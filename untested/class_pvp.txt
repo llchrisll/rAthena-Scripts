@@ -1,0 +1,34 @@
+//===== eAthena Script =======================================
+//= Class PvP
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Created
+//===== Compatible With ======================================
+//= Every eAthena SQL SVN 
+//===== Description ==========================================
+//= This script handles an PvP Room only for the designed Class in
+//  ".class"
+//===== Comments =============================================
+//= None yet... 
+//===========================================================
+prontera,150,180,0	script	Limited PvP	100,{
+
+mes .n$;
+if(Class != .class) {
+	mes "I'm sorry, but only "+jobname(.class)+"s are allowed to join this PvP Room.",
+	close;
+}
+mes "Do you want to go to the PvP Room?";
+if(select("- Yes:- No") - 1) close;
+close2;
+warp .map$[0],.map$[1],.map$[2];
+end;
+
+OnInit:
+set .n$,"["+strnpcinfo(1)+"]"; // NPC Name
+set .class,Job_Champion; // Allowed Class
+setarray .map$[0],"map",""+0,""+0;
+setnpcdisplay(strnpcinfo(2),jobname(.class)+" PvP");
+end;
+}

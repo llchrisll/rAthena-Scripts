@@ -1,0 +1,58 @@
+//===== eAthena Script =======================================
+//= Custom Item Drop
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= When a MvP gets killed, the item in the ".@id" has a
+//  ".@drop"% chance to drop.
+//  And a message will be announced :P
+//===== Comments =============================================
+//= Youtube: http://www.youtube.com/watch?v=H19KYE1JWNg
+//============================================================
+-	script	custom_mobdrop	-1,{
+end;
+
+// When a monster get killed
+OnNPCKillEvent:
+set .@id,rand(25000,25077); // Item ID
+// Invalid ID's like GM Set
+if( (.@id == 25008) || (.@id >= 25019 && .@id <= 25041) || (.@id == 25046) || (.@id >= 25052 && .@id <= 25066) || (.@id >= 25068 && .@id <= 25077)) goto OnNPCKillEvent;
+set .@am,1; // Item Amount
+set .@drop,5; // Drop Chance
+// For the Mob ID, http://ratemyserver.net/index.php?page=mob_db
+setarray .@mob_id[0],1038,1039,1046,1059,1086,1087,1096,1112,1115,1120,1147,1150,1157,1159,1190,1251,1252,1272,1312,1373,1388,1389,1418,1492,1511,1582,1583,1623,
+1630,1646,1647,1648,1649,1650,1651,1658,1685,1688,1708,1719,1734,1751,1768,1779,1785,1832,1871,1873,1885,1916,1917,1956,1957,1990,2022,2068,2087,2156,2165;
+// Checking if the Mob is in the list
+for( set .@m,0; .@m < getarraysize(.@mob_id); set .@m,.@m + 1) {
+	if(killedrid == .@mob_id[.@m]) {
+		if(rand(.@drop,100) == .@drop) { // Drop Chance (I hope it is correct :o)
+			getitem .@id,.@am;
+			announce "["+strcharinfo(0)+"] has recieved "+.@am+"x "+getitemname(.@id)+" (Drop Chance:"+ .@drop+"%) from the Mob: "+getmonsterinfo(.@mob_id[.@m],MOB_NAME),0,0x00FF00;
+		} else {
+			switch(rand(1,4)) {
+				case 1:
+				announce getmonsterinfo(.@mob_id[.@m],MOB_NAME)+": You were able to defeated me, but you'll never recieve the item ["+getitemname(.@id)+"].",bc_self,0xFF0000;
+				break;
+				
+				case 2:
+				announce getmonsterinfo(.@mob_id[.@m],MOB_NAME)+": Hahah!!! You never had the chance to get the item ["+getitemname(.@id)+"] from me.",bc_self,0xFF0000;
+				break;
+				
+				case 3:
+				announce getmonsterinfo(.@mob_id[.@m],MOB_NAME)+": Hahah!!! You never had the chance to get the item ["+getitemname(.@id)+"] from me.",bc_self,0xFF0000;
+				break;
+				
+				case 4:
+				announce getmonsterinfo(.@mob_id[.@m],MOB_NAME)+": Hahah!!! You never had the chance to get the item ["+getitemname(.@id)+"] from me.",bc_self,0xFF0000;
+				break;
+			}
+//			message strcharinfo(0),"The monster ["+getmonsterinfo(.@mob_id[.@m],MOB_NAME)+"] didn't drop the item ["+getitemname(.@id)+"].";
+		}
+	}
+}
+end;
+}

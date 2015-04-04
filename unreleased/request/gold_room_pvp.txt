@@ -1,0 +1,290 @@
+//===== eAthena Script =======================================
+//= Gold Room Battle
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= A battle over an gold room, which occures on every ".delay" days.
+//  Players can visit their gold room for ".dur" minutes, there is no delay restriction.
+//  See 'OnInit' for config.
+//===== Comments =============================================
+//= Request (http://rathena.org/board/topic/59504-list-of-my-script-request/)
+//	by Paulinds (Link to Requester)
+//	in the rAthena Board (http://www.rathena.org)
+//============================================================
+prontera,159,180,0	script	Gold Room Battle	100,{
+
+mes .n$;
+mes "Hello,"+ strcharinfo(0)+".";
+mes "How may I help you?";
+if(getgmlevel() > .gm) 
+	if(select("- GM Menu:- Player Menu") - 2) goto GM_M;
+mes "Do you need information about the access to the Gold Room or about the Gold Room Battle?";
+if(.timer == .delay) mes "Or do you want to participate?";
+mes "The next battle will be in "+ (.delay-.timer) +" day(s).";
+next;
+switch(select("- "+( ($gold_acc)?( ($gold_acc == getcharid(3))?"Warp to Gold Room":"Ownership"):( (.GRB_Room == 1)?"Battle!!!":"Room Closed")+":- Information:- Nevermind")) {
+	
+	case 1:
+	mes .n$;
+	if($gold_acc && ($gold_acc == getcharid(3)) ) {
+			mes "Do you want to enter the Gold Room?";
+			mes "^FF0000Note: You'll be automatically warped back to your Save Point after "+.dur+" minutes.^000000";
+			if(select("- Yes:- No") - 1) close;
+			next;
+			mes .n$;
+			mes "Okay, here we go.";
+			close2;
+			warp .gold$,.gold_x,.gold_y;
+			sleep2( .dur*60*1000 ); // Minutes*60 > Seconds*1000 = Milliseconds required for sleep2
+			doevent strnpcinfo(0)+"::OnDone";
+			end;
+		} else {
+			mes "The current owner is ^00FF00"+$gold_n$+"^000000.";
+			close;
+		}
+	if(!.GRB_Room) {
+		mes "I'm sorry, but the battle isn't open yet.";
+		close;
+	}
+	if(getmapusers(.pvp$) >= .limit) {
+		mes "I'm sorry, but the limit of "+.limit+" player has been reached.";
+		close;
+	}
+	mes "Do you want to join the Gold Room Battle?";
+	if(select("- Yes:- No") - 1) close;
+	next;
+	mes .n$;
+	mes "I will warp you now to the battlefield.";
+	close2;
+	warp .pvp$,0,0;
+	set @gold,1;
+	sleep2 2000;
+	if(getmapusers(.pvp$) == .limit) doevent strnpcinfo(0)+"::OnBattleStart";
+	end;
+	
+	case 2:
+	mes .n$;
+	mes "[ === Battle === ]";
+	mes "The Gold Room Battle is, like the name says, an pvp-type event where the last one to survive will be rewarded with access to his/her own Gold Room until the next battle.";
+	mes "The whole event has a max duration of "+.min+" minutes.";
+	mes "There can up to "+.limit+" players join to battle in the 3 minutes registration time.";
+	mes "The delay until the next battle is "+.delay +" days.";
+	mes " ";
+	mes "[ === Gold Room === ]";
+	mes "The winner of an battle can visit his/her gold room in this "+.delay+" days for "+.dur+" minutes and always.";
+	mes "That means there are no restrictions in usage.";
+	close;
+	
+	case 3:
+	close;
+}
+
+GM_M:
+next;
+mes .n$;
+mes "What now?";
+if(select("- Start/Stop Event:- Nevermind") - 1) close;
+next;
+if(.GRB_Eve) doevent strnpcinfo(0)+"::OnDisable"; 
+else doevent strnpcinfo(0)+"::OnPrepare";
+mes .n$;
+mes "The event has turned "+ ( (.GRB_Eve)?"off":"on");
+close;
+
+OnPCLogoutEvent:
+if(getcharid(3) != $gold_acc) end;
+OnDone:
+atcommand "@cleanmap";
+warp "SavePoint",0,0;
+end;
+
+OnPCLoadMapEvent:
+if( (strcharinfo(3) == .pvp$ && !@gold) || (strcharinfo(3) == .gold$ && getcharid(3) != $gold_acc) ) {
+	dispbottom .n$+": I'll warp you back to your savepoint because either you tried to join the battle, though you didn't register first or you tried to visit the gold room of another player.";
+	warp "SavePoint",0,0;
+	end;
+}
+while(getmapusers(.gold$) != 0) {
+	makeitem 969,1,.gold$,rand(88,111),rand(168,191);
+	sleep2 1000;
+}		
+atcommand "@cleanmap";
+end;
+
+OnPrepare:
+set .timer,.delay*60*24;
+OnMinute00:
+set .timer,.timer + 1;
+if( (.timer/60)/24 >= .delay) {
+	if(getmapusers(.pvp$) > 0) {
+		mapannounce .pvp$,.n$+": I will warp you all back to prontera, because I need this map for the Gold Room Battle.",bc_all;
+		sleep 5000;
+		mapwarp .pvp$,"prontera",150,180;
+	}
+	set .timer,0;
+	set $gold_acc,0;
+	announce .n$+": The gold room battle will begin shortly!!!",bc_all;
+	sleep 10000;
+	announce .n$+": You have 3 minutes to register, which starts now!!!",bc_all;
+	initnpctimer;
+	set .GRB_Eve,1;
+	set .GRB_Room,1;
+	if(getmapflag(.pvp$,mf_gvg) == 1) {
+		set .gvg,1;
+		removemapflag .pvp$,mf_gvg;
+	}
+	if(getmapflag(.pvp$,mf_pvp) == 1) {
+		set .pvp,1;
+		pvpoff .pvp$;
+	}
+	while(.GRB_Room) {
+		waitingroom "Current Fighters: "+getmapusers(.pvp$),0;
+		sleep 2000;
+		delwaitingroom;
+	}
+}
+end;
+
+OnTimer120000: // 2 Minutes
+announce .n$+": Hurry guys, 1 minute left!!!!",bc_all;
+end;
+
+Ontimer180000: // 3 Minutes
+OnBattleStart:
+stopnpctimer;
+set .GRB_Room,0;
+announce .n$+": Registration closed, let's see how many has registered....",bc_all;
+sleep 10000;
+if(getmapusers(.pvp$) < 2) {
+	announce .n$+": It seems like there are not enough players to start the battle.",bc_all;
+	goto OnDisable;
+}
+setmapflag .pvp$,mf_noreturn;
+setmapflag .pvp$,mf_nowarpto;
+setmapflag .pvp$,mf_nowarp;
+setmapflag .pvp$,mf_noteleport;
+setmapflag .pvp$,mf_nosave;
+setmapflag .pvp$,mf_nomemo;
+setmapflag .pvp$,mf_partylock;
+setmapflag .pvp$,mf_pvp_noparty;
+setmapflag .pvp$,mf_pvp_noguild;
+setmapflag .pvp$,mf_loadevent;
+announce .n$+": There are "+getmapusers(.pvp$)+" players registered.",bc_all;
+sleep 5000;
+announce .n$+": I will start the battle in 10 seconds!! Particpants, prepare yourself!! I also wish you good luck all!!",bc_all;
+sleep 5000;
+mapannounce .pvp$,.n$+": 5 seconds left!!!",bc_all;
+sleep 1000;
+mapannounce .pvp$,.n$+": 4 seconds left!!!",bc_all;
+sleep 1000;
+mapannounce .pvp$,.n$+": 3 seconds left!!!",bc_all;
+sleep 1000;
+mapannounce .pvp$,.n$+": 2 seconds left!!!",bc_all;
+sleep 1000;
+mapannounce .pvp$,.n$+": 1 seconds left!!!",bc_all;
+sleep 1000;
+mapannounce .pvp$,.n$+": GO !!!!",bc_all;
+pvpon .pvp$;
+startnpctimer;
+set .t_ck,0; // Timer Check
+end;
+
+OnTimer360000: // 3 Min = 180 seconds (Registration Time) + each min = 60 seconds > 360000 milliseconds
+stopnpctimer;
+set .t_ck,.t_ck + 1;
+if(.t_ck == .min/2) {
+	mapannounce .pvp$,.n$+": "+.min/2+" minutes have passed!!",bc_all;
+	if(getmapusers(.pvp$) == 0) {
+		sleep 10000;
+		mapannounce .pvp$,.n$+": Huh?! Where did the players disappear to? Since there are none, I will end the battle.",bc_all;
+		goto OnDisable;
+	}
+} else if(.t_ck == .min) {
+	mapannounce .pvp$,.n$+": "+.min+" minutes have passed!! Since no one has won this battle, I will end this battle!!",bc_all;
+	goto OnDisable;
+}
+setnpctimer 180100; // Reseting the timer back to after the registration time has passed
+startnpctimer;
+end;
+
+OnDisable:
+set .GRB_Room,0;
+delwaitingroom;
+removemapflag .pvp$,mf_noreturn;
+removemapflag .pvp$,mf_nowarpto;
+removemapflag .pvp$,mf_nowarp;
+removemapflag .pvp$,mf_noteleport;
+removemapflag .pvp$,mf_nosave;
+removemapflag .pvp$,mf_nomemo;
+removemapflag .pvp$,mf_partylock;
+removemapflag .pvp$,mf_pvp_noparty;
+removemapflag .pvp$,mf_pvp_noguild;
+removemapflag .pvp$,mf_loadevent;
+if(.gvg) {
+	set .gvg,0;
+	setmapflag .pvp$,mf_gvg;
+}
+if(!.pvp) pvpoff .pvp$;
+else set .pvp,0;
+announce .n$+": The event, Gold Room Battle, has ended!!!",bc_all;
+mapannounce .pvp$,.n$+": You all will be warped in 10 seconds back to prontera.",bc_all;
+sleep 10000;
+mapwarp .pvp$,"prontera.gat",150,180;
+set .GRB_Eve,0;
+end;
+
+OnPCKillEvent:
+if(strcharinfo(3) != .pvp$ || !@gold ) end;
+mapannounce .pvp$,.n$+": "+strcharinfo(0)+" has killed "+rid2name(killedrid)+"!!",bc_all;
+end;
+
+OnPCDieEvent:
+if(strcharinfo(3) != .pvp$ || !@gold ) end;
+if(killerrid != getcharid(3)) dispbottom .n$+": You have been killed by "+rid2name(killerrid)+"!!";
+set @gold,0;
+sleep2 500;
+warp "SavePoint",0,0;
+sleep2 1500; // Slowing down the script
+if(HP == 0) atcommand "@alive";
+percentheal 50,50;
+if(getmapusers(.pvp$) == 2) mapannounce .pvp$,.n$+": Wuhu!! Only 2 players remain, let's see who is the better player!!",bc_all;
+else if(getmapusers(.pvp$) == 1) {
+	announce .n$+": The winner of the Gold Room Battle is "+ rid2name(killerrid)+".",bc_all;
+	set $gold_acc,killerrid; // Saving RID of the winner
+	set $gold_n$,rid2name($gold_acc);
+	detachrid;
+	if(attachrid($gold_acc) == 1) dispbottom .n$+": You have won the Gold Room Battle, if you want to enter your Gold Room, please talk to me.";
+	goto OnDisable;
+} else if(getmapusers(.pvp$) == 0) goto OnDisable;
+end;
+
+
+OnInit:
+set .n$,"["+strnpcinfo(1)+"]"; // NPC Name
+set .limit,10; // Max Players
+set .min,15; // Battle Duration
+set .pvp$,"guild_vs5"; // Map for the PvP Room
+set .gold$,"new_zone04"; // Map for the Gold Room
+set .gold_x,100; // X Coordinate for the Gold Room where to be warped to
+set .gold_y,181; // Y Coordinate for the Gold Room where to be warped to
+// If the PvP Map is not the same as the Gold Room Map,
+// use special mapflags and sets variable to disinguish
+set .diff,0;
+if(.pvp$ != .gold$) { 
+	setmapflag .gold$,mf_noreturn;
+	setmapflag .gold$,mf_nowarp;
+	setmapflag .gold$,mf_nomemo;
+	setmapflag .gold$,mf_nosave;
+	setmapflag .gold$,mf_nowarpto;
+	setmapflag .gold$,mf_noteleport;
+	setmapflag .gold$,mf_loadevent;
+	set .diff,1;
+}
+set .delay,2; // Delay in days in which interval the battle will be hold.
+set .dur,1;// Gold Room Visit in minutes
+end;
+}

@@ -1,0 +1,26 @@
+//===== eAthena Script =======================================
+//= Guild Member Status Checker
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Made
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= This scripts checks the Guild Members on their Online Status.
+//===== Comments =============================================
+//= ...
+//============================================================
+prontera,100,100,0	script	Guild Member Checker 	100,{
+
+mes "[Status Checker]";
+if(!getcharid(2)) {
+	mes "I'm sorry, but you are not in a guild.";
+	close;
+}
+mes "These are the members currently online and offline:";
+query_sql "SELECT `name` , `online` FROM `char` WHERE `guild_id` = '"+getcharid(2)+"'",@mem$,@on;
+for( set @g,0; @g < getarraysize(@mem$); set @g,@g + 1) 
+	mes "- "+@mem$[@g]+": "+ ( (@on[@g] == 1) ? "^00FF00Online^000000":"^FF0000Offline^000000");
+close;
+}

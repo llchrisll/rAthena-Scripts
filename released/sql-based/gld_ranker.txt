@@ -1,0 +1,917 @@
+//===== eAthena Script =======================================
+//= Guild Manager
+//===== By ===================================================
+//= lllchrislll
+//===== Version ==============================================
+//= 1.0 - Script Made
+//		- Added many features (Didn't write that down...)
+//		- Added the possiblity to use the donation via an Shop
+//		  Items can only be set by the GM's, see 'OnInit'
+//		- Fixxed some bugs with the Reward Function
+//		  Reward can only be set by the GM's, see 'OnInit'
+//= 1.1 - Changed Reward Giving via Quest, also fixxed some bugs reported by darkis
+//		- Rewritten the Ranking Check, well it is using more memory now.... (Sorry for that)
+//		- Added an Random EXP Boost depending how much "rank" points
+//		  you possess, also added an menu option for it, see 'G_EXP'.
+//		- Also rewritten the explanation how to add this system to WoE:SE 
+//= 1.2 - Removed the Quest Area from preventing exploits.
+//====== ToDo List ===========================================
+//= Guild Shop: Looking for way to prevent the usage of your own Zeny instead
+//				of the donation for checking if you want to buy something
+//				Well, I found a way, but would cause a huge exploit.....
+//= Ranking Decrease: - How about when you lost a castle?
+//					 	Previous WoE: 3, This WoE: 2 > -1 Rank for Guild only or Member too? ;I
+//
+//===== Compatible/Created/Tested With ======================================
+//= eAthena SQL 14434 Trunk
+//===== Description ==========================================
+//= This Script handles a Ranking System in the Guild itself,
+//= the ranking itself can increase and decrease.
+//= Increasing the Ranking:
+//	- Donating money to the guild, which can be used by the
+//	  Guild Master only
+//	- Emperium Break during WoE
+//
+//= Decreasing of the Ranking:
+//  - Killing the Guild Members in PvP Rooms
+//  - Being offline for 1 week without telling the 
+//    guild master, to update the "Holiday List".
+//
+//= Also you can recieve other rewards from breaking the Emp,
+//	which is done by collecting points.
+//===== MySQL Entries =======================================
+/* //= Member Table:
+DROP TABLE IF EXISTS `guild_rank_mem`;
+CREATE TABLE `guild_rank_mem` (
+  `char_id` int(10) unsigned NOT NULL,
+  `guild_id` smallint(5) unsigned NOT NULL,
+  `rank` smallint(5) unsigned DEFAULT '0',
+  `woe` smallint(5) unsigned DEFAULT '0',
+  `donate` int(11) unsigned DEFAULT '0',
+  `donate_am` int(11) unsigned DEFAULT '0',
+  `holiday` smallint(5) unsigned DEFAULT '0',
+  PRIMARY KEY (`char_id`)
+) ENGINE=MyISAM;
+//= Guild Table:
+DROP TABLE IF EXISTS `guild_rank_guild`;
+CREATE TABLE  `guild_rank_guild` (
+  `guild_id` smallint(5) unsigned NOT NULL,
+  `type` smallint(5) unsigned DEFAULT '1',
+  `rank` smallint(5) unsigned DEFAULT '0',
+  `woe` smallint(5) unsigned DEFAULT '0',
+  `donate` int(11) unsigned DEFAULT '0',
+  `donate_min` int(11) unsigned DEFAULT '0',
+  `donate_max` int(11) unsigned DEFAULT '0',
+  PRIMARY KEY (`guild_id`)
+) ENGINE=MyISAM;
+*/
+//===== Comments =============================================
+//= You need to edit the following line in the
+//  npc/guild/agit_template.txt
+//========== Find this ==========//
+/*
+// Adjust Economy Invest Level for Castle
+set .@Economy,GetCastleData(strnpcinfo(2),2) - 5;
+if (.@Economy < 0) set .@Economy, 0;
+
+//========== Add above ==========//
+// Callfunc for Guild Rank System
+	callfunc "GLD_RANK_WOE";
+	
+//= WoE:SE : Open these file under npc/guild2/
+  arug_cas02.txt  arug_cas04.txt  schg_cas01.txt  schg_cas03.txt  schg_cas05.txt
+  arug_cas01.txt  arug_cas03.txt  arug_cas05.txt  schg_cas02.txt  schg_cas04.txt
+
+//========== Find this, which only shows up once every file. =========//
+mapannounce "arug_cas01","The emperium has been shattered!",bc_map,"0x00FF00",FW_NORMAL,20,0,40; 
+// ------- or -------- //
+announce "The emperium has been shattered!",bc_map,"0x00FF00",FW_NORMAL,20,0,40;
+
+//========== Add after ==========//
+// Callfunc for Guild Rank System
+	callfunc "GLD_RANK_WOE";
+*/
+//============================================================
+-	script	GuildRanks#Events	-1,{
+end;
+
+OnInit:
+query_sql "SHOW TABLES LIKE 'guild_rank_guild'",.@ch_gld_tbl$;
+query_sql "SHOW TABLES LIKE 'guild_rank_mem'",.@ch_mem_tbl$;
+if($gld_ranker_tbl == 1) {
+
+	// If the tables exists
+	if(.@ch_gld_tbl$[0] != "" && .@ch_mem_tbl$[0] != "") {
+		end;
+		
+	// If one of the tables doesn't exists
+	} else if(.@ch_gld_tbl[0] == "" || .@ch_mem_tbl[0] == "") { 
+		query_sql "DROP TABLE IF EXISTS `guild_rank_guild`";
+		query_sql "DROP TABLE IF EXISTS `guild_rank_mem`";
+		set $gld_ranker_tbl,0;
+	}
+}
+// Checking if the System is on or not
+if(!$gld_ranker_tbl) disablenpc "GuildRanks#Events"; end;
+
+setarray .expboost[0],5,10,15,20,25; // Exp Boost in %
+setarray .rankreq[0],15,30,60,120,240; // Rank Points required
+// Example: To gain 15% EXP Bonus, you need 60 Rank Points.
+set .boostuse,1; // Which day it will be activated on: 0-6 = Sunday - Saturday, 7 = Random
+switch(.boostuse) { 
+	case 0: set .expdayn$,"Sunday"; break;
+	case 1: set .expdayn$,"Monday"; break;
+	case 2: set .expdayn$,"Tuesday"; break;
+	case 3: set .expdayn$,"Wednesday"; break;
+	case 4: set .expdayn$,"Thursday"; break;
+	case 5: set .expdayn$,"Friday"; break;
+	case 6: set .expdayn$,"Saturday"; break;
+	default: set .expdayn$,"a random day."; break;
+}	
+set .GldEXPBoost,0;
+
+if(gettime(4) == ( (.boostuse != 7) ? .boostuse : rand(7) ) ) {
+	set .GldEXPBoost,1;
+	announce "Guild Rank System: EXP Bonus has been activated.",0,0x00FF00;
+}
+end;
+
+OnNPCKillEvent:
+if(!getcharid(2)) end; // If the player is not in a guild.
+// =========== EXP Boost ============== //
+if(.GldEXPBoost == 1) {
+	if(EXPLastRank < query_sql("SELECT `rank` FROM `guild_rank_mem` WHERE `guild_id` = '"+getcharid(2)+"' AND `char_id` = '"+getcharid(0)+"'",@rank) ) {
+		set EXPLastRank,@rank;
+		for( set @b,0; @b < getarraysize(.rankreq); set @b,@b + 1) {
+			if(EXPLastRank >= .rankreq[@b]) {
+				if(.rankreq[@b+1] != 0) {
+					set EXPBoost,.expboost[@b];
+					if(EXPLastRank < .rankreq[@b+1] ) break;
+				} else {
+					set EXPBoost,.expboost[@b];
+					break;
+				}
+			} 
+		}
+	}
+	set @bexp,(getmonsterinfo(killedrid,3)*EXPBoost);
+	if(getgmlevel()) dispbottom "Debug: Monster: "+getmonsterinfo(killedrid,0)+" with "+@bexp+" Base EXP, "+@jexp+" Job EXP";
+	set @jexp,(getmonsterinfo(killedrid,4)*EXPBoost);
+	set BaseEXP,BaseEXP + @bexp;
+	set JobEXP,JobEXP + @jexp;
+	dispbottom "EXP Bonus: "+EXPBoost+"%. You have recieved additionally "+@bexp+" Base EXP and "+@jexp+" Job EXP.";
+}
+end;
+
+OnPCKillEvent:
+if(!getcharid(2)) end;
+if(getmapflag(strcharinfo(3),mf_pvp) == 0) end;
+
+query_sql "SELECT `name` FROM `guild_member` WHERE `guild_id` = '"+getcharid(2)+"'",@gld_mem$;
+set @Killer$,rid2name(killerrid);
+for( set @gpvp,0; @gm < getarraysize(@gld_mem$); set @gpvp,@gpvp + 1) {
+	if(@Killer$ == @gld_mem$[@gpvp]) {
+		query_sql "UPDATE `guild_rank_mem` SET `rank` = `rank` - 1 WHERE `guild_id` = '"+getcharid(2)+"' AND `char_id` = '"+getcharid(0,@Killer$)+"'";
+		break;
+	}
+}
+donpcevent "::OnReset";
+end;
+
+OnPCLogoutEvent:
+if(!getcharid(2)) end;
+if(query_sql("SELECT `holiday` FROM `guild_rank_mem` WHERE `guild_id` = '"+getcharid(2)+"' AND `char_id` = '"+getcharid(0)+"'",@holiday) == 0) {
+	set gld_off_log,gettimetick(2) + 691200; // 8 Days
+	set gld_last,getcharid(2);
+}
+end;
+
+OnPCLoginEvent:
+if($gld_ranker_tbl) announce "The Guild Ranking System is online.",4,0x00FF00;
+if(.GldEXPBoost == 1) announce "Guild Rank System: EXP Bonus has been activated.",4,0x00FF00;;
+// Don't enable these lines, NEVER!! Need a solution for this problem 
+// if(BkpZeny != 0) { set Zeny,BkpZeny; set BkpZeny,0; } // Guild Shop Exploit Preventing
+if(!getcharid(2)) end;
+set EXPBoost,0;
+if(gld_last != getcharid(2)) set gld_off_log,0; end;
+query_sql "SELECT `holiday` FROM `guild_rank_mem` WHERE `guild_id` = '"+getcharid(2)+"' AND `char_id` = '"+getcharid(0)+"'",@holiday;
+if(@holiday == 0 && (gettimetick(2) > gld_off_log)) {
+	query_sql "UPDATE `guild_rank_mem` SET `rank` = `rank` - 1 WHERE `guild_id` = '"+getcharid(2)+"' AND `char_id` = '"+getcharid(0)+"'";
+} else {
+	set gld_off_log,0;
+}
+end;
+
+// ========================= Auto Guild Checking =========================//
+// This part checks the Registered Guilds and their members.
+// If the guild doesn't exists anymore or an Member has left a guild,
+// they will be deleted from the ranking and if the new Guild is registered
+// it will insert them into the new guild.
+// ==========================================================================
+OnClock0000:
+set .GldEXPBoost,0;
+if(gettime(4) == ( (.boostuse != 7) ? .boostuse : rand(7) ) ) {
+	set .GldEXPBoost,1;
+	announce "Guild Rank System: EXP Bonus has been activated.",0,0x00FF00;;
+}
+OnRankCheck:
+// Which Guild is registered and still exists
+query_sql "SELECT `guild_id` FROM `guild_rank_guild`",.@gld_ids;
+for( set .@w,0; .@w < getarraysize(.@gld_ids); set .@w,.@w + 1) {
+  	if(query_sql("SELECT `guild_id` FROM `guild` WHERE `guild_id` = '"+.@gld_ids[.@w]+"'",.@c_gld) != 0) {
+	
+// Getting the Guild Member ID's from the Guild_Member Table
+		query_sql "SELECT `char_id` FROM `guild_member` WHERE `guild_id` = '"+.@gld_ids[.@w]+"'",.@gld_mem;
+
+		for ( set .@m,0; .@m < getarraysize(.@gld_mem); set .@m,.@m+1) {
+		// Checking if the Member is in the ranking
+			if(query_sql("SELECT `char_id` FROM `guild_rank_mem` WHERE `guild_id` = '"+.@gld_ids[.@w]+"' AND `char_id` = '"+.@gld_mem[.@m]+"'",.@c_chid) == 0) {
+			
+				// Checking in which Guild the Member is
+				if(query_sql("SELECT `guild_id` FROM `guild_member` WHERE `char_id` = '"+.@gld_mem[.@m]+"'",.@c_gid) != .@gld_ids[.@w]) {
+				
+				// If the Member doesn't exists anymore in this guild
+					query_sql "DELETE FROM `guild_rank_mem` WHERE `char_id` = '"+.@gld_mem[.@m]+"'";
+				}
+				
+				// Member is not in the ranking
+				query_sql "INSERT INTO `guild_rank_mem` ( `guild_id` , `char_id` ) VALUES ( '"+.@gld_ids[.@w]+"' , '"+.@gld_mem[.@m]+"' )";
+			}
+		}
+// If the Guild doesn't exist anymore delete it from the ranking.
+	} else {
+		query_sql "DELETE FROM `guild_rank_guild` WHERE `guild_id` = '"+.@gld_ids[.@w]+"'";
+		query_sql "DELETE FROM `guild_rank_mem` WHERE `guild_id` = '"+.@gld_ids[.@w]+"'";
+		callsub OnGuildBreak;
+	}
+}
+donpcevent "::OnReset";
+end;
+
+OnGuildBreak:
+announce "The guild "+getguildname(.@gld_ids[.@w])+" has been disbanded.",0,0xFF0000;
+
+OnReset:
+deletearray .@gld_ids[0],getarraysize(.@gld_ids);
+deletearray .@gld_mem[0],getarraysize(.@gld_mem);
+deletearray .@c_chid[0],getarraysize(.@c_chid);
+deletearray .@c_gid[0],getarraysize(.@c_gid);
+end;
+}
+
+//OnAgitBreak:
+function	script	GLD_RANK_WOE	{
+query_sql "SELECT `type` FROM `guild_rank_guild` WHERE `guild_id` = '"+getcharid(2)+"'",@type;
+if(@type == 1) {
+	query_sql "UPDATE `guild_rank_mem` SET `rank` = `rank` + 1 , `woe` = `woe` + 1 WHERE `guild_id` = '"+getcharid(2)+"' AND `char_id` = '"+getcharid(0)+"'";
+	query_sql "UPDATE `guild_rank_guild` SET `rank` = `rank` + 1 , `woe` = `woe` + 1 WHERE `guild_id` = '"+getcharid(2)+"'";
+	announce "You have gained 1 Point for breaking an Emperium while WoE.",4,0xFF0000;
+}
+//end;
+return;
+}
+
+// ===================== Guild Shop Pre-Setting ==================== //
+-	shop	GUILD_SHOP	-1,512:-1
+
+// ===================== Guild Rank Manager ====================== //
+prontera,152,193,4	script	Guild Ranker#gldrank	110,{
+callsub G_Array;
+set .@n$,"[Guild Ranker]";
+set .@last_id,25077; // Highest Item ID
+set @guild_id,getcharid(2);
+
+OnStart:
+mes .@n$;
+// **********************************************************************//
+//					     // GM Menu Selection \\					 	 //
+// **********************************************************************//	
+if(getgmlevel() >= 80) {
+	mes "Player or GM Menu?";
+	menu "Player Menu",-,"GM Menu",G_GM;
+	next;
+	mes .@n$;
+}
+// **********************************************************************//
+//						 // No MySQL Entries made \\				 	 //
+// **********************************************************************//	
+if(!$gld_ranker_tbl) {
+	mes "I'm sorry, but";
+	mes "the System hasn't been";
+	mes "enabled yet.";
+	close;
+}
+// **********************************************************************//
+//						  // Not in a Guild \\					 	 //
+// **********************************************************************//	
+if(!@guild_id) {
+	mes "I'm sorry, but you";
+	mes "are not in a guild.";
+	close;
+}
+// **********************************************************************//
+//					  		// Main Greeting \\						 	 //
+// **********************************************************************//	
+mes "Hello, "+strcharinfo(0)+"!";
+if(query_sql("SELECT `guild_id` FROM `guild_rank_guild` WHERE `guild_id` = '"+@guild_id+"'",@gld_check) == 0) {
+	mes "As I can see your Guild has not been registered yet,";
+	if(strcharinfo(0) == getguildmaster(@guild_id)) {
+		mes "wanna register it now?";
+		next;
+		if(select("- Yes register:- No, thanks") == 2) {
+			goto G_Quit;
+		} else {
+			goto G_Register;
+		}
+	} else {
+		mes "if you want to join,";
+		mes "please inform your Guild Master about it.";
+		close;
+	}
+}
+mes "How can I help ya?";
+next;
+if(strcharinfo(0) == getguildmaster(@guild_id)) {
+	if(select("- Guild Master Menu:- Member Menu") == 1) {
+		menu "- Guild Summary",G_Summary,"- EXP Boost Info",G_EXP,"- Guild Shop",G_Shop,"- Donation Limit",G_Donate_L,"- Holiday List",G_Holiday,"- Nothing",G_Quit;
+	}
+}
+menu "- Guild Summary",G_Summary,"- EXP Boost Info",G_EXP,"- See Ranking",G_Rank,"- Get Reward",G_Reward,"- Donation",G_Donate,"- Nothing",G_Quit;
+
+// **********************************************************************//
+//							// Guild Summary \\					 		 //
+// **********************************************************************//	
+
+	G_Summary:
+	query_sql "SELECT `type` , `donate` , `donate_min` , `donate_max` FROM `guild_rank_guild` WHERE `guild_id` = '"+@guild_id+"'",@type,@donate,@donate_min,@donate_max;
+	mes .@n$;
+	mes "Guild Type: "+ ( (@type == 2) ? "Non-WoE" : "WoE");
+	mes " ";
+	mes "Donation Status:";
+	mes "Currently we have "+@donate+" Zeny on our Account.";
+	mes "Donation Limit:";
+	mes "Minium: " + @donate_min + " Zeny."; // Donate Minimum Amount
+	mes "Maximum: " + @donate_max + " Zeny."; // Donate Maximum Amount
+	close;
+
+// **********************************************************************//
+//							// EXP Boost Info \\					 	 //
+// **********************************************************************//		
+
+	G_EXP:
+	mes .@n$;
+	mes "The EXP Boost is global to every guild.";
+	mes "The boost depends on your rank and the percent set by the GM Team.";
+	mes "And will be activated on "+getvariableofnpc(.expdayn$,"GuildRanks#Events");
+	mes "Status: " + ( (getvariableofnpc(.GldEXPBoost,"GuildRanks#Events") == 1) ? "Active" : "Not Active.");
+	mes " ";
+	mes "Current Rank Requirements and EXP Boost.";
+	for( set @e,0; @e < getarraysize(getvariableofnpc(.expboost,"GuildRanks#Events")); set @e,@e + 1) {
+		mes getvariableofnpc(.rankreq[@e],"GuildRanks#Events")+" Points = "+getvariableofnpc(.expboost[@e],"GuildRanks#Events")+"% EXP Boost.";
+	}
+	close;
+	
+// **********************************************************************//
+//								// Ranking \\						 	 //
+// **********************************************************************//	
+	
+	G_Rank:
+	mes .@n$;
+	mes "What kind of ranking";
+	mes "do you want to see?";
+	next;
+	switch(select("- Donation:- WoE:- All")) {
+		
+// **********************************************************************//
+//								// Total Donation \\				 	 //
+// **********************************************************************//	
+		
+		case 1:
+		mes .@n$;
+		query_sql "SELECT `char_id` , `donate` , `donate_am` FROM `guild_rank_mem` WHERE `guild_id` = '"+@guild_id+"' ORDER BY `donate_am` DESC",@char_id,@donate,@donate_am;
+		query_sql "SELECT `donate` FROM `guild_rank_guild` WHERE `guild_id` = '"+@guild_id+"'",@donate_total;
+		mes "Total Donation:";
+		mes @donate_total;
+		mes " ";
+		mes "Name - Quantity - Donated Amount Total";
+		for( set @gm,0; @gm < getarraysize(@char_id); set @gm,@gm + 1) {
+			query_sql "SELECT `name`  FROM `guild_member` WHERE `guild_id` = '"+@guild_id+"' AND `char_id` = '"+@char_id[@gm]+"'",@c_name$;
+			mes @c_name$+" - "+@donate[@gm]+" - "+@donate_am[@gm];
+		}
+		close;
+		
+// **********************************************************************//
+//							 // Emperium Breaks \\					 	 //
+// **********************************************************************//	
+
+		case 2:
+		mes .@n$;
+		query_sql "SELECT `char_id` , `woe` FROM `guild_rank_mem` WHERE `guild_id` = '"+@guild_id+"' ORDER BY `woe` DESC",@char_id,@woe;
+		query_sql "SELECT `woe` FROM `guild_rank_guild` WHERE `guild_id` = '"+@guild_id+"'",@woe2;
+		mes "Total Emp Breaks:";
+		mes @woe2;
+		mes " ";
+		mes "Name - Break Quantity";
+		for( set @gm,0; @gm < getarraysize(@char_id); set @gm,@gm + 1) {
+			query_sql "SELECT `name`  FROM `guild_member` WHERE `guild_id` = '"+@guild_id+"' AND `char_id` = '"+@char_id[@gm]+"'",@c_name$;
+			mes @c_name$+" - "+@woe[@gm];
+		}
+		close;
+
+// **********************************************************************//
+//							  // Member Ranking \\					 	 //
+// **********************************************************************//	
+		
+		case 3:
+		mes .@n$;
+		query_sql "SELECT `char_id` , `rank` FROM `guild_rank_mem` WHERE `guild_id` = '"+@guild_id+"' ORDER BY `rank` DESC",@char_id,@rank;
+		mes "Name - Ranking";
+		for( set @gm,0; @gm < getarraysize(@char_id); set @gm,@gm + 1) {
+			query_sql "SELECT `name`  FROM `guild_member` WHERE `guild_id` = '"+@guild_id+"' AND `char_id` = '"+@char_id[@gm]+"'",@c_name$;
+			mes @c_name$+" - "+@rank[@gm];
+		}
+		close;
+	}
+	
+// **********************************************************************//
+//							  // Recieving Reward \\				 	 //
+// **********************************************************************//			
+	G_Reward:
+	query_sql "SELECT `woe` FROM `guild_rank_mem` WHERE `guild_id` = '"+@guild_id+"' AND `char_id` = '"+getcharid(0)+"'",@woe;
+	mes .@n$;
+	mes "Your current balance is:";
+	mes "WoE Points: "+@woe;
+	next;
+	mes .@n$;
+	mes "Reward - Points needed"; 
+	mes .rew_woe_need[0] + ". " + .rew_woe_am[0] + "x " + ( (.rew_woe[0] == 1) ?  " Zeny": getitemname(.rew_woe[0]) + " (ID:" + .rew_woe[0] + ")" ) + " - "+.rew_woe_need[0];
+	set @r_menu$,"- "+.rew_woe_need[0] + " "+( (.rew_woe_need[0] > 1) ? "Points": "Point");
+	for( set @r,1; @r < getarraysize(.rew_woe); set @r,@r+1) {
+		mes .rew_woe_am[@r] + "x " + ( (.rew_woe[@r] == 1) ? " Zeny": getitemname(.rew_woe[@r]) + " (ID: " + .rew_woe[@r] + ")" ) + " - "+.rew_woe_need[@r];
+		set @r_menu$,@r_menu$ + ":- "+.rew_woe_need[@r] + " "+( (.rew_woe_need[@r] > 1) ? "Points": "Point");			
+	}
+	mes " ";
+	mes "Please choose the reward you want.";
+	next;
+	switch(prompt(@r_menu$)) {
+	
+		default:
+		set @m,@menu - 1;
+		break;
+		
+		case 255:
+		goto G_Quit;
+		break;
+	}
+	mes .@n$;
+	mes "You have chosen:";
+	mes .rew_woe_am[@m] + "x " + ( (.rew_woe[@m] == 1) ? " Zeny": getitemname(.rew_woe[@m]) + " (ID: " + .rew_woe[@m] + ")" ) + " - "+.rew_woe_need[@m];
+	mes "Is that correct?";
+	next;
+	if(select("- Yes:- No") == 2) {
+		goto G_Quit;
+	} else {
+		mes .@n$;
+		if(.rew_woe_need[@m] > @woe) {
+			mes "I'm sorry, but it seems you don't have enough points for this reward.";
+			close;
+		} 
+		if(.rew_woe[@m] == 1) {
+			mes "You have recieved "+.@rew_woe_am[@m]+" Zeny.";
+			set Zeny,Zeny + .rew_woe_am[@m];
+		} else {
+			mes "You have recieved "+.rew_woe_am[@m] + "x "+getitemname(.rew_woe[@m]);
+			getitem .rew_woe[@m],.rew_woe_am[@m];
+		}
+		query_sql "UPDATE `guild_rank_mem` SET `woe` = `woe` - "+.rew_woe_need[@m]+" WHERE `guild_id` = '"+@guild_id+"' AND `char_id` = '"+getcharid(0)+"'";
+		close;
+	}
+	
+// **********************************************************************//
+//							  // Making Donation \\					 	 //
+// **********************************************************************//	
+
+	G_Donate:
+	query_sql "SELECT `donate` , `donate_min` , `donate_max` FROM `guild_rank_guild` WHERE `guild_id` = '"+@guild_id+"'",@donate,@donate_min,@donate_max;
+	mes .@n$;
+	if(@donate_min < 1) {
+		mes "Your Guild Master hasn't set the";
+		mes "Donation Limit yet.";
+		close;
+	}
+	mes "Total Donation: "+@donate;
+	mes "The account can hold up to "+.don_limit+" Zeny.";
+	if(@donate < .don_limit) {
+		mes (.don_limit - @donate) +" can be donated until the limit will be reached.";
+	} else if(@donate >= .don_limit) {
+		mes "Limit reached, the account is full.";
+		mes "Please wait until your Guild Master used some donations up.";
+		close;
+	}
+	mes "You can donate once per week.";
+	mes "The minimum amount is " + @donate_min + " Zeny"; // Donate Minimum Amount
+	mes "and the maximum "+ @donate_max + " Zeny."; // Donate Maximum Amount
+	next;
+	if(@guild_id == last_gld && gld_don_delay > gettimetick(2)) {
+		mes .@n$;
+		mes "I'm sorry, but the week hasn't passed yet.";
+		close;
+		
+	} else if(@guild_id != last_gld) { set gld_don_delay,0; }
+	
+	if(input(@do_don,@donate_min,@donate_max) != 0) {
+		mes .@n$;
+		mes "You have put an invalid amount.";
+		close;
+	}
+	if(Zeny < @do_don) {
+		mes .@n$;
+		mes "You don't have the needed money.";
+		close;
+	}
+	if( (@donate + @do_don) >= .don_limit) {
+		mes "The donation you are trying to make is too much for the account to handle.";
+		mes "Please wait until your Guild Master uses some donations.";
+		close;
+	}
+	query_sql "UPDATE `guild_rank_mem` SET `donate` = donate + 1 , `donate_am` = donate_am + "+@do_don+" , `rank` = rank + 1 WHERE `guild_id` = '"+@guild_id+"' AND `char_id` = '"+getcharid(0)+"'";
+	query_sql "UPDATE `guild_rank_guild` SET `donate` = donate + "+@do_don+" WHERE `guild_id` = '"+@guild_id+"'";
+	set Zeny,Zeny - @do_don;
+	set gld_don_delay,gettimetick(2) + 604800; // 1 Week Delay
+	set last_gld,@guild_id;
+	mes .@n$;
+	mes "Thank you for your";
+	mes "donation.";
+	close;
+
+	
+// **********************************************************************//
+//					     // Adding Donation Limit \\				 	 //
+// **********************************************************************//	
+
+	G_Donate_L:
+	mes .@n$;
+	mes "Type the minimum amount";
+	mes "Note: Highest is 10,000,000";
+	next;
+	input @don_min;
+	if(@don_min < 1 || @don_min > 10000000) close;
+	mes .@n$;
+	mes "Now the maximum amount:";
+	mes "Note: Highest is 10,000,000 too";
+	input @don_max;
+	if(@don_max < @don_min || @don_max > 10000000) close;
+	next;
+	mes .@n$;
+	mes "Result:";
+	mes "Minium: "+@don_min;
+	mes "Maximum: "+@don_max;
+	mes " ";
+	mes "Correct?";
+	if(select("- Yes:- No") == 1) {
+		query_sql "UPDATE `guild_rank_guild` SET `donate_min` = '"+@don_min+"' , `donate_max` = '"+@don_max+"' WHERE `guild_id` = '"+@guild_id+"'";
+	}
+	close;
+	
+// **********************************************************************//
+//					     // Guild Shop - using Donations \\			 	 //
+// **********************************************************************//		
+	
+	G_Shop:
+	query_sql "SELECT `donate` FROM `guild_rank_guild` WHERE `guild_id` = '"+@guild_id+"'",@don_total;
+	mes .@n$;
+	mes "Hello Master,";
+	mes "how can I help you?";
+	mes "You guild members have donated "+@don_total+" Zeny so far.";
+	next;
+	menu "Open Shop",-,"Nothing",G_Quit;
+
+	mes .@n$;
+	mes "I will now open the shop for you.";
+	mes "Note: The Skill Discount won't work here.";
+	mes "The difference will be shown, but I will use the actual costs.";
+	mes "Also it checks the Zeny in your inventory, so if you get enough";
+	mes "donations, but not enough Zeny with you, it could result in an error.";
+	close2;
+	// Don't enable these lines, NEVER!! Need a solution for this problem 
+	// set BkpZeny,Zeny; // A way to surprass the bug by having not enough Zeny with you even if he uses the donations?
+	// if(@don_total > .don_limit) set Zeny,.don_limit; else set Zeny,@don_total;
+	callshop "GUILD_SHOP",1;
+	npcshopattach "GUILD_SHOP";
+	end;
+
+	OnBuyItem:
+	for( set @bid,0; @bid < getarraysize(@bought_nameid); set @bid,@bid + 1) {
+		for( set @sid,0; @sid < getarraysize(.gshop_id); set @sid,@sid + 1) {
+			if(.gshop_id[@sid] == @bought_nameid[@bid]) {
+				set @cost_item,(.gshop_cost[@sid]*@bought_quantity[@bid]);
+				set @cost_total,(@cost_total+@cost_item);
+				break;
+			}
+		}
+	}
+	query_sql "SELECT `donate` FROM `guild_rank_guild` WHERE `guild_id` = '"+@guild_id+"'",@don_total;
+	if(@cost_total > .don_limit) {
+		dispbottom "I'm sorry, but you can't buy this much at once.";
+		dispbottom "Maximum is " + .don_limit + " Zeny.";
+	} else {
+		if(@cost_total > @don_total) {
+			dispbottom "You don't have enough Zeny.";
+		} else {
+			for( set @buy,0; @buy < getarraysize(@bought_nameid); set @buy,@buy + 1) {
+				getitem @bought_nameid[@buy],@bought_quantity[@buy];
+			}
+			dispbottom "Thank you for shopping.";
+			dispbottom "You have used "+@cost_total+" Zeny of the Donations.";
+			query_sql "UPDATE `guild_rank_guild` SET `donate` = `donate` - '"+@cost_total+"' WHERE `guild_id` = '"+@guild_id+"'";
+		}
+	}
+	set @cost_total,0;
+	deletearray @bought_nameid[0],128;
+	deletearray @bought_quantity[0],128;
+	// Don't enable this line, NEVER!! Need a solution for this problem 
+	// if(BkpZeny != 0) { set Zeny,BkpZeny; set BkpZeny,0; }
+	end;
+
+// **********************************************************************//
+//							  // Holiday List \\					 	 //
+// **********************************************************************//	
+
+	G_Holiday:
+	mes .@n$;
+	mes "What do you like to do?";
+	next;
+	switch(select("- Add:- Remove:- Show List:- Nothing")) {
+
+// **********************************************************************//
+//			     // Adding Member on the Holiday List \\			 	 //
+// **********************************************************************//	
+	
+		case 1:
+		mes .@n$;
+		mes "Type the member name you want to add:";
+		next;
+		input @hl_name$;
+		query_sql "SELECT `char_id` FROM `guild_member` WHERE `guild_id` = '"+@guild_id+"' AND `name` = '"+escape_sql(@hl_name$)+"'",@char_id;
+		if(!@char_id) {
+			mes .@n$;
+			mes "The name you have put is wrong.";
+			close;
+		}
+		query_sql "UPDATE `guild_rank_mem` SET `holiday` = '1' WHERE `guild_id` = '"+@guild_id+"' AND `char_id` = '"+@char_id+"'";
+		mes .@n$;
+		mes "The member "+@hl_name$+" has been added to the \"Holiday List\".";
+		close;
+
+// **********************************************************************//
+//			    // Removing Member from the Holiday List \\			 	 //
+// **********************************************************************//	
+		
+		case 2:
+		mes .@n$;
+		mes "Select the member from the list";
+		mes "which you want to remove.";
+		next;
+		query_sql "SELECT `char_id` FROM `guild_rank_mem` WHERE `guild_id` = '"+@guild_id+"' AND `holiday` = '1'",@char_id;
+		if(!@char_id) {
+			mes .@n$;
+			mes "There is no member in the list.";
+			close;
+		}
+		query_sql "SELECT `name` FROM `guild_member` WHERE `guild_id` = '"+@guild_id+"' AND `char_id` = '"+@char_id[0]+"'",@char_n$;
+		set @menu$,"- "+@char_n$[0];
+		for( set @gm_s,1; @gm_s < getarraysize(@char_id); set @gm_s,@gm_s + 1) {
+			query_sql "SELECT `name` FROM `guild_member` WHERE `guild_id` = '"+@guild_id+"' AND `char_id` = '"+@char_id[@gm_s]+"'",@char_n$;
+			set @menu$,@menu$ + ":- "+@char_n$[@gm_s];
+		}
+		switch(prompt(@menu$)) {
+			
+			default:
+			set @h,@menu - 1;
+			
+			mes .@n$;
+			mes "You have chosen "+ @char_n$[@h];
+			mes " ";
+			mes "Wanna remove him/her?";
+			if(select("- Yes:- No") == 2) close;
+			next;
+			query_sql "SELECT `char_id` FROM `guild_member` WHERE `guild_id` = '"+@guild_id+"' AND `name` = '"+escape_sql(@char_n$[@h])+"'",@char_id_n;
+			query_sql "UPDATE `guild_rank_mem` SET `holiday` = '0' WHERE `guild_id` = '"+@guild_id+"' AND `char_id` = '"+@char_id_n+"'";
+			mes .@n$;
+			mes "The member "+@char_n$[@h]+" has been removed from the List.";
+			close;
+			
+			case 255:
+			goto G_Quit;
+			break;
+		}
+
+// **********************************************************************//
+//						  // Showing Holiday List \\					 //
+// **********************************************************************//	
+
+		case 3:
+		mes .@n$;
+		mes "These members has been";
+		mes "put on the list:";
+		next;
+		query_sql "SELECT `char_id` FROM `guild_rank_mem` WHERE `guild_id` = '"+@guild_id+"' AND `holiday` = '1'",@char_id;
+		if(!@char_id) {
+			mes .@n$;
+			mes "There is no member";
+			mes "in the list.";
+			close;
+		}
+		query_sql "SELECT `name` FROM `guild_member` WHERE `guild_id` = '"+@guild_id+"' AND `char_id` = '"+@char_id[0]+"'",@char_n$;
+		mes @char_n$[0];
+		for( set @gm_s,1; @gm_s < getarraysize(@char_id); set @gm_s,@gm_s + 1) {
+			query_sql "SELECT `name` FROM `guild_member` WHERE `guild_id` = '"+@guild_id+"' AND `char_id` = '"+@char_id[@gm_s]+"'",@char_n$;
+			mes @char_n$[@gm_s];
+		}
+		close;
+		
+		case 4:
+		goto G_Quit;
+		break;
+	}
+	
+// **********************************************************************//
+//						  // Guild Registering \\					 	 //
+// **********************************************************************//	
+
+G_Register:
+mes .@n$;
+mes "You want to register your Guild for the our Ranking System?";
+mes "^FF0000Note: This ranking will be permanent until you are disbanding the guild.^000000";
+if(select("- Yes, please:- No, thanks") - 1) {
+	close;
+} else {
+	next;
+	mes .@n$;
+	mes "What type is your Guild?";
+	set @type,select("- WoE:- Non-WoE");
+	query_sql "INSERT INTO `guild_rank_guild` ( `guild_id` , `type` , `rank` , `woe` , `donate` , `donate_min` , `donate_max` ) VALUES ( '"+@guild_id+"' , '"+@type+"' , '0' , '0' , '0' , '0' , '0' )";
+	query_sql "SELECT `char_id` FROM `guild_member` WHERE `guild_id` = '"+@guild_id+"' ORDER BY `char_id` ASC",@char_id;
+	for( set @g,0; @g < getarraysize(@char_id); set @g,@g+1) {
+		query_sql "INSERT INTO `guild_rank_mem` ( `guild_id` , `char_id` , `holiday` ) VALUES ( '"+@guild_id+"' , '"+@char_id[@g]+"' , '0' )";
+	}
+	close;
+}
+
+// **********************************************************************//
+//								  // GM Menu \\						 	 //
+// **********************************************************************//	
+
+G_GM:
+next;
+mes .@n$;
+mes "Hello "+strcharinfo(0)+",";
+if($gld_ranker_tbl) {
+	mes "how can I help you?";
+	next;
+	switch(select("- Guild Ranks:- Re-Check Rank List:- Delete Tables")) {
+		
+		case 1:
+		query_sql "SELECT `guild_id` , `rank` , `woe` FROM `guild_rank_guild` WHERE `rank` > '0' ORDER BY `rank` DESC",.@r_gld,.@r_rank,.@r_woe;
+		mes .@n$;
+		mes "Only Guilds with Ranking Points will be displayed!";
+		if(.@r_gld[0] == 0) {
+			mes "There is no guild to display.";
+			close;
+		}
+		mes "The format of the list";
+		mes "will be like this:";
+		mes " ";
+		mes " Guild Name: Points";
+		mes "===== Emp Breaks: ===";
+		mes "x";
+		mes "*******************";
+		for( set @r,0; @r < getarraysize(.@r_gld); set @r,@r + 1) {
+			next;
+			mes getguildname(.@r_gld[@r])+": "+.@r_rank;
+			mes "===== Emp Breaks: ===";
+			mes .@r_woe[@r];
+			mes "*******************";
+		}
+		close;
+		
+		case 2:
+		mes .@n$;
+		mes "I will now re-check the Ranking Status for all guilds.";
+		close2;
+		doevent "GuildRanks#Events::OnRankCheck";
+		end;
+		
+		case 3:
+		mes .@n$;
+		mes "Are you sure to delete everything?";
+		next;
+		if(select("- Delete:- Nevermind") - 1) {
+			close;
+		} else {
+			close2;
+			query_sql "DROP TABLE IF EXISTS `guild_rank_guild`";
+			query_sql "DROP TABLE IF EXISTS `guild_rank_mem`";
+			disablenpc "GuildRanks#Events";
+			announce "The Guild Ranking System is offline.",0,0xFF0000;
+			set $gld_ranker_tbl,0;
+			end;
+		}
+	}
+} else {
+	mes "I'm sorry, but the ranking has not been activated yet,";
+	mes "but it's also necessary to install the required entries in";
+	mes "your database.";
+	next;
+	mes .@n$;
+	mes "First I will check if you installed it through the entries at the top of the script file.";
+	mes "Then I will activate it.";
+	mes "If that is not the case, I will install and activate the system for you if you want.";
+	next;
+	query_sql "SHOW TABLES LIKE 'guild_rank_guild'",.@c_tbl$;
+	if(.@c_tbl$[0] == "") {
+		mes .@n$;
+		mes "Result:";
+		mes "The entries are not yet installed wanna install them?";
+		next;
+		if(select("- Install it~:- Na, it would fail!") - 1) {
+			mes .@n$;
+			mes "How do you wanna know without installing it!!";
+			emotion e_bzz;
+			percentheal -99,-99;
+			close2;
+			sleep2 2000;
+			percentheal 100,100;
+			end;
+			
+		} else {
+			mes .@n$;
+			mes "Here we go~";
+			//= Member Table:
+			query_sql "CREATE TABLE `guild_rank_mem` ( `char_id` int(10) , `guild_id` smallint(5) , `rank` smallint(5) , `woe` smallint(5) , `donate` int(11) , `donate_am` int(11) , `holiday` smallint(5) )";
+			//= Guild Table:
+			query_sql "CREATE TABLE  `guild_rank_guild` ( `guild_id` smallint(5) , `type` smallint(5) , `rank` smallint(5) , `woe` smallint(5) , `donate` int(11) , `donate_min` int(11) , `donate_max` int(11) )";
+			
+			enablenpc "GuildRanks#Events";
+			announce "The Guild Ranking System is online.",0,0x00FF00;
+			set $gld_ranker_tbl,1;
+			close;
+		}
+	} else {
+		mes .@n$;
+		mes "It seems like the entries has been installed,";
+		mes "then I will activate the system if you want.";
+		if(select("- Please proceed~:- Stop please") - 1) {
+			close;
+		} else {
+			enablenpc "GuildRanks#Events";
+			announce "The Guild Ranking System is online.",0,0x00FF00;
+			set $gld_ranker_tbl,1;
+			close;
+		}
+	}
+}
+// **********************************************************************//
+//							  // Closing Message \\					 	 //
+// **********************************************************************//	
+G_Quit:
+mes .@n$;
+mes "See ya again.";
+close;
+
+G_Array:
+set @r_menu$,"";
+set .@rew_it_list$,"";
+deletearray .@c_tbl$[0],getarraysize(.@c_tbl$);
+deletearray @gld_mem$[0],getarraysize(@gld_mem$);
+deletearray @char_id[0],getarraysize(@char_id);
+deletearray @donate[0],getarraysize(@donate);
+deletearray @donate_am[0],getarraysize(@donate_am);
+deletearray @woe[0],getarraysize(@woe);
+deletearray @rank[0],getarraysize(@rank);
+deletearray .@r_gld[0],getarraysize(.@r_gld);
+deletearray .@r_rank[0],getarraysize(.@r_rank);
+deletearray .@r_woe[0],getarraysize(.@r_woe);
+return;
+
+OnInit:
+// Guild Rewards:
+// .rew_woe: Item ID, when you put 1 it will give Zeny as Reward.
+// .rew_woe_am: Amount of the Items or Zeny.
+// .rew_woe_need: The points needed
+// For Emp Breaking
+setarray .rew_woe[0],1,969;
+setarray .rew_woe_am[0],50000,10;
+setarray .rew_woe_need[0],1,5;
+// Maximum Zeny for Donation Account
+set .don_limit,2000000000; // 2b Zeny
+// Attaching Items To the Shop
+npcshopdelitem "GUILD_SHOP",512;
+setarray .gshop_id[0],7619,7620;
+setarray .gshop_cost[0],200000,200000;
+
+for ( set .@s,0; .@s < getarraysize(.gshop_id); set .@s,.@s + 1 ) {
+	npcshopadditem "GUILD_SHOP",.gshop_id[.@s],.gshop_cost[.@s];
+}
+end;
+}

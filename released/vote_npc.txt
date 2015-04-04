@@ -1,0 +1,226 @@
+//===== eAthena Script =======================================
+//= Vote NPC
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Made
+//= 1.1 - Added missing check for Vote Limit
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= This script can create/delete/reset votes.
+//  Config has been made as dynamically as possible.
+//	Delay, Max Answers, Max Votes at once, Max letters per Vote,
+//	Max letters per Answers can be set too.
+//	See 'OnInit'.
+//===== Comments =============================================
+//= Request (http://rathena.org/board/topic/57438-request-vote-npc/)
+//	by PapaZola (http://rathena.org/board/user/682-papazola/)
+//	in the rAthena Board (http://rathena.org/board)
+//============================================================
+prontera,150,180,0	script	Vote NPC	100,{
+
+mes .n$;
+mes "Hello, "+strcharinfo(0)+".";
+if(getgmlevel() < .gm) {
+	DoVote:
+	if(getarraysize($vote_q$) < 1) {
+		mes "I'm sorry, there is no vote yet.";
+		close;
+	}
+	if(gettimetick(2) < #vote_del) {
+		mes "You can't vote again, please wait the delay is over.";
+		close;
+		
+	} else if(.vote_limit == 1 && #vote_l == 1) {
+		mes "I'm sorry, but you voted already.";
+		close;
+	}
+	mes "Please select which vote you want to participate in:";
+	mes "^FF0000Note: Vote Delay " + ( (.vote_delay/60 >= 60)?.vote_delay/3600+" hours.":.vote_delay/60+" minutes");
+	mes ( (.vote_limit == 1)?"You can only vote once per vote.^000000":"You can vote more than once after the delay has passed.^000000");
+	set @v_menu$,"";
+	for ( set .@l,0; .@l < getarraysize($vote_q$); set .@l,.@l + 1)
+		set @v_menu$,@v_menu$ + "- "+$vote_q$[.@l] + ( ($vote_q$[.@l+1] != "")?":":"");
+		
+	next;
+	set .@v,select(@v_menu$) - 1;
+	
+	mes .n$;
+	set @a_menu$,"";
+	for ( set .@a,1; .@a < getd("$vote_q"+.@v+"_at"); set .@a,.@a + 1) 
+		set @a_menu$,@a_menu$ + "- "+getd("$vote_q"+.@v+"_a"+.@a+"$") + ( (getd("$vote_q"+.@v+"_a"+(.@a+1)+"$") != "")?":":"");
+	
+	mes $vote_q$[.@v];
+	next;
+	set .@a,select(@a_menu$);
+	mes .n$;
+	mes "Thank you for participating in this vote.";
+	mes "I appreciate it.";
+	setd("$vote_q"+.@d+"_v"+.@a),getd("$vote_q"+.@d+"_v"+.@a) + 1;
+	if(.vote_limit == 0) 
+		set #vote_del,gettimetick(2) + .vote_delay;
+	else
+		set #vote_l,1;
+	close;
+	
+} else {
+	mes "How may I help you today?";
+	mes " ";
+	if(getarraysize($vote_q$) < 1) mes "Currently there are no Votes running.";
+	else {
+		mes "Currently there are the following Votes running:";
+		mes "====================";
+		for ( set .@q,0; .@q < getarraysize($vote_q$); set .@q,.@q + 1) {
+			mes (.@q + 1) + ". "+$vote_q$[.@q];
+			mes ( ($vote_q$[.@q+1] != "")?"---------------------":"====================");
+		}
+	}
+	next;
+	switch(select("- View Vote Results:- Add Vote:- Delete Vote:- Reset Vote:- Delete All Votes:- Vote:- Nevermind")) {
+	
+		case 1:
+		mes .n$;
+		mes "Here are the current Vote Results!";
+		next;
+		mes "====================";
+		for(set .@d,0; .@d < getarraysize($vote_q$); set .@d,.@d + 1) {
+			mes $vote_q$[.@d]+":";
+			set .@a,1;
+			while( .@a < getd("$vote_q"+.@d+"_at")) {
+				mes getd("$vote_q"+.@d+"_a"+.@a+"$")+": "+getd("$vote_q"+.@d+"_v"+.@a);
+				set .@a,.@a + 1;
+			}
+			mes ( ($vote_q$[.@d+1] != "")?"---------------------":"====================");
+		}
+		close;
+	
+		case 2:
+		mes .n$;
+		if(getarraysize($vote_q$) == .votes) {
+			mes "I'm sorry, but the maxium of votes you can create has been reached.";
+			mes "Please delete one first before creating a new one.";
+			close;
+		}
+		mes "Please state the question for the Vote please.";
+		mes "Maximum is "+.vote_q_max+" letters.";
+		next;
+		if(input(.@v_name$,1,.vote_q_max) != 0) {
+			mes .n$;
+			mes "The question you have put is too long.";
+			mes "Please choose a shorter one.";
+			close;
+		}
+
+		set @a,1;
+		while( @a <= .vote_a) {
+			mes .n$;
+			mes "Possible Answer #"+@a+"/"+.vote_a+":";
+			mes "Maximum "+.vote_a_max+" letters.";
+			next;
+			if(input(getd(".@v_a"+@a+"$"),1,.vote_a_max) != 0) {
+				mes .n$;
+				mes "Error: Maximum "+.vote_a_max+" letters.";
+				next;
+				continue;
+			}
+			if(getd(".@v_a"+@a+"$") != "") {
+				setd("$vote_q"+getarraysize($vote_q$)+"_a"+@a+"$"),getd(".@v_a"+@a+"$");
+				set @a,@a + 1;
+			}
+		}
+		setd("$vote_q"+getarraysize($vote_q$)+"_at"),@a; // Total Answers of the vote
+		setarray $vote_q$[getarraysize($vote_q$)],.@v_name$;
+		mes .n$;
+		mes "New Vote, "+.@v_name$+", has been created.";
+		close;
+		
+		case 3:
+		mes .n$;
+		mes "Please select which vote you want to delete:";
+		set @v_menu$,"";
+		for ( set .@l,0; .@l < getarraysize($vote_q$); set .@l,.@l + 1)
+			set @v_menu$,@v_menu$ + "- "+$vote_q$[.@l] + ( ($vote_q$[.@l+1] != "")?":":"");
+			
+		next;
+		set .@v,select(@v_menu$) - 1;
+		
+		mes .n$;
+		mes "Chosen Vote: \""+$vote_q$[.@v]+"\"";
+		mes "Correct?";
+		if(select("- Yes:- No") - 1) close;
+		next;
+		mes .n$;
+		mes "I will now delete this vote.";
+		close2;
+		set .@a,1;
+		while( .@a != getd("$vote_q"+.@v+"_at")) {
+			setd("$vote_q"+.@v+"_a"+.@a+"$"),"";
+			setd("$vote_q"+.@v+"_v"+.@a),0;
+			set .@a,.@a + 1;
+		}
+		setd("$vote_q"+.@v+"_at"),0;
+		deletearray $vote_q$[.@v],1;
+		end;
+		
+		case 4:
+		mes .n$;
+		mes "Please select which vote you want to reset:";
+		set @v_menu$,"";
+		for ( set .@l,0; .@l < getarraysize($vote_q$); set .@l,.@l + 1)
+			set @v_menu$,@v_menu$ + "- "+$vote_q$[.@l] + ( ($vote_q$[.@l+1] != "")?":":"");
+			
+		next;
+		set .@v,select(@v_menu$) - 1;
+		
+		mes .n$;
+		mes "Chosen Vote: \""+$vote_q$[.@v]+"\"";
+		mes "Correct?";
+		if(select("- Yes:- No") - 1) close;
+		next;
+		mes .n$;
+		mes "I will now reset this vote.";
+		close2;
+		set .@a,1;
+		while( .@a != getd("$vote_q"+.@v+"_at")) {
+			setd("$vote_q"+.@v+"_v"+.@a),0;
+			set .@a,.@a + 1;
+		}
+		end;
+		
+		case 5:
+		mes .n$;
+		mes "Do you really delete every vote?";
+		if(select("- Yes:- No") - 1) close;
+		for(set .@d,0; .@d < getarraysize($vote_q$); set .@d,.@d + 1) {
+			set .@a,1;
+			while( .@a != getd("$vote_q"+.@d+"_at")) {
+				setd("$vote_q"+.@d+"_a"+.@a+"$"),"";
+				setd("$vote_q"+.@d+"_v"+.@a),0;
+				set .@a,.@a + 1;
+			}
+			setd("$vote_q"+.@d+"_at"),0;
+		}
+		deletearray $vote_q$[0],128;
+		close;
+		
+		case 6:
+		mes .n$;
+		goto DoVote;
+		
+		case 7:
+		close;
+	}
+}
+
+OnInit:
+set .n$,"["+strnpcinfo(1)+"]";
+set .votes,3; // Max Votes at the same time, Maximum 128!!!
+set .vote_q_max,15; // Maxium letters for the question
+set .vote_a,2; // Max Answers possible
+set .vote_a_max,5; // Maxium letters for the answers
+set .vote_delay,86400; // Delay in seconds, default 1 day (86400 Seconds)
+set .vote_limit,1; // Each player can only once per Vote: 1 = On / 0 = Off
+set .gm,60; // GM Access Level
+end;
+}

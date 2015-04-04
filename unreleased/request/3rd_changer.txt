@@ -1,0 +1,57 @@
+//===== eAthena Script =======================================
+//= 3rd Job Changer 
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Tested With ==========================================
+//= eAthena 14428 SQL Trunk 
+//===== Description ==========================================
+//= Simple 3rd Job Changer which changes your job only when you
+//  meet the level requirement.
+//===== Comments =============================================
+//= Request (Link to request)
+//	by User (Link to Requester)
+//	in the ... (Link of the homepage of the site)
+//= Forgot who requested that -.-
+//============================================================
+prontera,150,180,0	script	3rd Job Changer	100,{
+
+set .n$,"["+strnpcinfo(1)+"]";
+
+mes .n$;
+if(Upper != 1) {
+	mes "I'm sorry, but I can only change jobs for 2nd Rebirth Classes.";
+	close;
+}
+if(BaseLevel < 99 || JobLevel < 70) {
+	mes "I'm sorry, but you don't meet the level requirement.";
+	mes "Please come back as soon as you have achieved Level 99/70.";
+	close;
+}
+if(Class >= Job_Lord_Knight && Class <= Job_Gypsy && (BaseLevel >= 99 && JobLevel >= 70)) {
+	if(Class == Job_Lord_Knight || Class == Job_Lord_Knight2) set ThirdJob,4060;
+	if(Class == Job_Paladin || Class == Job_Paladin2) set ThirdJob,4073;
+	if(Class == Job_High_Priest) set ThirdJob,4063;
+	if(Class == Job_Champion) set ThirdJob,4077;
+	if(Class == Job_High_Wizard) set ThirdJob,4061;
+	if(Class == Job_Professor) set ThirdJob,4074;
+	if(Class == Job_Whitesmith) set ThirdJob,4064;
+	if(Class == Job_Creator) set ThirdJob,4078;
+	if(Class == Job_Sniper) set ThirdJob,4062;
+	if(Class == Job_Clown) set ThirdJob,4075;
+	if(Class == Job_Gypsy) set ThirdJob,4076;
+	if(Class == Job_Assassin_Cross) set ThirdJob,4065;
+	if(Class == Job_Stalker) set ThirdJob,4079;
+}
+mes "Do you want to change your job into a "+jobname(ThirdJob)+"?";
+if(select("- Yes:- No") - 1) close;
+next;
+jobchange ThirdJob;
+mes .n$;
+mes "Job Change done.";
+mes "Have a nice day.";
+close;
+}

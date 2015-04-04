@@ -1,0 +1,81 @@
+//===== eAthena Script =======================================
+//= CashPoints via PvP Kills
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Made
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Tested With ==========================================
+//= eAthena 14428 SQL Trunk 
+//===== Description ==========================================
+//= This scripts gives you Cash Points when you kill other Players.
+//= Also it has these features:
+//  - Deathmatch
+//  - Configureable Cash Points Amount
+//  - Map Restriction Settings
+//===== Comments =============================================
+//= ...
+//============================================================
+-	script	PvPCasher	-1,{
+end;
+
+OnPCKillEvent:
+if(getmapflag(strcharinfo(3),mf_pvp) == 0) end;
+if(.map_restr == 1) 
+	for ( set .@m,0; .@m < getarraysize(.map$); set .@m,.@m + 1) {
+		if(.map$[.@m] == "") break;
+		if(strcharinfo(3) == .map$[.@m]) {
+			set #CASHPOINTS,#CASHPOINTS + .cp_gain;
+			dispbottom "You have recieved "+.cp_gain+" Cash Points for killing "+rid2name(killedrid)+".";
+			dispbottom "Your Balance is now: "+#CASHPOINTS;
+			break;
+		}
+	}
+else {
+	set #CASHPOINTS,#CASHPOINTS + .cp_gain;
+	dispbottom "You have recieved "+.cp_gain+" Cash Points for killing "+rid2name(killedrid)+".";
+	dispbottom "Your Balance is now: "+#CASHPOINTS;
+}
+end;
+
+OnPCDieEvent:
+if(getmapflag(strcharinfo(3),mf_pvp) == 0) end;
+if(.map_restr == 1) 
+	for ( set .@m,0; .@m < getarraysize(.map$); set .@m,.@m + 1) {
+		if(.map$[.@m] == "") break;
+		if(strcharinfo(3) == .map$[.@m]) {
+			set #CASHPOINTS,#CASHPOINTS - .cp_lose;
+			dispbottom "You have lost "+.cp_lose+" Cash Points, because you were killed by "+rid2name(killerrid)+".";
+			dispbottom "Your Balance is now: "+#CASHPOINTS;
+			if(killerrid != getcharid(3) && .dm == 1) {
+				warp strcharinfo(3),0,0;
+				sleep2 1300;
+				if(HP == 0) atcommand "@alive";
+				percentheal 100,100;
+			} else warp "SavePoint",0,0;
+			break;
+		}
+	}
+else {
+	set #CASHPOINTS,#CASHPOINTS - .cp_lose;
+	dispbottom "You have lost "+.cp_lose+" Cash Points, because you were killed by "+rid2name(killerrid)+".";
+	dispbottom "Your Balance is now: "+#CASHPOINTS;
+	if(killerrid != getcharid(3) && .dm == 1) {
+		warp strcharinfo(3),0,0;
+		sleep2 1300;
+		if(HP == 0) atcommand "@alive";
+		percentheal 100,100;
+	} else warp "SavePoint",0,0;
+}
+end;
+
+OnInit:
+set .map_restr,1; // Should this script be working only on particular maps? - 1=On/0=Off
+// * Map Array:
+// - .map_restr must be 1
+setarray .map$[0],"pvp_n_1-1.gat";
+set .cp_gain,2; // How much Cash Points should the player gain?
+set .cp_lose,2; // How much Cash Points should the player lose?
+set .dm,1; // Deathmatch: 1= On/0= Off
+}

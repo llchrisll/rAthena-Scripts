@@ -1,0 +1,228 @@
+//===== eAthena Script =======================================
+//= WoE Castle Info
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Made
+//= 1.1 - Added WoE:SE entries
+//= 2.0 - Optimized script and fixed coordinates, which I forgot
+//		  to change at Payon Castles, still had Aldebaran coordinates...
+//= 2.1 - Fixed an typo
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= Displays every castle and their current guilds.
+//= Also by choosing a castle, it will warp you to the entrances.
+//===== Comments =============================================
+//= None yet.....
+//============================================================
+prontera.gat,164,174,3	script	WoE Castles	105,{
+function gGuildInfo;
+
+mes .n$;
+mes "Hello "+strcharinfo(0)+"";
+mes "I can show the WoE Castle Flags and the Castles, which are taken.";
+mes "I can also warp you to the castles' main entrances.";
+next;
+mes .n$;
+mes "I will list now the 3 Kingdoms:";
+next;
+if(select("- Rune Midgard:- Schwarzwald Republic:- Arunafelz Republic") == 1) {
+
+//------------------ Kingdom - Rune Midgard --------------//
+	mes .n$;
+	mes "The Kingdom Rune Midgard:";
+	mes "If you choose one of the castles, you will be warped there automatically.";
+	next;
+	select(gGuildInfo(2,".rune$",getarraysize(.rune$)));
+
+	mes .n$;
+	mes gGuildInfo(3,.rune$[@menu-1])+" taken by "+gGuildInfo(1,.rune$[@menu-1])+".";
+//------------------- Yesnelph - gefg_cas03 ---------------//
+	if(.rune$[@menu-1] == "gefg_cas03") {
+		mes "There are 4 entrances:";
+		mes "North, North-East, East and South.";
+		next;
+		switch(select("- North:- North-East:- East:- South")) {
+			case 1:
+			mes .n$;
+			mes "You have chosen the North Entrance.";
+			close2;
+			warp "gef_fild13.gat", 80, 308;
+			end;
+			
+			case 2:
+			mes .n$;
+			mes "You have chosen the North-East Entrance.";
+			close2;
+			warp "gef_fild13.gat", 123, 282;
+			end;
+		
+			case 3:
+			mes .n$;
+			mes "You have chosen the East Entrance.";
+			close2;
+			warp "gef_fild13.gat", 155, 240;
+			end;
+		
+			case 4:
+			mes .n$;
+			mes "You have chosen the South Entrance.";
+			close2;
+			warp "gef_fild13.gat", 83, 171;
+			end;
+		}
+//------------------- Mersetzdeitz - gefg_cas05 ---------------//
+	} else if(.rune$[@menu-1] == "gefg_cas05") {
+		mes "There are 2 entrances:";
+		mes "West and East.";
+		next;
+		switch(select("- West:- East")) {
+			case 1:
+			mes .n$;
+			mes "You have chosen the West Entrance.";
+			close2;
+			warp "gef_fild13.gat", 242, 54;
+			end;
+			
+			case 2:
+			mes .n$;
+			mes "You have chosen the East Entrance.";
+			close2;
+			warp "gef_fild13.gat", 319, 97;
+			end;
+		}
+//------------------- Repherion - gefg_cas01 ---------------//
+	} else if(.rune$[@menu-1] == "gefg_cas01") {
+		mes "There are 2 entrances:";
+		mes "West and East.";
+		next;
+		switch(select("- West:- East")) {
+	
+			case 1:
+			mes .n$;
+			mes "You have chosen the West Entrance.";
+			close2;
+			warp "gef_fild13.gat", 172, 54;
+			end;
+		
+			case 2:
+			mes .n$;
+			mes "You have chosen the East Entrance.";
+			close2;
+			warp "gef_fild13.gat", 216, 71;
+			end;
+		}
+	}
+	mes "You will be warped there now.";
+	close2;
+	warp .rune_w$[@menu-1],.rune_x[@menu-1],.rune_y[@menu-1];
+	end;
+
+//------------------ Kingdom - Rune Midgard End --------------//
+//------------------ Republic - Schwarzwald Republic ----------//
+	} else if(@menu == 2){
+		mes .n$;
+		mes "The Republic Schwarzwald:";
+		mes "If you choose one of the castles, you will be warped there automatically.";
+		next;
+		select(gGuildInfo(2,".schwarz$",getarraysize(.schwarz$)));
+
+		mes .n$;
+		mes gGuildInfo(3,.schwarz$[@menu-1])+" taken by "+gGuildInfo(1,.schwarz$[@menu-1])+".";
+		mes "You will be warped there now.";
+		close2;
+		warp "sch_gld.gat",.schwarz_x[@menu-1],.schwarz_y[@menu-1];
+		end;
+
+//------------------ Republic - Schwarzwald Republic End --------------//
+//------------------ Republic - Arunafelz Republic ----------//
+	} else if(@menu == 3){
+		mes .n$;
+		mes "The Republic Arunafelz:";
+		mes "If you choose one of the castles, you will be warped there automatically.";
+		next;
+		select(gGuildInfo(2,".aruna$",getarraysize(.aruna$)));
+
+		mes .n$;
+		mes gGuildInfo(3,.aruna$[@menu-1])+" taken by "+gGuildInfo(1,.aruna$[@menu-1])+".";
+		mes "You will be warped there now.";
+		close2;
+		warp "aru_gld.gat",.aruna_x[@menu-1],.aruna_y[@menu-1];
+		end;
+	}
+//------------------ Republic - Arunafelz Republic End --------------//
+
+// =========== gGuildInfo Function ==============
+function	gGuildInfo	{
+// getarg(0) = Type of Info:
+//			   * 1: Castle Owner
+//			   * 2: Menu (Castle Displaying)
+//			   * 3: Castle Name
+// getarg(1): getarg(0) = 1 & 3: Map/Castle
+//			  getarg(0) = 2: Region
+// getarg(2) = Array for Region (.rune$ = Rune Midgard, .schwarz$ = Schwarzwald Republic, .aruna$ = Arunafelz Republic")
+if(getarg(0) == 1) 
+	return ( set(.@g$,GetGuildName(GetCastleData(getarg(1),1))) == "null" || .@g$ == "")?"None":.@g$;
+
+else if(getarg(0) == 2) {
+	set .@rune_m$,"";
+	set .@schw_m$,"";
+	set .@aruna_m$,"";
+	for ( set .@c,0; .@c < getarg(2); set .@c,.@c + 1) {
+		if(compare(getd(getarg(1)+"["+.@c+"]"),"prtg_cas") == 1) set .@rune_m$,.@rune_m$ + "Prontera - "+gGuildInfo(3,getd(getarg(1)+"["+.@c+"]"))+" ["+gGuildInfo(1,getd(getarg(1)+"["+.@c+"]"))+"]"+ ( (getd(getarg(1)+"["+(.@c+1)+"]") != "")?":":"");
+		else if(compare(getd(getarg(1)+"["+.@c+"]"),"gefg_cas") == 1) set .@rune_m$,.@rune_m$ + "Geffen - "+gGuildInfo(3,getd(getarg(1)+"["+.@c+"]"))+" ["+gGuildInfo(1,getd(getarg(1)+"["+.@c+"]"))+"]"+ ( (getd(getarg(1)+"["+(.@c+1)+"]") != "")?":":"");
+		else if(compare(getd(getarg(1)+"["+.@c+"]"),"aldeg_cas") == 1) set .@rune_m$,.@rune_m$ + "Aldebaran - "+gGuildInfo(3,getd(getarg(1)+"["+.@c+"]"))+" ["+gGuildInfo(1,getd(getarg(1)+"["+.@c+"]"))+"]"+ ( (getd(getarg(1)+"["+(.@c+1)+"]") != "")?":":"");
+		else if(compare(getd(getarg(1)+"["+.@c+"]"),"payg_cas") == 1) set .@rune_m$,.@rune_m$ + "Payon - "+gGuildInfo(3,getd(getarg(1)+"["+.@c+"]"))+" ["+gGuildInfo(1,getd(getarg(1)+"["+.@c+"]"))+"]"+ ( (getd(getarg(1)+"["+(.@c+1)+"]") != "")?":":"");
+		else if(compare(getd(getarg(1)+"["+.@c+"]"),"schg_cas") == 1) set .@schw_m$,.@schw_m$ + "Yuno - "+gGuildInfo(3,getd(getarg(1)+"["+.@c+"]"))+" ["+gGuildInfo(1,getd(getarg(1)+"["+.@c+"]"))+"]"+ ( (getd(getarg(1)+"["+(.@c+1)+"]") != "")?":":"");
+		else if(compare(getd(getarg(1)+"["+.@c+"]"),"arug_cas") == 1) set .@aruna_m$,.@aruna_m$ + "Rachel - "+gGuildInfo(3,getd(getarg(1)+"["+.@c+"]"))+" ["+gGuildInfo(1,getd(getarg(1)+"["+.@c+"]"))+"]"+ ( (getd(getarg(1)+"["+(.@c+1)+"]") != "")?":":"");
+	}
+	
+	if(getarg(1) == ".rune$") return .@rune_m$;
+	else if(getarg(1) == ".schwarz$") return .@schw_m$;
+	else if(getarg(1) == ".aruna$") return .@aruna_m$;
+	
+} else if(getarg(0) == 3) 
+	return GetCastleName(getarg(1));
+
+return "[Error]: EWW!! An bug!!!"; // Should never be called/occur!!
+}
+
+
+OnInit:
+set .n$,"[WoE Castles]";
+// =========== Rune Midgard =========== //
+setarray .rune$[0],"prtg_cas03","prtg_cas04","prtg_cas05","prtg_cas02","prtg_cas01", // Prontera
+				   "gefg_cas03","gefg_cas04","gefg_cas05","gefg_cas02","gefg_cas01", // Geffen
+				   "aldeg_cas03","aldeg_cas04","aldeg_cas05","aldeg_cas02","aldeg_cas01", // Aldebaran
+				   "payg_cas03","payg_cas04","payg_cas05","payg_cas02","payg_cas01"; // Payon
+
+// = Warp Coordinates:
+setarray .rune_w$[0],"prt_gld","prt_gld","prt_gld","prt_gld","prt_gld", // Prontera
+					 "gef_fild13","gef_fild13","gef_fild13","gef_fild13","gef_fild13", // Geffen
+					 "alde_gld","alde_gld","alde_gld","alde_gld","alde_gld", // Aldebaran
+					 "pay_gld","pay_gld","pay_gld","pay_gld","pay_gld"; // Payon
+setarray .rune_x[0],153,134,182,230,137, // Prontera
+					1,184,1,308,1, // Geffen Castles have multiply entrances, so I made extra checks for them, which is the "1" for.
+					141,236,273,111,64, // Aldebaran
+					305,123,195,297,132; // Payon
+setarray .rune_y[0],129,225,221,149,51, // Prontera
+					1,270,1,228,1, // Geffen
+					104,257,101,247,96, // Aldebaran
+					306,160,276,104,227; // Payon
+
+// ======== Schwarzwald Republic - sch_gld =========== //
+setarray .schwarz$[0],"schg_cas03","schg_cas04","schg_cas05","schg_cas02","schg_cas01"; // Yuno
+
+// = Warp Coordinates:
+setarray .schwarz_x[0],97,119,79,288,294;
+setarray .schwarz_y[0],196,8,311,232,104;
+
+// ======== Arunafelz Republic - aru_gld =========== //
+setarray .aruna$[0],"arug_cas03","arug_cas04","arug_cas05","arug_cas02","arug_cas01"; // Rachel
+
+// = Warp Coordinates:
+setarray .aruna_x[0],71,306,299,133,178;
+setarray .aruna_y[0],186,304,107,82,242;
+end;
+}

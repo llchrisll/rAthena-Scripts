@@ -1,0 +1,236 @@
+//===== eAthena Script =======================================
+//= IP Ban NPC
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 Remake of a older version
+// 		   Re-making the time calculation
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= Allows you the IP Ban someone. 
+//===== Comments =============================================
+//= None...
+//============================================================
+help_lobby,133,159,4	script	Mikey	948,{
+	set .@n$,"[Mikey]";
+	set .@gm_access,60;
+	set @day_feb,28;
+	set @time$,gettimestr("%Y-%m/%d %H:%M:%S",21);
+	set @day,gettimestr("%d",10);
+	set @month,gettimestr("%m",10);
+	set @year,gettimestr("%Y",10);
+	set @day_calc,@day + 7;
+		if(@day_calc > 31 && (@month == 1 || @month == 3 || @month == 5 || @month == 7 || @month == 8 || @month == 10 || @month == 12)) {
+			set @day_calc,@day_calc - 31;
+			if(@month != 12) {
+				set @month,@month + 1;
+			} else if(@month == 12) {
+				set @month,1;
+			}
+		} else if(@day_calc > @day_feb && (@month == 2)) {
+			set @day_calc,@day_calc - @day_feb;
+		} else if(@day_calc > 30 && (@month == 4 || @month == 6 || @month == 9 || @month == 11)) {
+			set @day_calc,@day_calc - 30;
+		}
+		
+	set @month_calc,@month + 1; 
+	
+		if(@month_calc > 12) {
+			set @month_calc,@month_calc - 12; set @year,@year + 1;
+		}
+	
+	set @year_calc1,@year + 1;
+	set @year_calc2,@year + 2;
+	set @list$,"";
+	set @rtime$,"";
+	set @reason$,"";
+	setarray @ban_time$[1],gettimestr(""+@year+"-"+@month+"/"+@day_calc+" %H:%M:%S",21),
+						   gettimestr(""+@year+"-"+@month_calc+"/"+@day+" %H:%M:%S",21),
+						   gettimestr(""+@year_calc1+"-"+@month+"/"+@day+" %H:%M:%S",21),
+						   gettimestr(""+@year_calc2+"-"+@month+"/"+@day+" %H:%M:%S",21);
+	
+	
+if(getgmlevel() < .@gm_access) {
+	mes .@n$;
+	mes "Sorry, but I can't help you.";
+	close;
+	
+} else if(getgmlevel() >= .@gm_access) {
+	if(getgmlevel() >= 99) {
+		mes "Actual Time:";
+		mes @time$;
+		mes "(Test Time for 1 Week:)";
+		mes "("+@day_calc+") (Day)";
+		mes @ban_time$[1];
+		mes "(Test Time for 1 Month:)";
+		mes "("+@month_calc+") (Month)";
+		mes @ban_time$[2];
+		mes "(Test Time for 1 Year:)";
+		mes "("+@year_calc1+") (Year)";
+		mes @ban_time$[3];
+		mes "(Test Time for 2 Year:)";
+		mes "("+@year_calc2+") (Year's)";
+		mes @ban_time$[4];
+		next;
+	}
+	mes .@n$;
+	mes "Hello, "+strcharinfo(0)+"!";
+	mes "I can make an IP Ban for you.";
+	mes "As well, I can display the current";
+	mes "IP Ban's and delete them.";
+	mes "Valid duration's are:";
+	mes "1 Week, 1 Month, 1 Year, 2 Year's";
+	next;
+	mes .@n$;
+	mes "What do you like to do?";
+	switch(select("- Show IP List:- Add an Ban:- Delete an Ban")) {
+		case 1:
+		next;
+		mes .@n$;
+		mes "I will list now";
+		mes "the current IP Ban's";
+		mes "in your Chat Box.";
+		close2;
+		query_sql "SELECT `list`  , `rtime` , `reason` FROM `ipbanlist` ORDER BY `list` DESC", @list$, @rtime$, @reason$;
+		if(@list$ == "") {
+			mes .@n$;
+			mes "There are no entrys in the IP Ban List.";
+			close;
+		}
+		dispbottom "  IP  / Ban Expire  /  Reason";
+		for(set @ei,0; @ei < getarraysize(@list$); set @ei,@ei + 1) {
+			dispbottom ""+@list$[@ei]+" / "+@rtime$[@ei]+" / "+@reason$[@ei]+"";
+		}
+		end;
+		
+		case 2:
+		next;
+		mes .@n$;
+		mes "Now type the Account Name or";
+		mes "Account ID of the Account";
+		mes "you want to ban and I will";
+		mes "search the IP logged to it.";
+		next;
+		t_again:
+		if(select("- Account Name:- Account ID") == 1) {
+			input @acc_n$;
+			next;
+			mes .@n$;
+			if(@acc_n$ == "") { mes "Invalid Name, try again."; goto t_again;}
+			mes "The inserted name is: "+@acc_n$+".";
+			mes "Is that correct?";
+			if(select("- Yes, it is.:- No, again please.") == 2) {
+				goto t_again;
+			} else {
+				next;
+				query_sql "SELECT `userid` FROM `login` WHERE `userid` = '"+@acc_n$+"'", @check_id$;
+				if(@acc_n$ != @check_id$ || @check_id$ == "") { mes "Invalid Name, try again."; goto t_again;}
+				dispbottom "Account Name: "+@acc_n$;
+			}
+		} else {
+			input @acc_id;
+			if(!@acc_id || @acc_id < 2000000) { mes "Invalid Value, try again."; goto t_again;}
+			mes .@n$;
+			mes "The inserted name is: "+@acc_id+".";
+			mes "Is that correct?";
+			if(select("- Yes, it is.:- No, again please.") == 2) {
+				goto t_again;
+			} else {
+				next;
+				query_sql "SELECT `account_id` FROM `login` WHERE `account_id` = '"+@acc_id+"'", @check_aid;
+				if(@acc_id != @check_aid  || !@check_aid) { mes "Invalid Account ID, try again."; goto t_again;}
+				query_sql "SELECT `userid` FROM `login` WHERE `account_id` = '"+@acc_id+"'",@acc_n$;
+				dispbottom "Account ID: "+@acc_id;
+			}
+		}
+		next;
+		mes .@n$;
+		mes "Alright, so how";
+		mes "long do you want";
+		mes "to ban him/her?";
+		switch(select("- 1 Week Ban:- 1 Month Ban:- 1 Year Ban:- 2 Year's Ban")) {
+		
+			default:
+			set @rtime$,@ban_time$[@menu];
+			break;
+		}
+		next;
+		mes .@n$;
+		mes "Now I need a reason, why do";
+		mes "you want to ban that Account.";
+		input @reason$;
+		if(@reason$ == "") { mes "Invalid Reason, try again."; goto t_again;}
+		dispbottom "Reason: "+@reason$+"";
+		mes "After the calculation, I will";
+		mes "need a confirmation again.";
+		next;
+		mes .@n$;
+		mes "The Account \"" + @acc_n$+"\"";
+		mes "will be banned until";
+		mes @rtime$;
+		mes "duo the reason "+@reason$+".";
+		menu "Correct",-,"Not correct",t_again;
+			next;
+			mes .@n$;
+			mes "Your IP Ban Request has been sent.";
+			close2;
+			query_sql "SELECT `last_ip` FROM `login` WHERE `userid` = '"+@acc_n$+"'", @last_ip$;
+			query_sql "INSERT INTO `ipbanlist` ( `list` , `btime` , `rtime` , `reason`) VALUES ('"+@last_ip$+"' ,'"+@time$+"' , '"+@rtime$+"' , '"+@reason$+"')";
+			end;
+		
+		case 3:
+		next;
+		mes .@n$;
+		mes "Please choose, which one";
+		mes "you want to delete:";
+		mes " ";
+		query_sql "SELECT `list`  , `rtime` , `reason` FROM `ipbanlist`", @list$, @rtime$, @reason$;
+		if(@list$ == "") {
+			mes "There are no entrys in the IP Ban List.";
+			close;
+		}
+		set @ban_menu$,"";
+		for(set @ei,0; @ei < getarraysize(@list$); set @ei,@ei + 1) {
+			mes "Banned IP Nr. ^FF0000"+(@ei+1)+"^000000";
+			mes @list$[@ei];
+			mes "----Ban Expire:-----";
+			mes @rtime$[@ei];
+			mes "-----Reason:------";
+			mes @reason$[@ei];
+			mes "================";
+			set @ban_menu$,@ban_menu$ + "- "+ @list$[@ei]+":";
+		}
+		set @ban_menu$,@ban_menu$ + "- Nothing";
+		if((prompt(@ban_menu$) - getarraysize(@list$)) > 0) {
+			break;
+			
+		} else {
+			next;
+			set @ip,@menu - 1;
+			
+			mes .@n$;
+			mes "You have choosen:";
+			mes " ";
+			mes "Banned IP Nr. ^FF0000"+(@ip+1)+"^000000";
+			mes @list$[@ip];
+			mes "----Ban Expire:-----";
+			mes @rtime$[@ip];
+			mes "-----Reason:------";
+			mes @reason$[@ip];
+			mes "================";
+			mes " ";
+			mes "Wanna delete this Entry?";
+			if(select("- Yes, please:- No, don't") - 1) {
+				close;
+			} else {
+				next;
+				mes .@n$;
+				mes "I'll delete it now.";
+				query_sql "DELETE FROM `ipbanlist` WHERE `list` = '"+@list$[@ip]+"'";
+				close;
+			}
+		}
+	}
+}
+}

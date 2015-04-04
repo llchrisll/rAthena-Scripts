@@ -1,0 +1,1177 @@
+//===== eAthena Script =======================================
+//= Last Man Standing
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Created
+//===== Compatible With ======================================
+//= Every eAthena SQL SVN
+//===== Tested With ==========================================
+//= eAthena 14428 SQL Trunk 
+//===== Description ==========================================
+//= Last Man Standing is an PvP Event, where the last one to
+//	survive wins.
+//= Configureable:
+//  - Initiate Type (Automatic or Manually)
+//  - Event Duration
+//  - Delay 
+//  - Reward Type (Item or Custom Variable)
+//  - Reward Amount
+//  - Trade Settings: (Only available for the Custom Variable)
+//	  - Tradeable against Items and Zeny
+//    - Items:
+//	    - Items to be exchanged for
+//      - Item Amount
+//      - Costs per Item
+//    - Zeny:
+//	    - Zeny to gain
+//      - Costs for Zeny
+//  - Intravision (Anti-Cheat Method)
+//  - GM Access Level
+//    - Only required when initiate type is on manual
+//    - On other hand it's for a small overview
+//  - Player Settings:
+//    - Level
+//    - Job (By Upper)
+//  - Event Map
+//= These can be configured InGame too.
+//  But there is a extra variable for that: .conf to allow it or not
+//===== Comments =============================================
+//= None yet... 
+//===========================================================
+prontera,150,180,0	script	Last Man Standing	100,{
+
+mes .n$;
+mes "Hello, "+strcharinfo(0)+"!";
+mes "How can I help you?";
+next;
+if(getgmlevel() >= .gm) {
+	menu "GM Menu",GM_Menu,"Player Menu",-;
+	mes .n$;
+	mes "What now?";
+	next;
+}
+switch(select("- Join LMS:- Information:- Recieve Reward:- "+ ( (.rew_type == 2)?"Trade "+.rew_n$+":- ":"")+"Nothing")) {
+
+	case 1:
+	mes .n$;
+	if(!.LMS_Reg) {
+		mes "I'm sorry, but the registration is not opened yet.";
+		close;
+	}
+	if(getmapusers(.map$) >= .limit) {
+		mes "I'm sorry, but I can't register you anymore, since the maximum amount of players has been reached.";
+		close;
+	}
+	if(.job || .lvl) {
+		mes "These are the restrictions for the event:";
+		mes ( (!.job)?"":( (.rand)?.upper_n$[.j]:.job_l$)+" are forbidden to join.");
+		mes ( (!.lvl)?"":"Level Restriction: - Normal/Extended Jobs: "+.norm+", Rebirth Jobs: "+.adv+", Baby Jobs: "+.baby+", 3rd Jobs: "+.third+".");
+		next;
+		mes .n$;
+	}
+	set @fail,0;
+	// Job Restriction enabled?
+	if(.job) {
+		if(.rand) // Random?
+			if(Upper == (.upper[.j]-1))
+				set @fail,1;
+		else if(!.rand) // Not Random
+			for ( set .@l,0; .@l < getarraysize(.upper); set .@l,.@l + 1) 
+				if(Upper == (.upper[.@l]-1)) // -1 = Because an array doesn't accept a "0" as value
+					set @fail,1;
+	// Level Restriction
+	} else if(.lvl) { 
+		if(Upper == 0 && BaseLevel < .norm) set @fail,1;
+		else if(Upper == 1 && BaseLevel < .adv) set @fail,1;
+		else if(Upper == 2 && BaseLevel < .baby) set @fail,1;
+		else if(Upper == 4 || Upper == 5 || Upper == 6 && (BaseLevel < .third)) set @fail,1;
+	}
+	if(@fail) {
+		mes "I'm sorry, but you can't join the LMS duo the restrictions.";
+		mes ( (!.job)?"":"Job Restriction: "+( (.rand)?.upper_n$[.j]:.job_l$)+" are forbidden to join.");
+		mes ( (!.lvl)?"":"Level Restriction: "+ ( (Upper == 0)?"Normal/Extended Jobs: "+.norm:( (Upper == 1)?"Rebirth Jobs: "+.adv:( (Upper == 2)?"Baby Jobs: "+.baby:"3rd Jobs: "+.third) ) )+".");
+		close;
+	}
+	mes "So you want to join LMS, huh?";
+	mes "You still can turn back!";
+	next;
+	if(select("- I want to participate in LMS!!!:- Uhh.. Nevermind then") - 1) {
+		mes .n$;
+		mes "See you again, when you are ready.";
+		close;
+	}
+	mes .n$;
+	mes "That's the spirit!!!";
+	mes "I will warp you now to the event map.";
+	close2;
+	set @lms,1;
+	warp .map$,0,0;
+	end;
+
+	case 2:
+	mes .n$;
+	mes "Last Man Standing, LMS in short, is an event where you have to fight against other players.";
+	mes "This event will be started "+ ( (.init)?"automatic every "+.time+" "+ ( (.del_type == 1)?"hours":"days"):"manually by an GM")+".";
+	mes "The last one which survives will be rewarded with "+.rew_am +( (.rew_type == 2)?" "+.rew_n$:"x "+getitemname(.rew_id))+".";
+	mes "Also on entry you will gain the ability to see hidden enemies, this is to prevent players to cheat in this event for not being able to see them.";
+	mes "The maximum players which can participate are "+.limit+".";
+	mes "When you die, you will be immediatly warped to your save point.";
+	mes "In short, survival for the strongest!!";
+	close;
+	
+	case 3:
+	mes .n$;
+	if(!@lms) {
+		mes "I'm sorry, but you are not qualified to recieve an reward.";
+		close;
+	}
+	mes "Congratulation in surviving Last Man Standing, here is your reward.";
+	close2;
+	set @lms,0;
+	if(.rew_type == 1) getitem .rew_id,.rew_am;
+	else if(.rew_type == 2) {
+		setd(.rew_var$),getd(.rew_var$) + .rew_am;
+		dispbottom "You have recieved "+.rew_am+" "+.rew_n$+".";
+	}
+	end;
+	
+	case 4:
+	if(.rew_type != 2) close;
+	mes .n$;
+	mes "Balance "+.rew_n$+": "+getd(.rew_var$);
+	mes "What do you want to trade them against?";
+	mes " ";
+	mes "Here are the current rates and exchange values:";
+	mes .z_cost+" = "+.zeny+" Zeny";
+	for ( set .@l,0; .@l < getarraysize($item); set .@l,.@l + 1) 
+		mes $cost[.@l] +" = "+$gain[.@l]+"x "+getitemname($item[.@l]);
+		
+	next;
+	if(select("- Items:- Zeny") - 1) {
+		mes .n$;
+		mes "How much points do you want to trade?";
+		mes "Remember, per "+.zeny +" you require "+.z_cost+" "+.rew_n$;
+		next;
+		if(input(@t_zeny,.z_cost,getd(.rew_var$)) != 0) {
+			mes .n$;
+			mes "You have put an invalid amount.";
+			mes "Minimum, "+.z_cost+", Maximum, "+getd(.rew_var$);
+			close;
+		}
+		mes .n$;
+		if(@t_zeny*.z_cost > getd(.rew_var$)) {
+			mes "You don't have the required amount of "+.rew_n$;
+			close;
+		}
+		set Zeny,Zeny + @t_zeny*.z_cost;
+		setd(.rew_var$),getd(.rew_var$) - @t_zeny*.z_cost;
+	} else {
+		mes .n$;
+		mes "Please choose the item you want to trade against.";
+		mes "Format: Name (Costs)";
+		next;
+		for ( set .@i,0; .@i < getarraysize($item); set .@i,@i + 1) 
+			set .@trade$,.@trade + "- "+getitemname($item[.@i]) + "("+$cost[.@i]+")" + ( ($item[.@i+1])?":":"");
+		
+		set @t,select(.@trade$) - 1;
+		mes .n$;
+		mes "How much points do you want to trade?";
+		mes "Remember, per "+$gain[@t] +"x "+getitemname($item[@t]) +" you require "+$cost[@t]+" "+.rew_n$;
+		next;
+		if(input(@t_item,$cost[@t],getd(.rew_var$)) != 0) {
+			mes .n$;
+			mes "You have put an invalid amount.";
+			mes "Minimum, "+$cost[@t]+", Maximum, "+getd(.rew_var$);
+			close;
+		}
+		mes .n$;
+		if(@t_item*$cost[@t] > getd(.rew_var$)) {
+			mes "You don't have the required amount of "+.rew_n$;
+			close;
+		}
+		getitem $item[@t],$gain[@l];
+		setd(.rew_var$),getd(.rew_var$) - @t_item*$cost[@t];
+	}		
+	mes "The trade was successfull.";
+	close;
+	
+	case 5:
+	close;
+}
+
+GM_Menu:
+mes .n$;
+mes "Current Start Settings:";
+mes ( (.init)?"Automatic every "+.time+" "+ ( (.del_type == 1)?"hours":"days"):"Manually");
+mes "The event is currently "+( (.LMS_Eve)?"^00FF00Active":"^FF0000Offline")+"^000000.";
+mes "Registering is currently "+( (.LMS_Reg)?"^00FF00opened":"^FF0000closed")+"^000000.";
+mes "Preparetions are currently "+( (.LMS_Pre)?"^FF0000in process":( (.LMS_Reg)?"^00FF00finished":"^FF0000not loaded") )+"^000000.";
+if(.init) mes "Since the event is on Automatic, you can't start/stop the event.";
+if(!.conf) mes "The event settings can't be changed. If you want to change something ask an GM who has access to the script itself.";
+mes "I will show you in the brackets your Access Status.";
+mes " ";
+mes "What do you want to do?";
+switch(select("- Start/Stop Event ("+( (!.init)?"^00FF00Granted":"^FF0000Rejected")+"^000000):- Event Settings ("+( (.conf)?"^00FF00Granted":"^FF0000Rejected")+"^000000):- Nevermind")) {
+	
+	case 1:
+	next;
+	mes .n$;
+	if(.init) {
+		mes "You can't start/stop the event.";
+		close;
+	}
+	mes "Do you really want to "+( (!.LMS_Eve || !.LMS_Reg || !.LMS_Pre)?"^00FF00start":"^FF0000stop")+"^000000 the event?";
+	if(select("- Yes:- No") - 1)  close;
+	next;
+	if(.LMS_Eve || .LMS_Reg || .LMS_Pre) donpcevent strnpcinfo(0)+"::OnDisable"; else donpcevent strnpcinfo(0)+"::OnStart";
+	mes .n$;
+	mes "The event has been "+( (!.LMS_Eve)?"^00FF00started":"^FF0000stopped")+"^000000.";
+	mes "See ya.";
+	close;
+	
+	case 2:
+	if(!.conf) {
+		next;
+		mes .n$;
+		mes "The event settings can't be changed.";
+		close;
+	}
+	while(1) {
+		next;
+		mes .n$;
+		mes "Please choose settings you want to change:";
+		next;
+		switch(select("- Initiate Settings:- Event Duration:- Intravision Effect:- Reward Settings:- Trade Settings:- Player Access Settings:- Nevermind")) {
+			case 1:
+			mes .n$;
+			mes "How should the event be started?";
+			mes "^FF0000Values: 1 = By GM / 0 = Automatic^000000";
+			next;
+			input .@ini;
+			mes .n$;
+			if(.@ini > 1) {
+				mes "Invalid Value.";
+				mes "1 = By GM / 0 = Automatic";
+				continue;
+			} else if(!.@ini) {
+				mes "Now should the event start in hours or in days?";
+				next;
+				set .@inter,select("- Hours:- Days");
+				mes .n$;
+				mes "Now type the interval itself.";
+				mes "^FF0000Minimum 1";
+				if(.@inter == 1) 
+					mes "Maximum 24 hours.";
+				else if(.@inter == 2) 
+					mes "Maximum 30 days.";
+				mes "^000000";
+				input .@time;
+				if(!.@time || .@inter == 1 && .@time > 24 || .@inter == 2 && .@time > 30) {
+					next;
+					mes .n$;
+					mes "Invalid Value.";
+					mes "^FF0000Minimum 1";
+					if(.@inter == 1) 
+						mes "Maximum 24 hours.";
+					else if(.@inter == 2) 
+						mes "Maximum 30 days.";
+					mes "^000000";
+					continue;
+				}
+				set .del_type,.@inter;
+				set .time,.@time;
+			}
+			set .init,.@ini;
+			continue;
+			
+			case 2:
+			mes .n$;
+			mes "Please choose the Event Duration in minutes:";
+			mes "^FF0000Minimum 5, Maximum 60^000000";
+			if(input(.@dur,5,60) != 0) {
+				next;
+				mes .n$;
+				mes "Invalid Value.";
+				mes "^FF0000Minimum 5, Maximum 60^000000";
+				continue;
+			}
+			set .dur,.@dur;
+			continue;
+			
+			case 3:
+			mes .n$;
+			mes "Enable Intravision Effect or not?";
+			next;
+			if(select("- Yes:- No") - 1) 
+				set .intra,0; 
+			else 
+				set .intra,1;
+			continue;
+			
+			case 4:
+			mes .n$;
+			mes "Is the reward an Item or should it be saved as an Variable?";
+			next;
+			if(select("- Item:- Variable") == 1) {
+				mes .n$;
+				mes "Please type the Item ID:";
+				input .@item;
+				if(.@item < 501 || getitemname(.@item) == "" || getitemname(.@item) == "null") {
+					next;
+					mes .n$;
+					mes "Invalid Item ID.";
+					continue;
+				}
+				set .@rew_type,1;
+			} else {
+				mes .n$;
+				mes "Now type the variable name and the Display Name.";
+				mes "Variable Name Maximum: 10 letters.";
+				mes "Display Name Maximum: 20 Letters.";
+				if(input(.@var1$,1,10) != 0) {
+					next;
+					mes .n$;
+					mes "Invalid Name or too long.";
+					mes "^FF0000Maximum 10 letters.^000000";
+					continue;
+				}					
+				if(input(.@var2$,1,20) != 0) {
+					next;
+					mes .n$;
+					mes "Invalid Name or too long.";
+					mes "^FF0000Maximum 20 letters.^000000";
+					continue;
+				}
+				set .@rew_type,2;
+			}
+			next;
+			mes .n$;
+			mes "And at last please choose the reward amount.";
+			mes "^FF0000Minimum 1, Maximum 10000.^000000";
+			input .@amo;
+			if(!.@amo || .@amo > 10000) {
+				next;
+				mes .n$;
+				mes "Invalid Amount.";
+				mes "^FF0000Minimum 1, Maximum 10000.^000000";
+				continue;
+			}
+			set .rew_am,.@amo;
+			if(.@rew_type == 1) 
+				set .rew_id,.@item;
+			else if(.@rew_type == 2) {
+				set .rew_var$,.@var1$;
+				set .rew_n$,.@var2$;
+			}
+			set .rew_type,.@rew_type;
+			continue;
+
+			case 5:
+			mes .n$;
+			mes "Which settings do you want to change?";
+			next;
+			if(select("- Item:- Zeny") - 1) {
+				mes .n$;
+				mes "Please type the amount to recieve from trade.";
+				mes "^FF0000Minimum 1, Maximum 10,000,000.^000000";
+				next;
+				input .@z_am;
+				if(!.@z_am || .@z_am > 10000000) {
+					mes .n$;
+					mes "Invalid Amount.";
+					mes "^FF0000Minimum 1, Maximum 10,000,000.^000000";
+					continue;
+				}				
+				mes .n$;
+				mes "Now please the "+.rew_n$+" to be exchange with.";
+				mes "^FF0000Minimum 1, Maximum 500.^000000";
+				input .@ex_am;
+				if(!.@ex_am || .@ex_am > 500) {
+					next;
+					mes .n$;
+					mes "Invalid Amount.";
+					mes "^FF0000Minimum 1, Maximum 500.^000000";
+					continue;
+				}
+				set .z_cost,.@ex_am;
+
+			} else {
+				mes .n$;
+				mes "There are currently "+getarraysize($item)+",";
+				mes "maximum are 128 items.";
+				mes "what do you like to do?";
+				next;
+				switch(select("- Add Item:- Edit Items:- Delete Items")) {
+					case 1:
+					mes .n$;
+					if(getarraysize($item) >= 128) {
+						mes "You can't add any more items, please delete some or edit if it's just an minor change.";
+						continue;
+					}
+					mes "The input will be done in 3 steps:";
+					mes " > Item ID";
+					mes " > Amount to gain, Max: 500";
+					mes " > "+.rew_n$+" to exchange for, Max: 1000";
+					mes "Now if you would input the Item ID please:";
+					input .@id;
+					if(.@id < 501 || getitemname(.@id) == "" || getitemname(.@id) == "null") {
+						next;
+						mes .n$;
+						mes "Invalid ID or Item not found.";
+						continue;
+					}
+					input .@am;
+					if(!.@am || .@am > 500) {
+						next;
+						mes .n$;
+						mes "Invalid Amount.";
+						mes "^FF0000Minimum 1, Maximum 500.^000000";
+						continue;
+					}
+					input .@cost;
+					if(!.@cost || .@cost > 1000) {
+						next;
+						mes .n$;
+						mes "Invalid Amount.";
+						mes "^FF0000Minimum 1, Maximum 1000.^000000";
+						continue;
+					}
+					setarray $item[getarraysize($item)],.@id;
+					setarray $gain[getarraysize($gain)],.@am;
+					setarray $cost[getarraysize($cost)],.@cost;
+					break;
+					
+					case 2:
+					set .@it_m$,"";
+					mes .n$;
+					mes "Please choose from the list below, which item you want to edit:";
+					for ( set .@i,0; .@i < getarraysize($item); set .@i,.@i + 1) 
+						set .@it_m$,.@it_m$ + "- "+$gain[.@i]+"x "+getitemname($item[.@i])+" ("+$cost[.@i]+")"+ ( ($item[.@i+1])?":":"");
+					
+					set .@ed,select(.@it_m$) - 1;
+					next;
+					mes .n$;
+					mes "You have chosen \""+getitemname($item[.@ed])+"\".";
+					mes "Is that correct?";
+					if(select("- Yes:- No") - 1) continue;
+					next;
+					mes .n$;
+					mes "What do you want to change?";
+					next;
+					switch(prompt("- Item ID:- Amount to gain:- "+.rew_n$+" to exchange for:- All")) {
+					
+						case 1:
+						mes .n$;
+						mes "Please type the new Item ID.";
+						next;
+						input .@id;
+						mes .n$;
+						if(.@id < 501 || getitemname(.@id) == "" || getitemname(.@id) == "null") {
+							mes "Invalid ID or Item not found.";
+							continue;
+						}
+						mes "Result:";
+						mes "New ID: "+.@id+" ["+getitemname(.@id)+"]";
+						mes "Is that correct?";
+						if(select("- Yes:- No") - 1) continue;
+						setarray $item[.@ed],.@id;
+						break;
+						
+						case 2:
+						mes .n$;
+						mes "Please type the new Amount.";
+						mes "^FF0000Minimum 1, Maximum 500.^000000";
+						next;
+						input .@am;
+						mes .n$;
+						if(!.@am || .@am > 500) {
+							mes "Invalid Amount.";
+							mes "^FF0000Minimum 1, Maximum 500.^000000";
+							continue;
+						}
+						mes "Result:";
+						mes "New Amount to gain: "+.@am;
+						setarray $gain[.@ed],.@am;
+						break;
+						
+						case 3:
+						mes .n$;
+						mes "Please type the new Costs.";
+						mes "^FF0000Minimum 1, Maximum 1000.^000000";
+						next;
+						input .@cost;
+						mes .n$;
+						if(!.@cost || .@cost > 1000) {
+							mes .n$;
+							mes "Invalid Amount.";
+							mes "^FF0000Minimum 1, Maximum 1000.^000000";
+							continue;
+						}
+						mes "Result:";
+						mes "New Costs:"+ .@cost;
+						setarray $cost[.@ed],.@cost;
+						break;						
+						
+						case 4:
+						mes .n$;
+						mes "The edit will be done in 3 steps:";
+						mes " > Item ID";
+						mes " > Amount to gain, Max: 500";
+						mes " > "+.rew_n$+" to exchange for, Max: 1000";
+						mes "Now if you would input the new Item ID please:";
+						next;
+						input .@id;
+						if(.@id < 501 || getitemname(.@id) == "" || getitemname(.@id) == "null") {
+							mes .n$;
+							mes "Invalid ID or Item not found.";
+							continue;
+						}
+						dispbottom .n$+": New ID: "+.@id+" ["+getitemname(.@id)+"]";
+						input .@am;
+						if(!.@am || .@am > 500) {
+							mes .n$;
+							mes "Invalid Amount.";
+							mes "^FF0000Minimum 1, Maximum 500.^000000";
+							continue;
+						}
+						dispbottom .n$+": New Amount to gain: "+.@am;
+						input .@cost;
+						if(!.@cost || .@cost > 1000) {
+							mes .n$;
+							mes "Invalid Amount.";
+							mes "^FF0000Minimum 1, Maximum 1000.^000000";
+							continue;
+						}
+						dispbottom .n$+": New Costs: "+ .@cost;
+						mes .n$;
+						mes "Result:";
+						mes "New ID: "+.@id+" ["+getitemname(.@id)+"]";
+						mes "New Amount to gain: "+.@am;
+						mes "New Costs: "+ .@cost;
+						mes "Is that correct?";
+						if(select("- Yes:- No") - 1) continue;
+						setarray $item[.@ed],.@id;
+						setarray $gain[.@ed],.@am;
+						setarray $cost[.@ed],.@cost;
+					
+						case 255:
+						break;
+					}
+					break;
+					
+					case 3:
+					set .@it_m$,"";
+					mes .n$;
+					if(getarraysize($item) < 2) {
+						mes "I'm sorry, but you can't delete items as long there are less than 2 items.";
+						mes "Please add one first or edit an existing one.";
+						continue;
+					}
+					mes "Please choose from the list below, which item you want to delete:";
+					for ( set .@i,0; .@i < getarraysize($item); set .@i,.@i + 1) 
+						set .@it_m$,.@it_m$ + "- "+$gain[.@i]+"x "+getitemname($item[.@i])+" ("+$cost[.@i]+")"+ ( ($item[.@i+1])?":":"");
+					
+					set .@del,select(.@it_m$) - 1;
+					next;
+					mes .n$;
+					mes "You have chosen \""+getitemname($item[.@del])+"\".";
+					mes "Is that correct?";
+					if(select("- Yes:- No") - 1) continue;
+					next;
+					deletearray $item[.@del],1;
+					deletearray $gain[.@del],1;
+					deletearray $cost[.@del],1;
+					mes .n$;
+					mes "The item "+getitemname($item[.@del])+" has been deleted.";
+					break;
+				}
+				continue;
+			}
+			continue;
+
+			case 6:
+			mes .n$;
+			mes "What do you want to change?";
+			next;
+			switch(select("- Player Limit:- Level Settings:- Job Settings")) {
+				case 1:
+				mes .n$;
+				mes "Current Limit: "+.limit;
+				mes "Do you want to change it?";
+				if(select("- Yes:- No") - 1) continue;
+				mes "Minimum 5, Max 100.";
+				input .@lim;
+				if(.@lim < 5 || .@lim > 100) {
+					next;
+					mes .n$;
+					mes "Invalid Value.";
+					mes "^FF0000Minimum 5, Maximum 100.";
+					continue;
+				}
+				set .limit,.@lim;
+				break;
+				
+				case 2:
+				mes .n$;
+				mes "Do you want to enable the Level Restrictions?";
+				mes "Current Settings: "+ ( (.lvl)?"Active":"Deactive");
+				if(select("- Yes:- No") == 2) {
+					set .lvl,0; 
+					continue;
+				}
+				next;
+				mes .n$;
+				mes "I will now ask you to input the level restrictions in the following order:";
+				mes " > Normal/Extended Classes";
+				mes " > Baby Classes";
+				mes " > Rebirth Classes";
+				mes " > 3rd Classes";
+				mes "Please start with the \"Normal/Extended\":";
+				next;
+				input .@norm;
+				input .@baby;
+				input .@adv;
+				input .@3rd;
+				mes .n$;
+				mes "Result:";
+				mes "Normal/Extended: "+.@norm;
+				mes "Baby: "+.@baby;
+				mes "Rebirth: "+.@adv;
+				mes "3rd: "+ .@3rd;
+				mes "Is that correct?";
+				if(select("- Yes:- No") - 1) continue;
+				if(!.@norm && !.@baby && !.@adv && !.@3rd) {
+					next;
+					mes .n$;
+					mes "Every value is on 0, so I disable the level restriction.";
+					set .lvl,0; 
+					continue;
+				}
+				set .norm,.@norm;
+				set .baby,.@baby;
+				set .adv,.@adv;
+				set .third,.@3rd;
+				set .lvl,1;
+				break;
+				
+				case 3:
+				mes .n$;
+				mes "Do you want to enable the Job Restrictions?";
+				mes "Current Settings: "+ ( (.job)?"Active":"Deactive");
+				if(select("- Yes:- No") == 2) {
+					set .job,0; 
+					continue;
+				}
+				next;
+				mes .n$;
+				mes "Do you want to let the job be chosen randomly?";
+				set .@rand,select("- Yes:- No") - 2;
+				next;
+				mes .n$;
+				mes "Do you want to change the Upper names?";
+				mes "These are the current ones:";
+				mes " ";
+				for ( set .@j,0; .@j < getarraysize(.upper_n$); set .@j,.@j + 1) 
+					mes .upper_n$[.@j];
+					
+				if(select("- Yes:- No") - 2) {
+					next;
+					mes .n$;
+					mes "Please type the new times for the uppers in this order:";
+					mes " > Upper 1";
+					mes " > Upper 2";
+					mes " > Upper 3";
+					mes " > Upper 5";
+					mes " > Upper 6";
+					mes " > Upper 7";
+					mes "Minium 3 letters, maximum 15 letters.";
+					set .@c,0;
+					deletearray .upper_n$[0],128;
+					while( set(.@c,.@c+1) != 6	) {
+						if(input(.@up$,3,15) == 0) 
+							setarray .upper_n$[getarraysize(.upper_n$)],.@up$;
+						else {
+							next;
+							mes .n$;
+							mes "Invalid length.";
+							mes "Minium 5 letters, maximum 15 letters.";
+							mes "Reseted to default ones.";
+							deletearray .upper_n$[0],128;
+							setarray .upper_n$[0],"Normal/Extended","Rebirth","Baby","3rd Normal","3rd Rebirth","3rd Baby";
+							set .@c,6;
+							break;
+						}
+					}
+				}							
+				next;
+				mes .n$;
+				mes "These are the current upper flags:";
+				mes " ";
+				for ( set .@j,0; .@j < getarraysize(.upper); set .@j,.@j + 1) {
+					mes "------ "+.upper[.@j]+" ------";
+					if(.upper[.@j] == 1) mes .upper_n$[0];
+					else if(.upper[.@j] == 2) mes .upper_n$[1];
+					else if(.upper[.@j] == 3) mes .upper_n$[2];
+					else if(.upper[.@j] == 5) mes .upper_n$[3];
+					else if(.upper[.@j] == 6) mes .upper_n$[4];
+					else if(.upper[.@j] == 7) mes .upper_n$[5];
+					if(.upper[.@j+1] == 0) mes "=================="; else mes " ";
+				}
+				next;
+				mes .n$;
+				mes "Do you want to change this settings?";
+				if(select("- Yes:- No") - 1) {
+					set .job,1;
+					continue;
+				}
+				next;
+				mes .n$;
+				mes "I will now ask you to inut the Upper flags if the classes you want to reject,";
+				mes "the Uppers are the following:";
+				mes " > 1 = "+ .upper_n$[0];
+				mes " > 2 = "+ .upper_n$[1];
+				mes " > 3 = "+ .upper_n$[2];
+				mes " > 5 = "+ .upper_n$[3];
+				mes " > 6 = "+ .upper_n$[4];
+				mes " > 7 = "+ .upper_n$[5];
+				mes "By putting a '0' or an '8' and higher you will end the input.";
+				mes "Also you can only put up to 5 Uppers, any more would be pointless.";
+				deletearray .upper[0],128;
+				while( input(.@int,1,7) == 0) {
+					if(.@int == 4) { // 4 = Not a valid Upper, so repeating...
+						next;
+						mes .n$;
+						mes "Upper 4 doesn't exist, please repeat.";
+						continue; 
+					}
+					if(getarraysize(.upper) >= 5) {
+						next;
+						mes .n$;
+						mes "You have already put 5 Uppers.";
+						break;
+					}
+					dispbottom .n$+": "+(getarraysize(.upper)+1)+" Input: "+.@int;
+					setarray .upper[getarraysize(.upper)],.@int;
+				}
+				if(!.@int || .@int > 7) {
+					dispbottom .n$+": Input canceled. Reseted to '8' > None, also disabled the job restriction.";
+					set .job,0;
+					deletearray .upper[0],128;
+					setarray .upper[0],8;
+					continue;
+				}
+				set .job,1;
+				if(.@rand < 0) set .rand,1; else set .rand,.@rand;
+			}
+			continue;
+			
+			case 7:
+			break;
+		}
+		break;
+	}
+	case 3:
+	close;
+}
+
+OnMinute00:
+if(!.init) end; // Checking if the exection is automatic or manually, if manually end the script
+set .time_hr,.time_hr + 1; // Counter Increase every hour
+// If the delay type is in hours and the counter is below the required delay time, end the script
+if(.del_type == 1 && .time_hr < .time) end;
+else if(.del_type == 2) { // If the delay type is in days
+	if(.time_hr == 24) { // and the counter has reached a full hour
+		set .time_day,.time_day + 1; // increase the day counter by 1
+		set .time_hr,0; // Reset the hour counter
+	}
+	if(.time_day < .time) end; // Check if the day counter has reached enough days or not
+}
+set .time_hr,0;
+set .time_day,0;
+
+OnStart:
+// Job Definer
+if(.job) // Job Restriction enabled?
+	if(.rand) // Random?
+		set .j,rand(getarraysize(.upper)); 
+	else { // Not Random
+		set .job_l$,"";
+		for ( set .@l,0; .@l < getarraysize(.upper); set .@l,.@l + 1) {
+			if(.upper[.@l] == 1)
+				set .job_l$,.job_l$+ .upper_n$[0];
+			if(.upper[.@l] == 2)
+				set .job_l$,.job_l$+ .upper_n$[1];
+			if(.upper[.@l] == 3)
+				set .job_l$,.job_l$+ .upper_n$[2];
+			if(.upper[.@l] == 5)
+				set .job_l$,.job_l$+ .upper_n$[3];
+			if(.upper[.@l] == 6)
+				set .job_l$,.job_l$+ .upper_n$[4];
+			if(.upper[.@l] == 7)
+				set .job_l$,.job_l$+ .upper_n$[5];
+		
+			if( (.@l + 1) != getarraysize(.upper)) set .job_l$,.job_l$+", ";
+		}
+	}
+set .LMS_Pre,1;
+announce .n$+": The event, Last Man Standing, will be started shortly.",bc_all;
+sleep 10000;
+announce .n$+": The maximum players which can join are "+.limit+".",bc_all;
+sleep 10000;
+announce .n$+": I will open the registration for 2 minutes.",bc_all;
+sleep 10000;
+announce .n$+": "+ ( (!.job)?"All jobs are allowed":( (.rand)?.upper_n$[.j]:.job_l$)+" are forbidden") +" to join"+ ( (!.lvl)?"":", also there is a level restriction - Normal/Extended Jobs: "+.norm+", Rebirth Jobs: "+.adv+", Baby Jobs: "+.baby+", 3rd Jobs: "+.third)+".",bc_all;
+sleep 10000;
+announce .n$+": I just need to finish the preparations!",bc_all;
+if(getmapusers(.map$) > 0) {
+	mapannounce .map$,.n$+": You all will be warped in 10 seconds back to prontera, since this map will be used for an event, Last Man Standing.",bc_all;
+	sleep 10000;
+	mapwarp .map$,"prontera.gat",150,180;
+}
+sleep 10000;
+set .LMS_Reg,1; // Registration enabled
+set .time_ch,0; // Reset Time Counter
+set .LMS_Pre,0; // Preparetion done
+announce .n$+": Registration is now opened, please hurry!!!",bc_all;
+initnpctimer;
+end;
+
+OnTimer60000: // Every minute
+stopnpctimer;
+set .time_ch,.time_ch + 1;
+switch(.time_ch) {
+
+	case 1:
+	announce .n$+": Registration will last for 1 minute, please hurry!!!",bc_all;
+	break;
+	
+	case 2:
+	set .LMS_Reg,0;
+	announce .n$+": Registration has been closed!!!",bc_all;
+	sleep 10000;
+	if(getmapusers(.map$) < 2) {
+		announce .n$+": But it seems too less have registered, so I have to cancel it!!!",bc_all;
+		goto OnDisable;
+	}
+	announce .n$+": "+getmapusers(.map$)+" players have registered!!! I will start the event soon!",bc_all;
+	sleep 5000;
+	setmapflag .map$,mf_nowarpto;
+	setmapflag .map$,mf_nowarp;
+	setmapflag .map$,mf_noteleport;
+	setmapflag .map$,mf_nosave;
+	setmapflag .map$,mf_nomemo;
+	setmapflag .map$,mf_partylock;
+	setmapflag .map$,mf_pvp_noparty;
+	setmapflag .map$,mf_pvp_noguild;
+	setmapflag .map$,mf_loadevent;
+	set .LMS_Eve,1; // Event started
+	donpcevent strnpcinfo(1)+"::OnEnable";
+	break;
+	
+	default:
+	// +2 = Previous 2 minutes for registering time
+	if(.time_ch < ((.dur/2)+2) || .time_ch < (.dur+2)) break;
+	if(.time_ch == ((.dur/2)+2) ) {
+		mapannounce .map$,.n$+": "+.dur/2+" Minutes has passed!!!",bc_all;
+		if(getmapusers(.map$) == 0 && .LMS_Eve) 
+			announce .n$+": It seems like that all users have left the event map therefore I won't be able to declare the winner!!!",bc_all;
+			goto OnDisable;
+	} else if(.time_ch == (.dur+2) ) {
+		mapannounce .map$,.n$+": "+.dur+" Minutes has passed, I will now end the event!!!",bc_all;
+		goto OnDisable;
+	}
+	break;
+}
+initnpctimer;
+end;
+
+OnDisable:
+// No need to continue if the event hasn't even started and the preparations are still unfinished
+if(.LMS_Reg && .LMS_Pre) end; 
+removemapflag .map$,mf_nowarpto;
+removemapflag .map$,mf_nowarp;
+removemapflag .map$,mf_nomemo;
+removemapflag .map$,mf_noteleport;
+removemapflag .map$,mf_partylock;
+removemapflag .map$,mf_pvp_noparty;
+removemapflag .map$,mf_pvp_noguild;
+removemapflag .map$,mf_loadevent;
+pvpoff .map$;
+set .LMS_Eve,0;
+announce .n$+": The event, Last Man Standing, has ended!!!",bc_all;
+mapannounce .map$,.n$+": You all will be warped in 10 seconds back to prontera.",bc_all;
+sleep 10000;
+mapwarp .map$,"prontera.gat",150,180;
+end;
+
+OnPCKillEvent:
+if(strcharinfo(3) != .map$ || (.LMS_Reg && !.LMS_Eve) ) end;
+mapannounce .map$,.n$+": "+strcharinfo(0)+" has killed "+rid2name(killedrid)+"!!",bc_all;
+end;
+
+OnPCDieEvent:
+if(strcharinfo(3) != .map$ || (.LMS_Reg && !.LMS_Eve) ) end;
+if(killerrid != getcharid(3)) dispbottom .n$+": You have been killed by "+rid2name(killerrid)+"!!";
+set @lms,0;
+sleep2 500;
+warp "SavePoint",0,0;
+sleep2 1500; // Slowing down the script
+if(HP == 0) atcommand "@alive";
+percentheal 50,50;
+if(getmapusers(.map$) == 2) mapannounce .map$,.n$+": Wuhu!! Only 2 players remain, let's see who is the better player!!",bc_all;
+else if(getmapusers(.map$) == 1) {
+	announce .n$+": The winner of the Last Man Standing event is "+ rid2name(killerrid)+".",bc_all;
+	detachrid;
+	if(attachrid(killerrid) == 1) dispbottom .n$+": You have won the event, Last Man Standing, please visit me to recieve your reward.";
+	goto OnDisable;
+} else if(getmapusers(.map$) == 0) goto OnDisable;
+end;
+
+OnPCLoadMapEvent:
+if(strcharinfo(3) != .map$ || (.LMS_Reg && !.LMS_Eve) ) end;
+if(!@lms) {
+	mes .n$;
+	mes "I'm sorry, but you didn't register for the LMS. I will warp you back to Prontera.";
+	sleep2 5000;
+	warp "prontera.gat",150,180;
+	close;	
+}
+if(.intra) sc_start SC_Intravision,(.dur*60*1000),1; // Enabling Intravision
+announce .n$+": The event will start soon, please wait till the registration is closed.",bc_self;
+end;
+
+OnEnable:
+announce .n$+": The event will last "+.dur+" minutes.",bc_all;
+sleep 10000;
+announce .n$+": The event will start in 30 seconds.",bc_all;
+sleep 5000;
+mapannounce .map$,.n$+": 25 seconds left...",bc_all;
+sleep 15000;
+mapannounce .map$,.n$+": 10 seconds left...",bc_all;
+sleep 6000;
+mapannounce .map$,.n$+": Let the battle begin in...",bc_all;
+sleep 1000;
+mapannounce .map$,.n$+": 3!!",bc_all;
+sleep 1000;
+mapannounce .map$,.n$+": 2!!",bc_all;
+sleep 1000;
+mapannounce .map$,.n$+": 1!!",bc_all;
+sleep 1000;
+mapannounce .map$,.n$+": GO for a square and fair BATTLE!!",bc_all;
+pvpon .map$;
+end;
+
+OnInit:
+// InGame Configable? (1 = Allowed/ 0 = Forbidden)
+set .conf,1;
+// NPC Name, automatically taken from the NPC Header
+set .n$,"["+strnpcinfo(1)+"]"; 
+// GM Access
+set .gm,60; 
+// Map on which LMS will be executed
+set .map$,"force_3-1";
+// Initiate Type:
+// 0 = By GM
+// 1 = Automatic
+set .init,0;
+if(.init) {
+	// Delay Types:
+	// 1 = Hours
+	// 2 = Days
+	set .del_type,1;
+	// Delay in Hours (Max: 24, Default: 3)
+	if(.del_type == 1) set .time,3; 
+	// Delay in Days (Max: 30, Default: 2)
+	else set .time,2;
+}
+// Automatic Event Duration in Minutes (in case GM logs off/dc when manually) (Max: 60, Default: 30)
+// Note: Do not go to below 5 mins
+set .dur,30; 
+// Intravision (Maya Purple Card Effect - Able to see hidden player)
+// This effect is to prevent players to cheat by using "Cloaking" and similiar skills
+// 0 = Off
+// 1 = On
+set .intra,1;
+// =============== Reward Settings ============
+// Type:
+// 1 = Variable
+// 2 = Item
+set .rew_type,1;
+// Reward itself:
+if(.rew_type == 1) 
+	set .rew_id,512; // Item ID (Default: 512)
+else if(.rew_type == 2) {
+	set .rew_var$,"lms_points"; // Custom Variable (Default: "lms_points")
+	set .rew_n$,"Last Man Standing Points"; // (Default: "Last Man Standing Points"
+}
+set .rew_am,100; // Reward Amount (Max: 10000, Default: 10ß)
+// =============== Trade Settings ===================
+if(getarraysize($item) < 2) { // In case items has been already, the script won't overwrite them
+	setarray $item[0],512; // Items to trade against .rew_var$ (Default: 512)
+	setarray $gain[0],100; // Item amount gained (Max: 500, Default: 100)
+	setarray $cost[0],10; // Costs in .rew_var$ (Max: 1000, Default: 10)
+}
+set .zeny,200000; // Zeny to gain per .z_cost .rew_var$ (Max: 10,000,000, Default: 200,000)
+set .z_cost,20; // .rew_var$ required to gain .zeny Zeny (Max: 500, Default: 20)
+// ============== Player Access Settings =============
+// Here you can change the classes which can join the event.
+//
+// Player Limit (Min: 5, Max 100, Default: 30)
+set .limit,30;
+// Base Level Requirement:
+set .lvl,0; // 0 = Off/1 = On
+// Normal + Extended (Gunslinger/Ninja/...) Classes:
+set .norm,55;
+// Baby Classes:
+set .baby,70;
+// Advanced (Rebirth) Classes
+set .adv,85;
+// 3rd Classes:
+set .third,120;
+// Use Job Restriction?
+set .job,1;
+// Random chosen?
+set .rand,0;
+// Rejected Upper = Job Category:
+// On Eventstart an random value, if .rand is 1, will be chosen from this
+// and will be checked on registering
+// 1 = Normal/Extended
+// 2 = Rebirth
+// 3 = Baby
+// 5 = 3rd Normal
+// 6 = 3rd Rebirth
+// 7 = 3rd Baby
+// 8 = None
+// By adding an "Upper" you disable them
+// If you add an Upper, a 8 isn't allowed to be present
+// If that is the case, job restriction will be put on off
+
+// Note: Small explanation for those, why I'm using incorrect upper flags:
+// That's because of the array...., arrays doesn't accept "0" as an value
+// which would be Normal/Extended Classes, so I added "+1" each and "-1" on 
+// the "if()" checks where it compared my class with the restricted ones, 
+// look around at line 79
+setarray .upper[0],1,2;
+
+// Upper Flag Names
+setarray .upper_n$[0],"Normal/Extended","Rebirth","Baby","3rd Normal","3rd Rebirth","3rd Baby";
+// =================== Debug =====================================
+// = DON'T EDIT HERE ANYTHING, well nothing bad will happen but still...
+// ===============================================================
+// If .del_type is 1 (hours) and .time is over 24, default to 3
+if(.del_type == 1 && .time > 24) {
+	set .time,3;
+	debugmes .n$+": .time set to 3, because the delay is in hours and it was over 24.";
+	
+// If .del_type is 2 (days) and .time is over 30, default to 2
+} else if(.del_type == 2 && .time > 30) {
+	set .time,2;
+	debugmes .n$+": .time set to 2, because the delay is in days and it was over 30.";
+}
+// If random but .upper has only 1 value, put random on off.
+if(.rand && getarraysize(.upper) < 2) {
+	set .rand,0;
+	debugmes .n$+": .rand set to off, because the arraysize of .upper being less than 2.";
+}
+// If job restriction is on,
+if(.job)
+	for ( set .@l,0; .@l < getarraysize(.upper); set .@l,.@l + 1) {
+		// and an index in .upper is below 1 or higher than 7, set .job on off
+		if(!.upper[.@l] || .upper[.@l] > 7) { 
+			set .job,0;
+			debugmes .n$+": .job set to off, because an index in .upper is below 1 or higher than 7.";
+			break;
+		}
+		// If the .upper array does not have more than one upper saved in, stop this part and continue
+		if(getarraysize(.upper) < 2) continue;
+		
+		for( set .@i,1; .@i < getarraysize(.upper)-1; set .@i,.@i + 1) {
+			// If .upper has an double inserted entry,
+			if(.upper[.@i] == .upper[.@l]) {
+				// delete that entry, also send an debug message
+				debugmes .n$+": .upper["+.@i+"] has an double entry of Upper "+.upper[.@l]+", deleted it.";
+				deletearray .upper[.@i],1;
+			}
+		}
+	} 
+// If Automatic Event Duration is below 5 minutes, default it to 30 mins.
+if(.dur < 5) {
+	set .dur,30;
+	debugmes .n$+": .dur set to default (30), because it was below 5 minutes.";
+} else if(.dur > 60) {
+	set .dur,30;
+	debugmes .n$+": .dur set to default (30), because it was over 60 minutes.";
+}
+// If none was set, default it to "force_3-1"
+if(.map$ == "") {
+	set .map$,"force_3-1";
+	debugmes .n$+": .map$ set to default (force_3-1), because it was empty.";
+}
+// If player limit is below 5, default to 30
+if(.limit < 2) {
+	set .limit,30;
+	debugmes .n$+": .limit set to default (30), because it was below 2.";
+}
+// If reward is not 1 or 2, put 1
+if(!.rew_type || .rew_type > 2) {
+	set .rew_type,1;
+	debugmes .n$+": .rew_type set to 1, because it was out of range";
+}
+// If reward is item and item doesn't exists, set on 512 (Apple)
+if(.rew_type == 1 && (getitemname(.rew_id) == "" || getitemname(.rew_id) == "null") ) {
+	set .rew_id,512;
+	debugmes .n$+": .rew_id set to 512 (Apple), because the ID wasn't found.";
+}
+// If reward is variable and .rew_n$ and .rew_var$ are empty, set it to their default:
+if(.rew_type == 2) {
+	if(.rew_n$ == "") {
+		set .rew_n$,"Last Man Standing Points";
+		debugmes .n$+": .rew_n$ set to default (Last Man Standing Points), because it was empty.";
+	}
+	if(.rew_var$ == "") {
+		set .rew_var$,"lms_points";
+		debugmes .n$+": .rew_var$ set to default (lms_points), because it was empty.";
+	}
+}
+// If reward amount is over 10000, set on default (100)
+if(.rew_am > 10000) {
+	set .rew_am,100;
+	debugmes .n$+": .rew_am set to default (100), because it was over 10000.";
+}
+// If Trade items are empty or not found, default the first one to 512 (Apple) and the rest to 0
+for ( set .i,0; .i < getarraysize($item); set .i,.i + 1) 
+	if(getitemname($item[.i]) == "" || getitemname($item[.i]) == "null" && $item[.i] != 0) 
+		if(.i == 0) {
+			set $item[0],512;
+			set $gain[0],100;
+			set $cost[0],10;
+			debugmes .n$+": $item[0], $gain[0] and $cost[0] set to default (512,100,10), because the item couldn't be found.";
+		} else {
+			set $item[.i],0;
+			set $gain[.i],0;
+			set $cost[.i],0;
+			debugmes .n$+": $item["+.i+"], $gain["+.i+"] and $cost["+.i+"] set to 0, because the item couldn't be found.";
+		}
+	if($gain[.i] > 500) {
+		set $gain[.i],100;
+		debugmes .n$+": $gain["+.i+"] set to default (100), because it was over 500.";
+	} 
+	if($cost[.i] > 1000) {
+		set $cost[.i],10;
+		debugmes .n$+": $cost["+.i+"] set to default (10), because it was over 1000.";
+	}
+// Trade Settings:
+// If the zeny to gain is higher than 10,000,000 (Default Max Server Settings, well *input based), default to 200,000
+if(.zeny > 10000000) {
+	set .zeny,200000;
+	debugmes .n$+": .zeny set to default (200000), because it was over 10,000,000.";
+}
+// If .rew_var$ requirment for zeny is higher than 500, default to 20
+if(.z_cost > 500) {
+	set .z_cost,20;
+	debugmes .n$+": .z_cost set to default (20), because it was over 500.";
+}
+// ============ Debug End ===================
+end;
+}

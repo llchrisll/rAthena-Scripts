@@ -1,0 +1,371 @@
+//===== eAthena Script =======================================
+//= User Account Editor
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Made
+//		- Added Reset Equip
+//		- Added Change Slot
+//		- Fixed Change Slot Bug
+//        Changed from Menu > input
+//= 1.1 - Fixxed minor Bugs
+//= 1.2 - Fixxed small bug, Showing Online Player was bugged
+//		- Also reversed order of menu outputs (was pissing me off q.q)
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= This Script allows Player's editing their Account in-Game
+//  like an Control Panel.
+//= For GM's over Level 40:
+//- View Server Statistic
+//- View your own Account - Same as Player
+//- View other Char's Account Details by typing
+//  the name of an character bounded to it; such us E-Mail, IP,
+//  for GM's with Level 80 and higher Username and Account ID as well
+//===== Comments =============================================
+//= .@max_ch: Max Characters per Account, please
+//  put the number you have or the Slot Change Part
+//  won't work like it should.
+//  For Renewal Servers : src/common/mmo.h > #define MAX_CHARS
+//  Don't know for older servers anymore though.
+//============================================================
+help_lobby,59,140,6	script	In-Game CP	110,{
+set .@max_ch,21; // Max Characters per Account
+set .@n$,"^55AA88[Control Panel]^000000";
+
+
+mes .@n$;
+mes "Hello, " + strcharinfo(0);
+mes "I can tell you your Account";
+mes "Settings, as well I can";
+mes "change them for you.";
+mes "What do you like to do?";
+next;
+if(getgmlevel() >= 40) goto GM_Menu;
+menu "- Show my Info",CP_My,"- Nothing",CP_Quit;
+close;
+
+//================== GM_Menu ==================
+GM_Menu:
+if(select("- View Players Account's:- View my Account:- View Server Statistic") == 1) {
+
+//===================== View other Player's Account =====================		
+	mes .@n$;
+	mes "Please type the character";
+	mes "name you want and I'll find the";
+	mes "Account bounded to it.";
+	input @s_char$;
+	next;
+	mes .@n$;
+	if(@s_char$ == "") { mes "Character Name is invalid."; close;}
+	query_sql "SELECT `account_id` FROM `char` WHERE `name` = '"+@s_char$+"'",@s_accid;
+	if(!@s_accid) { mes "Character Name is invalid."; close;}
+	query_sql "SELECT `userid` , `sex` , `email` , `logincount` , `last_ip` FROM `login` WHERE `account_id` = '"+@s_accid+"'",@user$,@sex$,@email$,@login,@last_ip$;
+	if(getgmlevel() >= 80) {
+		mes "Username: " + @user$;
+		mes "Account ID: " + @s_accid;
+	}
+	mes "Gender: " + @sex$;
+	mes "E-Mail: " + @email$;
+	mes "Login Count: " + @login;
+	mes "Last IP: " + @last_ip$;
+	mes " ";
+	mes "Duo user protection";
+	mes ((getgmlevel() >= 80) ? "the Password" : "the Username, Account ID and Password");
+	mes "won't be shown.";
+	close;
+//===================================================
+	
+//================= View my Account =============
+} else if(@menu == 2) {
+	CP_My:
+	query_sql "SELECT `userid` , `sex` , `email` , `logincount` , `last_ip` FROM `login` WHERE `account_id` = '"+getcharid(3)+"'",@user$,@sex$,@email$,@login,@last_ip$;
+	mes .@n$;
+	mes "Username: " + @user$;
+	mes "Account ID: " + getcharid(3);
+	mes "Gender: " + @sex$;
+	mes "E-Mail: " + @email$;
+	mes "Login Count: " + @login;
+	mes "Your IP: " + @last_ip$;
+	mes " ";
+	mes "Duo user protection";
+	mes "the password won't be shown.";
+	mes "What now?";
+	next;
+	switch(select("- View Char's:- Edit E-Mail:- Edit Gender:- Nothing")) {
+		
+//============== View Char's ============
+		case 1:
+		mes .@n$;
+		mes "Choose a character, if you";
+		mes "want to change something.";
+		query_sql "SELECT `char_num` , `name` , `class` , `base_level` , `job_level` , `zeny` , `str` , `agi` , `vit` , `int` , `dex` , `luk` , `last_map` , `last_x` , `last_y` , `save_map` , `save_x` , `save_y` FROM `char` WHERE `account_id` = '"+getcharid(3)+"' ORDER BY `base_level` DESC",@char_num,@name$,@class,@base_level,@job_level,@zeny,@str,@agi,@int,@vit,@dex,@luk,@last_map$,@last_x,@last_y,@save_map$,@save_x,@save_y;
+		set @menu$,"";
+		mes " ";
+		set @menu$,"- " + @name$[0] + "";
+		mes "^FF0000~ "+@name$[0]+" ~^000000";
+		mes "---------------------";
+		mes "[Base/Job: " + @base_level[0] + "/" + @job_level[0] + "]";
+		mes "(Class: " + jobname(@class[0]) + ")";
+		mes "=====================";
+		for( set @a,1; @a < getarraysize(@name$); set @a,@a + 1) {
+			mes "^FF0000~ "+@name$[@a]+" ~^000000";
+			mes "---------------------";
+			mes "[Base/Job: " + @base_level[@a] + "/" + @job_level[@a] + "]";
+			mes "(Class: " + jobname(@class[@a]) + ")";
+			mes "=====================";
+			set @menu$,@menu$ + ":- " + @name$[@a] + "";
+		}
+		next;
+			
+		if((prompt(@menu$) - getarraysize(@name$)) > 0) {
+			close;
+			
+		} else {
+			set @m,@menu - 1;
+			
+			mes .@n$;
+			mes "You have chosen:";
+			mes "^FF0000~ "+@name$[@m]+" ~^000000";
+			mes "Base/Job: " + @base_level[@m] + "/" + @job_level[@m];
+			mes "Class: " + jobname(@class[@m]);
+			mes "Zeny: " + @zeny[@m];
+			mes " ";
+			mes "Strenght: " + @str[@m];
+			mes "Agility: " + @agi[@m];
+			mes "Vitality: " + @vit[@m];
+			mes "Intelligence: " + @int[@m];
+			mes "Dexterity: " + @dex[@m];
+			mes "Luck: " + @luk[@m];
+			mes " ";
+			mes "Position:";
+			mes "Current Map: " + @last_map$[@m];
+			mes "Cooardinates x: " + @last_x[@m] + ", y: " + @last_y[@m];
+			mes " ";
+			mes "Savepoint:";
+			mes "Map: "+ @save_map$[@m] + " x: " + @save_x[@m] + ", y: " + @save_y[@m];
+			mes "What do you want to do?";
+			next;
+			switch(select("- Reset Position:- Reset Style:- Change Slot:- Reset Equip:- Nothing")) {
+			
+//=============================== Reset Position ============================
+				case 1:
+				mes .@n$;
+				query_sql "SELECT `online` FROM `char` WHERE `name` = '"+escape_sql(@name$[@m])+"'",@online;
+				if(@online) {
+					mes "I'm sorry, but I can't reset the";
+					mes "position of the chosen character";
+					mes "while you are logged-in on it.";
+					close;
+					}
+				mes "I will reset the position now.";
+				query_sql "UPDATE `char` SET `last_map` =  '"+@save_map$[@m]+"' , `last_x` = '"+@save_x[@m]+"' , `last_y` = '"+@save_y[@m]+"' WHERE `name` = '"+escape_sql(@name$[@m])+"'";
+				close;
+				
+//=============================== Reset Style ============================					
+				case 2:
+				mes .@n$;
+				mes "This will reset your";
+				mes "whole style.";
+				next;
+				if(select("- Proceed:- Stop!!") - 1) {
+					mes .@n$;
+					mes "As you wish.";
+					mes "Your request has been canceled.";
+					close;
+				} else {
+					mes .@n$;
+					query_sql "SELECT `online` FROM `char` WHERE `name` = '"+escape_sql(@name$[@m])+"'",@online;
+					if(@online) {
+						mes "I'm sorry, but I can't reset the";
+						mes "style of the chosen character";
+						mes "while you are logged-in on it.";
+						close;
+					}
+					query_sql "UPDATE `char` SET `hair` = '0' , `hair_color` = '0' , `clothes_color` = '0' WHERE `name` = '"+escape_sql(@name$[@m])+"'";
+					mes "Your request has been completed.";
+					close;
+				}
+				
+//=============================== Change Character Slot ============================					
+				case 3:
+				set @menu_c$,"";
+				mes .@n$;
+				mes "The slots, which are used:";
+				mes " ";
+				for( set @num,0; @num < getarraysize(@char_num); set @num,@num + 1) {
+					mes @char_num[@num] + ". " + @name$[@num];
+				}
+				mes " ";
+				mes "Into which Slot do you want to change?";
+				next;
+				input @num_ch;
+				
+				mes .@n$;
+				if(@num_ch > .@max_ch) {
+					mes "I'm sorry, but you";
+					mes "have put an invalid";
+					mes "number. Try again please.";
+					close;
+				}
+				mes "You have chosen:";
+				mes @num_ch + ".";
+				mes " ";
+				mes "I will change the slot now.";
+				mes "Is that correct?";
+				if(select("- Yes, continue:- No, wrong") - 1) {
+					close;
+				} else {
+					next;
+					mes .@n$;
+					query_sql "SELECT `online` FROM `char` WHERE `name` = '"+escape_sql(@name$[@m])+"'",@online;
+					if(@online) {
+						mes "I'm sorry, but I can't change the";
+						mes "Slot of the chosen character";
+						mes "while you are logged-in on it.";
+						close;
+					}
+					for(set @n_ct,0; @n_ct < getarraysize(@char_num); set @n_ct,@n_ct + 1) {
+						if(@char_num[@n_ct] == @num_ch) {
+							mes "I'm sorry, but this";
+							mes "Slot is in use already.";
+							mes "Try again please.";
+							close;
+						}
+					}
+					query_sql "UPDATE `char` SET `char_num` = '"+@num_ch+"' WHERE `name` = '"+escape_sql(@name$[@m])+"'";
+					mes "Your request has been completed.";
+					close;
+				}
+//================================ Reset Equip ===============================
+				case 4:
+				mes .@n$;
+				mes "Wanna reset your Equip?";
+				if(select("- Yes, please:- No, thanks") - 1) {
+					close;
+				} else {
+					next;
+					mes .@n$;
+					query_sql "SELECT `online` FROM `char` WHERE `name` = '"+@name$[@m]+"'",@online;
+					if(@online) {
+						mes "I'm sorry, but I can't reset";
+						mes "your equipment of this character";
+						mes "while you are logged-in on it.";
+						close;
+					}
+					mes "I will start now.";
+					query_sql "UPDATE `inventory` SET `equip` = '0' WHERE `char_id` = '"+getcharid(0,escape_sql(@name$[@m]))+"'";
+					query_sql "UPDATE `char` SET `weapon` = '0' , `shield` = '0' , `head_top` = '0' , `head_mid` = '0' , `head_bottom`  = '0' WHERE `name` = '"+escape_sql(@name$[@m])+"'";
+					next;
+					mes .@n$;
+					mes "Your request has been completed.";
+					close;
+				}
+//===================== Nothing =====================					
+				case 5:
+				goto CP_Quit;
+				break;
+			} // Edit Char - End
+
+		} // Choose Char - End 
+//============== Edit Mail ============			
+		case 2:
+		mes .@n$;
+		mes "Now input the new E-Mail";
+		mes "Address:";
+		mes "Note: Type 'Cancel' for";
+		mes "aborting your attempt.";
+		next;
+		input @mail_n$;
+		if(@mail_n$ == "Cancel") goto CP_Quit;
+		mes .@n$;
+		mes "Old E-Mail:" +@email$;
+		mes "New E-Mail:" +@mail_n$;
+		mes " ";
+		mes "Is that correct?";
+		next;
+		if(select("- Yes, proceed please:- No, cancel it") - 1) {
+			mes .@n$;
+			mes "As you wish.";
+			mes "Your request has been canceled.";
+			close;
+		} else {
+			mes .@n$;
+			mes "You're E-Mail will be changed now.";
+			next;
+			query_sql "UPDATE `login` SET `email` = '"+escape_sql(@mail_n$)+"' WHERE `account_id` = '"+getcharid(3)+"'";
+			mes .@n$;
+			mes "Your request has been completed.";
+			close;
+		}
+//============== Edit Gender - 1 Month delay ============			
+		case 3:
+		mes .@n$;
+		if(gettimetick(2) < #sexch) {
+			mes "You can't change your";
+			mes "gender again. The time left:";
+			mes #sexch - gettimetick(2) + " Seconds.";
+			close;
+		}
+		mes "Note: Delay between changing your";
+		mes "gender again is one month.";
+		mes "Wanna still change it?";
+		next;
+		if(select("- Yes, proceed please:- No, cancel it") - 1) {
+			mes .@n$;
+			mes "As you wish.";
+			mes "Your request has been canceled.";
+			close;
+		} else {
+			mes .@n$;
+			mes "You're gender will be changed now,";
+			mes "you'll be kicked afterwards.";
+			next;
+			mes .@n$;
+			mes "Your request has been completed.";
+			close2;
+			set #sexch,gettimetick(2) + 2592000;
+			changesex;
+			end;
+		}
+//===================== Nothing =====================			
+		case 4:
+		goto CP_Quit;
+		break;
+	}
+	
+} else if(@menu == 3) {
+//=============== Server Statistic ===================
+
+	query_sql "SELECT count(*) FROM `login` WHERE `account_id` > 1",.@count_acc;
+	query_sql "SELECT count(*) FROM `char`",.@count_char;
+	query_sql "SELECT `zeny` FROM `char` WHERE `zeny` > 0",.@count_zeny;
+	for( set .@z,0; .@z < getarraysize(.@count_zeny); set .@z,.@z + 1) 
+		set .@total_zeny,.@total_zeny + .@count_zeny[.@z];
+		
+	next;
+	mes .@n$;
+	mes "Total Accounts: " + .@count_acc;
+	mes "Total Characters: " + .@count_char;
+	mes "Total Zeny: " + .@total_zeny;
+	next;
+	menu "Show Online Players",-,"Nothing",CP_Quit;
+		mes .@n$;
+		mes "I will now show the list of the";
+		mes "Online Players	in your Chat Box.";
+		close2;
+		dispbottom "======~-[)* Online <†> Players *(]~-========";
+		query_sql "SELECT `name` , `class` , `base_level` , `job_level` FROM `char` WHERE `online` = '1'",.@name$,.@class,.@b_level,.@j_level;
+		for( set .@a,0; .@a < getarraysize(.@name$); set .@a,.@a + 1) 
+			dispbottom .@name$[.@a] + " [Base/Job: " + .@b_level[.@a] + "/" + .@j_level[.@a] + "] (Class: " + jobname(.@class[.@a]) + ")";
+			
+		end;
+}
+//=================== Quit Message ==================
+CP_Quit:
+mes .@n$;
+mes "Farewell, " + strcharinfo(0);
+close;
+
+//============== End of Script ===================
+}

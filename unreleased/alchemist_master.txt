@@ -1,0 +1,128 @@
+//===== eAthena Script =======================================
+//= Alchemist Master
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Made
+//===== Credits ==============================================
+//= Blackout Ro for the idea D:
+//====== ToDo List ===========================================
+//= ...
+//===== Compatible/Created/Tested With =======================
+//= eAthena SQL 14434 Trunk
+//===== Description ==========================================
+//= This NPC can create alchemic bottles for you
+//  also it calculates the total bottles you can create
+//  according the amount of the required items you have with you.
+//= Requirements: Needed Items like normal and a fee of ".price"
+//  each bottle.
+//= Creation: You can also change the gain of bottles.
+//  Like instead of creating just one bottle, you can put more.
+//  Just see the "OnInit" part.
+//============================================================
+prontera,173,183,0	script	Alchemist Master	749,{
+
+mes .n$;
+mes "Hello, I'm the best alchemist in the country";
+mes "and can help you create alchemy bottles.";
+mes "Choose from the list:";
+next;
+set @c_bot,select("- "+getitemname(.bot_1[0])+":- "+getitemname(.bot_2[0])+":- "+getitemname(.bot_3[0])+":- "+getitemname(.bot_4[0])+":- "+getitemname(.bot_5[0])+":- "+getitemname(.bot_6[0])+":- Nothing");
+	
+if(@c_bot == 7) close;
+set @cost,0;
+mes .n$;
+mes "For 1 "+getitemname(getd(".bot_"+@c_bot+"[0]"))+" I need";
+mes "- "+getd(".bot_"+@c_bot+"[3]")+" "+getitemname(getd(".bot_"+@c_bot+"[2]")) + " (ID: "+getd(".bot_"+@c_bot+"[2]")+")";
+mes "- "+getd(".bot_"+@c_bot+"[5]")+" "+getitemname(getd(".bot_"+@c_bot+"[4]")) + " (ID: "+getd(".bot_"+@c_bot+"[4]")+")";
+if(getd(".bot_"+@c_bot+"[6]")) mes "- "+getd(".bot_"+@c_bot+"[7]")+" "+getitemname(getd(".bot_"+@c_bot+"[6]")) + " (ID: "+getd(".bot_"+@c_bot+"[6]")+")";
+if(getd(".bot_"+@c_bot+"[8]")) mes "- "+getd(".bot_"+@c_bot+"[9]")+" "+getitemname(getd(".bot_"+@c_bot+"[8]")) + " (ID: "+getd(".bot_"+@c_bot+"[8]")+")";
+next;
+mes .n$;
+if(countitem(getd(".bot_"+@c_bot+"[2]")) < getd(".bot_"+@c_bot+"[3]") || countitem(getd(".bot_"+@c_bot+"[4]")) < getd(".bot_"+@c_bot+"[5]") || (getd(".bot_"+@c_bot+"[6]") != 0 && countitem(getd(".bot_"+@c_bot+"[6]")) < getd(".bot_"+@c_bot+"[7]")) || (getd(".bot_"+@c_bot+"[8]") != 0 && countitem(getd(".bot_"+@c_bot+"[8]")) < getd(".bot_"+@c_bot+"[9]"))) {
+	mes "You don't have the required amount, please come back as soon has you have it.";
+	close;
+}
+set .@ing1,countitem(getd(".bot_"+@c_bot+"[2]"))/getd(".bot_"+@c_bot+"[3]");
+set .@ing2,countitem(getd(".bot_"+@c_bot+"[4]"))/getd(".bot_"+@c_bot+"[5]");
+if(getd(".bot_"+@c_bot+"[6]")) set .@ing3,countitem(getd(".bot_"+@c_bot+"[6]"))/getd(".bot_"+@c_bot+"[7]");
+if(getd(".bot_"+@c_bot+"[8]")) set .@ing4,countitem(getd(".bot_"+@c_bot+"[8]"))/getd(".bot_"+@c_bot+"[9]");
+
+set .@tot_ing,.@ing1;
+if(.@tot_ing > .@ing2) set .@tot_ing,.@ing2;
+if(.@ing3 && (.@tot_ing > .@ing3)) set .@tot_ing,.@ing3;
+if(.@ing4 && (.@tot_ing > .@ing4)) set .@tot_ing,.@ing4;
+
+mes "Also I need a fee of";
+mes .price + " Zeny for each bottle.";
+mes "That would be for all "+ set(@cost,.price*.@tot_ing)+" Zeny.";
+mes "How many do you want:";
+next;
+switch(select("- All ("+.@tot_ing+"):- Choose myself:- Nothing")) {
+
+	case 1:
+	mes .n$;
+	if(Zeny < @cost) {
+	mes "I'm sorry, but you don't have enough money.";
+		close;
+	}
+	mes "I will now create the bottles for you.";
+	next;
+	delitem getd(".bot_"+@c_bot+"[2]"),.@tot_ing*getd(".bot_"+@c_bot+"[3]");
+	delitem getd(".bot_"+@c_bot+"[4]"),.@tot_ing*getd(".bot_"+@c_bot+"[5]");
+	if(getd(".bot_"+@c_bot+"[6]")) delitem getd(".bot_"+@c_bot+"[6]"),.@tot_ing*getd(".bot_"+@c_bot+"[7]");
+	if(getd(".bot_"+@c_bot+"[8]")) delitem getd(".bot_"+@c_bot+"[8]"),.@tot_ing*getd(".bot_"+@c_bot+"[9]");
+	getitem getd(".bot_"+@c_bot+"[0]"),.@tot_ing*getd(".bot_"+@c_bot+"[1]");
+	set Zeny,Zeny - @cost;
+	mes .n$;
+	mes "Here you are.";
+	close;
+	
+	case 2:
+	mes .n$;
+	mes "Please type the amount you want:";
+	mes "Highest is "+.@tot_ing;
+	next;
+	if(input(@bot_am,1,.@tot_ing) != 0) {
+		mes .n$;
+		mes "Invalid Number.";
+		close;
+	}
+	set @cost,.price*@bot_am;
+	mes .n$;
+	if(Zeny < @cost) {
+		mes "I'm sorry, but you don't have enough money.";
+		close;
+	}
+	mes "I will now create the bottles for you.";
+	next;
+	delitem getd(".bot_"+@c_bot+"[2]"),@tot_am*getd(".bot_"+@c_bot+"[3]");
+	delitem getd(".bot_"+@c_bot+"[4]"),@tot_am*getd(".bot_"+@c_bot+"[5]");
+	if(getd(".bot_"+@c_bot+"[6]")) delitem getd(".bot_"+@c_bot+"[6]"),@tot_am*getd(".bot_"+@c_bot+"[7]");
+	if(getd(".bot_"+@c_bot+"[8]")) delitem getd(".bot_"+@c_bot+"[8]"),@tot_am*getd(".bot_"+@c_bot+"[9]");
+	getitem getd(".bot_"+@c_bot+"[0]"),@tot_am*getd(".bot_"+@c_bot+"[1]");
+	set Zeny,Zeny - @cost;
+	mes .n$;
+	mes "Here you are.";
+	close;
+	
+	case 3:
+	close;
+}
+	
+OnInit:
+set .n$,"[Alchemist]";
+set .price,5000;
+// Alcohol: Stem x5, Poison Spore x5, Empty Test Tube x1, Empty Bottle x1
+setarray .bot_1[0],970,1,905,5,7033,5,1092,1,713,1; 
+// Bottle Grenade: Alcohol x1, Fabric x1, Empty Bottle x1
+setarray .bot_2[0],7135,1,970,1,1059,1,713,1; 
+// Acid Bottle: Immortal Heart x1, Empty Bottle x1
+setarray .bot_3[0],7136,1,929,1,713,1; 
+// Plant Bottle: Maneater Blossom x2, Empty Bottle x1
+setarray .bot_4[0],7137,1,1023,2,713,1; 
+// Marine Sphere: Detonator x1, Tendon x1, Empty Bottle x1
+setarray .bot_5[0],7138,1,1051,1,1050,1,713,1;
+// Glistening Coat: Alcohol x1, Zenorc's Fang x1, Heart of Mermaid x1, Empty Bottle x1
+setarray .bot_6[0],7139,1,970,1,1044,1,950,1,713,1;
+}

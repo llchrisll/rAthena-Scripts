@@ -1,0 +1,15 @@
+// ================= ToDo List - GoogleCode =======================
+// = Creator: h0und3y3@gmail.com - Houndeye aka llchrisll
+// = Usage: Script Projects Overview
+// = User Profile: 
+//   eAthena: http://www.eathena.ws/board/index.php?showuser=245180
+//   rAthena: http://www.rAthena.org/board/user/402-llchrisll
+// ====================================================================
+
+Projects currently in work-in-progress:
+	- EC Card System v1.0
+	
+Projects currently in test phase:
+	- GM Manager v1.0
+	- Quest System v1.0
+	- Party EXP System v1.0

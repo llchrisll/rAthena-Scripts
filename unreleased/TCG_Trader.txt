@@ -1,0 +1,162 @@
+// TCG Trader
+prontera,147,171,4	script	TCG Trader	706,{
+set .@n$,"[TCG Trader]";
+
+mes .@n$;
+mes "Hello, "+strcharinfo(0);
+mes "How can I help you?";
+next;
+menu "Trading",-,"Information",TCG_Info,"Nothing",TCG_Quit;
+
+	mes .@n$;
+	mes "How do you want to trade?";
+	next;
+	if(select("- I want TCGs:- I want Items:- Nothing") == 3) {
+		close;
+	} else {
+		mes .@n$;
+		mes "Let me see if you meet the requirements.";
+		if(@menu == 1) {
+			if(countitem(.tcg_cur) < .tcg_quan) {
+				mes "I'm sorry, but you are missing "+(.tcg_quan - countitem(.tcg_cur))+" "+getitemname(.tcg_cur)+"s";
+				close;
+			} else {
+				if(Zeny < .tcg_fee) {
+					mes "I'm sorry, but you don't have enough Zeny.";
+					close;
+				}
+			}
+			next;
+			mes .@n$;
+			mes "It seems you meet all requirements.";
+			mes "Wanna proceed?";
+			next;
+			if(select("- Yes:- No") - 1) {
+				mes .@n$;
+				mes "Aborting the deal.....";
+				next;
+				goto TCG_Quit;
+
+			} else { 
+				getitem .tcg_id,.tcg_get;
+				delitem .tcg_cur,.tcg_quan;
+				set Zeny,Zeny - .tcg_fee;
+				close;
+			}
+		} else {
+			if(countitem(.tcg_id) < .tcg_get) {
+				mes "I'm sorry, but you are missing "+(.tcg_get - countitem(.tcg_id))+" "+getitemname(.tcg_id)+"s";
+				close;
+			} else {
+				if(Zeny < .tcg_fee) {
+					mes "I'm sorry, but you don't have enough Zeny.";
+					close;
+				}
+			}
+			next;
+			mes .@n$;
+			mes "It seems you meet all requirements.";
+			mes "Wanna proceed?";
+			next;
+			if(select("- Yes:- No") - 1) {
+				mes .@n$;
+				mes "Aborting the deal.....";
+				next;
+				goto TCG_Quit;
+
+			} else { 
+				delitem .tcg_id,.tcg_get;
+				getitem .tcg_cur,.tcg_quan;
+				set Zeny,Zeny - .tcg_fee;
+				close;
+			}
+		}
+	}
+
+	TCG_Info:
+	mes .@n$;
+	mes " ";
+	mes "[Into TCG]:";
+	mes "For "+.tcg_get+" " + getitemname(.tcg_id) + ( (.tcg_get > 1) ? "s" : "" );
+	mes "I need "+.tcg_quan + "x "+getitemname(.tcg_cur) + ( (.tcg_quan > 1) ? "s" : "" );
+	mes " ";
+	mes "[Into Items]:";
+	mes "For "+.tcg_quan + " "+getitemname(.tcg_cur) + ( (.tcg_quan > 1) ? "s" : "" );
+	mes "I need "+.tcg_get+"x " + getitemname(.tcg_id) + ( (.tcg_get > 1) ? "s" : "" );	
+	mes " ";
+	mes "Also I need a fee of "+.tcg_fee+" Zeny each exchange";
+	close;
+
+TCG_Quit:
+mes .@n$;
+mes "See ya.";
+close;
+
+OnInit:
+set .tcg_cur,512; // Item ID of the Item you want to exchange.
+set .tcg_quan,200; // Item Quantity required for TCG
+set .tcg_id,7227; // Item ID of TCG
+set .tcg_fee,20000; // Fee value in Zeny (default: 20k)
+set .tcg_get,1; // Recieved TCG Amount
+end;
+}
+//============ TCG Shop ==========
+prontera,147,169,5	script	TCG Shop	706,{
+mes .name$;
+mes "You currently have "+countitem(.TCG_item)+" TCGs.";
+mes "Would you like to look at the shop?";
+next;
+if(select("Yes:No") == 2) {
+	close;
+}
+close2;
+callshop "TCG_SHOP",1;
+npcshopattach "TCG_SHOP";
+dispbottom "You currently have "+countitem(.TCG_item)+" TCGs.";
+end;
+
+OnBuyItem:
+for(set @i,0; @i < getarraysize(@bought_nameid); set @i,@i+1) {
+	for(set @j,0; @j < getarraysize(.TCG_ITEMS); set @j,@j+1) {
+		if(.TCG_ITEMS[@j] == @bought_nameid[@i]) {
+			set @itemcost,(.ITEMPRICE[@j]*@bought_quantity[@i]);
+			set @totalcost,(@totalcost+@itemcost);
+			break;
+		}
+	}
+}
+
+if(@totalcost > countitem(.TCG_item)) {
+	dispbottom "You don't have enough TCGs.";
+} else {
+	for(set @i,0; @i < getarraysize(@bought_nameid); set @i,@i+1) {
+		getitem @bought_nameid[@i],@bought_quantity[@i];
+	}
+	delitem .TCG_item,@totalcost;
+	dispbottom "Thank you for shopping.";
+}
+set @totalcost,0;
+deletearray @bought_nameid[0],128;
+deletearray @bought_quantity[0],128;
+end;
+
+OnInit:
+npcshopdelitem "TCG_SHOP",908; // Leave this alone
+set .name$,"[TCG Trader]";
+set .TCG_item,7227; // Input TCG ID
+setarray .TCG_ITEMS[0],
+25000,25001,25002,25003,25004,25005,25006,25007,25009,25010,
+25011,25012,25013,25014,25015,25016,25017,25018,25042,25043,
+25044,25045,25047,25048,25049,25050,25051,25055,25067; // Item IDs - 128 max
+setarray .ITEMPRICE[0],
+10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10,10,
+10,10,10,10,10,10,10,10,10; // Item prices - Should followe ID's order
+
+for(set .@i,0; .@i < getarraysize(.TCG_ITEMS); set .@i,.@i+1) {
+	npcshopadditem "TCG_SHOP",.TCG_ITEMS[.@i],.ITEMPRICE[.@i];
+}
+end;
+}
+
+-	shop	TCG_SHOP	-1,908:-1

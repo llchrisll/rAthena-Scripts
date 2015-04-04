@@ -1,0 +1,30 @@
+//===== eAthena Script =======================================
+//= Auto Creation & Drop of Items
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= This script (lol) drops on every 20th second one of the items
+//	stored in the ".id" array.
+//= Amount is also random (1-5)
+//===== Comments =============================================
+//= ...
+//============================================================
+prontera,0,0,0	script	AutoItem	-1,{
+end;
+
+OnInit:
+setarray .id[1],512,984,985; // Apple,Oridecon,Elunium
+initnpctimer;
+end;
+
+OnTimer20000:
+stopnpctimer;
+// makeitem      <Item_ID>,             <Amount>,    <Map>,<X>,<Y>;
+makeitem .id[rand(1,getarraysize(.id))],rand(1,5),prontera,0,0;
+initnpctimer;
+end;
+}

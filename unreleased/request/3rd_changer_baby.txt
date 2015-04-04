@@ -1,0 +1,61 @@
+//===== eAthena Script =======================================
+//= 3rd Baby Job Changer 
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Tested With ==========================================
+//= eAthena 14428 SQL Trunk 
+//===== Description ==========================================
+//= Simple 3rd Baby Job Changer which changes your job only when you
+//  meet the level requirement.
+//===== Comments =============================================
+//= Request (Link to request)
+//	by User (Link to Requester)
+//	in the ... (Link of the homepage of the site)
+//= Forgot who requested that -.-
+//============================================================
+prontera,150,180,0	script	3rd Baby Job Changer	100,{
+
+set .n$,"["+strnpcinfo(1)+"]";
+
+mes .n$;
+if(Upper != 2) {
+	mes "I'm sorry, but I can only change jobs for 2nd Baby Classes.";
+	close;
+}
+if(BaseLevel < 99 || JobLevel < 50) {
+	mes "I'm sorry, but you don't meet the level requirement.";
+	mes "Please come back as soon as you have achieved Level 99/50.";
+	close;
+}
+if(Class >= Job_Baby_Knight && Class <= Job_Baby_Dancer) {
+	if(Class == Job_Baby_Knight || Class == Job_Baby_Knight2) set ThirdJob,4096;
+	if(Class == Job_Baby_Crusader || Class == Job_Baby_Crusader2) set ThirdJob,4102;
+	if(Class == Job_Baby_Priest) set ThirdJob,4099;
+	if(Class == Job_Baby_Monk) set ThirdJob,4106;
+	if(Class == Job_Baby_Wizard) set ThirdJob,4097;
+	if(Class == Job_Baby_Sage) set ThirdJob,4103;
+	if(Class == Job_Baby_Blacksmith) set ThirdJob,4100;
+	if(Class == Job_Baby_Alchemist) set ThirdJob,4107;
+	if(Class == Job_Baby_Hunter) set ThirdJob,4098;
+	if(Class == Job_Baby_Bard) set ThirdJob,4104;
+	if(Class == Job_Baby_Dancer) set ThirdJob,4105;
+	if(Class == Job_Baby_Assassin) set ThirdJob,4101;
+	if(Class == Job_Baby_Rogue) set ThirdJob,4108;
+} else { 
+	mes "I'm sorry, but I can't change your job."; 
+	close; 
+}
+
+mes "Do you want to change your job into a "+jobname(ThirdJob)+"?";
+if(select("- Yes:- No") - 1) close;
+next;
+jobchange ThirdJob;
+mes .n$;
+mes "Job Change done.";
+mes "Have a nice day.";
+close;
+}

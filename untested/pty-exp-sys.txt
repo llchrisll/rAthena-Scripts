@@ -1,0 +1,670 @@
+//===== eAthena Script =======================================
+//= Party EXP System
+//===== By ===================================================
+//= lllchrislll
+//===== Version ==============================================
+//= 1.0
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= This Script handles an Party EXP System, which allows you
+//	to give an party an EXP Bonus depending on the member quantity.
+//	Bonus is given in percent.
+//	Also it provides an Dungeon Warp Service.
+//===== Credits	==============================================
+//= To the author of the "Ultimate Warper" from the eAthena Board.
+//	Since no header was included and I forgot the name of him/her,
+//	I couldn't ask the permission to use an part of the script.
+//	I used the map coordinates.
+//===== ToDo List ============================================
+//= ...
+//============================================================
+prontera,151,185,4	script	Party EXP Service	110,{
+function	EXP_FUNC;
+function	MAP_DATA;
+function	PT_MAP;
+
+mes .n$;
+mes "Hello, "+strcharinfo(0)+"!";
+mes "How can I help you?";
+next;
+switch(select("- Choose Map:- Information:- Nothing")) {
+	case 1:
+	mes .n$;
+	if(getd(".pty_"+getcharid(1)+"_m$") == "") {
+		set @join,0;
+		if(!getcharid(1)) {
+			mes "Do you want to join a party?";
+			if(getarraysize(.pty_id) < 1) {
+				mes "But since there is no party yet you could join, you need to create one yourself.";
+				mes "Also you require 2 and more members to use the Party EXP Service.";
+				close;
+			}
+			next;
+			if(select("- Yes:- No") - 1) {
+				mes .n$;
+				mes "Then you need to create one first, also you require 2 and more members to use the Party EXP Service.";
+				close;
+			}
+			mes .n$;
+			mes "Please choose the map first, then the party you want to join in.";
+			next;
+			mes .n$;
+			set @join,1;
+		}
+		if(!@join) {
+			if(strcharinfo(0) != getpartyleader(getcharid(1))) {
+				mes "Only the party leader can register your party for the Party EXP Service.";
+				close;
+			}
+			getpartymember(getcharid(1),2);
+			copyarray .@pty_aid[0],$@partymemberaid[0],$@partymembercount;
+			for ( set .@p,0; .@p < $@partymembercount; set .@p,.@p + 1) 
+				if(isloggedin(.@pty_aid[.@p]) == 1)  // Member logged in?
+					set .@ct,.@ct + 1;
+					
+			if(.@ct < 2) {
+				mes "A party requires 2 members minimum to use the Party EXP Service.";
+				close;
+			}
+			set .@partyct,$@partymembercount;
+		}
+		mes "What kind of map do you want?";
+		next;
+		if(select("- Field:- Dungeon") == 1) {
+		
+	// ============= Fields ==================
+			
+			mes .n$;
+			mes "Please choose the field you want to play in:";
+			next;
+			set @d,select( PT_MAP(1) ) - 1;
+			mes .n$;
+			mes "Now choose the level please:";
+			next;
+			set @lvl_m$,"";
+			for ( set @m,0; @m < getarraysize(getd("."+.fieldpre$[@d]+"$")); set @m,@m + 2)
+				set @lvl_m$,@lvl_m$ + "- "+getd("."+.fieldpre$[@d]+"$["+@m+"]")+" ("+PT_MAP(1,.fieldpre$[@d],@m)+")" + ( (getd("."+.fieldpre$[@d]+"$["+(@m+2)+"]") != "")?":":"");
+
+			set @l,select(@lvl_m$)*2-2;
+			mes .n$;
+			if(@join) {
+				mes "I will now list the available parties:";
+				mes " ";
+				set @pty_menu$,"";
+				deletearray @pty_list[0],128;
+				for ( set .@l,0; .@l < getarraysize(.pty_id); set .@l,.@l + 1) {
+					if(getd(".pty_"+.pty_id[.@l]+"_m$") == getd("."+.fieldpre$[@d]+"$["+(@l+1)+"]")) {
+						mes "===================";
+						mes "Party Name: "+getpartyname(.pty_id[.@l]);
+						mes "Leader: "+getpartyleader(.pty_id[.@l]);
+						getpartymember(.pty_id[.@l]);
+						mes "Current Members: "+$@partymembercount;
+						setarray @pty_list[getarraysize(@pty_list)],.pty_id[.@l];
+						set @pty_menu$,@pty_menu$ + "- "+getpartyname(.pty_id[.@l]) + ( (.pty_id[.@l+1] != 0)?":":"");
+						mes ( (.pty_id[.@l+1] != 0)?"":"===================");
+					}
+				}
+				next;
+				if(getarraysize(@pty_list) < 1) {
+					mes .n$;
+					mes "I'm sorry, but there s no party on this map.";
+					close;
+				}
+				set @p,select(@pty_menu$) - 1;
+				mes .n$;
+				if(isloggedin(getpartyleader(.pty_id[@p],1),getpartyleader(.pty_id[@p],2)) == 1) {
+					mes "I will send now an request to the party leader with your Level and Class.";
+					mes "I will do so 3 times with an interval of 10 seconds.";
+					mes "If the leader doesn't respond until then, please try to PM him/her by yourself.";
+					mes "The leader's name is ["+getpartyleader(.pty_id[@p])+"].";
+					close2;
+					setarray .@req_n$[0],strcharinfo(0),""+BaseLevel+"/"+JobLevel,"Class: "+jobname(Class);
+					detachrid;
+					attachrid(getpartyleader(.pty_id[@p],1));
+					set @req,3;
+					while( @req != 0) {
+						announce .n$+": The player ["+.@req_n$[0]+"] with "+.@req_n$[1]+", "+.@req_n$[2]+" requests to join your party. I will repeat this message "+@req+" more time(s).",bc_self;
+						sleep2 10000;
+						set @req,@req - 1;
+					}
+					detachrid;
+					attachrid(getcharid(3,.@req_n$[0]));
+					dispbottom .n$+": Your request has been sent.";
+					end;
+				} else {
+					mes "It seems like that the party leader of "+getpartyname(.pty_id[@p])+" isn't online.";
+					mes "Please try again.";
+					close;
+				}
+			}
+			EXP_FUNC(getcharid(1),1);
+			mes "Your party will recieve an bonus of "+getd(".pty_"+getarg(0)+"_exp") +"%."; 
+			mes "I will warp you and your party now to the "+.fieldn$[@d]+ ( (compare(.fieldn$[@d],"Field") == 1)?" ":" Field ") + getd("."+.fieldpre$[@d]+"$["+@l+"]");
+			mes "Happy leveling!!!";
+			close2;
+			// Field Index
+			setd(".pty_"+getcharid(1)+"_m$"),""+getd("."+.fieldpre$[@d]+"$["+(@l+1)+"]"); 
+			setarray getd(".pty_"+getcharid(1)+"[0]"),1,@d;
+			// Setting Start Point
+			setarray getd(".pty_"+getcharid(1)+"_st$[0]"),""+getd("."+.fieldpre$[@d]+"$["+(@l+1)+"]"),"0","0";
+			// Warping Party ...
+			warpparty getd(".pty_"+getcharid(1)+"_st$[0]")+".gat",0,0,getcharid(1);
+			// Enabling Party Re-/Join Feature, kinda...
+			setmapflag getd("."+.fieldpre$[@d]+"$["+(@l+1)+"]"),mf_loadevent;
+			
+	// ================== Dungeons ============
+		} else {
+			mes .n$;
+			mes "Please choose the dungeon you want to play in:";
+			next;
+			set @d,select( PT_MAP(2) ) - 1;
+			mes .n$;
+			mes "Now choose the level please:";
+			next;
+			set @lvl_m$,"";
+			for ( set @m,0; @m < getarraysize(getd("."+.dungpre$[@d]+"$")); set @m,@m + 4)
+				if(getd("."+.dungpre$[@d]+"$["+(@m+2)+"]") != "" && getd("."+.dungpre$[@d]+"$["+(@m+3)+"]") != "") // If no coordinates are given, don't show them.
+					set @lvl_m$,@lvl_m$ + "- "+getd("."+.dungpre$[@d]+"$["+@m+"]") +" ("+PT_MAP(2,.dungpre$[@d],@m)+")"+ ( (getd("."+.dungpre$[@d]+"$["+(@m+4)+"]") != "")?":":"");
+
+			set @l,select(@lvl_m$)*4-4;
+			mes .n$;
+			if(@join) {
+				mes "I will now list the available parties:";
+				mes " ";
+				set @pty_menu$,"";
+				deletearray @pty_list[0],128;
+				for ( set .@l,0; .@l < getarraysize(.pty_id); set .@l,.@l + 1) {
+					if(getd(".pty_"+.pty_id[.@l]+"_m$") == getd("."+.dungpre$[@d]+"$["+(@l+1)+"]")) {
+						mes "===================";
+						mes "Party Name: "+getpartyname(.pty_id[.@l]);
+						mes "Leader: "+getpartyleader(.pty_id[.@l]);
+						getpartymember(.pty_id[.@l]);
+						mes "Current Members: "+$@partymembercount;
+						setarray @pty_list[getarraysize(@pty_list)],.pty_id[.@l];
+						set @pty_menu$,@pty_menu$ + "- "+getpartyname(.pty_id[.@l]) + ( (.pty_id[.@l+1] != 0)?":":"");
+						mes ( (.pty_id[.@l+1] != 0)?"":"===================");
+					}
+				}
+				next;
+				if(getarraysize(@pty_list) < 1) {
+					mes .n$;
+					mes "I'm sorry, but there s no party on this map.";
+					close;
+				}
+				set @p,select(@pty_menu$) - 1;
+				mes .n$;
+				if(isloggedin(getpartyleader(.pty_id[@p],1),getpartyleader(.pty_id[@p],2)) == 1) {
+					mes "I will send now an request to the party leader with your Level and Class.";
+					mes "I will do so 3 times with an interval of 10 seconds.";
+					mes "If the leader doesn't respond until then, please try to PM him/her by yourself.";
+					mes "The leader's name is ["+getpartyleader(.pty_id[@p])+"].";
+					close2;
+					setarray .@req_n$[0],strcharinfo(0),""+BaseLevel+"/"+JobLevel,"Class: "+jobname(Class);
+					detachrid;
+					attachrid(getpartyleader(.pty_id[@p],1));
+					set @req,3;
+					while( @req != 0) {
+						announce .n$+": The player ["+.@req_n$[0]+"] with "+.@req_n$[1]+", "+.@req_n$[2]+" requests to join your party. I will repeat this message "+@req+" more time(s).",bc_self;
+						sleep2 10000;
+						set @req,@req - 1;
+					}
+					detachrid;
+					attachrid(getcharid(3,.@req_n$[0]));
+					dispbottom .n$+": Your request has been sent.";
+					end;
+				} else {
+					mes "It seems like that the party leader of "+getpartyname(.pty_id[@p])+" isn't online.";
+					mes "Please try again.";
+					close;
+				}
+			}
+			EXP_FUNC(getcharid(1),1);
+			mes "Your party will recieve an bonus of "+getd(".pty_"+getarg(0)+"_exp")+"%."; 
+			mes "I will warp you and your party now to the "+.dungn$[@d]+ ( (compare(.dungn$[@d],"Dungeon") == 1)?" ":" Dungeon ") + getd("."+.dungpre$[@d]+"$["+@l+"]");
+			mes "Happy leveling!!!";
+			close2;
+			// Leveling Map
+			setd(".pty_"+getcharid(1)+"_m$"),""+getd("."+.dungpre$[@d]+"$["+(@l+1)+"]"); 
+			// Dungeon Index
+			setarray getd(".pty_"+getcharid(1)+"[0]"),2,@d;
+			// Setting Start Point
+			setarray getd(".pty_"+getcharid(1)+"_st$[0]"),""+getd("."+.dungpre$[@d]+"$["+(@l+1)+"]"),""+getd("."+.dungpre$[@d]+"$["+(@l+2)+"]"),""+getd("."+.dungpre$[@d]+"$["+(@l+3)+"]");
+			// Warping Party ...
+			warpparty getd(".pty_"+getcharid(1)+"_st$[0]")+".gat",getd(".pty_"+getcharid(1)+"_st$[1]"),getd(".pty_"+getcharid(1)+"_st$[2]"),getcharid(1);
+			// Enabling Party Re-/Join Feature, kinda...
+			setmapflag getd("."+.dungpre$[@d]+"$["+(@l+1)+"]"),mf_loadevent;
+		}
+		setarray .pty_id[getarraysize(.pty_id)],getcharid(1);
+// ============ Party is already registered ==============
+	} else {
+		if(strcharinfo(0) == getpartyleader(getcharid(1))) {
+			mes "How can I help you?";
+			next;
+			if(select("- Remove Party from list:- Warp Options") - 2) {
+				EXP_FUNC(getcharid(1),3,1);
+				mes .n$;
+				mes "Your party has been removed from my list.";
+				close;
+			}
+			mes .n$;
+		}
+		mes "Do you want to be warped to one of your party members or to the start point?";
+		if(select("- To my comrades:- Start Point") - 1) {
+			close2;
+			warp getd(".pty_"+getcharid(1)+"_st$[0]")+".gat",getd(".pty_"+getcharid(1)+"_st$[1]"),getd(".pty_"+getcharid(1)+"_st$[2]");
+			end;
+		}
+		next;
+		mes .n$;
+		mes "Please select to which party member you want to be warped to:";
+		next;
+		set @pty_ml$,"";
+		getpartymember(getcharid(1));
+		set @partyct,$@partymembercount;
+		copyarray @partymemb$[0],$@partymembername$[0],@partyct;
+		for ( set .@p,0; .@p < @partyct; set .@p,.@p + 1) {
+			if(isloggedin(getcharid(3,@partymemb$[.@p]),getcharid(0,@partymemb$[.@p])) == 1) { // Member logged in?
+				getmapxy(@map$,@mapx,@mapy,0,@partymemb$[.@p]);
+				if(@map$ == getd(".pty_"+getcharid(1)+"_m$")) { // Member on same Map as registered?
+					set @pty_ml$,@pty_ml$ + "- "+@partymemb$[.@p] + ( (@partymemb$[.@p] == getpartyleader(getcharid(1)))?" (Leader)":"");
+				}
+			}
+		}
+		if(@pty_ml$ == "") {
+			mes .n$;
+			mes "I'm sorry, but no member of your party has been found.";
+			close;
+		}
+		set @pm,select(@pty_ml$) - 1;
+		mes .n$;
+		mes @partymemb$[@pm] + ( (@partymemb$[@pm] == getpartyleader(getcharid(1)))?" (Leader)":"");
+		mes "Correct?";
+		if(select("- Yes:- No") - 1) close;
+		close2;
+		// Since there is no server command for warping an player to another one
+		// and I didn't wanted to create another array for that ...
+		atcommand "@warpto "+@partymemb$[@pm];
+	}
+	end;
+	
+	case 2:
+	mes .n$;
+	mes "I can offer my Party EXP Service to any Party, which uses my Dungeon Warp Service, which allows the party to recieve more EXP based on the party members.";
+	mes "Everytime one of these members dies/changes map/log out or someone joins in, I'll recalculate the EXP Bonus.";
+	mes "The recalculation for the members which died will also occur when they are still on the map and remains dead.";
+	mes "Though they have 30 seconds to rejoin their party.";
+	mes "Also if the leader of the party logs out or leaves the map, I will remove it from my list and warp all members to their Save Points.";
+	mes "The party leader can let me recalculate the EXP Bonus by PMing me by putting \"NPC:"+strnpcinfo(1)+"\" in the Wispher Box and as text \"Reset\".";
+	next;
+	mes .n$;
+	mes "Here is the list for the EXP Rates.";
+	mes " ";
+	mes "[====== EXP Rates ======]";
+	for ( set .@e,1; .@e < getarraysize(.exp); set .@e,.@e + 1) 
+		mes .ppl[.@e]+"+ Members: "+.exp[.@e]+"%";
+	close;
+	
+	case 3:
+	close; 
+}
+OnInit:
+// =============== NPC Name ===============
+set .n$,"["+strnpcinfo(1)+"]";
+// =============== Field Names =================
+setarray .fieldn$[0],"Prontera Fields";
+// =============== Field Prefixes ==============
+setarray .fieldpre$[0],"prt";
+// =============== Field Data ==================
+// = Format: Menu Name, Map Name,...
+setarray .prt$[0],"prt_fild01";
+// =============== Dungeon Names ===============
+setarray .dungn$[0],"Abyss Lake","Amatsu Dungeon","Ant Hell","Ayothaya Dungeon","Bylan","Clock Tower","Coal Mine","Culvert","Einbech Dungeon","Gefenia","Geffen Dungeon","Glast Heim","Gonyrun Dungeon","Ice Dungeon","Labyrinth","Juperos","Lightalzen Bio Lab","Louyang Dungeon","Magma Dungeon","Odin Temple","Orc Dungeon","Payon Dungeon","Pyramid Dungeon","Sphinx Dungeon","Sunken Ship Dungeon","Thanatos Tower","Toy Factory Dungeon","Turtle Dungeon","Umbala Dungeon","Guild Castles";
+// =============== Dungeon Prefixes ===============
+setarray .dungpre$[0],"abyss","amat","anth","ayot","bylan","c_tower","coal","culv","einb","gefenia","gefd","glast","gonr","iced","maze","jupe","lhz","louy","magma","odin","orcsd","payd","pyram","sphinx","pirate","thana","toy","turtle","umbal","gld_cas";
+// =============== Dungeon Data ===============
+// = Format: Menu Name, Map Name.gat, X, Y, .....
+setarray .abyss$[0],"Entrance","hu_fild05","189","207","Level 1","abyss_01","264","271","Level 2","abyss_02","275","270","Level 3","abyss_03","116","27";
+setarray .amat$[0],"Level 1","ama_dun01","227","10","Level 2","ama_dun02","32","43","Level 3","ama_dun03","119","15";
+setarray .anth$[0],"Level 1","anthell01","32","262","Level 2","anthell02","34","263";
+setarray .ayot$[0],"Level 1","ayo_dun01","9","149","Level 2","ayo_dun02","230","235";
+setarray .bylan$[0],"Level 1","iz_dun00","168","168","Level 2","iz_dun01","41","37","Level 3","iz_dun02","236","204","Level 4","iz_dun03","32","63","Level 5","iz_dun04","26","27";
+setarray .c_tower$[0],"Clock Tower Level 1","c_tower1","200","163","Clock Tower Level 2","c_tower2","268","26","Clock Tower Level 3","c_tower3","64","148","Clock Tower Level 4","c_tower4","32","63","Basement Level 1","alde_dun01","197","25","Basement Level 2","alde_dun02","262","41","Basement Level 3","alde_dun03","276","53","Basement Level 4","alde_dun04","130","130";
+setarray .coal$[0],"Level 1","mjo_dun01","52","17","Level 2","mjo_dun02","381","343","Level 3","mjo_dun03","302","261";
+setarray .culv$[0],"Level 1","prt_sewb1","132","248","Level 2","prt_sewb2","19","19;","Level 3","prt_sewb3","180","169","Level 4","prt_sewb4","100","92","Level 5","prt_sewb5","100","92";
+setarray .einb$[0],"Level 1","ein_dun01","22","18","Level 2","ein_dun02","292","290";
+setarray .gefenia$[0],"Level 1","gefenia01","59","167","Level 2","gefenia02","201","35","Level 3","gefenia03","264","236","Level 4","gefenia04","33","270";
+setarray .gefd$[0],"Level 1","gef_dun00","104","100","Level 2","gef_dun01","115","236","Level 3","gef_dun02","106","132","Level 3","gef_dun03","203","200";
+setarray .glast$[0],"St. Abbey","gl_church","156","8","Churchyard","gl_chyard","147","15","Inside Glast Heim","gl_in01","121","59","Castle Level 1","gl_cas01","199","29","Castle Level 2","gl_cas02","104","25","Chivalry Level 1","gl_knt01","150","10","Chivalry Level 2","gl_knt02","157","287","Staircaise","gl_step","117","124","Culvert Level 1","gl_sew01","258","255","Culvert Level 2","gl_sew01","258","255","Culvert Level 3","gl_sew02","108","291","Culvert Level 4","gl_sew03","171","273","Cave Level 1","gl_dun01","133","271","Cave Level 2","gl_dun02","224","274","Underground Prison Level 1","gl_prison","14","70","Underground Prison Level 2","gl_prison1","150","14";
+setarray .gonr$[0],"Level 1","gon_dun01","143","59","Level 2","gon_dun02","17","114","Level 3","gon_dun03","68","9";
+setarray .iced$[0],"Level 1","ice_dun01","157","14","Level 2","ice_dun02","151","155","Level 3","ice_dun03","149","22","Level 4","ice_dun04","34","139";
+setarray .maze$[0],"Level 1","prt_maze01","176","7","Level 2","prt_maze02","103","18","Level 3","prt_maze03","23","8";
+setarray .jupe$[0],"Level 1","juperos_01","99","92","Level 2","juperos_02","34","59","Level 3","jupe_cave","77","50";
+setarray .lhz$[0],"Level 1","lhz_dun01","151","286","Level 2","lhz_dun02","18","148","Level 3","lhz_dun03","140","136";
+setarray .louy$[0],"Level 1","lou_dun01","218","196","Level 2","lou_dun02","282","20","Level 3","lou_dun03","165","37";
+setarray .magma$[0],"Level 1","mag_dun01","126","69","Level 2","mag_dun02","47","32";
+setarray .odin$[0],"Level 1","odin_tem01","98","144","Level 2","odin_tem02","22","181","Leve 3","odin_tem03","121","51";
+setarray .orcsd$[0],"Level 1","orcsdun01","32","169","Level 2","orcsdun02","21","185";
+setarray .payd$[0],"Level 1","pay_dun00","22","180","Level 2","pay_dun01","19","33","Level 3","pay_dun02","19","63","Level 4","pay_dun03","155","159","Level 5","pay_dun04","201","204";
+setarray .pyram$[0],"Level 1","moc_pryd01","192","9","Level 2","moc_pryd02","10","192","Level 3","moc_pryd03","100","92","Level 4","moc_pryd04","181","11","Basement 1","moc_pryd05","94","96","Basement 2","moc_pryd06","192","8";
+setarray .sphinx$[0],"Level 1","in_sphinx1","192","9","Level 2","in_sphinx2","149","81","Level 3","in_sphinx3","210","54","Level 4","in_sphinx4","10","222","Level 5","in_sphinx5","100","99";
+setarray .pirate$[0],"Level 1 1","treasure01","69","24","Level 2","treasure02","102","27";
+setarray .thana$[0],"Level 1","tha_t01","150","36","Level 2","tha_t02","150","36","Level 3","tha_t03","220","158","Level 4","tha_t04","59","143","Level 5","tha_t05","62","11","Level 6","tha_t06","206","8","Level 7","tha_t07","65","166","Level 8","tha_t08","104","44","Level 9","tha_t09","88","145","Level 10","tha_t10","0","0","Level 11","tha_t11","0","0","Level 12","tha_t12","0","0","Thanatos Boss","thana_boss","0","0";
+setarray .toy$[0],"Level 1","xmas_dun01","205","16","Level 2","xmas_dun02","129","133";
+setarray .turtle$[0],"Entrance","tur_dun01","161","34","Level 1","tur_dun02","148","256","Level 2","tur_dun03","132","190","Level 3","tur_dun04","100","192";
+setarray .umbal$[0],"Carpender's Shop in The Tree","um_dun01","205","16","Passage to a Foreign World","um_dun02","48","30","Hvergelmir's Fountain","yggdrasil01","40","63";
+setarray .gld_cas$[0],"Prontera Guild Castles","prt_gld","159","91","Aldebaran Guild Castles","alde_gld","186","157","Payon Guild Castles","pay_gld","202","173","Geffen Guild Castles","gef_fild13","270","225";
+// ============== EXP Settings ================== //
+setarray .ppl[1],2,5,7,9; // Minimum Players required for the bonus
+setarray .exp[1],20,50,75,100; // EXP Bonus in percent
+
+OnNPCKillEvent:
+if(!getcharid(1)) end;
+if(getmapflag(strcharinfo(3),mf_pvp) == 1 || getmapflag(strcharinfo(3),mf_gvg) == 1) end; // On PvP or GvG Maps = No effect
+if(getd(".pty_"+getcharid(1)+"_st$[0]") == "") end; // Not registered at the NPC.
+// If the player is not on the chosen leveling map anymore,
+// attach the leader, if he/she is not already, retrieve the new map. If found, update it.
+// Else remove the party from the NPC.
+if(strcharinfo(3) != getd(".pty_"+getcharid(1)+"_m$")) {
+	if(strcharinfo(0) != getpartyleader(getcharid(1))) {
+		set .@p,getcharid(1);
+		detachrid;
+		attachrid(getpartyleader(.@p,1)); 
+	}
+	MAP_DATA(getd(".pty_"+getcharid(1)+"[0]"),getd(".pty_"+getcharid(1)+"[1]"));
+}
+EXP_FUNC(getcharid(1),4,killedrid);
+end;
+
+OnPCDieEvent:
+if(!getcharid(1)) end;
+if(getmapflag(strcharinfo(3),mf_pvp) == 1 || getmapflag(strcharinfo(3),mf_gvg) == 1) end; // On PvP or GvG Maps = No effect
+if(getd(".pty_"+getcharid(1)+"_m$") == "") end; // Not registered at the NPC.
+set @die,1;
+set @lpt,getcharid(1);
+set .@mem$,strcharinfo(0);
+dispbottom .n$+": You have 30 seconds to rejoin your party. Otherwise I'll have to recalulate the EXP Bonus.";
+if(strcharinfo(0) != getpartyleader(@lpt)) {
+	detachrid;
+	attachrid(getpartyleader(getcharid(1,.@mem$),1));
+}
+dispbottom .n$+": One of your members, "+.@mem$+", has died. Please resurrect him/her as soon as possible or I'll have to recalculate your EXP Bonus.";
+dispbottom .n$+": I give you 30 seconds to do so.";
+attachnpctimer(.@mem$);
+initnpctimer;
+end;
+
+OnTimer30000:
+stopnpctimer;
+set .@pt,@lpt;
+if(!getcharid(1) || getcharid(1) != .@pt) { // In case the player left the party.
+	set @lpt,0;
+	set @die,0;
+	detachrid;
+	attachrid(getpartyleader(.@pt,1));
+	dispbottom .n$+": One of your members, which died previously died, has left your party.";
+}
+if(strcharinfo(3) != getd(".pty_"+getcharid(1)+"_m$")) {
+	set @die,0;
+	detachrid;
+	attachrid(getpartyleader(.@pt,1));
+	dispbottom .n$+": One of your members, which died previously died, didn't manage to come back.";
+	EXP_FUNC(getcharid(1),1);
+} else {
+	detachrid;
+	attachrid(getpartyleader(.@pt,1));
+	dispbottom .n$+": One of your members, which died previously died, has come back.";
+}
+dispbottom .n$+": Your party will now recieve an bonus of "+getd(".pty_"+getarg(0)+"_exp")+"%.";
+end;
+
+OnTimerQuit:
+stopnpctimer;
+OnPCLogOutEvent:
+if(!getcharid(1)) end;
+if(getmapflag(strcharinfo(3),mf_pvp) == 1 || getmapflag(strcharinfo(3),mf_gvg) == 1) end; // On PvP or GvG Maps = No effect
+if(getd(".pty_"+getcharid(1)+"_m$") == "") end; // Not registered at the NPC.
+// Recheck of party members on the same map,
+// in case someone logged out.
+set .@pt,getcharid(1);
+detachrid;	
+attachrid(getpartyleader(.@pt,1));
+EXP_FUNC(getcharid(1),1);
+dispbottom "Your party will now recieve an bonus of "+getd(".pty_"+getarg(0)+"_exp")+"%.";
+end;
+
+// ============= Recalculate EXP Bonus on Whisper ==============
+OnWhisperGlobal:
+if(!getcharid(1)) end;
+if(getmapflag(strcharinfo(3),mf_pvp) == 1 || getmapflag(strcharinfo(3),mf_gvg) == 1) end; // On PvP or GvG Maps = No effect
+if(getd(".pty_"+getcharid(1)+"_m$") == "") end; // Not registered at the NPC.
+if(@whispervar0$ != "Reset" && strcharinfo(0) != getpartyleader(getcharid(1))) end;
+dispbottom .n$+": I will recalculate your EXP Rate....";
+if(strcharinfo(3) == getd(".pty_"+getcharid(1)+"_m$")) EXP_FUNC(getcharid(1),2); 
+else EXP_FUNC(getcharid(1),1);
+dispbottom .n$+": Your party will now recieve an bonus of "+getd(".pty_"+getarg(0)+"_exp")+"%."; 
+end;
+
+// ==================== Party Joining Feature =================
+OnPCLoadMapEvent:
+if(!@join && !@die) end;
+set .@pt,getcharid(1);
+if(@die && strcharinfo(3) == getd(".pty_"+getcharid(1)+"_m$")) {
+	stopnpctimer;
+	set @die,0;
+	if(strcharinfo(0) != getpartyleader(.@pt)) {
+		detachrid;
+		attachrid(getpartyleader(.@pt,1));
+	}
+	dispbottom .n$+": One of your members, which died previously died, has come back.";
+}
+if(@join && strcharinfo(3) == getd(".pty_"+getcharid(1)+"_m$")) {
+	set @join,0;
+	if(strcharinfo(0) != getpartyleader(.@pt)) {
+		detachrid;
+		attachrid(getpartyleader(.@pt,1));
+	}
+	dispbottom .n$+": A new member has joined your party.";
+}
+EXP_FUNC(getcharid(1),2);
+dispbottom .n$+": Your party will now recieve an bonus of "+getd(".pty_"+getarg(0)+"_exp")+"%."; 
+end;
+
+// ===================== EXP Bonus Function =================
+function	EXP_FUNC	{
+//	getarg(0) = Party ID
+// 	getarg(1):
+//	- 1 = Party is still at the NPC
+//	- 2 = Party is in Dungeon
+//	- 3 = Delete party from the register/NPC
+//	- 4 = Giving EXP to the party members
+	getpartymember(getarg(0),2);
+	set .@partyct,$@partymembercount;
+	copyarray .@pty_aid[0],$@partymemberaid[0],.@partyct;
+
+// ======== Party is in Dungeon =================
+	if(getarg(1) == 2) {
+		for ( set .@p,0; .@p < .@partyct; set .@p,.@p + 1) {
+			// Recheck of party members on the same map,
+			// in case someone died or logged out.
+			// If that happened, inform the leader about it and set new exp bonus.
+			if(isloggedin(.@pty_aid[.@p]) == 1) { // Member is logged in
+				detachrid;
+				attachrid(.@pty_aid[.@p]);
+				if(strcharinfo(3) == getd(".pty_"+getcharid(1)+"_m$"))  // Member is on the leveling map
+					if(HP > 0)  // Member is alive
+						set .@pty_map,.@pty_map + 1; // Adding counter for EXP Rate recalculate
+			}
+		}
+		if(.@pty_map < getd(".pty_"+getarg(0)+"_mem")) 
+			dispbottom .n$+": One of your party members have left the leveling map.";
+			
+		else if(.@pty_map > getd(".pty_"+getarg(0)+"_mem"))
+			dispbottom .n$+": Your party members have increased.";
+			
+		else if(.@pty_map == getd(".pty_"+getarg(0)+"_mem")) // No change in party members
+			return;
+			
+		dispbottom .n$+": I'll have to recalculate the EXP Rate....";
+
+// ======== Delete party from the register/NPC ==
+	} else if(getarg(1) == 3) {
+		for ( set .@p,0; .@p < .@partyct; set .@p,.@p + 1) {
+			if(isloggedin(.@pty_aid[.@p]) == 1 && .@pty_aid[.@p] != getpartyleader(getarg(0),1)) {
+				detachrid;
+				attachrid(.@pty_aid[.@p]);
+				if(getarg(2) == 1) dispbottom .n$+": Your party leader wants to remove your party from my list, so....";
+				else dispbottom .n$+": Your party leader has logged out.";
+				dispbottom .n$+": I will delete this party from my list and warp you all in 10 seconds to your Save Points.";
+			}
+		}
+		sleep2 10000;
+		warpparty "SavePointAll",0,0,getarg(0);
+		setd(".pty_"+getarg(0)+"_m$"),"";
+		deletearray getd(".pty_"+getarg(0)+"[0]"),128;
+		deletearray getd(".pty_"+getarg(0)+"_st$[0]"),128;
+		setd(".pty_"+getarg(0)+"_exp"),0;
+		setd(".pty_"+getarg(0)+"_mem"),0;
+		for ( set .@d,0; .@d < getarraysize(.pty_id); set .@d,.@d + 1) 
+			if(getarg(0) == .pty_id[.@d]) 
+				deletearray .pty_id[.@d],1;
+		end;
+		
+// ======== Giving EXP to the party members =====
+	} else if(getarg(1) == 4) {
+		set .@bexp,getmonsterinfo(getarg(2),3)*getd(".pty_"+getarg(0)+"_exp")/100;
+		set .@jexp,getmonsterinfo(getarg(2),4)*getd(".pty_"+getarg(0)+"_exp")/100;
+		for ( set .@p,0; .@p < .@partyct; set .@p,.@p + 1) {
+			// Recheck of party members on the same map,
+			// in case someone died or logged out.
+			if(isloggedin(.@pty_aid[.@p]) == 1) { // Member is logged in
+				detachrid;
+				attachrid(.@pty_aid[.@p]);
+				if(strcharinfo(3) == getd(".pty_"+getarg(0)+"_m$")) { // Member is on the leveling map
+					if(HP > 0) { // Member is alive
+						set BaseExp,BaseExp + .@bexp;
+						set JobExp,JobExp + .@jexp;
+						dispbottom .n$+": Recieved Bonus: "+getd(".pty_"+getarg(0)+"_exp")+"% - Base EXP: "+.@bexp+"/Job EXP: "+.@jexp;
+					}
+				}
+			}
+		}
+		end;
+	}
+	// When the NPC tries to get the exp rate at the first time (standing at the NPC)
+	// it will be checked if getarg(1) has 1 so it can set the exp rate accordingly
+	if(getarg(1) == 1 && .@pty_map == 0) set .@pty_map,.@partyct; 
+	setd(".pty_"+getarg(0)+"_exp"),0;
+	for ( set .@e,1; .@e < getarraysize(.exp); set .@e,.@e + 1) 
+		if(.@pty_map >= .ppl[.@e]) set .@r,.@e;
+		
+	if(.@r) setd(".pty_"+getarg(0)+"_exp"),.exp[.@r];
+	setd(".pty_"+getarg(0)+"_mem"),.@pty_map;
+	return;
+}
+// ===================== Map Data Function =================
+// = Retrieving and Updating the location of a party in case the moved to another map,
+//	 which is still in the dungeon/field array.
+function	MAP_DATA	{
+// getarg(0) = Type of Map (1 = Field/2 = Dungeon)
+// getarg(1) = Field or Dungeon Index
+setd(".pty_"+getcharid(1)+"_m$"),"";
+if(getarg(0) == 1) 
+	for ( set @m,1; @m < getarraysize(getd("."+.fieldpre$[getarg(1)])); set @m,@m +	2)
+		if(strcharinfo(3) == getd("."+.fieldpre$[getarg(1)]+"$["+@m+"]"))
+			setd(".pty_"+getcharid(1)+"_m$"),getd("."+.fieldpre$[getarg(1)]+"$["+@m+"]");
+
+else if(getarg(0) == 2) 
+	for ( set @m,1; @m < getarraysize(getd("."+.dungpre$[getarg(1)])); set @m,@m + 4)
+		if(strcharinfo(3) == getd("."+.dungpre$[getarg(1)]+"$["+@m+"]"))	
+			setd(".pty_"+getcharid(1)+"_m$"),getd("."+.dungpre$[getarg(1)]+"$["+@m+"]");
+			
+if(getd(".pty_"+getcharid(1)+"_m$") != "") return; else dispbottom "You're Map is different from the main party, you won't recieve any EXP Bonus for now.";
+}
+
+// ==================== Field and Dungeon Menu Creation ===========
+// = Retrieving the party amount on each map and displaying the number in the menu
+//	 which will be created afterwards.
+
+// Field List:
+// PT_MAP(1,.fieldpre$[.@fi]);
+
+// Field Levels List:
+// PT_MAP(1,.fieldpre$[@d],@m);
+
+// Dungeon List:
+// PT_MAP(2,.dungpre$[.@du]);
+
+// Dungeon Levels List:
+// PT_MAP(2,.dungpre$[@d],@m);
+
+function	PT_MAP	{
+// getarg(0)	0 = Menu Creation
+//		      1/2 = Map Type (1=Field/2=Dungeon)
+// getarg(1) == Field/Dungeon Prefix
+// ==== Dungeon only =====
+// getarg(2) == Array Index of the Level
+if(getarg(0) == 0) {
+	set .men_field$,"";
+	set .men_dung$,"";
+
+	// =============== Creating Field Menu ===============
+	for ( set .@fi,0; .@fi < getarraysize(.fieldn$); set .@fi,.@fi + 1) 
+		set .men_field$,.men_field$ + "- "+.fieldn$[.@fi] +" ("+PT_MAP(1,.fieldpre$[.@fi])+")"+ ( (.fieldn$[.@fi+1] != "")?":":"");
+		
+	// =============== Creating Dungeon Menu ===============
+	for ( set .@du,0; .@du < getarraysize(.dungn$); set .@du,.@du + 1) 
+		set .men_dung$,.men_dung$ + "- "+.dungn$[.@du] +" ("+PT_MAP(2,.dungpre$[.@du])+")"+ ( (.dungn$[.@du+1] != "")?":":"");
+		
+	return;
+
+// ========== Field Party Counter =========
+} else if(getarg(0) == 1) {
+	// Party Looping
+	for( set .@i,0; .@i < getarraysize(.pty_id); set .@i,.@i + 1) {
+	
+		// Party is on a field?
+		if(getd(".pty_"+.pty_id[.@i]+"[0]") == 1 ) 		
+			// Checking if the current Party is on this map
+				if(getd(".pty_"+.pty_id[.@i]+"_m$") == getd("."+getarg(1)+"$["+getarg(2)+"]")) {
+					// Counter for the main list
+					if(getarg(3) == 0) 
+						setd(".@"+getarg(1)+"_ct"),getd(".@"+getarg(1)+"_ct") + 1;
+					else 
+						setd(".@"+getarg(1)+"-"+getarg(3)+"_ct"),getd(".@"+getarg(1)+"-"+getarg(3)+"_ct") + 1;
+				}
+		// If not on a field, next party please....	
+		else continue;
+	}
+	if(getarg(3) == 0) 
+		return getd(".@"+getarg(1)+"_ct");
+	else 
+		return getd(".@"+getarg(1)+"-"+getarg(3)+"_ct");
+
+// ========== Dungeon Party Counter =========		
+} else if(getarg(0) == 2) {
+		// Party Looping
+	for( set .@i,0; .@i < getarraysize(.pty_id); set .@i,.@i + 1) {
+	
+		// Party is in a dungeon?
+		if(getd(".pty_"+.pty_id[.@i]+"[0]") == 2 ) 		
+			// Checking if the current Party is on this map
+				if(getd(".pty_"+.pty_id[.@i]+"_m$") == getd("."+getarg(1)+"$["+getarg(2)+"]")) {
+					// Counter for the main list
+					if(getarg(3) == 0) 
+						setd(".@"+getarg(1)+"_ct"),getd(".@"+getarg(1)+"_ct") + 1;
+					else 
+						setd(".@"+getarg(1)+"-"+getarg(3)+"_ct"),getd(".@"+getarg(1)+"-"+getarg(3)+"_ct") + 1;
+				}
+		// If not in a dungeon, next party please....	
+		else continue;
+	}
+	if(getarg(3) == 0) 
+		return getd(".@"+getarg(1)+"_ct");
+	else 
+		return getd(".@"+getarg(1)+"-"+getarg(3)+"_ct");
+}
+// ======================= End of PT_MAP Function =====================
+}	
+// ======================= End of Script =====================
+}

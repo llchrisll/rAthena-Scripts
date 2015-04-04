@@ -1,0 +1,77 @@
+//===== eAthena Script =======================================
+//= Weekly EXP Boost
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Made
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= This scripts boosts on "if(gettime(4) == x)" the EXP rate
+//	by Base EXP: "$@bbonus" and Job EXP: "$@jbonus", also
+//	Global Drop Rate: "$@dbonus".
+//===== Comments =============================================
+//= ...
+//============================================================
+-	script	WeeklyBonus	-1,{
+end;
+
+OnInit:
+// ====== Original Rates ======
+// Base exp
+set $@brate,getbattleflag("base_exp_rate");
+// Job exp
+set $@jrate,getbattleflag("job_exp_rate");
+// Drops
+set $@dcomrate,getbattleflag("item_rate_common");
+set $@dhealrate,getbattleflag("item_rate_heal");
+set $@duserate,getbattleflag("item_rate_use");
+set $@dequiprate,getbattleflag("item_rate_equip");
+
+// ====== Bonus Lines ======
+// Exp Rates
+set $@bbonus,5000;
+set $@jbonus,5000;
+// Drop Rates
+set $@dbonus,5000; // Global Drop Bonus
+
+set $@dcombonus,$@dbonus;
+set $@dhealbonus,$@dbonus;
+set $@dusebonus,$@dbonus;
+set $@dequipbonus,$@dbonus;
+OnClock0001:
+if(gettime(4) == 1) { // 0= Sunday - 6= Saturday
+
+	//Base exp
+	setbattleflag("base_exp_rate",$@brate + $@bbonus);
+	//Job exp
+	setbattleflag("job_exp_rate",$@jrate + $@jbonus);
+	//Drops
+	setbattleflag("item_rate_common",$@dcomrate + $@dcombonus);
+	setbattleflag("item_rate_heal",$@dhealrate + $@dhealbonus);
+	setbattleflag("item_rate_use",$@duserate + $@dusebonus);
+	setbattleflag("item_rate_equip",$@dequiprate + $@dequipbonus);
+	atcommand "@reloadmobdb";
+
+	announce "[Weekly EXP Boost] - Current Rates: Base Exp: "+ (getbattleflag("base_exp_rate")/100)+"x Job Exp: "+ (getbattleflag("job_exp_rate")/100)+"x Drop:"+ ( ($@drate + $@dbonus)/100)+"x",bc_all,0xFF6060;
+	end;
+}
+	//Base exp
+	setbattleflag("base_exp_rate",$@brate);
+	//Job exp
+	setbattleflag("job_exp_rate",$@jrate);
+	//Drops
+	setbattleflag("item_rate_common",$@dcomrate);
+	setbattleflag("item_rate_heal",$@dhealrate);
+	setbattleflag("item_rate_use",$@duserate);
+	setbattleflag("item_rate_equip",$@dequiprate);
+	atcommand "@reloadmobdb";
+	
+	announce "Current Rates: Base Exp: "+ (getbattleflag("base_exp_rate")/100)+"x Job Exp: "+ (getbattleflag("job_exp_rate")/100)+"x Drop:"+ ($@drate/100)+"x",bc_all,0xFF6060;
+	end;
+	
+OnPCLoginEvent:
+if(getbattleflag("base_exp_rate") != $@brate) announce "[Weekly EXP Boost] - Current Rates: Base Exp: "+ (getbattleflag("base_exp_rate")/100)+"x Job Exp: "+ (getbattleflag("job_exp_rate")/100)+"x Drop:"+ ( ($@drate + $@dbonus)/100)+"x",bc_all,0xFF6060;
+else announce "Current Rates: Base Exp: "+ (getbattleflag("base_exp_rate")/100)+"x Job Exp: "+ (getbattleflag("job_exp_rate")/100)+"x Drop:"+($@drate/100)+"x",bc_self,0xFF6060;
+end;
+}

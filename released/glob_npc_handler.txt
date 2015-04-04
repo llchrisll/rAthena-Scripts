@@ -1,0 +1,295 @@
+//===== eAthena Script =======================================
+//= Global NPC Handler
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Made
+//      - Added Debug Messages
+//      - Changed Variable Names
+//      - Fixed some typos
+//      - Changed Variable Names again > changed most from $@ to . variables
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Tested With ==========================================
+//= eAthena 14428 SQL Trunk 
+//===== Description ==========================================
+//= This script allows you to handle your NPC loadings,
+//  like unloading an NPC when he isn't needed like an Event.
+//= Also it can be useful when you want to test/bug fix your creation.
+//= The config is done via OnInit
+//= But for this whole system to work, you need to do some changes
+//  in your NPCs. See 'OnScriptDisable' for more.
+//===== Comments =============================================
+//= ...
+//============================================================
+-	script	NPCHandler	-1,{
+end;
+
+OnInit:
+set .n$,"[NPC Handler]";
+set .gm,80; // GM Access Level
+// ========= Main Path =========//
+set .glob_path$,"npc/custom/";
+if(.@hand_debug) announce "Debug: Main Path "+.glob_path$+" loaded - Main NPC Path initialize..",bc_self;
+// If you have an extra subdir for your own npcs(eg. to keep an overview),
+// put it in here, like "mynpc/", if not leave "" as it is.
+set .glob_path_main$,"summon/";
+if(.@hand_debug) announce "Debug: Main NPC Path "+.glob_path_main$+" loaded - Categories initialize...",bc_self;
+// ===== Categories: (Paths) =========//
+setarray .path_other$[0],"Main","cities/","merchants/","mobs/","warps/","quests/";
+// $npc_ Extensions
+setarray .path_ext$[0],"main","c","s","m","w","q"; // For the NPC management via getd($npc_"+.path_ext$[x]...
+if(.@hand_debug) announce "Debug: Categories ("+.path_other$[0]+") and Extensions ("+.path_ext$[0]+") loaded...",bc_self;
+// ========= "Main" NPCs =========//
+// Note: This format will be the same with every NPC below.
+// ===============================//
+// File Names - Entry is supposed to be without ".txt"
+setarray .npc_main$[0],"";
+// NPC Name, used for unloadnpc/disablenpc and Menu Display
+// (must be the same as in the npc header line)
+setarray $@npc_main_alias$[0],"";
+// UnLoading - 0 = No Unload, 1 = Unload, for more than 1 NPC, see 'OnScriptDisable'
+// Used for auto disable on server loading
+setarray .npc_main_u[0],1,1,0;
+if(.@hand_debug) announce "Debug: Main NPCs "+.path_other$[0]+" loaded - NPCs in Subdirs initialize..",bc_self;
+// ==========  NPC's in Subdirs (quests/,mobs/,...) ======//
+
+// ========= "cities/" NPCs =========//
+// Extra subdir, not used by the "main" npc's
+// If the NPC is in multiplie subdirs put them too, like
+// town_1/indoor/
+setarray .npc_c_sub$[0],""; 
+setarray .npc_c$[0],"";
+setarray $@npc_c_alias$,"";
+setarray .npc_c_u[0],0,0,0;
+if(.@hand_debug) announce "Debug: NPCs in Subdir \""+.path_other$[1]+"\" loaded - NPCs in Subdir \""+.path_other$[2]+"\" initialize..",bc_self;
+// ========= "merchants/" NPCs =========//
+setarray .npc_s_sub$[0],""; 
+setarray .npc_s$[0],"";
+setarray $@npc_s_alias$,"";
+setarray .npc_s_u[0],0;
+if(.@hand_debug) announce "Debug: NPCs in Subdir \""+.path_other$[2]+"\" loaded - NPCs in Subdir \""+.path_other$[3]+"\" initialize..",bc_self;
+// ========= "mobs/" NPCs =========//
+setarray .npc_m_sub$[0],"dungeons/"; 
+setarray .npc_m$[0],"";
+setarray $@npc_m_alias$,"";
+setarray .npc_m_u[0],0;
+if(.@hand_debug) announce "Debug: NPCs in Subdir \""+.path_other$[3]+"\" loaded - NPCs in Subdir \""+.path_other$[4]+"\" initialize..",bc_self;
+// ========= "warps/" NPCs =========//
+setarray .npc_w_sub$[0],"","cities/"; 
+setarray .npc_w$[0],"";
+setarray $@npc_w_alias$,"";
+setarray .npc_w_u[0],0,0;
+if(.@hand_debug) announce "Debug: NPCs in Subdir \""+.path_other$[4]+"\" loaded - NPCs in Subdir \""+.path_other$[5]+"\" initialize..",bc_self;
+// ========= "quests/" NPCs =========//
+setarray .npc_q_sub$[0],""; 
+setarray .npc_q$[0],"";
+setarray $@npc_q_alias$,"";
+setarray .npc_q_u[0],0,0;
+// ======= Menu Creations ==========//
+if(.@hand_debug) announce "Debug: NPCs in Subdir \""+.path_other$[5]+"\" loaded.",bc_self;
+if(.@hand_debug) announce "Debug: Subdir NPCs loaded - Menu Creation....",bc_self;
+set .cat_menu$,"";
+// Categorie Menu
+for( set .@c,0; .@c < getarraysize(.path_other$); set .@c,.@c + 1) {
+	set .cat_menu$,.cat_menu$ + "- "+.path_other$[.@c] + ( (.path_other$[.@c + 1] == "")?"":":");
+	setd("."+.path_ext$[.@c]+"_menu$"),"";
+	if(.@hand_debug) announce "Debug: Categorie "+.path_other$[.@c]+" Complete - NPC List Creation....",bc_self;
+	// Each categorie it will create a extra menu for the NPC List.
+	for( set .@n,0; .@n < getarraysize(getd("$@npc_"+.path_ext$+"_alias$")); set .@n,.@n + 1) 
+		setd("."+.path_ext$[.@c]+"_menu$"),getd("."+.path_ext$[.@c]+"_menu$") + "- "+getd("$@npc_"+.path_ext$[.@c]+"_alias$["+.@n+"]") + ( (getd("$@npc_"+.path_ext$[.@c]+"_alias$["+(.@n + 1)+"]") == "")?"":":");
+	if(.@hand_debug) announce "Debug: NPC List \"."+.path_ext$[.@c]+"_menu$\" Complete - Looping....",bc_self;
+}
+if(.@hand_debug) announce "Debug: Categorie Menu & NPC Lists Creation completed - ScriptDisable initialized...",bc_self;
+// =================================//
+
+OnScriptDisable:
+// =========== Script Disable/Unload for more than one NPC ========= //
+// OnScriptLoad is Must-Have, it loads the "OnInit" and Co if you load
+// the NPCs with this or else these settings will miss out.
+//
+// You must put the lines after OnInit: into the same NPC named in the $npc_*_alias$
+// If an OnInit: part already exists, either make an seperate NPC or
+// add it there, I would make an extra NPC though :P
+// For an seperate NPC I made an example :D.
+// =============================================================== //
+/*
+-	script	<NPC_Name>_Conf	-1,{
+end;
+
+OnInit:
+// Exchange the NPC 1, etc, with the NPC Name you want to disable
+setarray .npc$[0],"NPC 1","NPC 2","NPC 3"; // etc, but don't put this npc
+// Put here the event, if available, which should be loaded on Script Loading
+setarray .init_npc$[0],"OnInit","",""; 
+set .ext$,"main"; // In which variable is it saved? $@npc_main$ > "main" ... as example
+set .conf_npc$,strnpcinfo(0); // Here comes this NPC.
+for( set .@i,0; .@i < getarraysize(getd("$@npc_"+.ext$+"_alias$")); set .@i,.@i + 1) {
+	if(.conf_npc$ == getd("$@npc_"+.ext$+"_alias$["+.@i+"]")) {
+		setd("$@npc_"+.ext$+"_qua["+.@i+"]"),getarraysize(.npc$) + 1; // + 1 == .conf_npc$
+		setd("$@npc_"+.ext$+"_lo["+.@i+"]"),1;
+		setd("$@npc_"+.ext$+"_ab["+.@i+"]"),1;
+	}
+}
+end;
+
+OnScriptLoad:
+doevent strnpcinfo(0)+"::OnInit";
+for (set .@u,0; .@u < getarraysize(.npc$); set .@u,.@u + 1) {
+	// More than 1 NPC and an "On..." is available
+	if(.init_npc$[.@u] != "") doevent .npc$[.@u] + "::"+.init_npc$[.@u];
+	dispbottom "NPC "+ .npc$[.@u] +" has been loaded.";
+}
+end;
+
+// These are required if you have more than 1 NPC
+OnScriptDisable:
+for (set .@u,0; .@u < getarraysize(.npc$); set .@u,.@u + 1) {
+	disablenpc .npc$[.@u];
+	dispbottom "NPC "+ .npc$[.@u] +" has been disabled.";
+}
+end;
+
+OnScriptEnable:
+for (set .@u,0; .@u < getarraysize(.npc$); set .@u,.@u + 1) {
+	enablenpc .npc$[.@u];
+	dispbottom "NPC "+ .npc$[.@u] +" has been enabled.";
+}
+end;
+
+OnScriptUnload:
+for (set .@u,0; .@u < getarraysize(.npc$); set .@u,.@u + 1) {
+	atcommand "@unloadnpc "+ .npc$[.@u];
+	dispbottom "NPC "+ .npc$[.@u] +" has been unloaded.";
+	sleep2 500;
+}
+end;
+}
+*/
+// =============================================================== //
+deletearray $@dis_all$,128;
+for ( set .@t,0; .@t < getarraysize(.path_ext$); set .@t,.@t + 1) {
+	for( set .@u,0; .@u < getarraysize(getd("$@npc_"+.path_ext$[.@t])); set .@u,.@u + 1) {
+		if(getd(".npc_"+.path_ext$[.@t]+"$["+.@u+"]") != "" && getd("$@npc_"+.path_ext$[.@t]+"_u["+.@u+"]") == 1) {
+			if(getd("$@npc_"+.path_ext$[.@t]+"_qua["+.@u+"]") > 1) doevent getd("$@npc_"+.path_ext$[.@t]+"_alias$["+.@u+"]")+"::OnScriptDisable";
+			disablenpc getd("$@npc_"+.path_ext$[.@t]+"_alias$["+.@u+"]");
+			setd("$@npc_"+.path_ext$[.@t]+"_lo["+.@u+"]"),0;
+			setd("$@npc_"+.path_ext$[.@t]+"_ab["+.@u+"]"),0;
+			setarray $@dis_all$[getarraysize($@dis_all$)],"- "+getd("$@npc_"+.path_ext$[.@t]+"_alias$["+.@u+"]");
+		}
+	}
+}
+if(.@hand_debug) announce "Debug: ScriptDisable Completed - "+getarraysize($@dis_all$)+" NPCs has been disabled.",bc_self;
+if(.@hand_debug) announce "Debug: OnInit: Completed",bc_self;
+set .@hand_debug,0;
+if(.@re_in) goto OnWhisperGlobal;
+end;
+// ================================= OnInit / Config End ================================== //
+OnPCLoginEvent:
+if(getgmlevel() < .gm) end;
+if(getarraysize($@dis_all$) > 0) {
+	dispbottom .n$ + ": The following NPCs has been disabled automatically:";
+	for( set .@d,0; .@d < getarraysize($@dis_all$); set .@d,.@d + 1)
+		dispbottom $@dis_all$[.@d];
+}
+end;
+
+OnWhisperGlobal:
+if(getgmlevel() < 80) end;
+
+mes .n$;
+mes "Hello "+ strcharinfo(0)+".";
+mes "I can handle your NPC Loading settings.";
+mes "How can I help you?";
+mes "^FF0000Note: Reload will only affect the already saved OnInit: settings in the memory.";
+mes "If you changed the OnInit: settings, you need to reload the whole script itself.^000000";
+next;
+if(select("- NPC Handling:- Reload Handler") - 1) {
+	if(select("- With Debug:- Without Debug") - 2) set .@hand_debug,1;
+	set .@re_in,1;
+	goto OnInit;
+}
+set .@re_in,0;
+mes .n$;
+mes "Please choose the categorie from below.";
+next;
+set .@k,select(.cat_menu$) - 1;
+mes .n$;
+mes "Categorie: "+ .path_other$[.@k];
+mes "Now choose the NPC:";
+next;
+set .@n,select(getd("."+.path_ext$[.@k]+"_menu$")) - 1;
+mes .n$;
+mes "=== NPC Info: ===";
+mes "File Name: "+getd(".npc_"+.path_ext$[.@k]+"$["+.@n+"]");
+mes "NPC Name: "+getd("$@npc_"+.path_ext$[.@k]+"_alias$["+.@n+"]");
+mes "NPC's: "+set(.@q,getd("$@npc_"+.path_ext$[.@k]+"_qua["+.@n+"]"));
+mes "Path: "+.glob_path$ + .glob_path_main$ + ( (.path_other$[.@k] == "Main")?"":.path_other$[.@k] + getd(".npc_"+.path_ext$[.@k]+"_sub$["+.@n+"]"));
+mes "[=== Status: ===]";
+mes "Loaded: "+( (set(.@lo,getd("$@npc_"+.path_ext$[.@k]+"_lo["+.@n+"]")) == 1)?"Yes":"No");
+mes "Enabled: "+( (set(.@ab,getd("$@npc_"+.path_ext$[.@k]+"_ab["+.@n+"]")) == 1)?"Yes":"No");
+mes " ";
+if(!.@q) {
+	mes "No NPC could be found.";
+	mes "Please make sure that you didn't mistype the NPC names in the respective Config NPC and the \"$@npc_"+.path_ext$[.@k]+"_alias$["+.@n+"]\" array.";
+	mes " ";
+	mes "What do you want to do with it?";
+	switch(select("- Load:- "+ (getd("$@npc_"+.path_ext$[.@k]+"_lo["+.@n+"]")?"Unload:- Nothing":"Nothing"))) {
+		case 1: set .@glob_m,3; break;
+		case 2: if(getd("$@npc_"+.path_ext$[.@k]+"_lo["+.@n+"]") == 1) { set .@glob_m,1; break; }
+		case 3:	set .@glob_m,5; break;
+	}
+} else {
+	mes "What do you want to do with it?";
+	set .@glob_m,select("- Unload:- Disable:- Load:- Enable:- Nothing");
+}
+switch(.@glob_m) {
+
+	case 1: // Unload
+	if(.@lo == 1) {
+		if(getd("$@npc_"+.path_ext$[.@k]+"_qua["+.@n+"]") > 1) 
+			doevent getd("$@npc_"+.path_ext$[.@k]+"_alias$["+.@n+"]")+"::OnScriptUnload";
+			//dispbottom "Scripter: I'm sorry, but unloading multiply NPCs is bugged at the moment, it crashed my map server, don't know why though. As soon as I fixxed it I will update it of course.";
+		close2;
+		// sleep2( 1000*getd("$@npc_"+.path_ext$[.@k]+"_qua["+.@n+"]") );
+		setd("$@npc_"+.path_ext$[.@k]+"_lo["+.@n+"]"),0;
+		setd("$@npc_"+.path_ext$[.@k]+"_ab["+.@n+"]"),0;
+		setd("$@npc_"+.path_ext$[.@k]+"_qua["+.@n+"]"),0;
+		atcommand "@unloadnpc "+getd("$@npc_"+.path_ext$[.@k]+"_alias$["+.@n+"]");
+		dispbottom "NPC "+ getd("$@npc_"+.path_ext$[.@k]+"_alias$["+.@n+"]") + " has been unloaded.";
+		end;
+	} else dispbottom "This NPCs can't be unloaded, since they are already.";
+	close;
+	
+	case 2: // Disable
+	close2;
+	if(.@ab == 1) {
+		if(getd("$@npc_"+.path_ext$[.@k]+"_qua["+.@n+"]") > 1) doevent getd("$@npc_"+.path_ext$[.@k]+"_alias$["+.@n+"]")+"::OnScriptDisable"; 
+		disablenpc getd("$@npc_"+.path_ext$[.@k]+"_alias$["+.@n+"]");
+		dispbottom "NPC "+ getd("$@npc_"+.path_ext$[.@k]+"_alias$["+.@n+"]") +" has been disabled.";
+		setd("$@npc_"+.path_ext$[.@k]+"_ab["+.@n+"]"),0;
+	} else dispbottom "This NPCs can't be disabled, since they are already.";
+	end;
+	case 3: // Load
+	close2;
+	if(.@lo == 0) {
+		atcommand "@loadnpc " + .glob_path$ + .glob_path_main$ + ( (.path_other$[.@k] == "Main")?.npc_main$[.@n]:.path_other$[.@k] + getd(".npc_"+.path_ext$[.@k]+"_sub$["+.@n+"]") + getd(".npc_"+.path_ext$[.@k]+"$["+.@n+"]")) + ".txt";
+		dispbottom getd(".npc_"+.path_ext$[.@k]+"$["+.@n+"]") + ".txt - "+getd("$@npc_"+.path_ext$[.@k]+"_alias$["+.@n+"]") + " has been loaded.";
+		doevent getd("$@npc_"+.path_ext$[.@k]+"_alias$["+.@n+"]")+"::OnScriptLoad"; 
+	} else dispbottom "This NPCs can't be loaded, since they are already.";
+	end;
+
+	case 4: // Enable
+	close2;
+	if(.@ab == 0) {
+		if(getd("$@npc_"+.path_ext$[.@k]+"_qua["+.@n+"]") > 1) doevent getd("$@npc_"+.path_ext$[.@k]+"_alias$["+.@n+"]")+"::OnScriptEnable";
+		enablenpc getd("$@npc_"+.path_ext$[.@k]+"_alias$["+.@n+"]");
+		setd("$@npc_"+.path_ext$[.@k]+"_ab["+.@n+"]"),1;
+		dispbottom "NPC "+ getd("$@npc_"+.path_ext$[.@k]+"_alias$["+.@n+"]") +" has been enabled.";
+	} else dispbottom "This NPCs can't be enabled, since they are already.";
+	end;
+
+	case 5:
+	close;
+}
+}

@@ -1,0 +1,29 @@
+// 1st option:
+prontera,100,100,0	script	Base/Stats Checker	100,{
+if(!getgmlevel()) end;
+
+query_sql "SELECT `base_level` , `char_id` FROM `char` WHERE `base_level` > <MaxLevel> LIMIT 128",@b_level,@cid;
+for( set @b,0; @b < getarraysize(@b_level); set @b,@b + 1) {
+	query_sql "UPDATE `char` SET `base_level` = <MaxLevel> WHERE `char_id` = "+getcharid(0);
+	
+}
+end;
+}
+// 2nd option:
+-	script	BaseStatCheck	-1,{
+end;
+
+OnPCLoginEvent:
+if(BaseLevel > <MaxLevel>) {
+	dispbottom "You're Level has been reset duo the new Max Level, which is <MaxLevel> now.";
+	set BaseLevel,<MaxLevel>;
+	dispbottom "Also you're Stats has been reset for bug preventing purposes.";
+	ResetStatus;
+	end;
+}
+if(readparam(bStr) > 120 || readparam(bAgi) > 120 || readparam(bVit) > 120 || readparam(bInt) > 120 || readparam(bDex) > 120 || readparam(bLuk) > 120) {
+	dispbottom "You're Stats has been reset duo the new Max Stats Limit, which is 120 now.";
+	ResetStatus;
+	end;
+}
+}

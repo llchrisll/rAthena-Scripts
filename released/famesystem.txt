@@ -1,0 +1,763 @@
+//===== eAthena Script =======================================
+//= Fame Quest and Shop System
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Created
+//= 1.1 - Added missing reset part after completing an quest
+//      - Added Reset Quest Delay Option to GM Panel,
+//        Quest Overview and Quest Counter Reset Option
+//        to Quest Management menu
+//      - Moved Class Selection at Quest Management after Quest Quantity List
+//      - Modified the checks at OnNPCKillEvent:
+//      - Fixed an typo at Fame Gaining in the function, I 
+//        forgot to add the new fame, instead it was setting it
+//      - Fixed an Shop problem
+//      - Changed the "mes" at Progress Displaying by whispering at the NPC
+//        into "dispbottom", no need to open a window for that :P
+//= 1.2 - Compatible with rAthena now
+//      - Fixxed some bugs and made some small edits
+//      - Fixxed the GM check in the first lines
+//===== Compatible With ======================================
+//= Every Athena SQL SVN 
+//===== Tested With ==========================================
+//= eAthena 14428 SQL Trunk 
+//===== Description ==========================================
+//= Gain Fame by doing "Fame Quests" and use the gained points
+//  in the Fame Shop, where the GM's above lvl ".gm" can add/remove
+//  items from.
+//= Fame Quests:
+//  Fame Quests are listed via the Class Row you are in.
+//= See "OnInit:" for the Config.
+//===== Comments =============================================
+//= Note: I will NOT!!!! add an SQL Support for this.
+//============================================================
+prontera,161,182,4	script	Fame Manager	110,{
+function	FAME_FUNC;
+
+mes .n$;
+mes "Hello, "+strcharinfo(0)+"!";
+if(getgmlevel() >= .gm)
+	if(select("- GM Panel:- Player Menu") == 1) goto GM_Panel;
+mes "By completeing so called \"Fame Quests\" you can gain fame points,";
+mes "which can be spent in the Shop.";
+mes "You can have up to "+.m_fame+" Fame Points each class.";
+mes "The quests depends on the class row in which you are,";
+mes "like Knight belongs to the Class Row Swordman";
+mes "Please choose what you want to do now:";
+if(set(.@m,select("- Fame Quests:- Open Shop:- Nothing")) == 3) close;
+next;
+mes .n$;
+if(set(@t,BaseClass) < 1 || @t > 6) {
+	mes "I'm sorry, but you can't gain any fame.";
+	close;
+}
+if(.@m == 1) {
+	if(FameDelay < gettimetick(2)) {
+		if(getarraysize(getd("$f_quest_id_"+@t)) < 1) {
+			mes "I'm sorry, but there are no \"Fame Quests\" yet.";
+			mes "Please try again later.";
+			close;
+		}
+		if(getd("FamePoints_"+@t) >= .m_fame) {
+			mes "You have reached the maximum Fame for your Class.";
+			mes "Please visit the Shop to use them.";
+			close;
+		}
+		if(FameQuest) { // Player has an Quest active
+			mes "I will list your progress in the Chat Room.";
+			close2;
+			dispbottom FAME_FUNC(0,@t,FameQuest);
+			end;
+		} else { // No quest accepted yet
+			// Saving Quest ID's in a list
+			// also displaying info about the quest
+			for ( set .@m,0; .@m < getarraysize(getd("$f_quest_id_"+@t)); set .@m,.@m + 1) {
+				mes "Quest ID: "+getd("$f_quest_id_"+@t+"["+.@m+"]");
+				set .@q_id,getd("$f_quest_id_"+@t+"["+.@m+"]");
+				mes "----------------";
+				set .@t,getd("$f_quest_"+.@q_id+"_"+@t+"_type");
+				mes "Type: "+ ( (.@t == 1)?"Monster Hunting":"Item Collecting");
+				if(.@t == 1) mes "Required Level: "+getd("$f_quest_"+.@q_id+"_"+@t+"_level");
+				mes "Target: "+ ( (.@t == 1)?getd("$f_quest_"+.@q_id+"_"+@t+"_mam[0]")+"x "+strmobinfo(1,getd("$f_quest_"+.@q_id+"_"+@t+"_mid[0]")):getd("$f_quest_"+.@q_id+"_"+@t+"_iam[0]")+"x "+getitemname(getd("$f_quest_"+.@q_id+"_"+@t+"_iid[0]")) );
+				for ( set .@l,1; .@l < getarraysize( getd("$f_quest_"+.@q_id+"_"+@t+"_"+( (.@t == 1)?"m":"i")+"id") ); set .@l,.@l + 1) 
+					mes "        "+ ( (.@t == 1)?getd("$f_quest_"+.@q_id+"_"+@t+"_mam["+.@l+"]")+"x "+strmobinfo(1,getd("$f_quest_"+.@q_id+"_"+@t+"_mid["+.@l+"]")):getd("$f_quest_"+.@q_id+"_"+@t+"_iam["+.@l+"]")+"x "+getitemname(getd("$f_quest_"+.@q_id+"_"+@t+"_iid["+.@l+"]")) );
+				mes "=================";
+				set .@fm_menu$,.@fm_menu$ + "- Quest ID#"+getd("$f_quest_id_"+@t+"["+.@m+"]") + ( (getd("$f_quest_id_"+@t+"["+(.@m+1)+"]") == 0)?"":":");
+			}
+			next;
+			set .@g,select(.@fm_menu$) - 1;
+			mes .n$;
+			mes "You have chosen ID#"+set(.@id,getd("$f_quest_id_"+@t+"["+.@g+"]"))+":";
+			set .@t,getd("$f_quest_"+.@id+"_"+@t+"_type");
+			mes "Quest Info:";
+			mes "Type: "+( (.@t == 1)?"Monster Hunting":"Item Collecting");
+			if(.@t == 1) mes "Required Level: "+getd("$f_quest_"+.@id+"_"+@t+"_level");
+			mes "Target: "+ ( (.@t == 1)?getd("$f_quest_"+.@id+"_"+@t+"_mam[0]")+"x "+strmobinfo(1,getd("$f_quest_"+.@id+"_"+@t+"_mid[0]")):getd("$f_quest_"+.@id+"_"+@t+"_iam[0]")+"x "+getitemname(getd("$f_quest_"+.@id+"_"+@t+"_iid[0]")) );
+			for ( set .@l,1; .@l < getarraysize( getd("$f_quest_"+.@id+"_"+@t+"_"+( (.@t == 1)?"m":"i")+"id") ); set .@l,.@l + 1) 
+				mes "        "+ ( (.@t == 1)?getd("$f_quest_"+.@id+"_"+@t+"_mam["+.@l+"]")+"x "+strmobinfo(1,getd("$f_quest_"+.@id+"_"+@t+"_mid["+.@l+"]")):getd("$f_quest_"+.@id+"_"+@t+"_iam["+.@l+"]")+"x "+getitemname(getd("$f_quest_"+.@id+"_"+@t+"_iid["+.@l+"]")) );
+			mes "Is that correct?";
+			if(select("- Yes:- No") - 1) close;
+			next;
+			mes .n$;
+			if(.level && (BaseLevel < getd("$f_quest_"+.@id+"_"+@t+"_level")) ) {
+				mes "I'm sorry, but you don't meet the level requirement.";
+				close;
+			}
+			set FameQuest,.@id;
+			mes "Good Luck.";
+			close;
+		}
+	} else {
+		mes "I'm sorry, but you can't do any Fame Quest for the time being.";
+		mes "Come back later.";
+		close;
+	}
+
+} else if(.@m == 2) {
+	if(getarraysize(getd("$f_shop_"+@t+"_id")) < 1) {
+		mes "I'm sorry, but there are no items yet.";
+		mes "Please come back later.";
+		close;
+	}
+	mes "You have "+ getd("FamePoints_"+@t)+" Fame Points";
+	mes "Notice: Discount Skill won't work at me, you'll have to pay the full price.";
+	close2;
+	npcshopitem "Fame Shop"+@t,512,10;
+	npcshopdelitem "Fame Shop"+@t,512;
+	for ( set .@s,0; .@s < getarraysize(getd("$f_shop_"+@t+"_id")); set .@s,.@s + 1) 
+		npcshopadditem "Fame Shop"+@t,getd("$f_shop_"+@t+"_id["+.@s+"]"),getd("$f_shop_"+@t+"_cost["+.@s+"]");
+	
+	npcshopattach "Fame Shop"+@t;
+	callshop "Fame Shop"+@t,1;
+	end;
+}
+
+OnBuyItem:
+for ( set .@b,0; .@b < getarraysize(@bought_nameid); set .@b,.@b + 1) {
+	for ( set .@l,0; .@l < getarraysize(getd("$f_shop_"+@t+"_id")); set .@l,.@l + 1) {
+		if(@bought_nameid[.@b] == getd("$f_shop_"+@t+"_id["+.@l+"]")) {
+			if(checkweight(getd("$f_shop_"+@t+"_id["+.@l+"]"),@bought_quantity[.@b]) == 1) {
+				set @cost,getd("$f_shop_"+@t+"_cost["+.@l+"]")*@bought_quantity[.@b];
+				set @total,@total+@cost;
+			} else {
+				dispbottom "Cash Shop: You would be overweight, please remove some items or buy less.";
+				set @cost,0;
+				set @total,0;
+				deletearray @bought_nameid[0],128;
+				deletearray @bought_quantity[0],128;
+				end;
+			}
+		}
+	}
+}
+if(@total > getd("FamePoints_"+@t) ) {
+	dispbottom strnpcinfo(1)+": You don't have the required Fame Points";
+	dispbottom strnpcinfo(1)+": You need "+@total+" Fame Points.";
+	set @cost,0;
+	set @total,0;
+	deletearray @bought_nameid[0],128;
+	deletearray @bought_quantity[0],128;
+	end;
+}
+setd("FamePoints_"+@t),getd("FamePoints_"+@t) - @total;
+
+for ( set .@s,0; .@s < getarraysize(@bought_nameid); set .@s,.@s + 1)
+	getitem @bought_nameid[.@s],@bought_quantity[.@s];
+	
+set @cost,0;
+set @total,0;
+deletearray @bought_nameid[0],128;
+deletearray @bought_quantity[0],128;
+end;
+	
+	
+OnNPCKillEvent:
+if(FameQuest == 0 || getd("$f_quest_"+FameQuest+"_"+BaseClass+"_type") != 1) end;
+for ( set .@m,0; .@m < getarraysize(getd("$f_quest_"+FameQuest+"_"+BaseClass+"_mid")); set .@m,.@m + 1) 
+	if( killedrid == getd("$f_quest_"+FameQuest+"_"+BaseClass+"_mid["+.@m+"]") ) {
+		setd(killedrid+"_Kill"),getd(killedrid+"_Kill") + 1;
+		break;
+	}
+dispbottom FAME_FUNC(0,BaseClass,FameQuest);
+end;
+
+OnWhisperGlobal:
+if(getgmlevel() > .gm && @whispervar0$ == "OnInit") goto OnInit;
+if(FameQuest == 0) {
+	dispbottom .n$+": I'm sorry, but you haven't accepted an quest yet, therefore you can't see your progress.";
+	end;
+}
+dispbottom .n$+": Here is your Progress:";
+for ( set .@q,0; .@q < getarraysize(getd("$f_quest_"+FameQuest+"_"+@t+"_mid")); set .@q,.@q + 1) 
+	dispbottom strmobinfo(1,getd("$f_quest_"+FameQuest+"_"+@t+"_mid["+.@q+"]"))+": "+getd(getd("$f_quest_"+FameQuest+"_"+@t+"_mid["+.@q+"]")+"_Kill")+"/"+getd("$f_quest_"+FameQuest+"_"+@t+"_mam["+.@q+"]");
+end;
+
+
+GM_Panel:
+mes "What do you like to do?";
+next;
+switch(select("- Quest Management:- Shop Management:- Reset Fame Quest Delay:- Nothing")) {
+	case 1:
+	mes .n$;
+	mes "This is the current quest quantity in each Job Row:";
+	for( set .@j,1; .@j != 7; set .@j,.@j + 1) {
+		mes jobname(.@j)+": "+getarraysize(getd("$f_quest_id_"+.@j));
+		set .@tot,.@tot + getarraysize(getd("$f_quest_id_"+.@j));
+	}
+
+	mes "Total: " + .@tot;
+	mes "What do you want to do?";
+	mes "But first choose in the Job Row:";
+	set @t,select("- Swordman:- Mage:- Archer:- Acolyte:- Merchant:- Thief");
+	next;
+	switch(select("- Quest Overview:- Add Quests:- Delete Quests:- Reset Quest Counter")) {
+		case 1:
+		mes .n$;
+		if(getarraysize(getd("$f_quest_id_"+@t)) < 1) {
+			mes "There are no quests yet.";
+			mes "Please add one first.";
+			close;
+		}
+		for ( set .@m,0; .@m < getarraysize(getd("$f_quest_id_"+@t)); set .@m,.@m + 1) {
+			mes "Quest ID: "+getd("$f_quest_id_"+@t+"["+.@m+"]");
+			set .@q_id,getd("$f_quest_id_"+@t+"["+.@m+"]");
+			mes "----------------";
+			set .@t,getd("$f_quest_"+.@q_id+"_"+@t+"_type");
+			mes "Type: "+ ( (.@t == 1)?"Monster Hunting":"Item Collecting");
+			if(.@t == 1) mes "Required Level: "+getd("$f_quest_"+.@q_id+"_"+@t+"_level");
+			mes "Target: "+ ( (.@t == 1)?getd("$f_quest_"+.@q_id+"_"+@t+"_mam[0]")+"x "+strmobinfo(1,getd("$f_quest_"+.@q_id+"_"+@t+"_mid[0]")):getd("$f_quest_"+.@q_id+"_"+@t+"_iam[0]")+"x "+getitemname(getd("$f_quest_"+.@q_id+"_"+@t+"_iid[0]")) );
+			for ( set .@l,1; .@l < getarraysize( getd("$f_quest_"+.@q_id+"_"+@t+"_"+( (.@t == 1)?"m":"i")+"id") ); set .@l,.@l + 1) 
+				mes "        "+ ( (.@t == 1)?getd("$f_quest_"+.@q_id+"_"+@t+"_mam["+.@l+"]")+"x "+strmobinfo(1,getd("$f_quest_"+.@q_id+"_"+@t+"_mid["+.@l+"]")):getd("$f_quest_"+.@q_id+"_"+@t+"_iam["+.@l+"]")+"x "+getitemname(getd("$f_quest_"+.@q_id+"_"+@t+"_iid["+.@l+"]")) );
+			mes "=================";
+		}
+		break;
+		
+		case 2:
+		mes .n$;		
+		if(getarraysize(getd("$f_quest_id_"+@t)) >= 128) {
+			mes "I'm sorry, but you can't any more quests thus the limit is 128.";
+			close;
+		}
+		set .@que_id,getd("$f_quest_id_"+@t+"_last") + 1;
+		mes "Please choose what type of quest it will be:";
+		next;
+		set .@type,select("- Monster Hunting:- Item Collecting");
+		set .@count,0;
+		mes .n$;
+
+		// Monster Hunting
+		if(.@type == 1) {
+			mes "How many mobs should be hunted?";
+			mes "^FF0000Note: Maximum "+.mob_ct+"^000000";
+			if(input(.@ct,1,.mob_ct) != 0) {
+				next;
+				mes .n$;
+				mes "Invalid Amount, please try again.";
+				close;
+			}
+			if(.level) {
+				next;
+				mes .n$;
+				mes "Now please choose the level requirement:";
+				mes "^FF0000Note: You can't go over the maximum level of "+.m_level+"!^000000";
+				if(input(.@lvl,1,.m_level) != 0) {
+					next;
+					mes .n$;
+					mes "Invalid Level, please try again.";
+					close;
+				}
+			}
+			while(.@count != .@ct) {
+				next;
+				mes .n$;
+				mes "Please type the Mob ID for #"+(.@count+1)+",which should be hunted:";
+				next;
+				input .@mobid;
+				mes .n$;
+				if(strmobinfo(1,.@mobid) == "null" || strmobinfo(1,.@mobid) == "") {
+					mes "Mob not found, please be sure that you have typed the ID correctly and try again.";
+					continue;
+				}
+				mes "Monster: "+strmobinfo(1,.@mobid);
+				mes "Now type the amount to hunt:";
+				mes "Minimum: "+.mob_min+", Maximum: "+.mob_max;
+				next;
+				if(input(.@mobam,.mob_min,.mob_max) != 0) {
+					mes .n$;
+					mes "Invalid Amount, please try again.";
+					continue;
+				}
+				setarray getd("$f_quest_"+.@que_id+"_"+@t+"_mid["+getarraysize(getd("$f_quest_"+.@que_id+"_"+@t+"_mid"))+"]"),.@mobid;
+				setarray getd("$f_quest_"+.@que_id+"_"+@t+"_mam["+getarraysize(getd("$f_quest_"+.@que_id+"_"+@t+"_mam"))+"]"),.@mobam;
+				set .@count,.@count + 1;
+			}
+			if(.level) setd("$f_quest_"+.@que_id+"_"+@t+"_level"),.@lvl;
+			// Item Collecting
+		} else if(.@type == 2) {
+			mes "How many items do you want to add?";
+			mes "^FF0000Note: Maximum "+.item_ct+"^000000";
+			if(input(.@ct,1,.item_ct) != 0) {
+				next;
+				mes .n$;
+				mes "Invalid Amount, please try again.";
+				close;
+			}
+			while(.@count != .@ct) {
+				next;
+				mes .n$;
+				mes "Type the Item ID for #"+(.@count+1)+":";
+				next;
+				input .@itemid;
+				mes .n$;
+				if(getitemname(.@itemid) == "null" || getitemname(.@itemid) == "") {
+					mes "The ID "+.@itemid+" doesn't exist. Please try again.";
+					continue;
+				}
+				mes "Type the amount to collect next:";
+				mes "^FF0000Note: Minimum: "+.item_min+", Maximum: "+.item_max+"^000000";
+				next;
+				if(input(.@itemam,.item_min,.item_max) != 0) {
+					mes .n$;
+					mes "Invalid Amount, please try again.";
+					continue;
+				}
+				setarray getd("$f_quest_"+.@que_id+"_"+@t+"_iid["+getarraysize(getd("$f_quest_"+.@que_id+"_"+@t+"_iid"))+"]"),.@itemid;
+				setarray getd("$f_quest_"+.@que_id+"_"+@t+"_iam["+getarraysize(getd("$f_quest_"+.@que_id+"_"+@t+"_iam"))+"]"),.@itemam;
+				set .@count,.@count + 1;
+			}
+		}
+		next;
+		mes .n$;
+		mes "The Quest ID#"+.@que_id+" has been added successfully.";
+		setd("$f_quest_"+.@que_id+"_"+@t+"_type"),.@type;
+		setd("$f_quest_"+.@que_id+"_"+@t+"_ct"),.@ct;
+		setarray getd("$f_quest_id_"+@t+"["+getarraysize(getd("$f_quest_id_"+@t))+"]"),.@que_id;
+		setd("$f_quest_id_"+@t+"_last"),getd("$f_quest_id_"+@t+"_last") + 1;
+		break;
+		
+		case 3:
+		mes .n$;
+		if(getarraysize(getd("$f_quest_id_"+@t)) < 1) {
+			mes "I'm sorry, but this class row doesn't have any quests, which can be deleted.";
+			mes "Please create one first.";
+			close;
+		}
+		mes "Now choose which quest you want to delete:";
+		mes " ";
+		for ( set .@m,0; .@m < getarraysize(getd("$f_quest_id_"+@t)); set .@m,.@m + 1) {
+				mes "Quest ID: "+getd("$f_quest_id_"+@t+"["+.@m+"]");
+				set .@q_id,getd("$f_quest_id_"+@t+"["+.@m+"]");
+				mes "----------------";
+				set .@t,getd("$f_quest_"+.@q_id+"_"+@t+"_type");
+				mes "Type: "+ ( (.@t == 1)?"Monster Hunting":"Item Collecting");
+				if(.@t == 1) mes "Required Level: "+getd("$f_quest_"+.@q_id+"_"+@t+"_level");
+				mes "Target: "+ ( (.@t == 1)?getd("$f_quest_"+.@q_id+"_mam[0]")+"x "+strmobinfo(1,getd("$f_quest_"+.@q_id+"_"+@t+"_mid[0]")):getd("$f_quest_"+.@q_id+"_"+@t+"_iam[0]")+"x "+getitemname(getd("$f_quest_"+.@q_id+"_"+@t+"_iid[0]")) );
+				for ( set .@l,1; .@l < getarraysize( getd("$f_quest_"+.@q_id+"_"+@t+"_"+( (.@t == 1)?"m":"i")+"id") ); set .@l,.@l + 1) 
+					mes "        "+ ( (.@t == 1)?getd("$f_quest_"+.@q_id+"_"+@t+"_mam["+.@l+"]")+"x "+strmobinfo(1,getd("$f_quest_"+.@q_id+"_"+@t+"_mid["+.@l+"]")):getd("$f_quest_"+.@q_id+"_"+@t+"_iam["+.@l+"]")+"x "+getitemname(getd("$f_quest_"+.@q_id+"_"+@t+"_iid["+.@l+"]")) );
+				mes "=================";
+				set .@fm_del$,.@fm_del$ + "- Quest ID#"+getd("$f_quest_id_"+@t+"["+.@m+"]")+ ( (getd("$f_quest_id_"+@t+"["+(.@m+1)+"]") == 0)?"":":");
+			}
+		next;
+		set .@del,select(.@fm_del$) - 1;
+		mes .n$;
+		mes "You have chosen Quest ID #"+set(.@q_del,getd("$f_quest_id_"+@t+"["+.@del+"]") );
+		mes "Is that correct?";
+		next;
+		if(select("- Yes:- No") - 1) close;
+		mes .n$;
+		mes "The Quest ID#"+.@q_del+" has been deleted successfully.";
+		if(getd("$f_quest_"+.@q_del+"_"+@t+"_type") == 1) {
+			deletearray getd("$f_quest_"+.@q_del+"_"+@t+"_mid[0]"),128;
+			deletearray getd("$f_quest_"+.@q_del+"_"+@t+"_mam[0]"),128;
+		} else {
+			deletearray getd("$f_quest_"+.@q_del+"_"+@t+"_iid[0]"),128;
+			deletearray getd("$f_quest_"+.@q_del+"_"+@t+"_iam[0]"),128;
+		}
+		deletearray getd("$f_quest_id_"+@t+"["+.@del+"]"),1;
+		setd("$f_quest_"+.@q_del+"_"+@t+"_type"),0;
+		break;
+	
+		case 4:
+		mes .n$;
+		mes "Are you sure?";
+		if(select("- Yes:- No") - 1) close;
+		next;
+		mes .n$;
+		mes "Quest Counter Reseted.";
+		setd("$f_quest_id_"+@t+"_last"),0;
+		break;
+	}
+	break;
+	
+	// Shop Management
+	case 2:
+	mes .n$;
+	mes "Which Fame Shop you want to manage?";
+	next;
+	set .@t,select("- Swordman:- Mage:- Archer:- Acolyte:- Merchant:- Thief");
+	mes .n$;
+	mes "What do you like to do?";
+	while(1) {
+		next;
+		switch(select("- Shop Overview:- Add Items:- Edit Items:- Delete Items:- Nothing")) {
+			case 1:
+			mes .n$;
+			if(getarraysize(getd("$f_shop_"+.@t+"_id")) < 1) 
+				mes "There is no item in the Shop yet.";
+			else {
+				mes "There are currently the following "+getarraysize(getd("$f_shop_"+.@t+"_id"))+" Items in the Shop:";
+				mes "============================";
+				for ( set .@i,0; .@i < getarraysize(getd("$f_shop_"+.@t+"_id")); set .@i,.@i + 1) {
+					mes getitemname(getd("$f_shop_"+.@t+"_id["+.@i+"]"))+" (ID: "+getd("$f_shop_"+.@t+"_id["+.@i+"]")+")";
+					mes "Price: "+getd("$f_shop_"+.@t+"_cost["+.@i+"]")+" Fame Points";
+					mes ( (getd("$f_shop_"+.@t+"_id["+(.@i+1)+"]") != 0)?"---------------------------------":"============================");
+				}
+			}
+			continue;
+			
+			case 2:
+			mes .n$;
+			if(getarraysize(getd("$f_shop_"+.@t+"_id")) >= 128) {
+				mes "The Shop is full, please remove an item first.";
+				continue;
+			}
+			mes "Please type the Item ID you want to add:";
+			mes "Max is 128 Items.";
+			next;
+			if(input(@item,501,.last_id) != 0) {
+				mes .n$;
+				mes "The id you have put is either too low or too high.";
+				continue;
+			}
+			if(getitemname(@item) == "null" || getitemname(@item) == "") {
+				mes .n$;
+				mes "The item you requested doesn't exist.";
+				continue;
+			}
+			mes .n$;
+			mes "Chosen Item: "+getitemname(@item);
+			mes " ";
+			mes "Now input the price it should have.";
+			mes "Maximum is "+.m_price;
+			next;
+			if(input(@price,1,.m_price) != 0) {
+				mes .n$;
+				mes "You have put an invalid price.";
+				mes "Maximum is "+.m_price;
+				continue;
+			}
+			mes .n$;
+			mes "Price: "+@price+" Fame Points";
+			mes "Is that correct?";
+			if(select("- Yes:- No") - 1) continue;
+			FAME_FUNC(1,.@t,1,0,@item,@price);
+			continue;
+			break;
+
+			case 3:
+			mes .n$;
+			if(getarraysize(getd("$f_shop_"+.@t+"_id")) < 1) {
+				mes "There is no Item to edit.";
+				mes "Please add one first :D.";
+				continue;
+			}
+			mes "Please choose the item you want to edit:";
+			mes "Format: Name (Current Price)";
+			next;
+			set @ed_list$,"";
+			for ( set .@e,0; .@e < getarraysize(getd("$f_shop_"+.@t+"_id")); set .@e,.@e + 1)
+				set @ed_list$,@ed_list$ + "- "+getitemname(getd("$f_shop_"+.@t+"_id["+.@e+"]"))+" ("+getd("$f_shop_"+.@t+"_cost["+.@e+"]")+")" + ( ( getd("$f_shop_"+.@t+"_id["+(.@e+1)+"]") )?":":"");
+				
+			set @ed,select(@ed_list$) - 1;
+			
+			mes .n$;
+			mes "Chosen Item: "+ getitemname(getd("$f_shop_"+.@t+"_id["+@ed+"]"));
+			mes "Item ID: "+getd("$f_shop_"+.@t+"_id["+@ed+"]");
+			mes "Price: "+ getd("$f_shop_"+.@t+"_cost["+@ed+"]")+" Fame Points";
+			mes "Correct?";
+			if(select("- Yes:- No") - 1) continue;
+			next;
+			mes .n$;
+			mes "What do you want to edit?";
+			next;
+			if(select("- Item ID:- Price") - 1) {
+				mes .n$;
+				mes "Input the new price:";
+				next;
+				if(input(@price,1,.m_price) != 0) {
+					mes .n$;
+					mes "You have put an invalid price.";
+					mes "Maximum is "+.m_price;
+					continue;
+				}
+				mes .n$;
+				mes "Chosen Price: "+@price+" Fame Points";
+				mes "Correct?";
+				if(select("- Yes:- No") - 1) continue;
+				FAME_FUNC(1,.@t,3,@ed,getd("$f_shop_"+.@t+"_id["+@ed+"]"),@price);
+				
+			} else {
+				mes .n$;
+				mes "Input the new item id:";
+				next;
+				if(input(@item,501,.last_id) != 0) {
+					mes .n$;
+					mes "The id you have put is either too low or too high.";
+					continue;
+				}
+				if(getitemname(@item) == "null" || getitemname(@item) == "") {
+					mes .n$;
+					mes "The item you requested doesn't exist.";
+					continue;
+				}
+				mes .n$;
+				mes "Chosen Item: "+getitemname(@item);
+				mes "Correct?";
+				if(select("- Yes:- No") - 1) continue;
+				FAME_FUNC(1,.@t,3,@ed,@item,getd("$f_shop_"+.@t+"_cost["+@ed+"]"));
+			}	
+			continue;
+			break;
+
+			case 4:
+			mes .n$;
+			if(getarraysize(getd("$f_shop_"+.@t+"_id")) < 1) {
+				mes "There is no Item to remove.";
+				mes "Please add one first :D.";
+				continue;
+			}
+			mes "Please choose the item you want to remove:";
+			mes "Format: Name (Current Price)";
+			next;
+			set @r_list$,"";
+			for ( set .@e,0; .@e < getarraysize(getd("$f_shop_"+.@t+"_id")); set .@e,.@e + 1)
+				set @r_list$,@r_list$ + "- "+getitemname(getd("$f_shop_"+.@t+"_id["+.@e+"]"))+" ("+getd("$f_shop_"+.@t+"_cost["+.@e+"]")+")" + ( (getd("$f_shop_"+.@t+"_id["+(.@e+1)+"]"))?":":"");
+				
+			set @re,select(@r_list$) - 1;
+			
+			mes .n$;
+			mes "Chosen Item: "+ getitemname(getd("$f_shop_"+.@t+"_id["+@re+"]"));
+			mes "Price: "+ getd("$f_shop_"+.@t+"_cost["+@re+"]")+" Fame Points";
+			mes "Correct?";
+			if(select("- Yes:- No") - 1) continue;
+			FAME_FUNC(1,.@t,2,@ed);
+			continue;
+			break;
+			
+			case 5:
+			break;
+		}
+		break;
+	}
+	
+	case 3:
+	mes .n$;
+	mes "Fame Quest Delay reseted.";
+	set FameDelay,0;
+	break;
+	
+	case 4:
+	break;	
+}
+close;
+
+OnInit:
+// NPC Name, recieved automatically from the NPC Header
+set .n$,"["+strnpcinfo(1)+"]";
+// GM Access Level for GM Panel
+set .gm,80;
+// Minimum and Maximum Mob Amount
+set .mob_min,1;
+set .mob_max,100;
+// Maximum Mobs you can hunt at the same time
+set .mob_ct,3;
+// Level Restriction
+set .level,1; // 1 = On / 0 = Off
+set .m_level,99; // Max Base Level of the Server
+// Minimum and Maximum Item Amount
+set .item_min,1;
+set .item_max,200;
+// Maximum Items you can collect at the same time
+set .item_ct,5;
+// Maximum Fame
+set .m_fame,10000;
+// Random Fame Values
+set .min_f,10;
+set .max_f,100;
+// Delay Duration
+set .time,86400;
+// Shop Settings
+// Last Item ID in the Database
+set .last_id,25000;
+// Maximum Price, should be not more than .m_fame, else an Item would be unbuyable.
+set .m_price,.m_fame;
+
+function	FAME_FUNC	{
+// getarg(0) - Identifier
+// 0 = Quest
+// 1 = Shop
+//
+// getarg(1) - Class Type
+//
+// ======= Quest =========
+// getarg(2) - Quest ID (FameQuest variable)
+// --------------------------------
+if(getarg(0) == 0) {
+	if(getarg(2) != 0) { // The player has accepted an quest
+		for ( set .@i,0; .@i < getarraysize(getd("$f_quest_id_"+getarg(1))); set .@i,.@i + 1) 
+			if(getd("$f_quest_id_"+getarg(1)+"["+.@i+"]") == getarg(2)) break;
+			
+		// Getting Type of Quest
+		set .@c_que_t,getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_type");
+	
+		// Getting Amount per Mob/Item
+		set .@c_q_ct,getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_ct");
+
+		// Monster Hunting
+		if(.@c_que_t == 1) {
+			
+			// Monster Quanity = 1?
+			if(.@c_q_ct == 1) {
+				
+				// Killed enough Mobs?
+				if(getd(getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_mid[0]")+"_Kill") < getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_mam[0]")) 
+				
+					// Displaying progress 
+					return strmobinfo(1,getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_mid[0]"))+"(ID: "+getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_mid[0]")+": "+getd(getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_mid[0]")+"_Kill")+"/"+getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_mam[0]");
+			
+				// If Monster to kill is over 1
+			} else {
+
+				// Looping through the monster array
+				for ( set .@m,0; .@m < .@c_q_ct; set .@m,.@m + 1) {
+				
+					// Checking if the required amount of the mob chosen is enough
+					if(getd(getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_mid["+.@m+"]")+"_Kill") >= getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_mam["+.@m+"]")) 
+						
+						// Increasing counter
+						set .@c,.@c + 1;
+						
+					// Displaying detailed Progress
+					dispbottom strmobinfo(1,getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_mid["+.@m+"]"))+"(ID: "+getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_mid["+.@m+"]")+"): "+getd(getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_mid["+.@m+"]")+"_Kill")+"/"+getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_mam["+.@m+"]");
+				}
+				
+				// After looping, checking if the counter value is the same as the arraysize of the monster quantity array, if not:
+				if(.@c != .@c_q_ct) 
+					return "You didn't defeat all required mobs yet.";
+				else 
+					// Displaying Quest completed.
+					dispbottom "You have defeated all required Mobs, thanks for your hard work.";
+			}
+
+		// Item Collecting
+		} else {
+
+			// Item Quanity = 1?
+			if(.@c_q_ct == 1) {
+				
+				// Collected enough Items?
+				if(countitem(getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_iid[0]")) < getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_iam[0]")) 
+				
+					// Displaying progress
+					return getitemname(getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_iid[0]"))+" (ID:"+getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_iid[0]")+": "+countitem(getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_iid[0]"))+"/"+getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_iam[0]");
+			
+			// If Items to collect is over 1
+			} else if(.@c_q_ct > 1) {
+				
+				// Looping through the item array
+				for ( set .@m,0; .@m < .@c_q_ct; set .@m,.@m + 1) {
+				
+					// Checking if the required amount of the items chosen is enough
+					if(countitem(getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_iid["+.@m+"]")) >= getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_iam["+.@m+"]")) 
+				
+						// Increasing counter
+						set .@c,.@c + 1;
+			
+					// Displaying detailed Progress
+					dispbottom getitemname(getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_iid["+.@m+"]"))+" (ID:"+getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_iid["+.@m+"]")+"): "+countitem(getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_iid["+.@m+"]"))+"/"+getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_iam["+.@m+"]");
+				}
+				
+				// After looping, checking if the counter value is the same as the counter variable of the item arrays, if not:
+				if(.@c != .@c_q_ct) 
+					return "You didn't collect all required items.";
+						
+				else 
+					// Displaying Quest completed.
+					dispbottom "You have collected all required Items, thanks for your hard work.";
+			}
+		}
+		// Bug preventing
+		if(.@c_que_t < 1) 
+			set .@c_que_t,getd("$f_quest_"+getarg(3)+"_"+getarg(2)+"_type");
+		
+		// Monster Hunting
+		if(.@c_que_t == 1) {
+			// Looping through the monster array
+			for ( set .@m,0; .@m < getarraysize(getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_mid")); set .@m,.@m + 1) 
+				// Reseting Monster Variables
+				setd(getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_mid["+.@m+"]")+"_Kill"),0;
+			
+		// Item Collecting
+		} else if(.@c_que_t == 2) {
+			// Looping through the item array
+			for ( set .@m,0; .@m < .@c_q_ct; set .@m,.@m + 1) 
+				// Deleting the Items
+				delitem getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_iid["+.@m+"]"),getd("$f_quest_"+getarg(2)+"_"+getarg(1)+"_iam["+.@m+"]");
+		} else 
+			return "Bug appeared: .@c_que_t == 0, at Quest completing by removing items from the inventory/reseting mob variables.";
+		
+		// Reseting Quest Variable
+		set .@fq,FameQuest;
+		set FameQuest,0;
+		set FameDelay,gettimetick(2)+.time;
+		set .@f_gain,rand(.min_f,.max_f);
+		setd("FamePoints_"+getarg(1)),getd("FamePoints_"+getarg(1)) + .@f_gain;
+		dispbottom .n$+": You have gained "+.@f_gain+" Fame Points.";
+		return .n$+": Quest ID#"+.@fq+" completed";
+		
+	}
+	
+// ======================= Shop ======================= //
+} else if(getarg(0) == 1) {
+// getarg(2):
+//	* 1 - Add
+//	* 2 - Remove
+//	* 3 - Edit
+// getarg(3): Array Position for Edit & Remove
+// getarg(4): Item ID
+// getarg(5): Price
+// ==================================================== //
+	// =========== Item Adding ============ //
+	if(getarg(2) == 1) {
+		npcshopadditem "Fame Shop"+getarg(1),getarg(4),getarg(5);
+		setarray getd("$f_shop_"+getarg(1)+"_id["+getarraysize(getd("$f_shop_"+getarg(1)+"_id"))+"]"),getarg(4);
+		setarray getd("$f_shop_"+getarg(1)+"_cost["+getarraysize(getd("$f_shop_"+getarg(1)+"_cost"))+"]"),getarg(5);
+		
+	// =========== Item Removal ============ //	
+	} else if(getarg(2) == 2) {
+		npcshopdelitem "Fame Shop"+getarg(1),getd("$f_shop_"+getarg(1)+"_id["+getarg(3)+"]");
+		deletearray getd("$f_shop_"+getarg(1)+"_id["+getarg(3)+"]"),1;
+		deletearray getd("$f_shop_"+getarg(1)+"_cost["+getarg(3)+"]"),1;
+		
+	// =========== Item Edit ============ //
+	} else if(getarg(2) == 3) {
+		setarray getd("$f_shop_"+getarg(1)+"_id["+getarg(3)+"]"),getarg(4);
+		setarray getd("$f_shop_"+getarg(1)+"_cost["+getarg(3)+"]"),getarg(5);
+		// Re-Create Shop after Edit
+		npcshopitem "Fame Shop"+getarg(1),getd("$f_shop_"+getarg(1)+"_id[0]"),getd("$f_shop_"+getarg(1)+"_cost[0]");
+		for ( set .@s,1; .@s < getarraysize(getd("$f_shop_"+getarg(1)+"_id")); set .@s,.@s + 1) 
+				npcshopadditem "Fame Shop"+getarg(1),getd("$f_shop_"+getarg(1)+"_id["+.@s+"]"),getd("$f_shop_"+getarg(1)+"_cost["+.@s+"]");
+	}
+	return;
+}
+// End of Function
+}
+// End of Script
+}
+-	shop	Fame Shop1	-1,512:-1
+-	shop	Fame Shop2	-1,512:-1
+-	shop	Fame Shop3	-1,512:-1
+-	shop	Fame Shop4	-1,512:-1
+-	shop	Fame Shop5	-1,512:-1
+-	shop	Fame Shop6	-1,512:-1

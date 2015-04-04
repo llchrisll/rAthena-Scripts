@@ -1,0 +1,255 @@
+//===== eAthena Script =======================================
+//= GM Manager
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Created
+//===== Compatible With ======================================
+//= Every eAthena SQL SVN 
+//===== Tested With ==========================================
+//= Untested
+//===== Description ==========================================
+//= This Scripts handles Basic Map Access Settings for your GM's.
+//  Also you can set which GM Level can join active WoE.
+//= Currently you can decide which GM's can go everywhere but with @hide active.
+//  And which are only allowed to be in Town or GM Office/House.
+//======== Install Notes ======================================
+//= GM Shop: I made the Item Adding Sequence as simple as possible:
+//  In .gms_id_start you put your first Custom Item ID, in .gms_id_end
+//  your Last Custom Item ID. Note: It doesn't matter if there are unused
+//  Item IDs, those will be skipped.
+//  In .gms_cost you can put the price which will be used for every item.
+//= GM House: I left the map name and coordinates open for you, just configure
+//  .gm_m$ ( Map Name), .gm_x (X Cooardinate), .gm_y (Y Cooardinate).
+//  Afterwards you need to put the cooardinates for the 2 NPC's below.
+//= You're ready to go :P
+//===== Comments =============================================
+//= ...
+//============================================================
+paradise,88,232,4	script	GM Officer	100,{
+
+mes .n$;
+if(getarraysize(.gm_list$) < 1) {
+	mes "I'm sorry, but no GM is online at the moment, therefore you won't be able to access the GM office.";
+	close;
+}
+mes "Do you want to be warped to the GM Office?";
+mes "Currently there are "+getarraysize(.gm_list$)+" GM's online, "+getmapusers(.gm_m$)+" are in the GM Office.";
+if(select("- Yes:- No") - 1) close;
+close2;
+warp .gm_m$,.gm_x,.gm_y;
+end;
+
+OnPCLoginEvent:
+if(!getgmlevel()) end;
+
+delwaitingroom;
+setarray .gm_list$[getarraysize(.gm_list$)],strcharinfo(0);
+waitingroom ( (compare(strcharinfo(0),"GM") == 1)?"":"GM ") + strcharinfo(0)+" is online",0;
+
+if(getgmlevel() > 0 && getgmlevel() <= .gm_town) {
+	dispbottom .n$+": You are not allowed to leave the town or the GM Office.";
+	set @gm,1;
+
+} else if(getgmlevel() > 0 && getgmlevel() == .gm_hide) {
+	atcommand "@hide";
+	dispbottom .n$+": You are not allowed to leave the GM Hide.";
+	set @gm,2;
+}
+if(getgmlevel() > 0 && getgmlevel() <= .woe) 
+	dispbottom .n$+": You are not allowed to enter Castle Maps while WoE is running.";
+attachnpctimer;
+initnpctimer;
+end;
+
+OnPCLogOutEvent:
+if(!getgmlevel()) end;
+for ( set .g,0; .g < getarraysize(.gm_list$); set .g,.g + 1)
+	if(strcharinfo(0) == .gm_list$[.g]) 
+		deletearray .gm_list$[.g],1;
+end;
+
+OnTimer1000:
+set @sec,@sec + 1;
+stopnpctimer;
+if(@sec == .gm_int) {
+	if(@gm == 1) {
+		if(!getmapflag(strcharinfo(3),mf_town) ) {
+			if(.gm_multi == 0 && strcharinfo(3) != .gm_m$) 
+				set .@r,1;
+			else if(.gm_multi == 1) 
+				for ( set .@g,0; .@g < getarraysize(.gm_m$); set .@g,.@g + 1) 
+					if(strcharinfo(3) != .gm_m$[.@g]) set .@r,1;
+					else set .@r,0;
+					
+			if(.@r) {
+				dispbottom .n$+": You are not allowed to leave the town or the GM Office.";
+				dispbottom .n$+": I will warp you know to your Save Point.";
+				warp "SavePoint",0,0;
+			}
+		}
+	} else if(@gm == 2) {
+		if(checkoption(0x40) != 1 && !getmapflag(strcharinfo(3),mf_town)) {
+			atcommand "@hide";
+			dispbottom .n$+": GM Hide re-enabled.";
+		}
+	} else if(getmapflag(strcharinfo(3),mf_gvgcastle) && (agitcheck() || agitcheck2()) && getgmlevel() <= .woe) {
+			dispbottom .n$+": You are not allowed to enter Castle Maps while WoE is running.";
+			dispbottom .n$+": I will warp you know to your Save Point.";
+			warp "SavePoint",0,0;
+	}
+	set @sec,0;
+}
+attachnpctimer;
+initnpctimer;
+end;
+
+
+OnInit:
+set .n$,"["+strnpcinfo(1)+"]";
+// ==== GM House Settings: =====
+// * Map Quantities:
+// ? In case your GM House has more than one map in usage.
+// - 0: 1 Map
+// - 1: 1+ Maps
+// ===============
+set .gm_multi,1;
+if(.gm_multi == 0) 
+	set .gm_m$,"help_lobby";
+else 
+	setarray .gm_m$[0],"help_ent","help_lobby","help_room1","help_room2","help_room3";
+set .gm_x,26;
+set .gm_y,10;
+// Don't forget to change the map coordinates for GM Office below
+// Mapflag Settings
+if(.gm_m$ != "") {
+	setmapflag .gm_m$,mf_nowarpto;
+	setmapflag .gm_m$,mf_nowarp;
+	setmapflag .gm_m$,mf_noteleport;
+	setmapflag .gm_m$,mf_nomemo;
+	setmapflag .gm_m$,mf_noreturn;
+	setmapflag .gm_m$,mf_nosave;
+	setmapflag .gm_m$,mf_noskill;
+	setmapflag .gm_m$,mf_nogo;
+	setmapflag .gm_m$,mf_novending;
+	setmapflag .gm_m$,mf_notrade;
+}
+// ======= Access Settings =========
+// - WoE: Every GM equal and below this level isn't allowed to join WoE.
+set .woe,80;
+// ===== Location =====
+// - Town Only + GM House (must be available, also .gm_m$,.gm_x,gm_y must not be empty!!)
+// - Every GM equal and below this level has to be in town or in the GM House.
+set .gm_town,40;
+// - Everywhere, but with @hide
+set .gm_hide,80;
+// - Interval of Position Check in Seconds
+set .gm_int,30;
+waitingroom "No GM Online",0;
+sleep 30000;
+while(1) {
+	delwaitingroom;
+	waitingroom getarraysize(.gm_list$)+" GMs are online.",0;
+	sleep 30000;
+}
+end;
+}
+// =============== NPC's in the GM Office ============
+help_lobby.gat,103,136,4	script	GM Helper#1::gm_help	100,{
+
+mes .n$;
+mes "Hi, "+strcharinfo(0)+".";
+mes "How can I help you today?";
+next;
+switch(select("- Call GM:"+( (getgmlevel() > 0)?"- GM Shop:":"")+"- Nothing")) {
+	case 1:
+	mes .n$;
+	if(getgmlevel() > 0) {
+		mes "Why do you need to call another GM Oo?";
+		close;
+	}
+	if(gettimetick(2) < #gm_call) {
+		mes "I'm sorry, but you have wait a bit to call for an GM again.";
+		close;
+	}
+	mes "Do you want to call for an GM?";
+	if(select("- Yes:- No") - 1) close;
+	getmapxy(@mapn$,@mapx,@mapy,0);
+	if(@mapn$ == "help_lobby" || @mapn$ == "help_lobby.gat") set @help_map$,"GM Lobby.";
+	if(@mapn$ == "help_room3" || @mapn$ == "help_room3.gat") set @help_map$,"Help Room Nr. 3.";
+	announce .n$+": ["+strcharinfo(0)+"] requires some help, anyone who is free please come to the GM Office, to be exact at "+.@help_map$+", immediatly.",0;
+	next;
+	mes .n$;
+	mes "Called an GM for you :).";
+	mes "Please come back anytime you require anything.";
+	set #gm_call,gettimetick(2) + .gmc_delay;
+	close;
+	
+	case 2:
+	if(getgmlevel() < 1) close;
+	npcshopattach "GM_Shop";
+	callshop "GM_Shop",1;
+	end;
+	
+	case 3:
+	close;
+}
+
+OnInit:
+set .n$,"["+strnpcinfo(1)+"]";
+// ========= Call GM Settings =========
+// = Delay to call an GM in seconds
+set .gmc_delay,30;
+}
+// Warp Portal out of the GM Office
+// map.gat,0,0,0	warp	gmoff	2,2,prontera,150,176 
+// > warps/warps.txt
+// GM Shop
+-	shop	GM_Shop	-1,512:-1
+
+-	script	GMSHOP_CONF	-1,{
+end;
+
+OnInit:
+// ========= GM Shop Settings =========
+// - Item Start ID:
+set .gms_id_start,29000;
+// - Item End ID, LAST CUSTOM ID:
+// Doesn't matter if there is an unused Item ID, it will be skipped.
+set .gms_id_end,29514;
+// - Item Price:
+// - 0 = Price from the Item DB (recommended)
+// - 20+ = Minimum Buy Price
+set .gms_cost,0;
+npcshopdelitem "GM_Shop",512;
+set .@s,.gms_id_start;
+while ( set(.@s,.@s + 1) < (.gms_id_end+1) ) {
+	if(getitemname(.@s) == "" || getitemname(.@s) == "null") continue;
+	npcshopadditem "GM_Shop",.@s,.gms_cost;
+}
+end;
+}
+help_room3,34,19,4	duplicate(gm_help)	GM Helper#2	100
+
+help_lobby,108,157,4	script	Help Rooms	100,{
+setarray .@gm_m$[0],"help_room1.gat","help_room2.gat","help_room3.gat";
+
+	mes "[Help Room Warper]";
+	mes "Hello,";
+	mes "Room Nr. 1 & Room Nr. 2";
+	mes "are for GMs only and Room Nr. 3";
+	mes "can be used by Players as well.";
+	mes " ";
+	mes "In which room do you want?";
+	menu "Room 1 (Users - "+getmapusers("help_room1.gat")+"):Room 2 (Users - "+getmapusers("help_room2.gat")+"):Room 3 (Users - "+getmapusers("help_room3.gat")+")",-;
+		next;
+		mes "[Help Room Warper]";
+		mes "I will warp you now.";
+		close2;
+		if(getgmlevel() >= 1) {
+			warp .@gm_m$[@menu-1],11,29;
+		} else {
+			warp .@gm_m$[2],11,29;
+		}
+		end;
+}

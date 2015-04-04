@@ -1,0 +1,2890 @@
+//===== rAthena Script =======================================
+//= Status & Weapon Mastery System
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Initial Release
+//===== Compatible With ======================================
+//= Every Athena SQL SVN 
+//===== Tested With ==========================================
+//= rAthena 17267 SQL Trunk 
+//===== Description ==========================================
+//= Handles a mastery system, which gives you extra bonuses
+//  depending on the mastery level.
+//= There are Status and Weapon Mastery:
+//	 - Each Status Mastery has it's own training program
+//	 - Weapon Mastery is about killing Monsters
+//===== Comments =============================================
+//= ...
+//===== SQL Table ============================================
+/*
+ CREATE TABLE IF NOT EXISTS `trainsystem` (
+ `id` INT(10) UNSIGNED NOT NULL,
+ `str` INT(8) UNSIGNED DEFAULT '0',
+ `agi` INT(8) UNSIGNED DEFAULT '0',
+ `vit` INT(8) UNSIGNED DEFAULT '0',
+ `int` INT(8) UNSIGNED DEFAULT '0',
+ `dex` INT(8) UNSIGNED DEFAULT '0',
+ `luk` INT(8) UNSIGNED DEFAULT '0',
+ `dagger` INT(8) UNSIGNED DEFAULT '0',
+ `one-sword` INT(8) UNSIGNED DEFAULT '0',
+ `two-sword` INT(8) UNSIGNED DEFAULT '0',
+ `one-spear` INT(8) UNSIGNED DEFAULT '0',
+ `two-spear` INT(8) UNSIGNED DEFAULT '0',
+ `one-axe` INT(8) UNSIGNED DEFAULT '0',
+ `two-axe` INT(8) UNSIGNED DEFAULT '0',
+ `mace` INT(8) UNSIGNED DEFAULT '0',
+ `unused` INT(8) UNSIGNED DEFAULT '0',
+ `stave` INT(8) UNSIGNED DEFAULT '0',
+ `bow` INT(8) UNSIGNED DEFAULT '0',
+ `knuck` INT(8) UNSIGNED DEFAULT '0',
+ `music` INT(8) UNSIGNED DEFAULT '0',
+ `whip` INT(8) UNSIGNED DEFAULT '0',
+ `book` INT(8) UNSIGNED DEFAULT '0',
+ `katar` INT(8) UNSIGNED DEFAULT '0',
+ `revol` INT(8) UNSIGNED DEFAULT '0',
+ `rifle` INT(8) UNSIGNED DEFAULT '0',
+ `gatl` INT(8) UNSIGNED DEFAULT '0',
+ `shotg` INT(8) UNSIGNED DEFAULT '0',
+ `grenade` INT(8) UNSIGNED DEFAULT '0',
+ `fuuma` INT(8) UNSIGNED DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM;
+*/
+//==================== db/mob_db2.txt =======================
+/*
+// Training System - STR Mastery
+2901,BARRICADE_,STR Training,STR Training,10,100,0,0,0,1,1,2,100,99,0,0,0,0,0,0,7,12,0,0,22,0x40,2000,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2902,BARRICADE_,STR Training,STR Training,20,200,0,0,0,1,1,2,100,99,0,0,0,0,0,0,7,12,0,0,22,0x40,2000,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2903,BARRICADE_,STR Training,STR Training,30,300,0,0,0,1,1,2,100,99,0,0,0,0,0,0,7,12,0,0,22,0x40,2000,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2904,BARRICADE_,STR Training,STR Training,40,400,0,0,0,1,1,2,100,99,0,0,0,0,0,0,7,12,0,0,22,0x40,2000,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2905,BARRICADE_,STR Training,STR Training,50,500,0,0,0,1,1,2,100,99,0,0,0,0,0,0,7,12,0,0,22,0x40,2000,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2906,BARRICADE_,STR Training,STR Training,60,600,0,0,0,1,1,2,100,99,0,0,0,0,0,0,7,12,0,0,22,0x40,2000,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2907,BARRICADE_,STR Training,STR Training,70,700,0,0,0,1,1,2,100,99,0,0,0,0,0,0,7,12,0,0,22,0x40,2000,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2908,BARRICADE_,STR Training,STR Training,80,800,0,0,0,1,1,2,100,99,0,0,0,0,0,0,7,12,0,0,22,0x40,2000,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2909,BARRICADE_,STR Training,STR Training,90,900,0,0,0,1,1,2,100,99,0,0,0,0,0,0,7,12,0,0,22,0x40,2000,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2910,BARRICADE_,STR Training,STR Training,100,1000,0,0,0,1,1,2,100,99,0,0,0,0,0,0,7,12,0,0,22,0x40,2000,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+*/
+//===========================================================
+prontera,150,180,4	script	Mastery Trainer	110,{
+	mes .n$;
+	mes "Welcome, "+strcharinfo(0)+"!";
+	if(getgmlevel() >= .gm) 
+		switch(select("- GM Panel:- Player Menu:- Reset Training Delay:- Reset Mastery Levels")) {
+			case 1:
+			goto GM_Panel;
+			break;
+			
+			case 3:
+			callfunc "DATA_D-M",1,.train_b,.delay_type,1,0,1;
+			break;
+			
+			case 4:
+			// Resetting Status
+			for ( set .@st,0; .@st < 6; set .@st,.@st + 1) 
+				callfunc("DATA_D-M",2,.train_b,1,.@st,1,0,2);
+			
+			// Resetting Weapons
+			for ( set .@w,1; .@w < getarraysize(.eq_n$); set .@w,.@w + 1) 
+				if(.@w != 9) callfunc("DATA_D-M",2,.train_b,2,.@w,1,0,2);
+				
+			mes "Reset completed.";
+			next;
+			mes .n$;
+			break;
+			
+			default:
+			break;
+		}
+		
+	mes "You can improve your mastery levels by 1 every "+ ( (.delay_time < 86400)?(.delay_time/3600)+" Hour(s)":(.delay_time/3600)/24+" Day(s)")+".";
+	mes " ";
+	mes "So what do you want to do?";
+	next;
+	switch(select("- Improve my Masteries:- Information"+ ( (.equip_b == 1)?":- Apply Equip Bonus":"")+":- Nothing")) {
+	
+		case 1:
+		mes .n$;
+		if(#TrainSys == 2) {
+			mes "I'm sorry, but you didn't wanted to copy your mastery level via the change of the bounding type.";
+			mes "So I can't let you improve your mastery levels.";
+			close;
+		}
+		if(#TrainSys == 0) {
+			mes "Ahah a newcomer, welcome!!";
+			mes "Do you want to participate in my training programs?";
+			next;
+			if(select("- Yes:- No") - 1) {
+				mes .n$;
+				mes "That's too bad, if you should change your mind by any chance, don't hesitate to come back.";
+				close;
+			}
+			mes .n$;
+			mes "Which Mastery do you want to start with?";
+			set #TrainSys,1;
+			set #b_info,.train_b;
+				
+			if(.train_mode == 1) {
+				if(.train_b == 0)
+					set .@id,getcharid(3);
+				else if(.train_b == 1)
+					set .@id,getcharid(0);
+				
+				query_sql "INSERT INTO `trainsystem` ( `id` ) VALUES ( '"+.@id+"' )";
+			}
+		} else {
+			if(.train_mode == 1 && query_sql("SHOW TABLES LIKE 'trainsystem'",.@db_ck) == 0) {
+				mes "I'm sorry, but the database wasn't added to the system yet.";
+				mes "Please contact the GM Team.";
+				close;
+			}
+			mes "Which mastery do you want to try to improve this time?";
+			mes "These are your current levels:";
+			mes "[ === Status Mastery === ]";
+			setarray .@st_txt$[0],"STR","AGI","VIT","INT","DEX","LUK";
+			for ( set @st,0; @st < getarraysize(.@st_txt$); set @st,@st + 1)
+				mes .@st_txt$[@st]+" = "+callfunc("DATA_D-M",2,.train_b,1,@st,2);
+			mes " ";
+			mes "[ === Weapon Mastery === ]";
+			for ( set @w,1; @w < getarraysize(.eq_n$); set @w,@w + 1) 
+				if(@w != 9) mes .eq_n$[@w]+" = "+callfunc("DATA_D-M",2,.train_b,2,@w,2);
+		}
+		next;
+		switch( set(@mastery,select("- Status Mastery:- Weapon Mastery")) ) {
+	
+			case 1:
+			mes .n$;
+			if(callfunc("DATA_D-M",1,.train_b,.delay_type,1,0,2) > gettimetick(2)) {
+				mes "I'm sorry, but you are still exhausted from your previous training.";
+				close;
+			}
+			mes "What do you like to train?";
+			if(.solo) {
+				mes "^FF0000Note: The status mastery limit is active, so you can only train one status at once,";
+				mes "if you want to train an another one you will lose the other ones.^000000";
+				for ( set @s,0; @s < 6; set @s,@s + 1) 
+					if(set(.@s_c,callfunc("DATA_D-M",2,.train_b,1,@s,2) > 0) )
+						setarray .@s_ct[@s],.@s_c;
+					
+				if(getarraysize(.@s_ct) > 1) {
+					mes "You have more than one mastery training running.";
+					mes "Please select the one you want to continue the training.";
+					mes "Any other will be reseted afterwards.";
+				}
+			}
+			if(.class) {
+				mes "^FF0000Note: The status mastery class limit is active, therefore you only have up to 2 status masteries available.^000000";
+				switch(BaseClass) {
+					case Job_Swordman:	
+					set @p,select("- STR:- DEX");
+					if(@p == 1) set @p,0;
+					else set @p,4;
+					break;
+					
+					case Job_Mage:	
+					set @p,select("- INT:- DEX") + 2;
+					break;
+					
+					case Job_Archer:	
+					set @p,select("- AGI:- DEX");	
+					if(@p == 2) set @p,4;
+					break;
+					
+					case Job_Acolyte:	
+					set @p,select("- VIT:- INT");
+					if(@p == 1) set @p,2;
+					else set @p,3;
+					break;
+					
+					case Job_Merchant:	
+					set @p,select("- STR:- LUK");	
+					if(@p == 1) set @p,0;
+					else set @p,5;
+					break;
+
+					case Job_Thief:	
+					set @p,select("- STR:- AGI") - 1;
+					break;
+				}
+			} else 
+				set @p,select("- STR:- AGI:- VIT:- INT:- DEX:- LUK") - 1;
+				
+			if(.solo) {
+				mes "Chosen Status Mastery:";
+				switch(@p) {
+					case 0:	mes "STR";	break;
+					case 1:	mes "AGI";	break;
+					case 2:	mes "VIT";	break;
+					case 3:	mes "INT";	break;
+					case 4:	mes "DEX";	break;
+					case 5:	mes "LUK";	break;
+				}
+				mes "Is that correct?";
+				if(select("- Yes:- No") - 1) close;
+				set .@p,.@s_ct[@p];
+				for ( set .@o,0; .@o < 6; set .@o,.@o + 1) 
+					if(.@o == .@p) callfunc "DATA_D-M",2,.train_b,1,@p,1,.@p,2;
+					else callfunc "DATA_D-M",2,.train_b,1,@p,1,0,2;
+			}
+			next;
+			set @stat,callfunc("DATA_D-M",2,.train_b,1,@p,2);
+			if(@stat >= .s_level) {
+				mes .n$;
+				mes "I'm sorry, but you have achieved the max level for this mastery already.";
+				close;
+			}
+			switch(@p) {
+			
+				// ========= STR Training =========
+				case 0:
+				mes .n$;
+				if(getmapusers(.map$) != 0) {
+					mes "I'm sorry, but there is someone practicing already.";
+					mes "Please be patient.";
+					close;
+				}
+				// Deciding Mob ID and Mob Name
+				if(@stat <= 10) set .@lvl,10;
+				else if(@stat > 10 && @stat <= 20) set .@lvl,20;
+				else if(@stat > 20 && @stat <= 30) set .@lvl,30;
+				else if(@stat > 30 && @stat <= 40) set .@lvl,40;
+				else if(@stat > 40 && @stat <= 50) set .@lvl,50;
+				else if(@stat > 50 && @stat <= 60) set .@lvl,60;
+				else if(@stat > 60 && @stat <= 70) set .@lvl,70;
+				else if(@stat > 70 && @stat <= 80) set .@lvl,80;
+				else if(@stat > 80 && @stat <= 90) set .@lvl,90;
+				else if(@stat > 90 && @stat <= 100) set .@lvl,100;
+				set .str_mn$,getmonsterinfo(.str_mid+(.@lvl/10),0 )+" Level "+(@stat+1);
+				mes "[ === STR Training === ]";
+				mes "This will be done by hitting on a single mob which always recieves 1 damage per attack, like a Plant would.";
+				mes "The mob's HP for this training is "+getmonsterinfo((.str_mid+(.@lvl/10)),2)+".";
+				mes "There is just one thing you'll have to do:";
+				mes " - You will have to unequip everything.";
+				next;
+				mes .n$;
+				mes "I will now warp you to the practice map.";
+				mes "Good luck.";
+				close2;
+				set @train,1;
+				
+				// Unequipping everything and preventing from re-equipping
+				sc_start SC_STRIPWEAPON,3600000,5;
+				sc_start SC_STRIPSHIELD,3600000,5;
+				sc_start SC_STRIPARMOR,3600000,5;
+				sc_start SC_STRIPHELM,3600000,5;
+				nude;
+				monster .map$,.str_mx,.str_my,.str_mn$,.str_mid+(.@lvl/10),1,strnpcinfo(1)+"::OnStrMobDead";
+				warp .map$,.str_cx,.str_cy;
+				end;
+				
+				// ========= AGI Training =========
+				case 1:
+				mes .n$;
+				// Setting countdown
+				set @time,.agi_b_time - (@stat/.agi_x_red);
+				// Getting random array index
+				set @txt,rand(getarraysize(.agi_txt$));
+				mes "[ === AGI Training === ]";
+				mes "This will be done by typing an random text in "+@time+" seconds.";
+				mes "The text is case-sensitive, be sure to write it correctly.";
+				mes "^FF0000Note: You won't get a second chance until the next training.";
+				next;
+				mes .n$;
+				mes "Here is the text you need to type:";
+				mes .agi_txt$[@txt];
+				mes "The countdown will start after you press \"next\".";
+				next;
+				set @a_t,0; // Resetting Counter
+				attachnpctimer;
+				initnpctimer;
+				input @i_txt$;
+				if(@i_txt$ != .agi_txt$[@txt]) {
+					mes .n$;
+					mes "The text you have input is wrong.";
+					stopnpctimer;
+					callfunc "DATA_D-M",1,.train_b,.delay_type,1,.delay_time,1;
+					close;
+				}
+				stopnpctimer;
+				break;
+				
+				// ========= VIT Training =========
+				case 2:
+				mes .n$;
+				if(getmapusers(.map$) != 0) {
+					mes "I'm sorry, but there is someone practicing already.";
+					mes "Please be patient.";
+					close;
+				}
+				// Calculating countdown
+				if(@stat >= 10) 
+					set .@calc,.vit_inc*(@stat/10);		
+				set .cd,.vit_cd+.@calc;
+				
+				mes "[ === VIT Training === ]";
+				mes "This will be done by staying alive for "+.cd+" seconds.";
+				mes "Also you are not allowed to kill any mob while the training is running.";
+				mes "If you try you will not recieve any EXP and items, also you will be warped back to your savepoint.";
+				mes "I will now warp you to the practice map.";
+				mes "Good luck.";
+				close2;
+				
+				// Calculation which adds the VIT Mastery Level
+				if( @stat/5 < 1)
+					set .@m_b,1;
+				else if( @stat%10 == 0)
+					set .@m_b,@stat;
+				else if( @stat/5 > 0)
+					set .@m_b,@stat/5;
+					
+				// Setting Mob ID's and Base Spawn Amount depending on your Level
+				if(BaseLevel <= 99) {
+								// High Orc, Goblin Archer, Leib Olmai, Shinobi, Teddy Bear
+					setarray .@mob[0],1213,1258,1306,1401,1622;
+					set .@add,5;
+				} else if(BaseLevel > 99 && BaseLevel <= 255) {
+							// Archdam, Shelter, Skeggiold, Aliot, Incarnation of Morroc (Randgris Sprite)
+					setarray .@mob[0],1668,1701,1754,1736,1918;
+					set .@add,10;
+					
+				} else if(BaseLevel > 255) {
+							// Necromancer, Thorn of Magic, Tendrilrion, Lord Knight Seyren (MvP Slave), Whitesmith Howard (MvP Slave)
+					setarray .@mob[0],1870,1960,1991,1640,1642;
+					set .@add,15;
+				}
+				// Result
+				set .@m_q,.@m_b + .@add;
+				
+				addtimer(.cd*1000),strnpcinfo(0)+"::OnVitEnd";
+				if(.vit_mob_s == 1) 
+					for ( set .@i,0; .@i < getarraysize(.@mob); set .@i,.@i + 1)
+						monster .map$,rand(.vit_mx[0],.vit_mx[1]),rand(.vit_my[0],.vit_my[1]),getmonsterinfo(.@mob[.@i],0),.@mob[.@i],.@m_q,strnpcinfo(1)+"::OnVitMobKill";
+				else {
+					set .@i,rand(getarraysize(.@mob));
+					monster .map$,rand(.vit_mx[0],.vit_mx[1]),rand(.vit_my[0],.vit_my[1]),getmonsterinfo(.@mob[.@i],0),.@mob[.@i],.@m_q,strnpcinfo(1)+"::OnVitMobKill";
+				}
+				setmapflag .map$,mf_nobaseexp;
+				setmapflag .map$,mf_nojobexp;
+				warp .map$,.vit_cx,.vit_cy;
+				end;
+				
+				// ========= INT Training =========
+				case 3:
+				mes .n$;
+				mes "[ === INT Training === ]";
+				mes "This will be done via a quiz about Ragnarok Online.";
+				mes "The quiz contains "+set(.@f,.int_base+(@stat/10))+" questions.";
+				mes "You always have four answers available.";
+				mes "Let's get started, should we?";
+				mes "Good luck.";
+				set @int,0; // Reseting points
+				// Every 10th level you need one more question to answer
+				set @req,.int_pt + (@stat/10);
+				// Creating question catalog & Counter
+				set .@q,0;
+				set .@f,getarraysize(.int_quest$);
+				while(.@g != .@f) {
+					// Random question order?
+					if(.int_rquest) 
+						set .@x,rand(getarraysize(.int_quest$));
+					else 
+						set .@x,.@g; // array starts with 0 so -1
+						
+					
+					for ( set .@c,0; .@c < getarraysize(.@q_id); set .@c,.@c + 1) 
+						// Checking if the question has been put already
+						if(.@q_id[.@c] == .@x) {
+							set .@rep,1;
+							break;
+						}
+					if(.@rep == 0) {
+						setarray .@q_id[getarraysize(.@q_id)],.@x;
+						set .@g,.@g + 1;
+					}
+				}
+				// Question Counter
+				set .@d,0;
+				while(.@d != .@f) {
+					next;
+					set .@ans$,"";
+					set .@a,1;
+					// Answers Counter
+					while(.@a < 5) {
+						sleep2 100;
+						set .@rep,0;
+						if(.int_rans) // Random answer order?
+							set .@q,rand(1,4);
+						else 
+							set .@q,.@a;
+							
+						for ( set .@c,0; .@c < getarraysize(.@a_id); set .@c,.@c + 1) 
+							// Checking if the answer has been put already
+							if(.@a_id[.@c] == .@q) {
+								set .@rep,1;
+								break;
+							}
+						if(.@rep == 0) {
+							setarray .@a_id[getarraysize(.@a_id)],.@q;
+							// Current answer is the right answer
+							if(.@q == .int_right[.@d]) 
+								set .@cor,.@q;
+								
+							set .@a,.@a + 1;
+						}
+					}
+					// Creating Answers
+					for ( set .@a,0; .@a < getarraysize(.@a_id); set .@a,.@a + 1) 
+						set .@ans$,.@ans$ + "- "+getd(".int_ans"+.@a_id[.@a]+"$["+.@d+"]")+ ( (.@a < 4)?":":"");
+					mes "Question #"+(.@d+1);
+					mes "------------------";
+					mes .int_quest$[.@q_id[.@d]];
+					// Selecting Answer
+					set .@sel,select(.@ans$);			
+					// Correct Answer
+					if(.@a_id[.@sel] == .@cor) {
+						next;
+						set @int,@int + 1;
+						mes .n$;
+						mes "Correct Answer!!! +1 Point!!!";
+						mes "Current Points: "+@int;
+						mes "Required Points: "+@req;
+					}
+					// Enough points to pass
+					if(@int == @req) break;
+					set .@d,.@d + 1;
+					cleararray .@a_id[0],0,128;
+				}
+				break;
+				
+				// ========= DEX Training =========
+				case 4:
+				if(getmapusers(.map$) != 0) {
+					mes "I'm sorry, but there is someone practicing already.";
+					mes "Please be patient.";
+					close;
+				}
+				mes "[ === DEX Training === ]";
+				mes "This will be done by clicking on the NPC,";
+				mes "which moves to random spots around you.";
+				mes "You won't be able to move during the training.";
+				mes "I will now warp you to the practice map.";
+				mes "Good luck.";
+				close2;
+				warp .map$,.dex_cx,.dex_cy;
+				doevent "DEX Training::OnPrepare";
+				enablenpc "DEX Training";
+				end;
+				
+				// ========= LUK Training =========				
+				case 5:
+				mes .n$;
+				mes "[ === LUK Training === ]";
+				mes "This will be done by guessing 10 numbers,";
+				set .@no,(@stat/10) + 1; // Numbers required
+				mes "where "+ .@no+" have to be correct.";
+				mes "Good luck.";
+				while( set(.@c_t,.@c_t + 1) != .luk_gue) {
+					next;
+					set .@c_no,rand(1,9); // Randomize
+					input @g_no;
+					if(@g_no == .@c_no)	
+						set .@ct,.@ct + 1; // Guessed number is the same as the randomed one, increase this counter
+					mes .n$;
+					mes "Number #"+.@c_t+":";
+					mes "Chosen number: "+@g_no;
+					mes "Required number: "+.@c_no;
+					mes "Correct numbers so far: "+.@ct;
+					mes "Chances left: "+(.luk_gue-.@c_t);
+					if(.@ct == .@no) break; // If the quantity of the corrected guesses is the same as the required one, continue
+				}
+				if(.@c_t == .luk_gue && .@ct != .@no) {
+					mes "I'm sorry, but you have failed this training.";
+					close;
+				}
+				break;	
+			}
+			next;
+			OnComplete:
+			callfunc "DATA_D-M",2,.train_b,1,@p,1,1,1;
+			callfunc "DATA_D-M",1,.train_b,.delay_type,1,.delay_time,1;
+			mes .n$;
+			mes "The training has been completed, your mastery level has increased by 1.";
+			set @p,0;
+			close;
+		
+			case 2:
+			mes .n$;
+			if(callfunc("DATA_D-M",1,.train_b,.delay_type,2,0,2) > gettimetick(2)) {
+				mes "I'm sorry, but you are still exhausted from your previous training.";
+				close;
+			}
+			if(getmapusers(.map$) != 0) {
+				mes "I'm sorry, but there is someone practicing already.";
+				mes "Please be patient.";
+				close;
+			}
+			if(getequipid(4) == -1) {
+				mes "Hmm, I can't train your weapon since you don't have any equipped.";
+				mes "Please make sure you have a weapon equipped before coming back.";
+				close;
+			}
+
+			mes "Let's see, which weapon you have.";
+			next;
+			mes .n$;
+			mes "\""+getequipname(4)+"\" is your current weapon.";
+			mes "Do you want to train with it?";
+			if(select("- Yes:- No") - 1) close;
+			next;			
+			mes .n$;
+			for ( set .@e,0; .@e < getarraysize(.kill_weap); set .@e,.@e + 1) 
+				if(getiteminfo(getequipid(4),11) == .kill_weap[.@e]) {
+					mes "I'm sorry, but I can't train your weapon, since it's forbidden.";
+					close;
+				}
+			mes "Okay, I will now take a closer look at your weapon and then I will decide your enemies.";
+			next;
+			set @e,getiteminfo(getequipid(4),11);
+			set .@m_lvl,callfunc("DATA_D-M",2,.train_b,2,@e,2);
+			if(.@m_lvl >= .w_level) {
+				mes .n$;
+				mes "I'm sorry, but you already achieved the max level of this mastery.";
+				close;
+			}
+			while(1) {
+				sleep2 100;
+				set .@rep,0;
+				// Setting mob ID
+				set @mid,rand(1002,.l_mob);
+				// Mob found, continue else repeat
+				if(getmonsterinfo(@mid,0) == "null") continue;
+				// Checking if the Mob is an WoE Castle Treasure Chest
+				if(compare(getmonsterinfo(@mid,0),"Treasure") == 1) continue;
+				// Checking if the Mob ID is 1288 (Emperium)
+				if(@mid == 1288) continue;
+				// Checking if the Mob Mode contains "PLANT" (0x0040)
+				if(getmonsterinfo(@mid,MOB_MODE) & 64) continue;
+				// Checking if the Mob is an MvP and if MvP's are allowed, if not repeat
+				for ( set .@m,0; .@m < getarraysize(.wm_mvp_id); set .@m,.@m + 1)
+					if(@mid == .wm_mvp_id[.@m]) {
+						if(!.wm_mvp) set .@rep,1;
+						else set .@mvp_use,1;
+						break;
+					}
+				
+				if(.@rep == 1) continue;
+				// Deciding the weap level and so the difficulty of training via the mob levels:
+				if(getmonsterinfo(@mid,1) <= 30) set .@e_lvl,1;
+				else if(getmonsterinfo(@mid,1) > 30 && getmonsterinfo(@mid,1) <= 60) set .@e_lvl,2;
+				else if(getmonsterinfo(@mid,1) > 60 && getmonsterinfo(@mid,1) <= 90) set .@e_lvl,3;
+				else if(getmonsterinfo(@mid,1) > 90) set .@e_lvl,4;
+				
+				// Mob's difficulty doesn't meet the Weapon Level
+				if(getequipweaponlv(4) != .@e_lvl) continue;
+				// Setting Spawn Amount
+				if(!.@mvp_use) set @mob_am,rand(.wm_mmi,.wm_mma);
+				else set @mob_am,rand(.wm_mvp_min,.wm_mvp_max);
+				break;
+			}
+			mes .n$;
+			mes "Your enemies will be "+@mob_am+"x "+getmonsterinfo(@mid,0);
+			mes "Do you want to accept this challenge?";
+			if(select("- Yes:- No") - 1) close;
+			next;
+			mes .n$;
+			mes "Then I will warp you to the practice map.";
+			close2;
+			set @m_lvl,.@m_lvl;
+			// Cleaning map in case mobs are still on it ( DEBUG LOL :) )
+			if(mobcount(.map$,strnpcinfo(1)+"::OnMobTrainDead") > 0 && getmapusers(.map$) == 0) killmonsterall .map$; 
+			monster .map$,.wm_msp_x,.wm_msp_y,"Weapon Training Lv. "+(@m_lvl+1),@mid,@mob_am,strnpcinfo(1)+"::OnMobTrainDead";
+			announce .n$+": ["+strcharinfo(0)+"] is practicing to increase "+( (Sex)?"his":"her")+" "+$@eq_n$[@e]+" Mastery from "+@m_lvl+" to "+(@m_lvl + 1)+"!",bc_all;
+			announce .n$+": "+( (Sex)?"He":"She")+" will be fighting against "+@mob_am+"x "+getmonsterinfo(@mid,0)+", good luck ["+strcharinfo(0)+"]!!!",bc_all;
+			set @train,1;
+			// Preventing that the player changes weapon
+			// type while training the wanted one.
+			set .e,@e; 
+			set @k_total,0; // Resetting Total Kills for Mob Counter
+			warp .map$,.wm_cx,.wm_cy;
+			end;
+		
+		}
+		// ========== Information ============
+		case 2:
+		mes .n$;
+		mes "I will now explain you about this training system.";
+		mes "Let's start with \"Weapon Mastery\".";
+		next;
+		mes "[ === Weapon Mastery === ]";
+		mes "There are "+(getarraysize($@eq_n$) - 1)+" weapons you can master, which are:";
+		for ( set .@w,1; .@w < getarraysize($@eq_n$); set .@w,.@w + 1)
+			if(.@w != 9) mes "- "+$@eq_n$[.@w];
+		next;
+		mes "[ === Weapon Mastery === ]";
+		mes "The maximum level you can achieve with each weapon is "+.w_level+".";
+		mes "The benefit of this training is that you gain an atk/matk boost depending on your class.";
+		mes "This boost can increase by the refine level of the weapon.";
+		mes "The calculation of the boost is: mastery level * (refine/2)";
+		mes "In case the refine is below 2 no multiplitation will be done.";
+		mes "^FF0000Note: The Weapon Bonus will only be calculated using the Main Weapon (Right Hand).";
+		mes "The Weapon in the left hand (Affects Assassin Classes) will be ignored.";
+		next;
+		mes "[ === Weapon Mastery === ]";
+		mes "The training itself is killing monsters on the practice map.";
+		mes "The monsters will be decided depending on your weapon level (1-4):";
+		mes "Weapon Level 1: Monsters till Level 30";
+		mes "Weapon Level 2: Monsters till Level 60";
+		mes "Weapon Level 3: Monsters till Level 90";
+		mes "Weapon Level 4: Monsters above Level 90";
+		mes " ";
+		mes "The spawn amount will be a random value between "+.wm_mmi+" and "+.wm_mma+".";
+		if(.wm_mvp == 1) { 
+			mes "MvP Usage is active so there is a chance that MvP's are included also.";
+			mes "But there the Spawn Amount is between "+.wm_mvp_min+" and "+.wm_mvp_max+".";
+		}
+		next;
+		mes .n$;
+		mes "So that was the Weapon Mastery, let's move straight to the \"Status Mastery\".";
+		next;
+		mes "[ === Status Mastery === ]";
+		mes "Each Status Training has it own program:";
+		mes " ";
+		mes "STR: Defeating a Mob which recieves always 1 damage like a plant does.";
+		mes "AGI: Typing an random text in a calculated time.";
+		mes "VIT: Survival Mode.";
+		mes "INT: Quiz about the world of Ragnarok Online.";
+		mes "DEX: Clicking an NPC which moves to random spots around you in a limited time.";
+		mes "LUK: Guessing numbers, every 10th level you need to have one number more correct than before.";
+		mes " ";
+		mes "The training progams for STR, VIT and DEX will take place on the practice map.";
+		mes "The Status Bonus activates itself on login and you gain it by typing in the WhisperBox \"NPC:StatusBonus\" and as text anything you like.";
+		next;
+		mes .n$;
+		mes "Also there is an Equip Bonus, which formular for the boost is equip-refine/2.";
+		mes "This bonus depends on your class and only your highest refine will be used.";
+		mes "Examples:";
+		mes "+4 Muffler[1] > 4/2 = 2 > Swordman Class > +% DEF Bonus > +2% DEF";
+		mes "+4 Muffler[1] > 4/2 = 2 > Mage Class > +% MDEF Bonus > +2% MDEF";
+		mes "For this Bonus to become active, you need to "+ ( (.equip_req == 0)?"only ":"pay "+.equip_r_am+"x "+ ( (.equip_req == 1)?"Zeny":"Cash Points") +" and ")+"talk to me, also you must have joined my training program.";
+		mes "The Equip Bonus will be usable for exactly 1 day after payment. After that you have to pay again to use it, the boosts have an duration of "+(.eq_dur/1000/60)+" Minutes, after that you have to talk to me again to re-apply them.";
+		break;
+			
+		case 3:
+		if(.equip_b == 0) break;
+		if(.equip_req == 0) set #eq_pay,1;
+				
+		if( #eq_pay == 1 && #eq_timer >= gettimetick(2) ) {
+			OnEquipBonus:
+			// Stats Applying from Equip
+			for ( set @i,1; @i < 11; set @i,@i + 1) {
+				// Equipment slot is empty, skip it obviously.
+				if(getequipid(@i) == 0) continue; 
+				
+				// Accessories don't have refines, skip 'em..., well except for GM Command xX
+				if(@i == 7 || @i == 8) continue; 
+
+				// Weapon Bonus, happens just once so no need to put it below this loop
+				if(@i == 4) { 
+					set @e,getiteminfo(getequipid(4),11);
+					if( set(@w_m,callfunc("DATA_D-M",2,.train_b,2,@e,2) ) == 0) {
+						mes .n$;
+						mes "You didn't any training with this weapon yet, so no Bonus for you ;(.";
+						next;
+						continue;
+					}
+					if(getequiprefinerycnt(4) > 1) 
+						set .@ref_b,getequiprefinerycnt(4)/2;
+					else 
+						set .@ref_b,1;
+					set @atk,@w_m*.@ref_b;
+					
+					switch(BaseClass) {
+						case Job_Swordman: sc_end SC_INCATKRATE;	sc_start SC_INCATKRATE,.eq_dur,@atk;	dispbottom .n$+": + "+@atk+"% ATK Boost applied."; break;
+						case Job_Mage:	sc_end SC_INCMATKRATE;	sc_start SC_INCMATKRATE,.eq_dur,@atk;	dispbottom .n$+": + "+@atk+"% MATK Boost applied.";	break;
+						case Job_Archer:	sc_end SC_INCATKRATE;	sc_start SC_INCATKRATE,.eq_dur,@atk;	dispbottom .n$+": + "+@atk+"% ATK Boost applied."; break;
+						case Job_Acolyte:	sc_end SC_INCMATKRATE;	sc_start SC_INCMATKRATE,.eq_dur,@atk;	dispbottom .n$+": + "+@atk+"% MATK Boost applied.";	break;
+						case Job_Merchant:	sc_end SC_INCATKRATE;	sc_start SC_INCATKRATE,.eq_dur,@atk;	dispbottom .n$+": + "+@atk+"% ATK Boost applied."; break;
+						case Job_Thief:	sc_end SC_INCATKRATE;	sc_start SC_INCATKRATE,.eq_dur,@atk;	dispbottom .n$+": + "+@atk+"% ATK Boost applied."; break;
+					}
+					specialeffect2 EF_POTION_BERSERK;
+					continue;
+				}
+				if(getequiprefinerycnt(@i) > @ref) // When an refine is higher than the previous one,
+					set @ref,getequiprefinerycnt(@i);	//	set it to the new one
+			}
+			if(!@ref) {
+				mes .n$;
+				mes "Either you don't have any equip upgraded or you don't wear anything.";
+				close;
+			}
+			switch(BaseClass) {
+				case Job_Swordman:	sc_end SC_DEF_RATE;	sc_start SC_DEF_RATE,.eq_dur,@ref/2; dispbottom .n$+": + "+@ref/2+"% DEF Equip-Boost applied."; break;
+				case Job_Mage:	sc_end SC_MDEF_RATE;	sc_start SC_MDEF_RATE,.eq_dur,@ref/2; dispbottom .n$+": + "+@ref/2+"% MDEF Equip-Boost applied."; break;
+				case Job_Archer:	sc_end SC_MDEF_RATE;	sc_start SC_MDEF_RATE,.eq_dur,@ref/2; dispbottom .n$+": + "+@ref/2+"% MDEF Equip-Boost applied."; break;
+				case Job_Acolyte:	sc_end SC_DEF_RATE;	sc_end SC_MDEF_RATE;	sc_start SC_DEF_RATE,.eq_dur,@ref/2; sc_start SC_MDEF_RATE,.eq_dur,@ref/2; dispbottom .n$+": + "+@ref/2+"% DEF/MDEF Equip-Boost applied."; break;
+				case Job_Merchant:	sc_end SC_DEF_RATE;	sc_start SC_DEF_RATE,.eq_dur,@ref/2; dispbottom .n$+": + "+@ref/2+"% DEF Equip-Boost applied."; break;
+				case Job_Thief:	sc_end SC_DEF_RATE;	sc_start SC_DEF_RATE,.eq_dur,@ref/2; dispbottom .n$+": + "+@ref/2+"% DEF Equip-Boost applied."; break;
+			}
+			specialeffect2 EF_GUARD;
+			mes .n$;
+			mes "This Boosts will be active for "+(.eq_dur/1000/60)+" Minutes, if you want to re-apply the boost talk to me again.";
+			
+		} else {
+			mes .n$;
+			mes "To use the Equip Bonus, you have to pay for it:";
+			mes "Costs: "+.equip_r_am+"x "+( (.equip_req == 1)?"Zeny":"Cash Points");
+			mes "You have "+((.equip_req == 1)?Zeny:#CASHPOINTS)+"x "+( (.equip_req == 1)?"Zeny":"Cash Points");
+			mes "Do you want to use the Equip Bonus?";
+			mes "^FF0000Note: Only your highest refine will be used.^000000";
+			next;
+			if(select("- Yes:- No") - 1) close;
+			mes .n$;
+			if( ((.equip_req == 1)?Zeny:#CASHPOINTS) < .equip_r_am) {
+				mes "Seems like you don't have enough "+( (.equip_req == 1)?"Zeny":"Cash Points");
+				close;
+			}
+			mes "Thank you for your time and enjoy your bonus.";
+			close2;
+			doevent strnpcinfo(0)+"::OnEquipBonus";
+			set #eq_pay,1;
+			set #eq_timer,gettimetick(2)+86400;
+			set ((.equip_req == 1)?Zeny:#CASHPOINTS),((.equip_req == 1)?Zeny:#CASHPOINTS) - .equip_r_am;
+			end;
+		}
+		break;
+		
+		case 4:
+		break;
+	}
+	close;
+	
+// ======== STR Training ========
+OnStrMobDead:
+dispbottom .n$+": You have completed the STR Training successfully, I will now warp you back to your Save Point.";
+warp "SavePoint",0,0;
+sc_end SC_STRIPWEAPON;
+sc_end SC_STRIPSHIELD;
+sc_end SC_STRIPARMOR;
+sc_end SC_STRIPHELM;
+sleep2 2500;
+doevent strnpcinfo(1)+"::OnComplete";
+end;
+// ======== AGI Training ========
+OnTimer1000:
+stopnpctimer;
+set @a_t,@a_t + 1;
+if(@a_t == @time) {
+	announce .n$+": You have failed to type the given text in "+@time+" seconds. The practice will end now.",bc_self;
+	set @a_t,0;
+	end;
+}
+initnpctimer;
+end;
+// ======== VIT Training ========
+OnVitMobKill:
+dispbottom .n$+": You have killed an monster, so you failed the training. See you next time.";
+callfunc("DATA_D-M",1,.train_b,.delay_type,1,.delay_time,1);
+OnVitEnd:
+set @p,0;
+sleep2 1000;
+warp "SavePoint",0,0;
+removemapflag .map$,mf_nobaseexp;
+removemapflag .map$,mf_nojobexp;
+removemapflag .map$,mf_noskill;
+killmonsterall .map$;
+if(@p) goto OnComplete;
+end;
+
+// ==============================
+OnPCLogoutEvent:
+if(!@p && !@train) end;
+if(strcharinfo(3) == .map$) killmonsterall .map$;
+warp "SavePoint",0,0;
+callfunc("DATA_D-M",1,.train_b,.delay_type,1,.delay_time,1);
+end;
+
+OnPCDieEvent:
+if(!@p && !@train) end;
+killmonsterall .map$;
+warp "SavePoint",0,0;
+sleep2 1500;
+if(HP == 0) atcommand "@alive";
+set @p,0;
+set @train,0;
+if(@e)
+	announce .n$+": ["+strcharinfo(0)+"] has failed the "+$@eq_n$[@e]+" Training! Good Luck next time.",bc_all;
+dispbottom .n$+": You have failed the training. See you next time.";
+callfunc("DATA_D-M",1,.train_b,.delay_type,1,.delay_time,1);
+end;
+
+// ======= Weapon Mastery =======
+OnMobTrainDead:
+// Using @killmonster or like that doesn't have an RID attached so,...
+// preventing "no rid attached error" cuz of player variables > @
+if(playerattached() == 0) end; 
+set @k_total,@k_total + 1;
+dispbottom .n$+": "+@k_total+"/"+@mob_am+" "+getmonsterinfo(@mid,0)+" killed so far!!!!";
+set @e,getiteminfo(getequipid(4),11);
+if(.e != @e) {
+	dispbottom .n$+": Since you have changed your weapon type to a another one, I'll abort your training.";
+	killmonsterall .map$;
+}
+if(@k_total == @mob_am) {
+	dispbottom .n$+": Congratulation!!! You have defeated all enemies, therefore your training was successfull.";
+	announce .n$+": ["+strcharinfo(0)+"] has successfully defeated all "+@mob_am+"x "+getmonsterinfo(@mid,0)+", "+( (Sex)?"his":"her")+" "+$@eq_n$[@e]+" Mastery have been increased from "+@m_lvl+" to "+(@m_lvl + 1)+"!",bc_all;
+	callfunc("DATA_D-M",2,.train_b,2,@e,1,1,1);
+} else end;
+set @train,0;
+callfunc("DATA_D-M",1,.train_b,.delay_type,2,.delay_time,1);
+sleep2 2000;
+warp "SavePoint",0,0;
+end;
+
+OnPCLoadMapEvent:
+if( @p || @train) end;
+dispbottom .n$+": You are NOT allowed to be here, unless you're participating in an training.";
+warp "SavePoint",0,0;
+end;
+
+GM_Panel:
+next;
+mes .n$;
+mes "Here you can change the Settings,";
+mes "but note, that once the server restarts or the script will be reloaded,";
+mes "any change will be reseted to it old setting.";
+next;
+switch(select("- Initial Settings:- Delay Settings:- Mastery Settings")) {
+
+	case 1:
+	mes .n$;
+	mes "Please choose which setting you want to change:";
+	next;
+	switch(select("- Server Mode:- Global Coordinates:- Practice Map:- Bounding Type")) {
+		
+		// ============ Server Mode ============ 
+		case 1:
+		mes .n$;
+		mes "The current setting is "+ ( (.train_mode == 0)?"TxT":"SQL");
+		next;
+		if(select("- Change to "+ ( (.train_mode == 0)?"SQL":"TxT")+":- Nothing") - 1) break;
+		mes .n$;
+		mes "The Server Mode has been changed to "+ ( (.train_mode == 0)?"SQL":"TxT")+".";
+		set .train_mode,!.train_mode;
+		if(.train_mode == 1 && query_sql("SHOW TABLES LIKE 'trainsystem'",.@db_ck) == 0)
+			query_sql "CREATE TABLE IF NOT EXISTS `trainsystem` ( `id` INT(10) UNSIGNED NOT NULL, `str` INT(8) UNSIGNED DEFAULT '0', `agi` INT(8) UNSIGNED DEFAULT '0', `vit` INT(8) UNSIGNED DEFAULT '0', `int` INT(8) UNSIGNED DEFAULT '0', `dex` INT(8) UNSIGNED DEFAULT '0', `luk` INT(8) UNSIGNED DEFAULT '0', `dagger` INT(8) UNSIGNED DEFAULT '0', `one-sword` INT(8) UNSIGNED DEFAULT '0', `two-sword` INT(8) UNSIGNED DEFAULT '0', `one-spear` INT(8) UNSIGNED DEFAULT '0', `two-spear` INT(8) UNSIGNED DEFAULT '0', `one-axe` INT(8) UNSIGNED DEFAULT '0', `two-axe` INT(8) UNSIGNED DEFAULT '0', `mace` INT(8) UNSIGNED DEFAULT '0', `unused` INT(8) UNSIGNED DEFAULT '0', `stave` INT(8) UNSIGNED DEFAULT '0', `bow` INT(8) UNSIGNED DEFAULT '0', `knuck` INT(8) UNSIGNED DEFAULT '0', `music` INT(8) UNSIGNED DEFAULT '0', `whip` INT(8) UNSIGNED DEFAULT '0', `book` INT(8) UNSIGNED DEFAULT '0', `katar` INT(8) UNSIGNED DEFAULT '0', `revol` INT(8) UNSIGNED DEFAULT '0', `rifle` INT(8) UNSIGNED DEFAULT '0', `gatl` INT(8) UNSIGNED DEFAULT '0', `shotg` INT(8) UNSIGNED DEFAULT '0', `grenade` INT(8) UNSIGNED DEFAULT '0', `fuuma` INT(8) UNSIGNED DEFAULT '0')";
+		break;
+		
+		// ============ Global Coordinates ============ 
+		case 2:
+		mes .n$;
+		mes "The current global cooardinates are X:"+.coord_x+", Y:"+.coord_y+".";
+		next;
+		switch(select("- Change Coordinates:- Enable/Disable Global Cooardinates:- Nothing")) {
+			
+			case 1:
+			mes .n$;
+			mes "Please type the X Cooardinate, then the Y Cooardinate.";
+			mes "Afterwards I will check if these are passable.";
+			next;
+			input .@x_new;
+			input .@y_new;
+			mes .n$;
+			if(!checkcell(.map$,.@x_new,.@y_new,cell_chkpass) ) {
+				mes "Seems like these coordinates are not passable.";
+				mes "Please type valid coordinates.";
+				close;
+			}
+			mes "The new coordinates have been saved successfully.";
+			set .coord_x,.@x_new;
+			set .coord_y,.@y_new;
+			break;
+			
+			case 2:
+			mes .n$;
+			mes "Using Global Cooardinates will "+( (.use_glob == 1)?"":"not")+" be used.";
+			if(select("- Change it:- Nothing") - 1) break;
+			next;
+			mes .n$;
+			mes "Usage of Global Coordinates has been changed to "+( (.use_glob == 1)?"Deactive":"Active")+".";
+			set .use_glob,!.use_glob;
+			
+			case 3:
+			break;
+		}
+		break;
+		
+		// ============ Practice Map ============ 
+		case 3:
+		mes .n$;
+		mes "The current practice map is "+ .map$+".";
+		next;
+		if(select("- Change Practice Map:- Nothing") - 1) break;
+		mes .n$;
+		mes "Please type the new Practice Map:";
+		next;
+		input .@m_new$;
+		mes .n$;
+		if(getmapusers(.@m_new$) == -1) {
+			mes "This map doesn't exists.";
+			mes "Please type a valid map.";
+			close;
+		}
+		mes "The Practice Map has been successfully changed.";
+		mes "I also will check if the global coordinates are still valid.";
+		set .map$,.@m_new$;
+		if(!checkcell(.map$,.coord_x,.coord_y,cell_chkpass) ) 
+			mes "It seems like they are not valid anymore, please change them else some bug may appear.";
+		break;
+		
+		// ============ Bounding Type ============ 
+		case 4:
+		mes .n$;
+		mes "The current Bounding Type is "+( (.train_b == 0)?"Account":"Per Character")+".";
+		mes "Do you want to change it?";
+		if(select("- Yes:- No") - 1) close;
+		next;
+		mes .n$;
+		mes "The Bounding Type has been changed to "+( (.train_b == 1)?"Account":"Per Character")+".";
+		set .train_b,!.train_b;
+	}
+	break;
+	
+	// ============ Delay Settings ============ 
+	case 2:
+	mes .n$;
+	mes "Please choose what you want to change:";
+	next;
+	switch(select("- Delay Type:- Delay Time:- Nothing")) {
+		case 1:
+		mes .n$;
+		mes "The current delay type setting is "+.delay_type+".";
+		mes "Values:";
+		mes "- 0 = Off";
+		mes "- 1 = Counts for all Mastery (Weapon & Status)";
+		mes "- 2 = Each status mastery has it own Delay, Weapon mastery has a general delay.";
+		mes " ";
+		mes "Please type the new value:";
+		next;
+		input .@del_type;
+		mes .n$;
+		if(.@del_type > 2) {
+			mes "Invalid Value, please type a valid one.";
+			close;
+		}
+		mes "The delay type has been successfully changed.";
+		set .delay_type,.@del_type;
+		break;
+	
+		case 2:
+		mes .n$;
+		if(.delay_type == 0) {
+			mes "The delay type is 0, so it isn't necessary to put a delay time.";
+			close;
+		}
+		mes "The current delay time is "+.delay_time +" seconds.";
+		mes "Please the new value:";
+		mes "Recommended Value: 3600 (1 Hour) and above, since it's in seconds.";
+		next;
+		input .@del_time;
+		mes .n$;
+		if(.@del_time < 1) {
+			mes "Invalid Time, please type a valid one.";
+			mes "Recommended Value: 3600 (1 Hour) and above, since it's in seconds.";
+			close;
+		}
+		mes "The delay time has been successfully changed.";
+		set .delay_time,.@del_time;
+		break;
+		
+		case 3:
+		break;
+	}
+	
+	// ============ Mastery Settings ============ 
+	case 3:
+	mes .n$;
+	mes "Which setting category do you want to change?";
+	mes "Note: Main is like mastery max level, and so on.";
+	next;
+	switch(select("- Main:- Specific:- Equipment Bonus:- Nothing")) {
+		
+		// ============ Main Mastery Settings ============ 
+		case 1:
+		mes .n$;
+		mes "Which Mastery?";
+		next;
+		if(select("- Status Mastery:- Weapon Mastery") == 1) {
+		
+			// ============ Status Mastery Main Settings ============ 
+			mes .n$;
+			mes "Which setting?";
+			next;
+			switch(select("- Max Level:- Training Restriction:- Class Restriction")) {
+				
+				case 1:
+				mes .n$;
+				mes "Current Level: "+.s_level;
+				mes " ";
+				mes "Suggested values for:";
+				mes "- Low Rate: 20";
+				mes "- Mid Rate: 45";
+				mes "- High Rate: 100";
+				mes "- And higher: 500";
+				mes " ";
+				mes "This is up to you to decide which value suits your server";
+				mes "the best, you can put more than these values.";
+				mes " ";
+				mes "Please type the new max level:";
+				next;
+				input .@lvl_n;
+				mes .n$;
+				if(.@lvl_n < 1) {
+					mes "This can't be 0.";
+					close;
+				}
+				mes "The Max Level of the Status Mastery has been successfully changed to "+.@lvl_n+".";
+				set .s_level,.@lvl_n;
+				break;
+				
+				case 2:
+				mes .n$;
+				mes "The current setting is "+ ( (.solo == 0)?"Offline":"Online")+".";
+				mes "Do you want to change it?";
+				next;
+				if(select("- Yes:- No") - 1) break;
+				mes .n$;
+				mes "The Training Restriction has been changed to "+ ( (.solo == 0)?"Online":"Offline")+".";
+				set .solo,!.solo;
+				break;
+				
+				case 3:
+				mes .n$;
+				mes "The current setting is "+ ( (.class == 0)?"Offline":"Online")+".";
+				mes "Do you want to change it?";
+				next;
+				if(select("- Yes:- No") - 1) break;
+				mes .n$;
+				mes "The Class Restriction has been changed to "+ ( (.class == 0)?"Online":"Offline")+".";
+				set .class,!.class;
+				break;
+			}
+			break;
+		
+		// ============ Weapon Mastery Main Settings ============ 
+		} else {
+			mes .n$;
+			mes "Which setting:";
+			next;
+			if(select("- Max Level:- Warp Coordinates") == 1) {
+				mes .n$;
+				mes "Current Level: "+.w_level;
+				mes " ";
+				mes "Suggested values for:";
+				mes "- Low Rate: 20";
+				mes "- Mid Rate: 45";
+				mes "- High Rate: 100";
+				mes "- And higher: 500";
+				mes " ";
+				mes "This is up to you to decide which value suits your server";
+				mes "the best, you can put more than these values.";
+				mes " ";
+				mes "Please type the new max level:";
+				next;
+				input .@lvl_n;
+				mes .n$;
+				if(.@lvl_n < 1) {
+					mes "This can't be 0.";
+					close;
+				}
+				mes "The Max Level of the Weapon Mastery has been successfully changed to "+.@lvl_n+".";
+				set .w_level,.@lvl_n;
+				
+			// ============ Weapon Mastery Warp Coordinates ============ 
+			} else {
+				mes .n$;
+				if(.use_glob == 1) {
+					mes "Currently the Global Coordinates will be used, so there is no need to change them.";
+					close;
+				}
+				mes .n$;
+				mes "These are the current coordinates, X: "+.wm_cx+", Y: "+.wm_cy+".";
+				mes "Change it?";
+				next;
+				if(select("- Yes:- No") - 1) close;
+				mes "Please type the X Cooardinate, then the Y Cooardinate.";
+				mes "Afterwards I will check if these are passable.";
+				next;
+				input .@x_new;
+				input .@y_new;
+				mes .n$;
+				if(!checkcell(.map$,.@x_new,.@y_new,cell_chkpass) ) {
+					mes "Seems like these coordinates are not passable.";
+					mes "Please type valid coordinates.";
+					close;
+				}
+				mes "The new coordinates have been saved successfully.";
+				set .wm_cx,.@x_new;
+				set .wm_cy,.@y_new;
+			}
+			break;
+		}
+		break;
+		
+		// ============ Specific Mastery Settings ============ 
+		case 2:
+		mes .n$;
+		mes "Which Mastery?";
+		next;
+		if(select("- Status Mastery:- Weapon Mastery") == 1) {
+			// ============ Specific Status Mastery Settings ============ 
+			mes .n$;
+			mes "Now choose which Status Mastery you want to change the settings of:";
+			next;
+			switch(select("- STR:- AGI:- VIT:- INT:- DEX:- LUK")) {
+				
+				// ============ STR Status Mastery Settings ============ 
+				case 1:
+				mes .n$;
+				mes "What do you want to edit?";
+				next;
+				switch(select("- Base Mob ID:- Mob Spawn Coordinates:- Warp Coordinates")) {
+					
+					// ============ STR - Mob ID ============ 
+					case 1:
+					mes .n$;
+					mes "The current Mob ID is "+.str_mid+", change it?";
+					next;
+					if(select("- Yes:- No") - 1) break;
+					mes .n$;
+					mes "Please type the new Mob ID:";
+					mes "Note: The Mob ID + 1 should have the name \"STR Training\" in it.";
+					next;
+					input .@mid_n;
+					mes .n$;
+					if(compare(getmonsterinfo(.@mid_n+1,0),"STR Training") == 0) {
+						mes "This mob doesn't have the in the name \"STR Training\".";
+						close;
+					}
+					mes "The Mob ID has been successfully changed to "+.@mid_n+".";
+					set .str_mid,.@mid_n;
+					break;
+					
+					// ============ STR - Mob Spawn Coordinates  ============ 
+					case 2:
+					mes .n$;
+					mes "These are the current coordinates, X: "+.str_mx+", Y: "+.str_my+".";
+					mes "Change it?";
+					next;
+					if(select("- Yes:- No") - 1) close;
+					mes .n$;
+					mes "Please type the X Cooardinate, then the Y Cooardinate.";
+					mes "Afterwards I will check if these are passable.";
+					next;
+					input .@x_new;
+					input .@y_new;
+					mes .n$;
+					if(!checkcell(.map$,.@x_new,.@y_new,cell_chkpass) ) {
+						mes "Seems like these coordinates are not passable.";
+						mes "Please type valid coordinates.";
+						close;
+					}
+					mes "The new coordinates have been saved successfully.";
+					set .str_mx,.@x_new;
+					set .str_my,.@y_new;
+					break;
+					
+					// ============ STR - Warp Coordinates ============ 
+					case 3:
+					mes .n$;
+					if(.use_glob == 1) {
+						mes "Currently the Global Coordinates will be used, so there is no need to change them.";
+						close;
+					}
+					mes .n$;
+					mes "These are the current coordinates, X: "+.str_cx+", Y: "+.str_cy+".";
+					mes "Change it?";
+					next;
+					if(select("- Yes:- No") - 1) close;
+					mes "Please type the X Cooardinate, then the Y Cooardinate.";
+					mes "Afterwards I will check if these are passable.";
+					next;
+					input .@x_new;
+					input .@y_new;
+					mes .n$;
+					if(!checkcell(.map$,.@x_new,.@y_new,cell_chkpass) ) {
+						mes "Seems like these coordinates are not passable.";
+						mes "Please type valid coordinates.";
+						close;
+					}
+					mes "The new coordinates have been saved successfully.";
+					set .str_cx,.@x_new;
+					set .str_cy,.@y_new;
+					break;
+				}
+				
+				// ============ AGI Status Mastery Settings ============ 
+				case 2:
+				mes .n$;
+				mes "Which setting do you want to change?";
+				next;
+				switch(select("- Messages to type:- Base Timer:- Reduction Counter")) {
+					
+					// ============ AGI - Messages to type ============ 
+					case 1:
+					mes .n$;
+					mes "These are the current messages to type:";
+					for ( set .@a,0; .@a < getarraysize(.agi_txt$); set .@a,.@a + 1) 
+						mes "- "+.agi_txt$[.@a];
+					
+					mes "What do you want to do?";
+					next;
+					if(select("- Add Text:- Remove Text") - 1) {
+						mes .n$;
+						mes "Please select which text you want to remove:";
+						next;
+						for ( set .@t,0; .@t < getarraysize(.agi_txt$); set .@t,.@t + 1)
+							set .@agi_m$,.@agi_m$ + "- \""+.agi_txt$[.@t]+"\" "+( ( .agi_txt$[.@t+1] != "")?":":"");
+						
+						set .@del,select(.@agi_m$) - 1;
+						mes .n$;
+						mes "You have chosen \""+.agi_txt$[.@del]+"\".";
+						mes "Is that correct?";
+						next;
+						if(select("- Yes:- No") - 1) close;
+						deletearray .agi_txt$[.@del],1;
+						mes .n$;
+						mes "Entry removed.";
+						
+					} else {
+						mes .n$;
+						mes "Type any text you want, but it can't be shorter than 5 letters and longer than 20 letters.";
+						mes "By typing \"Cancel\", you will cancel the input.";
+						while(input(.@txt_n$,5,20) == 0 && getarraysize(.agi_txt$) != 128) {
+							next;
+							setarray .agi_txt$[getarraysize(.agi_txt$)],.@txt_n$;
+							mes .n$;
+							mes .@txt_n$+" has been added.";
+						}
+					}
+					break;
+					
+					// ============ AGI - Base Timer ============ 
+					case 2:
+					mes .n$;
+					mes "The current Base Timer is "+.agi_b_time+" seconds, change it?";
+					next;
+					if(select("- Yes:- No") - 1) close;
+					mes .n$;
+					mes "Please type the new time, but be realistic please.";
+					mes "Recommended: Minimum 5, Maximum 30.";
+					next;
+					if(input(.@time_n,5,30) != 0) {
+						mes .n$;
+						mes "Invalid Value, recommended: Minimum 5, Maximum 30.";
+						close;
+					}
+					mes .n$;
+					mes "The Base Timer has been changed to "+.@time_n+" seconds.";
+					set .agi_b_time,.@time_n;
+					break;
+					
+					// ============ AGI - Reduction Counter ============ 
+					case 3:
+					mes .n$;
+					mes "The Reduction Counter is currently at "+.agi_x_red+" seconds, change it?";
+					next;
+					if(select("- Yes:- No") - 1) close;
+					mes .n$;
+					mes "Please type the new timer, but be realistic please.";
+					mes "Recommended: Minimum 2, Maximum 15";
+					next;
+					if(input(.@time_n,2,15) != 0) {
+						mes .n$;
+						mes "Invalid Value, recommended: Minimum 2, Maximum 15.";
+						close;
+					}
+					mes .n$;
+					mes "The Reduction Counter has been changed to "+.@time_n+" seconds.";
+					set .agi_x_red,.@time_n;
+					break;
+				}
+				break;
+				
+				// ============ VIT Status Mastery Settings ============ 
+				case 3:
+				mes .n$;
+				mes "Which setting do you want to change?";
+				next;
+				switch(select("- Mob Spawn Type:- Starting Countdown:- Countdown Increaser:- Warp Coordinates:- Nothing")) {
+					
+					// ============ VIT - Mob Spawn Type ============ 
+					case 1:
+					mes .n$;
+					mes "The Mob Spawn Type is currently on "+( (.vit_mob_s == 1)?"Multiply Mobs":"One Mob")+", change it?";
+					next;
+					if(select("- Yes:- No") - 1) close;
+					mes .n$;
+					mes "Mob Spawn Type has been changed to "+( (.vit_mob_s == 0)?"Multiply Mobs":"One Mob")+".";
+					set .vit_mob_s,!.vit_mob_s;
+					break;
+					
+					// ============ VIT - Starting Countdown ============ 
+					case 2:
+					mes .n$;
+					mes "The current starting countdown is "+.vit_cd+" seconds, change it?";
+					next;
+					if(select("- Yes:- No") - 1) close;
+					mes .n$;
+					mes "Please type the new countdown, but be realistic please.";
+					mes "Recommended: Minimum 10, Maximum 60";
+					next;
+					if(input(.@v_cd_n,10,60) != 0) {
+						mes .n$;
+						mes "Invalid Value, Recommended: Minimum 10, Maximum 60";
+						close;
+					}
+					mes .n$;
+					mes "The starting countdown has been changed to "+.@v_cd_n+" seconds.";
+					set .vit_cd,.@v_cd_n;
+					break;
+					
+					// ============ VIT - Countdown Increaser ============ 
+					case 3:
+					mes .n$;
+					mes "The current countdown increaser each 10th level is at "+.vit_inc+" seconds, change it?";
+					next;
+					if(select("- Yes:- No") - 1) close;
+					mes .n$;
+					mes "Please type the new countdown increaser, but be realistic please.";
+					mes "Recommended: Minimum 5, Maximum 30.";
+					next;
+					if(input(.@v_inc,5,30) != 0) {
+						mes .n$;
+						mes "Invalid Value, Recommended: Minimum 5, Maximum 30.";
+						close;
+					}
+					mes .n$;
+					mes "The countdown inreaser has been changed to "+.@v_inc+" seconds.";
+					set .vit_inc,.@v_inc;
+					break;
+					
+					// ============ VIT - Warp Coordinates ============ 
+					case 4:
+					mes .n$;
+					if(.use_glob == 1) {
+						mes "Currently the Global Coordinates will be used, so there is no need to change them.";
+						close;
+					}
+					mes .n$;
+					mes "These are the current coordinates, X: "+.vit_cx+", Y: "+.vit_cy+".";
+					mes "Change it?";
+					next;
+					if(select("- Yes:- No") - 1) close;
+					mes "Please type the X Cooardinate, then the Y Cooardinate.";
+					mes "Afterwards I will check if these are passable.";
+					next;
+					input .@x_new;
+					input .@y_new;
+					mes .n$;
+					if(!checkcell(.map$,.@x_new,.@y_new,cell_chkpass) ) {
+						mes "Seems like these coordinates are not passable.";
+						mes "Please type valid coordinates.";
+						close;
+					}
+					mes "The new coordinates have been saved successfully.";
+					set .vit_cx,.@x_new;
+					set .vit_cy,.@y_new;
+					break;
+					
+					case 5:
+				}
+				break;
+				
+				// ============ INT Status Mastery Settings ============ 
+				case 4:
+				mes .n$;
+				mes "Which settings do you want to change?";
+				next;
+				switch(select("- Questions&Answers:- Minimum Questions:- Minimum Points to Pass:- Random Question Order:- Random Answer Order")) {
+					
+					// ============ INT - Questions & Answers ============
+					case 1:
+					mes .n$;
+					mes "What do you want to do?";
+					next;
+					if(select("- Add Question:- Remove Question") == 2) {
+						
+						// ============ INT - Questions & Answers  - REMOVE ============
+						mes .n$;
+						if(getarraysize(.int_quest$) < 2) {
+							mes "I'm sorry, but you can't delete the only question which is stored at the moment.";
+							mes "Please add another question first.";
+							close;
+						}
+						mes "Please choose from the menu below, which question you want to remove:";
+						mes "^FF0000Note: By removing an Question, you automatically remove the answers also.";
+						next;
+						
+						for ( set .@q,0; .@q < getarraysize(.int_quest$); set .@q,.@q + 1) 
+							set .@rem_quest$,.@rem_quest$ + "- "+.int_quest$[.@q] + ( (.int_quest$[.@q+1] != 0)?":":"");
+						
+						set .@r_q,select(.@rem_quest$);
+						
+						mes .n$;
+						mes "You have chosen the following question:";
+						mes .int_quest$[.@r_q];
+						mes "Is that correct?";
+						if(select("- Yes:- No") - 1) close;
+						next;
+						mes .n$;
+						mes "I will now remove the question and the answers belonging to it.";
+						next;
+						
+						deletearray .int_quest$[.@r_q],1;
+						deletearray .int_ans1$[.@r_q],1;
+						deletearray .int_ans2$[.@r_q],1;
+						deletearray .int_ans3$[.@r_q],1;
+						deletearray .int_ans4$[.@r_q],1;
+						deletearray .int_right[.@r_q],1;
+						
+						mes .n$;
+						mes "Deletion completed.";
+						
+					// ============ INT - Questions & Answers - ADD ============
+					} else {
+						mes .n$;
+						if(getarraysize(.int_quest$) >= 128) {
+							mes "The Question Catalog is full already.";
+							close;
+						}
+						mes "[Question]";
+						mes "Please type the question:";
+						input .@add_q$;
+						next;
+						mes .n$;
+						mes "Now please type the answers.";
+						mes "Note: Remember which is the correct answer.";
+						set .@a,0;
+						while ( set(.@a,.@a + 1) < 4) {
+							next;
+							dispbottom .n$+": Answer Counter: "+.@a;
+							if(.@a == 0) set .@a,1;
+							mes .n$;
+							mes "[Answer#"+.@a+"]";
+							input getd(".@add_a"+.@a+"$");
+						}
+			
+						mes " ";
+						mes "[Correct Answer]";
+						mes "Please type now the number of the correct Answer.";
+						mes "If you forgot which it is, type '0' and I will tell you the answers you put in, but only once.";
+						mes "If you put a number higher than 4, you'll have to start again.";
+						input .@add_r;
+						if(.@add_r == 0) {	
+							mes "[Answer#1]";
+							mes .@add_a1$;
+							mes " ";
+							mes "[Answer#2]";
+							mes .@add_a2$;
+							mes " ";
+							mes "[Answer#3]";
+							mes .@add_a3$;
+							mes " ";
+							mes "[Answer#4]";
+							mes .@add_a4$;
+							mes " ";
+							mes "Please type the number of the correct Answer:";
+							mes "If you should type again a '0' or a number higher than 4, you'll have to start again also.";
+							input .@add_r;
+							if(.@add_r == 0 || .@add_r > 4) close;
+						} else if(.@add_r > 4) {
+							mes "Invalid number.";
+							close;
+						}
+						next;
+						mes .n$;
+						mes "Thank you for hard work, I will now add this question and answers to the catalog.";
+						mes "See ya again.";
+						close2;
+						setarray .int_quest$[getarraysize(.int_quest$)],.add_q$;
+						setarray .int_ans1$[getarraysize(.int_ans1$)],.add_a1$;
+						setarray .int_ans2$[getarraysize(.int_ans2$)],.add_a2$;
+						setarray .int_ans3$[getarraysize(.int_ans3$)],.add_a3$;
+						setarray .int_ans4$[getarraysize(.int_ans4$)],.add_a4$;
+						setarray .int_right[getarraysize(.int_right)],.add_r;
+					}
+					break;
+					
+					// ============ INT - Minimum Questions ============
+					case 2:
+					mes .n$;
+					mes "Currently the minimum questions is "+.int_base+".";
+					mes "Do you want to change it?";
+					if(select("- Yes:- No") - 1) close;
+					next;
+					mes .n$;
+					mes "Please type the new value:";
+					mes "^FF0000Note: Minimum - 5, Maximum - 30^000000";
+					next;
+					if(input(.@int_b_n,5,30) != 0) {
+						mes .n$;
+						mes "Invalid Value, Minimum - 5, Maximum - 30";
+						close;
+					}
+					mes .n$;
+					mes "The minimum questions has been changed to "+.@int_b_n+".";
+					set .int_base,.@int_b_n;
+					break;
+					
+					// ============ INT - Minimum Points to Pass ============
+					case 3:
+					mes .n$;
+					mes "Currently the minimum points to pass is "+.int_pt+".";
+					mes "Do you want to change it?";
+					if(select("- Yes:- No") - 1) close;
+					next;
+					mes .n$;
+					mes "Please type the new value:";
+					mes "^FF0000Note: Minimum - 3, Maximum - 26^000000";
+					next;
+					if(input(.@int_pt_n,3,26) != 0) {
+						mes .n$;
+						mes "Invalid Value, Minimum - 3, Maximum - 26";
+						close;
+					}
+					mes .n$;
+					mes "The minimum points to pass has been changed to "+.@int_pt_n+".";
+					set .int_pt,.@int_pt_n;
+					break;
+					
+					// ============ INT - Random Question Order ============
+					case 4:
+					mes .n$;
+					mes "Random Question Order is "+ ( (.int_rquest == 1)?"Active":"Deactive")+".";
+					mes "Change it?";
+					if(select("- Yes:- No") - 1) break;
+					next;
+					mes .n$;
+					mes "The Random Question Order has been changed to "+ ( (.int_rquest == 1)?"Deactive":"Active")+".";
+					set .int_rquest,!.int_rquest;
+					break;
+					
+					// ============ INT - Random Answer Order ============
+					case 5:
+					mes .n$;
+					mes "Random Answer Order is "+ ( (.int_rans == 1)?"Active":"Deactive")+".";
+					mes "Change it?";
+					if(select("- Yes:- No") - 1) break;
+					next;
+					mes .n$;
+					mes "The Random Answer Order has been changed to "+ ( (.int_rans == 1)?"Deactive":"Active")+".";
+					set .int_rans,!.int_rans;
+					break;
+				}
+				break;
+				
+				// ============ DEX Status Mastery Settings ============ 
+				case 5:
+				mes .n$;
+				mes "Which kind of setting do you want to change?";
+				next;
+				switch(select("- Timer to click the NPC:- Times to click the NPC:- Points required to pass:- Warp Coordinate")) {
+
+					// ============ DEX - Timer to click the NPC ============ 
+					case 1:
+					mes .n$;
+					mes "Current setting is "+.dex_time+" seconds to click the NPC.";
+					mes "Change it?";
+					if(select("- Yes:- No") - 1) close;
+					next;
+					mes .n$;
+					mes "Please type the new time:";
+					mes "^FF0000Note: Minimum - 5, Maximum - 30^000000";
+					next;
+					if(input(.@dt,5,30) != 0) {
+						mes .n$;
+						mes "Invalid Value, Minimum - 5, Maximum - 30.";
+						close;
+					}
+					mes .n$;
+					mes "The Time to click the NPC has been changed to "+.@dt+".";
+					set .dex_time,.@dt;
+					break;
+
+					// ============ DEX - Clicks Needed ============ 
+					case 2:
+					mes .n$;
+					mes "Current setting is "+.dex_npc+" times to click the NPC.";
+					mes "Change it?";
+					if(select("- Yes:- No") - 1) close;
+					next;
+					mes .n$;
+					mes "Please type the new value:";
+					mes "^FF0000Note: Minimum - 5, Maximum - 30^000000";
+					next;
+					if(input(.@dts,5,30) != 0) {
+						mes .n$;
+						mes "Invalid Value, Minimum - 5, Maximum - 30.";
+						close;
+					}
+					mes .n$;
+					mes "The Times to click the NPC has been changed to "+.@dts+".";
+					set .dex_npc,.@dts;
+					break;					
+					
+					// ============ DEX - Points required to pass ============ 
+					case 3:
+					mes .n$;
+					mes "Current setting is "+.dex_pt+" times to click the NPC.";
+					mes "Change it?";
+					if(select("- Yes:- No") - 1) close;
+					next;
+					mes .n$;
+					mes "Please type the new value:";
+					mes "^FF0000Note: Minimum - 3, Maximum - 26^000000";
+					next;
+					if(input(.@dts,3,26) != 0) {
+						mes .n$;
+						mes "Invalid Value, Minimum - 3, Maximum - 26.";
+						close;
+					}
+					mes .n$;
+					mes "The Points required to Pass has been changed to "+.@dpt+".";
+					set .dex_pt,.@dpt;
+					break;
+					
+					// ============ DEX - Warp Coordinates ============ 
+					case 4:
+					mes .n$;
+					if(.use_glob == 1) {
+						mes "Currently the Global Coordinates will be used, so there is no need to change them.";
+						close;
+					}
+					mes .n$;
+					mes "These are the current coordinates, X: "+.dex_cx+", Y: "+.dex_cy+".";
+					mes "Change it?";
+					next;
+					if(select("- Yes:- No") - 1) close;
+					mes "Please type the X Cooardinate, then the Y Cooardinate.";
+					mes "Afterwards I will check if these are passable.";
+					next;
+					input .@x_new;
+					input .@y_new;
+					mes .n$;
+					if(!checkcell(.map$,.@x_new,.@y_new,cell_chkpass) ) {
+						mes "Seems like these coordinates are not passable.";
+						mes "Please type valid coordinates.";
+						close;
+					}
+					mes "The new coordinates have been saved successfully.";
+					set .dex_cx,.@x_new;
+					set .dex_cy,.@y_new;
+					break;
+				}
+				break;
+				
+				// ============ LUK Status Mastery Settings ============ 
+				case 6:
+				mes .n$;
+				mes "Which setting do you want to change?";
+				next;
+				switch(select("- Guess Chances:- Nothing")) {
+					
+					// ============ LUK - Chances to guess ============
+					case 1:
+					mes .n$;
+					mes "The current chances to guess are "+.luk_gue+", change it?";
+					next;
+					if(select("- Yes:- No") - 1) close;
+					mes .n$;
+					mes "Please type the new value, but be realistic please.";
+					mes "Recommended: Minimum 5, Maximum 15.";
+					next;
+					if(input(.@luk_c,5,15) != 0) {
+						mes .n$;
+						mes "Invalid Value, Recommended: Minimum 5, Maximum 15.";
+						close;
+					}
+					mes .n$;
+					mes "The chances to guess have been changed to "+.@luk_c+".";
+					set .luk_gue,.@luk_c;
+					break;
+					
+					case 2:
+				}
+				break;
+			}
+			break;
+			
+		} else {
+			// ============ Specific Weapon Mastery Settings ============ 
+			mes .n$;
+			mes "Which setting do you want to change?";
+			next;
+			switch(select("- Forbidden Weapon Types:- Monster Settings:- Uncustomized Weapon Feature:- Nothing")) {
+				
+				// ============ Forbidden Weapon Types ============ 
+				case 1:
+				mes .n$;
+				mes "Currently there are "+getarraysize(.kill_weap)+" weapon types on the forbidden list.";
+				next;
+				switch(select("- Add Weapon Type:- Empty List:- Nothing")) {
+					
+					case 1:
+					mes .n$;
+					mes "Here is the list of the weapon types:";
+					for ( set .@l,1; .@l < getarraysize($@eq_n$); set .@l,.@l + 1) 
+						if(.@l != 9) mes $@eq_n$[.@l]+" = "+.@l;
+					
+					mes " ";
+					mes "Please input the types you want to be forbidden:";
+					mes "By putting any number above the last weapon type or a '0', you will cancel the input.";
+					while(input(.@w_for,1,getarraysize($@eq_n$)-1) == 0) {
+						next;
+						set .@er,0;
+						for ( set .@q,0; .@q < getarraysize(.kill_weap); set .@q,@q + 1) {
+							if(.@w_for == .kill_weap[.@q]) {
+								mes .n$;
+								mes "CAUTION: Duplicate Entry, try again";
+								set .@er,1;
+								break;
+							}
+						}
+						if(.@er == 1) continue;
+						setarray .kill_weap[getarraysize(.kill_weap)],.@w_for;
+						mes .n$;
+						mes $@eq_n$[.@w_for]+" has been added.";
+					}
+					next;
+					mes .n$;
+					mes "There are now "+getarraysize($@eq_n$)+" weapon types forbidden.";
+					break;
+				
+					case 2:
+					mes .n$;
+					mes "Do you really want to empty the list?";
+					next;
+					if(select("- Yes:- No") - 1) break;
+					deletearray .kill_weap[0],128;
+					mes .n$;
+					mes "List has been cleared.";
+					
+					case 3:
+				}
+				break;
+				
+				// ============ Monster Settings ============ 
+				case 2:
+				mes .n$;
+				mes "Please choose which setting you want to change:";
+				next;
+				switch(select("- Last Mob ID:- Mob Spawn Cooardinates:- Minimum Mob Amount:- Maximum Mob Amount:- MVP Settings:- Nothing")) {
+					
+					// ============ Last Mob ID ============ 
+					case 1:
+					mes .n$;
+					mes "The last mob ID is currently "+.l_mob+".";
+					mes "Change it?";
+					if(select("- Yes:- No") - 1) break;
+					next;
+					mes .n$;
+					if(getmonsterinfo(input(.@m_id),0) == "null") {
+						mes "This mob doesn't exist.";
+						mes "Please type a valid ID.";
+						close;
+					}
+					mes "Last Mob ID has been changed to "+.@m_id+".";
+					set .l_mob,.@m_id;
+					break;
+					
+					// ============ Weapon - Mob Spawn Coordinates  ============ 
+					case 2:
+					mes .n$;
+					mes "These are the current coordinates, X: "+.wm_msp_x+", Y: "+.wm_msp_y+".";
+					mes "Change it?";
+					next;
+					if(select("- Yes:- No") - 1) close;
+					mes .n$;
+					mes "Please type the X Cooardinate, then the Y Cooardinate.";
+					mes "Afterwards I will check if these are passable.";
+					next;
+					input .@x_new;
+					input .@y_new;
+					mes .n$;
+					if(!checkcell(.map$,.@x_new,.@y_new,cell_chkpass) ) {
+						mes "Seems like these coordinates are not passable.";
+						mes "Please type valid coordinates.";
+						close;
+					}
+					mes "The new coordinates have been saved successfully.";
+					set .wm_msp_x,.@x_new;
+					set .wm_msp_y,.@y_new;
+					break;
+					
+					// ============ Minimum Mob Amount ============ 
+					case 3:
+					mes .n$;
+					mes "The current minimum mob amount is "+.wm_mmi+".";
+					mes "Change it?";
+					if(select("- Yes:- No") - 1) break;
+					next;
+					mes .n$;
+					if(input(.@m_mmi,1,.wm_mma) != 0) {
+						mes "Invalid Value, minimum 1, maximum "+.wm_mma+".";
+						mes "If you want to raise it above "+.wm_mma+".";
+						mes "Raise the Maximum Mob Amount then.";
+						close;
+					}
+					mes "Minimum Mob Amount has been changed to "+.@m_mmi+".";
+					set .wm_mmi,.@m_mmi;
+					break;
+					
+					// ============ Maximum Mob Amount ============ 
+					case 4:
+					mes .n$;
+					mes "The current maximum mob amount is "+.wm_mma+".";
+					mes "Change it?";
+					if(select("- Yes:- No") - 1) break;
+					next;
+					mes .n$;
+					if(input(.@m_mma,.wm_mmi,10000) != 0) {
+						mes "Invalid Value, minimum "+.wm_mmi+", maximum 10000.";
+						mes "If you want to lower it below "+.wm_mmi+".";
+						mes "Lower the Minimum Mob Amount then.";
+						close;
+					}
+					mes "Maximum Mob Amount has been changed to "+.@m_mma+".";
+					set .wm_mma,.@m_mma;
+					break;
+					
+					// ============ MvP Settings ============ 
+					case 5:
+					mes .n$;
+					mes "What do you want to change?";
+					next;
+					switch(select("- MvP Usage:- MvP ID's:- MvP Minimum Quantity:- MvP Maximum Quantity")) {
+					
+						// ============ MvP Usage ============ 
+						case 1:
+						mes .n$;
+						mes "MvP Usage is "+ ( (.wm_mvp == 1)?"Active":"Deactive")+".";
+						mes "Change it?";
+						if(select("- Yes:- No") - 1) break;
+						next;
+						mes .n$;
+						mes "The MvP Usage has been changed to "+ ( (.wm_mvp == 1)?"Deactive":"Active")+".";
+						set .wm_mvp,!.wm_mvp;
+						break;
+						
+						// ============ MvP ID's ============ 
+						case 2:
+						mes .n$;
+						if(.wm_mvp == 0) {
+							mes "Since MvP Usage isn't active, there is no need to edit the MVP ID's.";
+							close;
+						}
+						mes "Currently there are "+getarraysize(.wm_mvp_id)+" MvP's in the list,";
+						mes "which are:";
+						for ( set .@mvp,0; .@mvp < getarraysize(.wm_mvp_id); set .@mvp,.@mvp + 1)
+							mes "- "+getmonsterinfo(.wm_mvp_id[.@mvp],0);
+							
+						mes " ";
+						mes "So what do you want to do?";
+						next;
+						switch(select("- Add an MvP:- Remove an MvP:- Nothing")) {
+							
+							case 1:
+							mes .n$;
+							if(getarraysize(.wm_mvp_id) == 128) {
+								mes "I'm sorry, but you can't add any MvP anymore.";
+								close;
+							}
+							mes "You can cancel the input by typing a '0'.";
+							mes "Note: I won't be able to check if the Mob you've put is an MvP or not, so be sure to type the correct ID.";
+							while(input(.@m_add,1,.l_mob) != 0) {
+								next;
+								set .@er,0;
+								for ( set .@q,0; .@q < getarraysize(.wm_mvp_id); set .@q,@q + 1) {
+									if(.@m_add == .wm_mvp_id[.@q]) {
+										mes .n$;
+										mes "CAUTION: Duplicate Entry, try again";
+										set .@er,1;
+										break;
+									}
+								}
+								if(.@er == 1) continue;
+								setarray .wm_mvp_id[getarraysize(.wm_mvp_id)],.@m_add;
+								mes .n$;
+								mes getmonsterinfo(.@m_add,0)+" has been added.";
+							}
+							break;
+							
+							case 2:
+							mes .n$;
+							if(getarraysize(.wm_mvp_id) < 1) {
+								mes "I'm sorry, but there are no MvPs you could remove.";
+								close;
+							}
+							mes "Please choose which MvP you want to remove:";
+							mes "Format: Name (Mob ID)";
+							next;
+							for ( set .@r,0; .@r < getarraysize(.wm_mvp_id); set .@r,.@r + 1) 
+								set .@rem_mvp$,.@rem_mvp$ + "- "+getmonsterinfo(.wm_mvp_id[.@r],0)+" ("+.wm_mvp_id[.@r]+")"+ ( (.wm_mvp_id[.@r+1] != 0)?":":"");
+							
+							set .@del,select(.@rem_mvp$) - 1;
+							mes .n$;
+							mes "You have chosen "+getmonsterinfo(.wm_mvp_id[.@del],0)+" ("+.wm_mvp_id[.@del]+").";
+							mes "Is that correct?";
+							next;
+							if(select("- Yes:- No") - 1) close;
+							deletearray .wm_mvp_id[.@del],1;
+							mes .n$;
+							mes "Entry removed.";
+							break;
+						}
+						break;
+						
+						// ============ Minimum MvP Amount ============ 
+						case 3:
+						mes .n$;
+						mes "The current minimum MvP amount is "+.wm_mvp_min+".";
+						mes "Change it?";
+						if(select("- Yes:- No") - 1) break;
+						next;
+						mes .n$;
+						if(input(.@m_mmi,1,.wm_mvp_max) != 0) {
+							mes "Invalid Value, minimum 1, maximum "+.wm_mvp_max+".";
+							mes "If you want to raise it above "+.wm_mvp_max+".";
+							mes "Raise the Maximum MvP Amount then.";
+							close;
+						}
+						mes "Minimum MvP Amount has been changed to "+.@m_mmi+".";
+						set .wm_mvp_min,.@m_mmi;
+						break;
+						
+						// ============ Maximum MvP Amount ============ 
+						case 4:
+						mes .n$;
+						mes "The current maximum MvP amount is "+.wm_mvp_max+".";
+						mes "Change it?";
+						if(select("- Yes:- No") - 1) break;
+						next;
+						mes .n$;
+						if(input(.@m_mma,.wm_mvp_min,10) != 0) {
+							mes "Invalid Value, minimum "+.wm_mmi+", maximum 10.";
+							mes "If you want to lower it below "+.wm_mvp_min+".";
+							mes "Lower the Minimum MvP Amount then.";
+							close;
+						}
+						mes "Maximum MvP Amount has been changed to "+.@m_mma+".";
+						set .wm_mvp_max,.@m_mma;
+						break;
+						
+					}
+					break;
+					
+					case 6:
+				}
+				break;
+				
+				case 3:
+				mes .n$;
+				mes "Uncustomized Weapon Feature is "+ ( (.wm_weap == 1)?"Active":"Deactive")+".";
+				mes "Change it?";
+				if(select("- Yes:- No") - 1) break;
+				next;
+				mes .n$;
+				mes "The Uncustomized Weapon Feature has been changed to "+ ( (.wm_weap == 1)?"Deactive":"Active")+".";
+				set .wm_weap,!.wm_weap;
+				break;
+				
+				case 4:
+				break;
+			}
+		}
+		break;
+		
+		// Equipment Bonus Settings
+		case 3:
+		mes .n$;
+		mes "Please choose which setting you want to change:";
+		next;
+		switch(select("- Equip Bonus State:- Payment Method:- Payment Amount")) {
+			
+			case 1:
+			mes .n$;
+			mes "Currently the Equip Bonus is "+ ( (.equip_b == 1)?"Online":"Offline")+".";
+			mes "Do you want to change it?";
+			if(select("- Yes:- No") - 1) close;
+			next;
+			mes .n$;
+			mes "Equip Bonus State has been changed to "+ ( (.equip_b == 0)?"Online":"Offline")+".";
+			set .equip_b,!.equip_b;
+			break;
+		
+			case 2:
+			mes .n$;
+			mes "Currently the Payment Method is "+( (.equip_req == 0)?"None":( (.equip_req == 1)?"Zeny":"Cash Points") )+".";
+			mes "To what do you want to change it?";
+			next;
+			switch(select("- None:- Zeny:- Cash Points")) {
+				
+				case 1:
+				mes .n$;
+				mes "The Payment Method has been changed to \"None\".";
+				set .equip_req,0;
+				break;
+				
+				case 2:
+				mes .n$;
+				mes "The Payment Method has been changed to \"Zeny\".";
+				set .equip_req,1;
+				break;
+
+				case 3:
+				mes .n$;
+				mes "The Payment Method has been changed to \"Cash Points\".";
+				set .equip_req,2;
+				break;
+			}
+			
+			case 3:
+			mes .n$;
+			if(.equip_req == 0) {
+				mes "Since the Payment Method is \"None\", you don't have to put an amount.";
+				close;
+			}
+			mes "Currently the Payment Amount is "+.equip_r_am+" "+( (.equip_req == 1)?"Zeny":"Cash Points")+".";
+			mes "To what do you want to change it?";
+			switch(.equip_req) {
+				case 1:
+				mes "^FF0000Note: Minimum 10000, Maximum 1,000,000.^000000";
+				next;
+				if(input(.@eq_r_am,10000,1000000) != 0) {
+					mes .n$;
+					mes "Invalid Value. Minimum 10000, Maximum 1,000,000.";
+					close;
+				}
+				set .equip_r_am,.@eq_r_am;
+				mes "The Payment Amount has been changed to "+.equip_r_am+" Zeny.";
+				break;
+				
+				case 2:
+				mes "^FF0000Note: Minimum 10, Maximum 10,000.^000000";
+				next;
+				if(input(.@eq_r_am,10,10000) != 0) {
+					mes .n$;
+					mes "Invalid Value. Minimum 10, Maximum 10,000.";
+					close;
+				}
+				set .equip_r_am,.@eq_r_am;
+				mes "The Payment Amount has been changed to "+.equip_r_am+" Cash Points.";
+				break;
+			}
+			break;
+		}
+		break;
+		
+		case 4:
+		break;
+	}
+}
+close;
+
+OnPCLoginEvent:
+if(#TrainSys == 0) end; // No Mastery started yet
+announce .n$+": Your mastery will be saved "+( (.train_b == 0)?"global on your account":"on each character seperatly")+".",bc_self;
+announce .n$+": This may change anytime, if it does your mastery will be copied, if you agree you have either to start from 0 or from the old level you had at that time.",bc_self;
+// Mastery Saving has changed
+if(#db_save != .train_mode) {
+	for ( set @s,1; @s < 6; set @s,@s + 1) {
+		set @db_c,1;
+		set .@val,callfunc("DATA_D-M",2,.train_b,1,@s,2);
+		set @db_c,2;
+		callfunc "DATA_D-M",2,.train_b,1,@s,1,.@val,2;
+	}
+	// Equip Update
+	for ( set @w,1; @w <= 22; set @w,@w + 1) {
+		set @db_c,1;
+		set .@val,callfunc("DATA_D-M",2,.train_b,2,@w,2);
+		set @db_c,2;
+		callfunc "DATA_D-M",2,.train_b,2,@w,1,.@val,2;
+	}	
+	set #db_save,.train_mode;
+}
+
+if(.train_b != #b_info) { // Bound Type has changed
+	mes .n$;
+	mes "The bounding type has changed, do you want to copy your mastery level from your current character?";
+	mes "Any level on the other characters will be overwritten.";
+	mes "If you press \"No\", you can't continue your training neither you gain any effects until you choose to do that by an relogin.";
+	if(set(#Train_Sys,select("- Yes:- No") ) == 2) close;
+	close2;
+	if(.train_mode == 1) 		
+		query_sql "UPDATE `trainsystem` SET `id` = '"+( (.train_b)?getcharid(0):getcharid(3))+"' WHERE `id` = '"+( (#b_info)?getcharid(0):getcharid(3))+"'";
+	
+	else {
+		// Copying Status Mastery
+		for ( set @c,0; @c < 6; set @c,@c + 1) {
+			set .@cs,callfunc("DATA_D-M",2,#b_info,1,@c,2);
+			debugmes .n$+":Status "+@c+", Value: "+.@cs;
+			callfunc "DATA_D-M",2,.train_b,1,@c,1,.@cs,2;
+			callfunc "DATA_D-M",2,#b_info,1,@c,1,0,2;
+		}
+		// Copying Weapon Mastery
+		for ( set @w,1; @w < getarraysize(.eq_n$); set @w,@w + 1) {
+			if(@w != 9) {
+				set .@ws,callfunc("DATA_D-M",2,#b_info,2,@w,2);
+				debugmes .n$+":Weapon "+@w+", Value: "+.@ws;
+				callfunc "DATA_D-M",2,.train_b,2,@w,1,.@ws,2;
+				callfunc "DATA_D-M",2,#b_info,2,@w,1,0,2;
+			}
+		}
+	}
+	set #b_info,.train_b;
+}
+if(.equip_b == 1) 
+	if(#eq_timer <= gettimetick(2) && #eq_pay == 1) {
+		announce .n$+": The Payment for the Equip Bonus has worn out. To use the Bonus again, you have to pay once again.",bc_self;
+		set #eq_pay,0;
+		set #eq_timer,0;
+	}
+end;
+
+OnInit:
+ // NPC Name
+set .n$,"["+strnpcinfo(1)+"]";
+// Server Mode:
+// 0 - TxT
+// 1 - SQL
+// How should the saving be done?
+// TxT = via server temporar variables > $@<name>
+// SQL = obviously via SQL Database
+set .train_mode,0;
+if(.train_mode == 1 && query_sql("SHOW TABLES LIKE 'trainsystem'",.@sys_ck) == 0)
+	query_sql "CREATE TABLE IF NOT EXISTS `trainsystem` ( `id` INT(10) UNSIGNED NOT NULL, `str` INT(8) UNSIGNED DEFAULT '0', `agi` INT(8) UNSIGNED DEFAULT '0', `vit` INT(8) UNSIGNED DEFAULT '0', `int` INT(8) UNSIGNED DEFAULT '0', `dex` INT(8) UNSIGNED DEFAULT '0', `luk` INT(8) UNSIGNED DEFAULT '0', `dagger` INT(8) UNSIGNED DEFAULT '0', `one-sword` INT(8) UNSIGNED DEFAULT '0', `two-sword` INT(8) UNSIGNED DEFAULT '0', `one-spear` INT(8) UNSIGNED DEFAULT '0', `two-spear` INT(8) UNSIGNED DEFAULT '0', `one-axe` INT(8) UNSIGNED DEFAULT '0', `two-axe` INT(8) UNSIGNED DEFAULT '0', `mace` INT(8) UNSIGNED DEFAULT '0', `unused` INT(8) UNSIGNED DEFAULT '0', `stave` INT(8) UNSIGNED DEFAULT '0', `bow` INT(8) UNSIGNED DEFAULT '0', `knuck` INT(8) UNSIGNED DEFAULT '0', `music` INT(8) UNSIGNED DEFAULT '0', `whip` INT(8) UNSIGNED DEFAULT '0', `book` INT(8) UNSIGNED DEFAULT '0', `katar` INT(8) UNSIGNED DEFAULT '0', `revol` INT(8) UNSIGNED DEFAULT '0', `rifle` INT(8) UNSIGNED DEFAULT '0', `gatl` INT(8) UNSIGNED DEFAULT '0', `shotg` INT(8) UNSIGNED DEFAULT '0', `grenade` INT(8) UNSIGNED DEFAULT '0', `fuuma` INT(8) UNSIGNED DEFAULT '0')";
+set .map$,"new_zone04.gat"; // Map for Practice
+// Use Global Cooardinates? Default: 1
+// - 1 = Yes 
+// - 0 = No
+// If "No" then each training which requires the 
+// training map will use their own Warp cooardinates
+set .use_glob,1;
+set .coord_x,180; // Global X Cooardinate for the warp
+set .coord_y,180; // Global Y Cooardinate for the warp
+// =========== Mapflags ===========
+setmapflag .map$,mf_noreturn;
+setmapflag .map$,mf_nosave;
+setmapflag .map$,mf_nowarpto;
+setmapflag .map$,mf_nowarp;
+setmapflag .map$,mf_nobranch;
+setmapflag .map$,mf_noteleport;
+setmapflag .map$,mf_loadevent;
+setmapflag .map$,mf_nomvploot;
+setmapflag .map$,mf_nomobloot;
+setmapflag .map$,mf_monster_noteleport;
+// Delay and Mastery Bounding:
+// 0 = Account
+// 1 = Character
+set .train_b,0;
+// ======== Training Delay Settings ======
+// Type:
+// - 0 = Off
+// - 1 = Counts for all Mastery (Weapon & Status)
+// - 2 = Each status mastery has it own Delay, Weapon mastery has a general delay
+set .delay_type,1;
+// Delay Time:
+if(.delay_type) 
+	set .delay_time,86400; // Delay in seconds, Default: 86400 = 1 Day
+// ======= Status Mastery Settings =======
+// Max Level
+// Suggested values for:
+// - Low Rate: 20
+// - Mid Rate: 45
+// - High Rate: 100
+// - And higher: 500
+set .s_level,20;
+// Status Training Restriction
+// 1 = On
+// 0 = Off
+// When "1" only one status can be trained at once.
+// Any other will be reseted.
+set .solo,0;
+// Class Restricted
+// 1 = On
+// 0 = Off
+// If "1" training is class depended.
+// Like Swordman Class is Str and Dex only
+set .class,0;
+
+// Status Bonus Duration is in the NPC "StatusBonus"
+
+// ====== Str Mastery ======
+// = Training Mob ID
+// Put in .str_mid the Base Mob ID, like 2900.
+// Afterwards the scripts calcuates the Mob ID itself.
+// Just look around at line 191. 
+set .str_mid,2900; 
+set .str_mx,180; // X Cooardinate for the mob
+set .str_my,184; // Y Cooardinate for the mob
+// Warp Coordinate
+if(.use_glob) { // Global Coordinates
+	set .str_cx,.coord_x;
+	set .str_cy,.coord_y;
+} else { // Put here your coordinates
+	set .str_cx,0;
+	set .str_cy,0;
+}
+// ====== Agi Mastery - Fast Typing ======
+setarray .agi_txt$[0],"Train me","Moar Speed","Agi r0ckz","I wanna be faster";
+set .agi_b_time,15; // x seconds to type the text
+set .agi_x_red,10; // Every x lvl the duration to type will be reduced by 1
+
+// ====== Vit Mastery - Survival ======
+// - Mob Spawn Type at once: 
+// 0 = One Mob
+// 1 = Multiply Mobs
+set .vit_mob_s,1; 
+set .vit_cd,30; // x seconds for the first level
+set .vit_inc,10; // x seconds the countdown increases by every 10th level
+// ======== Monster Spawn Coordinates ===========
+// Randomly chosen spawn coordinates in a specified area:
+// [0] = left-down corner
+// [1] = right-upper corner
+setarray .vit_mx[0],171,188;
+setarray .vit_my[0],171,189;
+
+// Warp Coordinate
+if(.use_glob) { // Global Coordinates
+	set .vit_cx,.coord_x;
+	set .vit_cy,.coord_y;
+} else { // Put here your coordinates
+	set .vit_cx,0;
+	set .vit_cy,0;
+}
+// ====== Int Mastery - Quiz ======
+set .int_base,10; // Minium quantity of questions
+set .int_pt,8; // Minimum points required to pass
+set .int_rquest,1; // Random question order - 1 = On / 0 = Off
+set .int_rans,1; // Random answer order - 1 = On / 0 = Off
+setarray .int_quest$[0],"What is the name of this Server?","Which Card gives +100% HP, -50% DEF?";
+setarray .int_ans1$[0],"Dumbass Ro","Tao Gunka Card";
+setarray .int_ans2$[0],"Summon Ro","Fabre Card";
+setarray .int_ans3$[0],"Pwnage Ro","Acidus Card";
+setarray .int_ans4$[0],"Holy Ro","Mimic Card";
+setarray .int_right[0],2;
+// ====== Dex Mastery - Reaction ======
+// =============== Note ====================
+// There are two coordinate usages available:
+// - Fixed
+// - Random selected on an specified area
+// = See the "OnInit" in the "DEX Training" NPC for more info.
+// =========================================
+set .dex_time,15; // x seconds to click the npc
+set .dex_npc,10; // x times the NPC have to be clicked
+set .dex_pt,8; // x Points required to pass the test
+// Warp Coordinate
+if(.use_glob) { // Global Coordinates
+	set .dex_cx,.coord_x;
+	set .dex_cy,.coord_y;
+} else { // Put here your coordinates
+	set .dex_cx,0;
+	set .dex_cy,0;
+}
+// ====== Luk Mastery - Number guessing ======
+set .luk_gue,20; // Chances to guess
+
+// ========= Weapon Mastery Settings ========
+// Max Level:
+// Suggested values for:
+// - Low Rate: 20
+// - Mid Rate: 45
+// - High Rate: 100
+// - And higher: 500
+set .w_level,20;
+
+// Warp Coordinate
+if(.use_glob) { // Global Coordinates
+	set .wm_cx,.coord_x;
+	set .wm_cy,.coord_y;
+} else { // Put here your coordinates
+	set .wm_cx,0;
+	set .wm_cy,0;
+}
+// Insert the numbers of the weapons, which are forbidden to be trained with.
+// Weapon Types:
+// 1: Daggers
+// 2: One-handed swords
+// 3: Two-handed swords
+// 4: One-handed spears
+// 5: Two-handed spears
+// 6: One-handed axes
+// 7: Two-handed axes
+// 8: Maces
+// 10: Staves
+// 11: Bows
+// 12: Knuckles
+// 13: Musical Instruments
+// 14: Whips
+// 15: Books
+// 16: Katars
+// 17: Revolvers
+// 18: Rifles
+// 19: Gatling guns
+// 20: Shotguns
+// 21: Grenade launchers
+// 22: Fuuma Shurikens
+setarray .kill_weap[0],0;
+setarray .eq_n$[1],"Dagger","One-Handed Sword","Two-Handed Sword","One-Handed Spear","Two-Handed Spear","One-Handed Axe","Two-Handed Axe","Mace","Unused","Staff","Bow","Knuckle/Fist","Musical Instrument","Whip","Book","Katar","Revolver","Rifle","Gatling Gun","Shotgun","Grenade Launcher","Fuuma Shuriken";
+// Requires to SQL Mode (.train_mode == 1)
+// Sets the SQL Table names for the weapon types
+setarray .sql_wn$[1],"dagger","one-sword","two-sword","one-spear","two-spear","one-axe","two-axe","mace","unused","stave","bow","knuck","music","whip","book","katar","revol","rifle","gatl","shotg","grenade","fuuma";
+// Equip Bonus:
+// 0 = Off
+// 1 = On
+// Note: Equip bonus will be done via the refine level/2
+// and increases the ATK/MATK and DEF/MDEF depending on the Class
+set .equip_b,1;
+// Equip Bonus Payment:
+// 0 = None
+// 1 = Zeny
+// 2 = Cash Points
+set .equip_req,1;
+set .equip_r_am,100000; // 100k
+// Setting Equip Bonus Duration in Milliseconds (Seconds*1000)
+set .eq_dur,3600000; // 1 Hour
+// ====== Monster Settings for Weapon Mastery ======
+set .l_mob,3500; // Last Mob ID in DB
+// Mob Spawn Cooardinates
+set .wm_mvar,1; // Use spawn variables for Mob Spawning or random spawn? - 1 = Yes/ 0 = No
+if(.wm_mvar) {
+	set .wm_msp_x,180;
+	set .wm_msp_y,180;
+} else {
+	set .wm_msp_x,0;
+	set .wm_msp_y,0;
+}
+set .wm_mmi,10; // Min Mob Quantity
+set .wm_mma,100; // Max Mob Quantity
+// Allow usage of MvP's?
+// 0 - No
+// 1 - Yes
+set .wm_mvp,0; 
+// MVP IDs
+setarray .wm_mvp_id[0],1511,1647,1785,1630,1039,1874,1272,1719,1046,1389,1112,1115,1418,1871,1252,1768,1086,1885,1649,1651,1832,1492,1734,1251,1779,1688,1646,1373,1147,1059,1150,1087,1190,1038,1157,1159,1623,1650,1583,1708,1312,1751,1648,1658,1916,1929,1956,1957,1990,2022,2068;
+set .wm_mvp_min,1; // MvP Minimum Quantity
+set .wm_mvp_max,5; // MvP Maximum Quantity
+// ============ Debug ==============================
+// = Don't touch this!!
+// =================================================
+if(.train_mode > 1) { // If .train_mode is over 1 (0 = TxT / 1 = SQL)
+	set .train_mode,0;
+	debugmes .n$+": Training System Save Mode is over 1, set to 0.";
+}
+if(.map$ == "" || getmapusers(.map$) == -1) { // If the .map$ is empty or map doesn' exists
+	set .map$,"";
+	debugmes .n$+": Either .map$ is empty or the map doesn't exists, default to <Map>.";
+}
+if(.use_glob > 1) { // If .use_glob is over 1
+	set .use_glob,1;
+	debugmes .n$+": .use_glob is over 1, defaulting to 1.";
+}
+if(.train_b > 1) { // If .train_b is over 1
+	set .train_b,0; 
+	debugmes .n$+": .train_b is over 1, defaulting to 0.";
+}
+if(.delay_type > 2) { // If .delay_type is over 2
+	set .delay_type,1;
+	debugmes .n$+": .delay_type is over 2, defaulting to 1.";
+}
+if(.delay_time < 3600) { // If .delay_time is below 3600 seconds > 1 hour
+	set .delay_time,86400; // default it to 86400 > 1 day
+	debugmes .n$+": .delay_time is below 3600 (1 hour), defaulting to 86400 (1 day).";
+}
+if(.solo > 1) { // If .solo is over 1
+	set .solo,0;
+	debugmes .n$+": .solo is over 1, defaulting to 0.";
+}
+if(.class > 1) { // If .class is over 1
+	set .class,0;
+	debugmes .n$+": .class is over 1, defaulting to 0.";
+}
+// If the base mob id in .str_mid is incorrect cause there weren't 10 mobs afterwards
+for ( set .@m,1; .@m < 10; set .@m,.@m + 1)
+	if(getmonsterinfo(.str_mid+.@m,0) == "null") {
+		set .str_mid,4000; // Defaulting to 4000
+		debugmes .n$+": The base mob id in .str_mid is incorrect cause there weren't 10 mobs afterwards, defaulting to 4000.";
+	}
+// ====== Agi Mastery - Fast Typing ======
+if(getarraysize(.agi_txt$) < 1) {
+	setarray .agi_txt$[0],"Train me","Moar Speed","Agi r0ckz","I wanna be faster";
+	debugmes .n$+": .agi_txt$ array was empty, default to \"Train me,Moar Speed,Agi r0ckz,I wanna be faster\".";
+}
+if(.agi_b_time < 1) { // If .agi_b_time is be below 1, default to 15.
+	set .agi_b_time,15;
+	debugmes .n$+": .agi_b_time is below 1, defaulting to 15.";
+}
+if(.agi_x_red < 1) { // If .agi_x_red is be below 1, default to 10.
+	set .agi_x_red,10;
+	debugmes .n$+": .agi_x_red is below 1, defaulting to 10.";
+}
+// ====== Vit Mastery - Survival ======
+if(.vit_mob_s > 1) { // If .vit_mob_s is higher than 1, default to 1.
+	set .vit_mob_s,1; 
+	debugmes .n$+": .vit_mob_s is higher than 1, defaulting to 1.";
+}
+if(.vit_cd < 10) { // If .vit_cd is below 10, default to 30.
+	set .vit_cd,30;
+	debugmes .n$+": .vit_cd is below 10, defaulting to 30.";
+}
+if(.vit_inc < 1) { // If .vit_inc is below 1, default to 10.
+	set .vit_inc,10;
+	debugmes .n$+": .vit_inc is below 1, defaulting to 10.";
+}
+if(.vit_cx == 0 || .vit_cy == 0) { // If .vit_cx or .vit_cy is 0, use global coordinates.
+	set .vit_cx,.coord_x;
+	set .vit_cy,.coord_y;
+	debugmes .n$+": .vit_cx or .vit_cy is 0, using to global cooardinates.";
+}
+// ====== Int Mastery - Reading Books in random order ======
+if(.int_base < 5) { // If .int_base is below 5, default to 10
+	set .int_base,10;
+	debugmes .n$+": .int_base is below 5, defaulting to 10.";
+}
+if(.int_pt < 1) { // If .int_pt is below 1, default to 8.
+	set .int_pt,8;
+	debugmes .n$+": .int_pt is below 1, defaulting to 8.";
+}
+if(.int_rquest > 1) { // If .int_rquest is higher than 1, default to 1.
+	set .int_rquest,1;
+	debugmes .n$+": .int_rquest is higher than 1, defaulting to 1.";
+}
+if(.int_rquest > 1) { // If .int_rans is higher than 1, default to 1.
+	set .int_rans,1; 
+	debugmes .n$+": .int_rans is higher than 1, defaulting to 1.";
+}
+// If .int_quest$, .int_ans1$, .int_ans2$, .int_ans3$, .int_ans4$ or .int_right is empty, use these lines:
+if(getarraysize(.int_quest$) < 1 || getarraysize(.int_ans1$) < 1 || getarraysize(.int_ans2$) < 1 || getarraysize(.int_ans3$) < 1 || getarraysize(.int_ans4$) < 1 || getarraysize(.int_right) < 1) {
+	setarray .int_quest$[0],"What is the name of this Server?";
+	setarray .int_ans1$[0],"Dumbass Ro";
+	setarray .int_ans2$[0],"Summon Ro";
+	setarray .int_ans3$[0],"Pwnage Ro";
+	setarray .int_ans4$[0],"Holy Ro";
+	setarray .int_right[0],2;
+	debugmes .n$+": .int_quest$, .int_ans1$, .int_ans2$, .int_ans3$, .int_ans4$ or .int_right is empty, reseted everything.";
+}
+// ====== Dex Mastery - Concentration ======
+if(.dex_time < 5) { // If .dex_time is below 5, default to 15.
+	set .dex_time,15;
+	debugmes .n$+": .dex_time is below 5, defaulting to 15.";
+}
+if(.dex_npc < 1) { // If .dex_npc is below 1, default to 10.
+	set .dex_npc,10;
+	debugmes .n$+": .dex_npc is below 1, defaulting to 10.";
+}
+if(.dex_pt < 1) { // If .dex_pt is below 1, default to 8.
+	set .dex_pt,8;
+	debugmes .n$+": .dex_pt is below 1, defaulting to 8.";
+}
+if(.dex_cx == 0 || .dex_cy == 0) { // If .dex_cx or .dex_cy is 0, use global coordinates.
+	set .dex_cx,.coord_x;
+	set .dex_cy,.coord_y;
+	debugmes .n$+": .dex_cx or .dex_cy is 0, using to global cooardinates.";
+}
+// ====== Luk Mastery - Number guessing ======
+if(.luk_gue < 5) { // If .luk_gue is below 5, default to 20.
+	set .luk_gue,20;
+	debugmes .n$+": .luk_gue is below 5, defaulting to 20.";
+}
+// ========= Weapon Mastery Settings ========
+if(.w_level < 20 || .w_level > 500) { // If .w_level is below 20 or higher than 500, default to 20.
+	set .w_level,20;
+	debugmes .n$+": .w_level is either below 20 or higher than 500, defaulting to 20.";
+}
+if(.wm_cx == 0 || .wm_cy == 0) { // If .wm_cx or .wm_cy is 0, use global coordinates.
+	set .wm_cx,.coord_x;
+	set .wm_cy,.coord_y;
+	debugmes .n$+": .wm_cx or .wm_cy is 0, using to global cooardinates.";
+}
+// Looping through the .kill_weap array to check if there is an value higher than 22, if yes default to 0.
+for ( set .@w,0; .@w < getarraysize(.kill_weap); set .@w,.@w + 1) 
+	if(.kill_weap[.@w] > 22) {
+		debugmes .n$+": .kill_weap["+.@w+"] was holding an invalid value, reseting to 0.";
+		deletearray .killweap[0],128;
+		break;
+	}
+if(getarraysize(.eq_n$) < 1) { // If $@eq_n$ is empty, default to these entries:
+	setarray .eq_n$[1],"Dagger","One-Handed Sword","Two-Handed Sword","One-Handed Spear","Two-Handed Spear","One-Handed Axe","Two-Handed Axe","Mace","Unused","Staff","Bow","Knuckle/Fist","Musical Instrument","Whip","Book","Katar","Revolver","Rifle","Gatling Gun","Shotgun","Grenade Launcher","Fuuma Shuriken";
+	debugmes .n$+": $@eq_n$ is empty, defaulting.....";
+}
+if(getarraysize(.sql_wn$) < 1) { // If .sql_wn$ is empty, default to these entries:
+	setarray .sql_wn$[1],"dagger","one-sword","two-sword","one-spear","two-spear","one-axe","two-axe","mace","unused","stave","bow","knuck","music","whip","book","katar","revol","rifle","gatl","shotg","grenade","fuuma";
+	debugmes .n$+": .sql_wn$ is empty, defaulting.....";
+}
+if(.equip_b > 1) { // If .equip_b is higher than 1, default to 0.
+	set .equip_b,0;
+	debugmes .n$+": .equip_b is higher than 1, defaulting to 0.";
+}
+if(.equip_req > 2) { // If .equip_req is higher than 2, default to 1.
+	set .equip_req,1;
+	debugmes .n$+": .equip_req is higher than 2, defaulting to 1.";
+}
+// If .equip_req is not 0 and .equip_r_am is below 1 or higher than 1.000.000, default to 100.000.
+if( .equip_req != 0 && (.equip_r_am < 1 || .equip_r_am > 1000000) ) {
+	set .equip_r_am,100000; // 100k
+	debugmes .n$+": .equip_r_am is either below 1 or higher than 1.000.000 while .equip_req is not 0, defaulting to 100.000.";
+	
+	// .equip_req is 0 while .equip_r_am is not, setting .equip_r_am to 0.
+	if(.equip_req == 0 && .equip_r_am != 0) {
+		set .equip_r_am,0;
+		debugmes .n$+": .equip_req is 0 while .equip_r_am is not, setting .equip_r_am to 0.";
+	}
+}
+// ====== Monster Settings for Weapon Mastery ======
+if(.l_mob < 1002 || .l_mob > 3500) { // If .l_mob is below 1002 (Poring) or higher than 3500, default to 3500
+	set .l_mob,3500;
+	debugmes .n$+": .l_mob is below 1002 or higher than 3500, defaulting to 3500.";
+}
+if(.wm_mvar > 1) { // If .wm_mvar is over 1, reset to 1
+	set .wm_mvar,1;
+	debugmes .n$+": .wm_mvar is over 1, defaulting to 1.";
+	if(.wm_mvar == 1 && (.wm_msp_x == 0 || .wm_msp_y == 0) ) { // If .wm_msp_x or .wm_msp_y is 0, set .wm_mvar to 0.
+		set .wm_mvar,0;
+		debugmes .n$+": .wm_msp_x or .wm_msp_y is 0, setting .wm_mvar to 0.";
+	}
+}
+if(.wm_mmi < 1) { // If .wm_mmi is below 1, default to 10.
+	set .wm_mmi,10;
+	debugmes .n$+": .wm_mmi is below 1, defaulting to 10.";
+}
+if(.wm_mma < 10) { // If .wm_mma is below 10, default to 100.
+	set .wm_mma,100;
+	debugmes .n$+": .wm_mma is below 10, defaulting to 100.";
+}
+if(.wm_mvp > 1) { // If .wm_mvp is higher than 1, default to 0.
+	set .wm_mvp,0; 
+	debugmes .n$+": .wm_mvp is higher than 1, defaulting to 0.";
+}
+if(.wm_mvp && getarraysize(.wm_mvp_id) < 1) {  // If .wm_mvp is 1 and .wm_mvp_id is empty, defaulting it these ID's.
+	setarray .wm_mvp_id[0],1511,1647,1785,1630,1039,1874,1272,1719,1046,1389,1112,1115,1418,1871,1252,1768,1086,1885,1649,1651,1832,1492,1734,1251,1779,1688,1646,1373,1147,1059,1150,1087,1190,1038,1157,1159,1623,1650,1583,1708,1312,1751,1648,1658;
+	debugmes .n$+": .wm_mvp_id is empty though .wm_mvp is On, defaulting.....";
+	// If .wm_mvp_min is higher than .wm_mvp_max, default to 1.
+	if(.wm_mvp_min > .wm_mvp_max) {
+		set .wm_mvp_min,1;
+		debugmes .n$+": .wm_mvp_min is higher than .wm_mvp_max, defaulting to 1.";
+	}
+	// If .wm_mvp_max is lower than .wm_mvp_min, default to 5.
+	if(.wm_mvp_max < .wm_mvp_min) {
+		set .wm_mvp_max,5;
+		debugmes .n$+": .wm_mvp_max is lower than .wm_mvp_min, defaulting to 5.";
+	}
+}
+// ============ Debug End ==============================
+// ========== Showing Practice Map Usage ===============
+while(1) {
+	waitingroom "Practice Map: "+( (getmapusers(.map$) == 0)?"Free":"In usage"),0;
+	sleep 5000;
+	delwaitingroom;
+}
+end;
+	}
+-	script	StatusBonus	-1,{
+end;
+
+OnPCLoginEvent:
+OnWhisperGlobal:
+if(#TrainSys == 0 || #TrainSys == 2 || #db_save != .train_b) end; // No Mastery started yet, Bounding Type has changed
+set .@n$,"Mastery Trainer";
+// Setting Status Bonus Duration in Milliseconds (Seconds*1000)
+set .@dur,3600000; // 1 Hour
+// Stat Applying from Status Training
+for ( set @s,0; @s < 6; set @s,@s + 1) {
+	if( set(.@s_c,callfunc("DATA_D-M",2,.train_b,1,@s,2) ) == 0) continue;
+		set @s_up,.@s_c; // Use the level itself
+
+if(!@s_up) // Skipping current mastery, when no training was done yet
+	continue;
+
+	switch(@s) {
+		case 0: sc_end SC_STRFOOD;	sc_start SC_STRFOOD,.@dur,@s_up;	dispbottom .@n$+": + "+@s_up+" STR Mastery-Boost applied.";	break;
+		case 1: sc_end SC_AGIFOOD;	sc_start SC_AGIFOOD,.@dur,@s_up;	dispbottom .@n$+": + "+@s_up+" AGI Mastery-Boost applied.";	break;
+		case 2:	sc_end SC_VITFOOD;	sc_start SC_VITFOOD,.@dur,@s_up;	dispbottom .@n$+": + "+@s_up+" VIT Mastery-Boost applied.";	break;
+		case 3:	sc_end SC_INTFOOD;	sc_start SC_INTFOOD,.@dur,@s_up;	dispbottom .@n$+": + "+@s_up+" INT Mastery-Boost applied.";	break;
+		case 4:	sc_end SC_DEXFOOD;	sc_start SC_DEXFOOD,.@dur,@s_up;	dispbottom .@n$+": + "+@s_up+" DEX Mastery-Boost applied.";	break;
+		case 5:	sc_end SC_LUKFOOD;	sc_start SC_LUKFOOD,.@dur,@s_up;	dispbottom .@n$+": + "+@s_up+" LUK Mastery-Boost applied.";	break;
+	
+	set .@i,1;
+	}
+}
+if(.@i) dispbottom .@n$+": This Boost will be active for "+(.@dur/1000/60)+" Minutes, if you want to re-apply the boost whisper to me via \"NPC:StatusBonus\" with any text.";
+end;
+}
+
+// ===== Function to save/read the Delay and Level =====	//
+function	script	DATA_D-M	{					//
+// getarg(0): Categorie								//
+//		- 1 = Delay									//
+//		- 2 = Mastery								//
+//													//
+// getarg(1): Bounding Type							//
+//		- 0 = Account								//
+//		- 1 = Character								//
+//													//
+//		================ Delay ================		//
+// getarg(2): Type									//
+// 		- 0 = Off									//
+// 		- 1 = Counts for all Mastery 				//
+//			 (Weapon & Status)						//
+// 		- 2 = Each status mastery has it own Delay,	//
+//			  Weapon mastery has a general delay	//
+//													//
+// getarg(3): Section								//
+//		- 1 = Status								//
+//		- 2 = Weapon								//
+//													//
+// getarg(4): Delay Duration						//
+// 													//
+// getarg(5): Write/Read							//
+//		- 1 = Write									//
+// 		- 2 = Read									//
+// 													//
+// Example:	callfunc "DATA_D-M"						//
+//	 Categorie,Bound,Type,Section,Time,Write/Read;	//
+// 	 1,.train_b,.delay_type,@mastery,.delay_time,1/2;//
+//													//
+// 		=============== Mastery ===============		//
+// getarg(2): Section								//
+//		- 1 = Status								//
+//		- 2 = Weapon								//
+//													//
+// getarg(3): Mastery Type							//
+//		- When getarg(2) = 1: Status				//
+//			- 0 = STR								//
+//			- 1 = AGI								//
+//			- 2 = VIT								//
+//			- 3 = INT								//
+//			- 4 = DEX								//
+//			- 5 = LUK								//
+//		- When getarg(2) = 2: Weapon				//
+//			- See 'Weapon Types' above				//
+//			Don't wanna repeat 22 lines, duh!!		//
+// 													//
+// getarg(4): Write/Read							//
+//		- 1 = Write									//
+// 		- 2 = Read									// 
+// 													// 	
+// getarg(5): Used as Value when getarg(4) is 1		//
+// 													//
+// getarg(6): Used as identifier for getarg(5)		//
+//		- 1 = Add									//
+//		- 2 = Set									//
+// 													//
+// Example:	callfunc "DATA_D-M"						//
+//	 Categorie,Bound,Section,Mastery Type,Write/Read,Value,Add/Set;//
+// 	 2,.train_b,@mastery,@e/@p,1/2,<value>,1/2;		//
+//													//
+// ================================================ //
+//debugmes getarg(0,0)+","+getarg(1,0)+","+getarg(2,0)+","+getarg(3,0)+","+getarg(4,0)+","+getarg(5,0)+","+getarg(6,0);
+// ============ Delay ===============
+if(getarg(0) == 1) {
+	if(getarg(2) == 0) return; // Off = No Delay
+	// Type of Delay 
+	if(getarg(2) == 1)  // Counts for all Mastery 
+		set .@mast$,"Train";
+		
+	// Each mastery has it own Delay,
+	else if(getarg(2) == 2) {
+	
+		// Status Mastery
+		if(getarg(3) == 1) {
+			switch(@p) {
+				case 0:	set .@mast$,"STR"; break;
+				case 1:	set .@mast$,"AGI"; break;
+				case 2:	set .@mast$,"VIT"; break;
+				case 3:	set .@mast$,"INT"; break;
+				case 4:	set .@mast$,"DEX"; break;
+				case 5:	set .@mast$,"LUK"; break;
+			}
+		// Weapon mastery has a general delay
+		} else if(getarg(3) == 2)
+			set .@mast$,"Weapon";
+	}
+	// Save or Read
+	if(getarg(5) == 1) // Save new data
+		setd(""+ ( (getarg(1) == 0)?"#":"")+.@mast$+"Delay"),gettimetick(2)+getarg(4);
+	else if(getarg(5) == 2) // Read current data
+		return getd(""+ ( (getarg(1) == 0)?"#":"")+.@mast$+"Delay");
+	
+// ========= Mastery ================	
+} else if(getarg(0) == 2) {
+	
+// === Server Mode has changed === //
+	if(@db_c == 1) 
+		// Reading data from the previous mode
+		set .@sm,#db_save;
+	// Copying data in the new mode
+	else if(@db_c == 2)
+		set .@sm,!#db_save;
+// =============================== //
+	// Server Mode hasn't changed
+	else 
+		set .@sm,getvariableofnpc(.train_mode,"Mastery Trainer");
+		
+	// Bounding Type
+	if(getarg(1) == 0)
+		set .@id,getcharid(3);
+	else if(getarg(1) == 1)
+		set .@id,getcharid(0);
+	
+	if(.@sm == 1) {
+		if(getarg(2) == 1) 	{ // Status Mastery
+			switch(getarg(3)) {
+				case 0:	set .@sql_t$,"str"; break;
+				case 1:	set .@sql_t$,"agi"; break;
+				case 2:	set .@sql_t$,"vit"; break;
+				case 3:	set .@sql_t$,"int"; break;
+				case 4:	set .@sql_t$,"dex"; break;
+				case 5:	set .@sql_t$,"luk"; break;
+			}
+		} else if(getarg(2) == 2)	{ // Weapon Mastery
+			setarray .@sql_wn$[1],"dagger","one-sword","two-sword","one-spear","two-spear","one-axe","two-axe","mace","unused","stave","bow","knuck","music","whip","book","katar","revol","rifle","gatl","shotg","grenade","fuuma";
+			set .@sql_t$,.@sql_wn$[getarg(3)];
+			if(.@sql_t$ == "") {
+				debugmes .n$+": SQL Table identifing failed. Bug detected - Fix required.";
+				return -1;
+			}
+		}
+		
+		// Checking if the entry in the database even exists
+		if(query_sql("SELECT `id` FROM `trainsystem` WHERE `id` = '"+.@id+"'",.@sql_res) == 0) 
+			query_sql "INSERT INTO `trainsystem` ( `id` ) VALUES ( '"+.@id+"' )";
+		
+		// Save or Read
+		if(getarg(4) == 1) { // Save new data
+		
+			// Identifier 
+			if(getarg(6) == 1) // "Add"
+				query_sql "UPDATE `trainsystem` SET `"+.@sql_t$+"` = `"+.@sql_t$+"` + '"+getarg(5)+"' WHERE `id` = '"+.@id+"'";
+						
+			else if(getarg(6) == 2)// "Set"
+				query_sql "UPDATE `trainsystem` SET `"+.@sql_t$+"` = '"+getarg(5)+"' WHERE `id` = '"+.@id+"'";
+
+		} else if(getarg(4) == 2) {
+			// Read current data
+			query_sql "SELECT `"+.@sql_t$+"` FROM `trainsystem` WHERE `id` = '"+.@id+"'",.@sql_res;
+			return .@sql_res;
+		}
+			
+	} else {
+	
+		if(getarg(2) == 1) 	// Status Mastery
+			set .@mast$,"stats";
+		else if(getarg(2) == 2)	// Weapon Mastery
+			set .@mast$,"weap";
+			
+		// Save or Read
+		if(getarg(4) == 1)	{ // Save new data
+		
+			// Identifier 
+			if(getarg(6) == 1) // "Add"
+				setarray getd("$"+.@mast$+"_"+.@id+"["+getarg(3)+"]"),getd("$"+.@mast$+"_"+.@id+"["+getarg(3)+"]") + getarg(5);
+			
+			else if(getarg(6) == 2)// "Set"
+				setarray getd("$"+.@mast$+"_"+.@id+"["+getarg(3)+"]"),getarg(5);
+
+		} else if(getarg(4) == 2) // Read current data
+			return getd("$"+.@mast$+"_"+.@id+"["+getarg(3)+"]");
+	}
+}
+return;
+}
+
+new_zone04.gat,182,180,4	script	DEX Training	110,{
+if(.dex_t) {
+	set @d_pt,@d_pt + 1;
+	set .sec,.sl-1;
+	goto OnTimer1000;
+}
+end;
+
+OnPrepare:
+set .t_id,getcharid(3);
+set .@st_calc,@stat/10 + ( (@stat >= 10)?"":( (@stat == 0)?"+1":"") );
+set .@timer,getvariableofnpc(.dex_time,"Mastery Trainer");
+set .sl,.@timer-.@st_calc; // Time till next move of NPC
+pcblockmove .t_id,1; // Blocking Movement of the Character
+enablenpc strnpcinfo(0);
+if(.dex_coord == 0) {
+	set .@co,rand(getarraysize(.x));
+	set .@x_c,.x[.@co];
+	set .@y_c,.y[.@co];
+} else {
+	set .@x_c,rand(.x[0],.x[1]);
+	set .@y_c,rand(.y[0],.y[1]);
+}
+movenpc strnpcinfo(1),.@x_c,.@y_c;
+set .npc,1; // Times the NPC has been moved
+set .dex_t,1; // Training Activated
+set @d_pt,0; // Reseting Points
+set .sec,0;
+initnpctimer;
+end;
+
+OnTimer1000:
+set .sec,.sec + 1;
+if(.sec == .sl) {
+	stopnpctimer;
+	if(.npc == getvariableofnpc(.dex_npc,"Mastery Trainer") ) goto OnEnd;
+	if(.dex_coord == 0) {
+		set .@co,rand(getarraysize(.x));
+		set .@x_c,.x[.@co];
+		set .@y_c,.y[.@co];
+	} else {
+		set .@x_c,rand(.x[0],.x[1]);
+		set .@y_c,rand(.y[0],.y[1]);
+	}
+	movenpc strnpcinfo(1),.@x_c,.@y_c;
+	set .npc,.npc + 1; // Times the NPC has been moved
+	set .sec,0;
+	initnpctimer;
+}
+end;
+
+OnEnd:
+if(playerattached() == 0)  // If no player is attached
+	if(isloggedin(.t_id) == 1)   // Check if the character is still online
+		attachrid(.t_id); 
+	else goto OnTrainDisable;
+pcblockmove getcharid(3),0;
+warp "SavePoint",0,0;
+sleep2 2000; // Delay required to finish warping ;O
+if(@d_pt >= getvariableofnpc(.dex_pt,"Mastery Trainer") )
+	doevent "Mastery Trainer::OnComplete";
+else {
+	dispbottom getvariableofnpc(.n$,"Mastery Trainer")+": You have failed this training.";
+	dispbottom getvariableofnpc(.n$,"Mastery Trainer")+": Your points: "+@d_pt+", required: "+getvariableofnpc(.dex_pt,"Mastery Trainer")+".";
+}
+OnTrainDisable:
+set .dex_t,0;
+disablenpc strnpcinfo(0);
+end;
+	
+OnInit:
+disablenpc strnpcinfo(0);
+// Cooardinate Usage:
+// 0 = Fixed, use the next two arrays for this.
+// 1 = Area, use the two arrays below, which only holds two numbers.
+set .dex_coord,0;
+// Fixed single cooardinates
+if(.dex_coord == 0) {
+	setarray .x[0],175,172,179,185,183,186,188,183,176,181;
+	setarray .y[0],180,174,173,172,176,181,187,187,172,175;
+} else {
+// Randomly chosen coordinates in a specified area:
+// [0] = left-down corner
+// [1] = right-upper corner
+	setarray .x[0],171,188;
+	setarray .y[0],171,189;
+}
+end;
+}

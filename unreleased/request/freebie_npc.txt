@@ -1,0 +1,283 @@
+//===== eAthena Script =======================================
+//= Freebie NPC
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Tested With ==========================================
+//= eAthena 14428 SQL Trunk 
+//===== Description ==========================================
+//= This Script gives new players, which passes the level requirement
+//	if set, freebies in form of zeny and/or items.
+//	See 'OnInit' for Config.
+//===== Comments =============================================
+//= Request (Link to request)
+//	by User (Link to Requester)
+//	in the ... (Link of the homepage of the site)
+//= Forgot who requested that -.-
+//============================================================
+prontera,150,180,0	script	Freebie NPC	100,{
+
+mes .n$;
+if(getgmlevel() >= .gm) {
+	mes "What do you want to do?";
+	next;
+	if(select("- Managment:- Player Interface") - 2) goto GM_Menu;
+	mes .n$;
+}
+if(.gm_it && getarraysize($item) < 1 || !.gm_it && getarraysize(.Free) < 1) {
+	mes "I'm sorry, but there is no freebie yet to can recieve.";
+	mes "Please wait till an GM added some.";
+	close;
+}
+if(!#free && $freebies < .f_limit) {
+	if(Upper == 0) 
+		if(.requ && BaseLevel < 99 && JobLevel < 50) goto F_Level;
+			
+	else if(Upper == 1) 
+		if(.reb_lvl && BaseLevel < 99 && JobLevel < 70) goto F_Level;
+
+	goto F_Info;
+	
+} else if( (getarraysize($free_p$) + $freebies) >= .f_limit) {
+	mes "I'm sorry, but I cannot give you any freebies anymore, since I have reached the maximum allowed amount to give.";
+	
+} else if(#free == 1) {
+	mes "Do you want to recieve your freebies now?";
+	if(select("- Yes:- No") - 2) goto F_Get;
+} else if(#free == 2) {
+	mes "I'm sorry, but you already recieved your freebies.";
+}
+close;
+
+F_Level:
+mes "It seems you don't meet the level requirements, which are "+ ( (Upper == 0)?"99/50":"99/70")+".";
+close;
+
+F_Info:
+mes "You'll recieve some freebies for joining our server!!";
+mes "Do you want to to recieve 'em now or later?";
+mes "Since I qualified that you have already an valid character";
+mes "you can get it later as well.";
+set #free,1;
+if(select("- Now:- Later") - 1) close;
+
+F_Get:
+next;
+mes .n$;
+mes "Here you are.";
+close2;
+if(!.gm_it) // No InGame Menu used
+	for ( set @f,0; @f < getarraysize(.Free); set @f,@f + 2)
+		if(.Free[@f] == 1) {
+			set Zeny,Zeny + .Free[@f+1];
+			dispbottom .n$+": You have recieved "+.Free[@f+1]+" Zeny.";
+		} else getitem .Free[@f],.Free[@f+1];
+else // Via InGame Menu setable 
+	for ( set @f,0; @f < getarraysize($item); set @f,@f + 2)
+		if($item[@f] == 1) {
+			set Zeny,Zeny + $item[@f+1];
+			dispbottom .n$+": You have recieved "+$item[@f+1]+" Zeny.";
+		} else getitem $item[@f],$item[@f+1];	
+
+// As long the array isn't full
+if(getarraysize($free_p$) < 128) 
+	// Save the Player's Name in the array
+	setarray $free_p$[getarraysize($free_p$)],strcharinfo(0); 
+// else increasing the counter for max freebies, which also servs for "Unknown" Quantity
+else set $freebies,$freebies + 1; 
+set #free,2; // Player has recieved the Freebies
+end;
+
+GM_Menu:
+mes .n$;
+mes "What do you want to manage?";
+next;
+switch(select("- View Freebies:- Freebie Management:- Player List:- Reset Variables")) {
+	
+	case 1:
+	mes .n$;
+	if(.gm_it && getarraysize($item) < 1 || !.gm_it && getarraysize(.Free) < 1) {
+		mes "I'm sorry, but there is no freebie yet to can view.";
+		mes "Please add some first.";
+		close;
+	}
+	mes "Here is the list of the current freebies:";
+	next;
+	if(!.gm_it) { // No InGame Menu used
+		for ( set @f,0; @f < getarraysize(.Free); set @f,@f + 2) {
+			set @d,(@f+2)/2;
+			mes "===== Freebie #"+@d+" ======";
+			if(.Free[@f] == 1)	mes  .Free[@f+1]+ " Zeny";
+			else mes .Free[@f+1]+ "x "+getitemname(.Free[@f]);
+			if(.Free[@f+2] == 0) mes "==================";
+		}
+	} else { // Via InGame Menu setable 
+		for ( set @f,0; @f < getarraysize($item); set @f,@f + 2) {
+			set @d,(@f+2)/2;;
+			mes "===== Freebie #"+@d+" ======";
+			if($item[@f] == 1)	mes  $item[@f+1]+ " Zeny";
+			else mes $item[@f+1]+ "x "+getitemname($item[@f]);
+			if($item[@f+2] == 0) mes "==================";
+		}
+	}
+	next;
+	mes .n$;
+	mes "Max Freebies to give: "+.f_limit;
+	mes "Freebies to give left: "+(.f_limit - getarraysize($free_p$) - $freebies);
+	close;
+	
+	case 2:
+	mes .n$;
+	if(!.gm_it) {
+		mes "This menu isn't available, since the Freebie Settings be read from the script itself.";
+		close;
+	}
+	mes "Please choose what to do:";
+	next;
+	switch(select("- Add Freebies:- Delete Freebies:- Nothing")) {
+		case 1:
+		mes .n$;
+		if(getarraysize($item) >= 128) {
+			mes "You can't add any freebies anymore, please remove one first.";
+			close;
+		}
+		mes "Do you want to add Zeny or an Item as Freebie?";
+		next;
+		if(select("- Zeny" + ( (.zeny)?"":" Not Allowed") +":- Item") - 1) {
+			mes .n$;
+			mes "Please type the Item ID you want to add:";
+			mes "Max are 128 Items.";
+			next;
+			input @item;
+			mes .n$;
+			if(@item < 501 && @item > .last) {
+				mes "The value you have put is not valid.";
+				close;
+			}
+			if(getitemname(@item) == "null" || getitemname(@item) == "") {
+				mes "The item you requested doesn't exist.";
+				close;
+			}
+			mes "Chosen Item: "+ getitemname(@item);
+			mes " ";
+			mes "Now input the amount it should have.";
+			mes "Maximum is "+.i_limit;
+			next;
+			if(input(@amount,1,.i_limit) != 0) {
+				mes .n$;
+				mes "You have put an invalid amount.";
+				mes "Maximum is "+.i_limit;
+				close;
+			}
+			mes .n$;
+			mes "Result: "+@amount+" "+getitemname(@item);
+			mes "Is that correct?";
+			if(select("- Yes:- No") - 1) close;
+			setarray $item[getarraysize($item)],@item,@amount;
+		} else {
+			if(!.zeny) close;
+			mes .n$;
+			mes "Please type the amount.";
+			mes "Maximum is "+.z_limit;
+			next;
+			if(input(@amount,1,.z_limit) != 0) {
+				mes .n$;
+				mes "You have put an invalid amount.";
+				mes "Maximum is "+.z_limit;
+				close;
+			}
+			mes .n$;
+			mes "Result: "+@amount+" Zeny";
+			mes "Is that correct?";
+			if(select("- Yes:- No") - 1) close;
+			setarray $item[getarraysize($item)],1,@amount;
+		}
+		break;
+		
+		case 2:
+		mes .n$;
+		if(getarraysize($item) < 1) {
+			mes "There is no Freebie to remove.";
+			mes "Please add one first :D.";
+			close;
+		}
+		mes "Please choose the freebie you want to remove:";
+		mes "Format: Name (Current Amount)";
+		next;
+		set @r_list$,"";
+		for ( set .@e,0; .@e < getarraysize($item); set .@e,.@e + 2)
+			set @r_list$,@r_list$ + "- "+( ($item[.@e] != 1)?getitemname($item[.@e]):"Zeny")+" ("+$item[.@e+1]+")" + ( ($item[.@e+2])?":":"");
+		
+		set @re,select(@r_list$) - 1;
+		
+		mes .n$;
+		if($item[@re] != 1) mes "Chosen Item: "+ getitemname($item[@re]);
+		mes "Amount: "+ $item[@re+1] + ($item[@re] == 1)?" Zeny":"";
+		mes "Correct?";
+		if(select("- Yes:- No") - 1) close;
+		deletearray $item[@re],2;
+		break;
+		
+		case 3:
+		break;
+	}
+	close;
+	
+	case 3:
+	mes .n$;
+	mes "I will now list the player which recieved their freebies already:";
+	mes "Note: I can only list a max of 128 players, anyone else will be counted as \"Unknown\".";
+	next;
+	mes "[===== Player List =====]";
+	for ( set .@e,0; .@e < getarraysize($free_p$); set .@e,.@e + 1)
+		mes "- "+$free_p$[.@e] + ( ($free_p$[.@e+1] != "")?":":"");
+	if($freebies != 0) mes "Unknown: "+$freebies;
+	close;
+	
+	case 4:
+	mes .n$;
+	mes "This will delete every variables' conent, also your own.";
+	if(select("- Continue:- Stop!") - 1) close;
+	set #free,0;
+	set $freebies,0;
+	deletearray $free_p$[0],128;
+	deletearray $item[0],128;
+	close;
+	
+}
+
+OnInit:
+set .n$,"["+strnpcinfo(1)+"]";
+set .gm,80; // GM Access Level
+// How should be the Item Adding be handled?
+// 0 == via .Free Array > No Ingame Menu
+// 1 == via $item array > InGame Menu
+// Note: You can only use one of these options.
+set .gm_it,1;
+set .requ,1; // Level Requirement?
+set .reb_lvl,0; // When rebirthed is lvl 99/70 required?
+// Freebies:
+// Format: Reward,Amount
+// Reward can be either Item and/or Zeny.
+// For Zeny put "1" and for Item, the ID you want.
+// Amount should be obvious.
+setarray .Free[0],512,10,513,10;
+set .f_limit,100; // Max Freebies
+set .i_limit,100; // Max Amount of Items
+set .zeny,1; // Use zeny too?
+set .z_limit,1000000; // Maximum Zeny (Default: 1m)
+if(.gm_it) end;
+for ( set .@f,0; .@f < getarraysize(.Free); set .@f,.@f + 1)
+	if(!.zeny && .Free[.@f] == 1) {
+		debugmes .n$+": Loading Failed!";
+		debugmes .n$+": Reason: Misconfiguration in the .Free array (Zeny, which isn't allowed).";
+		debugmes .n$+": Solution: Either you allow the usage of Zeny or edit the values to equal or higher than 501 for Item ID's.";
+		set .@error,1;
+		break;
+	}
+if(.@error == 1) disablenpc strnpcinfo(0);
+end;
+}

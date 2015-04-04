@@ -1,0 +1,89 @@
+//===== eAthena Script =======================================
+//= Rebirth Reseter
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= This Script allows you to change back to an High Novice,
+//= but only twice per Account.
+//===== Comments =============================================
+//= Made for Alice
+//============================================================
+
+prontera,151,191,4	script	Rebirth Reset	403,{
+set .@n$,"[Mike]";
+
+mes .@n$;
+if(Class >= 4002 && Class <= 4022) {
+	mes "Hello, I can change you";
+	mes "back to an High Novice, if you";
+	mes "would like:";
+	mes "^FF0000Note: But you only can do that twice!^000000";
+	next;
+	if(select("- Change to High Novice:- Nothing") == 2) {
+		mes .@n$;
+		mes "Okay, see ya.";
+		close;
+	} else {
+		mes .@n$;
+		if(#novice_reset >= 2) {
+			mes "I'm sorry, but I";
+			mes "can't change you back";
+			if(Class == Job_Novice_High) {
+				mes "since you are already";
+				mes "a High Novice.";
+			} else { 
+				mes "to a High Novice anymore.";
+				close;
+			}
+			
+		} else if(checkfalcon() || checkcart() || checkriding()) {
+			mes "I would like to ask you remove your";
+			mes "Cart, Falcon or Peco first.";
+		}
+	//=========== For Rebirth Quest - Cheating on Valkyrie and Co. :D ====
+	// - Backward calculating of the current Rebirth Job (eg.: Paladin > Crusader)
+		set ADVJOB, Class-Job_Novice_High;
+		if(ADVJOB == Job_Knight2) set ADVJOB,Job_Knight;
+		if(ADVJOB == Job_Crusader2) set ADVJOB,Job_Crusader;
+		mes "Also what Job do you want to be later?";
+		if(select("- Rebirth 1st(Lord Knight,etc):- Rebirth 2nd (Paladin,etc)") == 1) {
+			switch(select("- Lord Knight:- High Priest:- High Wizard:- Whitesmith:- Sniper:- Assassin Cross") {
+				default:
+				set @job_next,@menu + 6;
+				break;
+			}
+		} else {
+			switch(select("- Paladin:- Champion:- Professor:- Stalker:- Creator:- Clown/Gypsy") {
+				
+				case 6:
+				if(!Sex) set @job_next,20;
+				if(Sex) set @job_next,19;
+				break;
+			
+				default:
+				set @job_next,@menu + 13;
+				break;
+			}
+		}
+		mes "Okay, here we go.";
+		close2;
+
+	// - New Rebirth Job Calulation
+		set ADVJOB, @job_next+Job_Novice_High; 
+	// ===================================================================
+		set #novice_reset,#novice_reset + 1;
+		jobchange Job_Novice_High;
+		resetlvl(1);
+		end;
+	}
+} else {
+	mes "I'm sorry, but you are not";
+	mes "a Rebirth Class. I can't";
+	mes "change you into a High Novice.";
+	close;
+}
+}

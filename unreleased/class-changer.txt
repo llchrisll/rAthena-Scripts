@@ -1,0 +1,1113 @@
+//===== eAthena Script =======================================
+//= Job Master (no 3rd Class)
+//===== By ===================================================
+//= lllchrislll
+//===== Credits ==============================================
+//= Keichii and DarkChild for the Platinum Skill NPC
+//===== Version ==============================================
+//= 1.0 - Script Made
+//= 	  Rewritten the Job Menu Creation Part
+//=		  Added Reset and Renting Feature
+//= 	  Added Platinum Skills as Menu Option
+//= 	  Rewritten the Job Menu Part again
+//= 	  Added Status & Skill Reset Option
+//=		  Optimized the text a bit and fixxed that minor bug about
+//		  "next;", I hope it works now...
+//===== Compatible With ======================================
+//= Every eAthena SVN
+//===== Made and Tested On ==============================================
+//= eAthena-SQL-14367[Trunk]
+//===== Description ==========================================
+//= Job Master with several Features
+//= Renting Function
+//= Reset Function
+//= Platinum Skills Function
+//===== Comments =============================================
+//= $@job_: 
+// func = Job Change Function
+// instant = With Instant Rebirth
+// random = With Random Job Row after Rebirth
+//         (you can rechoose your 1st Rebirth Class)
+// baby = Baby Class
+// rebirth = Rebirth Class
+// trans = Transcended (Gunslinger/Ninja)
+// taekwon = Taekwon
+// plat = Platinum Skills
+//= $@reset_func = Reset Function
+//= $@rental_func = Rental Function
+//= 1 > On / 0 > Off
+//============================================================
+-	script	JOB_MAIN_CONFIG	-1,{
+end;
+
+OnInit:
+	//==== Job Change/Reset/Rental/Platinum Skills Feature - On/Off =====
+	set $@job_func,1;
+	set $@reset_func,1;
+	set $@rental_func,1;
+	// Cart can be rented by other Classes than Merchant too?
+	// For example a other Class with the "Push Cart" Skill or a custom
+	// Item which allows to use one:
+	set $@cart_other,1; 
+	//--------------------------
+	set $@job_plat,1;
+	//====== Job Change Type Settings - On/Off ===================
+	if($@job_func) {
+		set $@job_baby,1;
+		set $@job_rebirth,1;
+		if($@job_rebirth) {
+			set $@job_instant,0;
+			set $@job_random,0;
+			// Preventing from causing bugs on rebirth
+			if($@job_instant == 1 && $@job_random == 1) set $@job_instant,0; set $@job_random,0;
+		}
+		set $@job_trans,1;
+		set $@job_taekwon,1;
+	}
+	//================== Reset and Rental Prices ======================
+	//= Value over 0 = Enable it and will be used as price
+	
+	if($@reset_func) {
+		set $@stat_cost,200000;		// 200k Zeny
+		set $@skill_cost,200000;	// 200k Zeny
+		set $@statskill_cost,400000; // 400k Zeny
+		set $@novice_cost,500000000;	// 500m Zeny
+		set $@noviceh_cost,250000000;	//250m Zeny
+	}
+	set $@skillp_cost,30000;	// 30k Zeny
+	
+	if($@rental_func) set $@rent_cost,50000;	// 50k Zeny
+	//===== NPC Menu Creation, depending on the Features you enabled. ===
+	set $@job_menu$,(($@job_func) ? "- Job Change" : "Job Change Disabled") + ":- Reset:" + (($@rental_func) ? "- Rental" : "Rental Disabled")+":" + (($@job_plat) ? "- Platinum Skills" : "Platinum Skills Disabled");
+	end;
+}
+
+prontera,149,194,4	script	Class Changer	110,{
+set .n$,"[Job Master]";
+
+mes .n$;
+mes "How can I help ya?";
+switch(select($@job_menu$)) {
+	
+	case 1:
+		if(!$@job_func) close;
+		next;
+		mes .n$;
+		mes "Hello, " + strcharinfo(0)+".";
+		mes "You are a " + jobname(Class)+".";
+		if(@job_info < 2) {
+			mes " ";
+			mes "Wanna see, which features and Classes are allowed?";
+			if(select("- Yes, show me:- No, contine") == 1) {
+				next;
+				mes .n$;
+				mes "Baby Class: "+(($@job_baby) ? "Allowed" : "Forbidden");
+				mes "Transcended Class: "+(($@job_trans) ? "Allowed" : "Forbidden");
+				mes "Taekwon Class: "+(($@job_taekwon) ? "Allowed" : "Forbidden");
+				mes "Rebirth Class: "+(($@job_rebirth) ? "Allowed" : "Forbidden");
+				if($@job_rebirth) {
+					mes " ";
+					mes "Wanna see the Rebirth Options with their description?";
+					if(select("- Yes, show me:- No, contine") == 1) {
+						next;
+						mes .n$;
+						mes "Rebirth Options:";
+						mes "Normal: "+((!$@job_instant && !$@job_random) ? "Active" : "Deactive");
+						mes "Instant Rebirth: "+(($@job_instant) ? "Active" : "Deactive");
+						mes "Random Job Row: "+(($@job_random) ? "Active" : "Deactive");
+						next;
+						mes .n$;
+						mes "Instant Rebirth:";
+						mes "2nd Class > 2nd Rebirth with Level 68/1.";
+						mes " ";
+						mes "Random Job Row:";
+						mes "You can choose your 1st Class like before on your own.";
+						next;
+						mes .n$;
+						mes "Instant Rebirth and Random Job Row Features can't be activated at the same time, since it wouldn't make sense.";
+						next;
+						mes .n$;
+						mes "If both are activated, they will both be disabled.";
+						mes "So it will become the \"Normal\" way.";
+					}
+				}
+			}
+			next;
+			mes .n$;
+			mes "Do you still want to see this information?";
+			mes "^FF0000Note: This info will be re-shown after you relog.^000000";
+			set @job_info,select("- Yes:- Nope");
+		}
+		next;
+		if((!$@job_baby && (Class >= 4023 && Class <= 4045)) || (!$@job_taekwon && (Class >= 4046 && Class <= 4049)) || (!$@job_trans && (Class == 25 || Class == 26)) || (!$@job_rebirth && (Class >= 4001 && Class <= 4022)))	callsub F_UnallowedClass;
+		if(SkillPoint != 0) goto J_SkillP;
+		callsub JOB_CHANGE;
+		if(getgmlevel() >= 90) {
+			mes "-=? Variable | Report ?=-";
+			mes "Rebirth Job: " + RebJob + ", " + ( (RebJob > 4007) ? jobname(RebJob) : "None");
+			mes "Fail Check: "+C_Fail;
+			mes "Job Change Menu: "+((@m_job$[1] != "") ? ""+@m_job$[1]+", "+@m_job$[2]+"": "None");
+			next;
+		}
+		
+		if(C_Fail) goto J_Quit;
+		if($@job_rebirth && Upper == 0 && RebJob >= 4001) goto J_Rebirth;
+		if(Upper >= 1 && BaseJob >= Job_Knight || C_Fail) goto J_Quit;
+		mes .n$;
+		mes "Which Job do you want to become?";
+		mes " ";
+		switch(Class) {
+		
+			case Job_Novice:
+			if(JobLevel == 10 && getskilllv(1) == 9) {
+				mes @job_pre$[0];
+				next;
+				menu "- Swordman",J_Swordy,"- Mage",J_Mage,"- Archer",J_Archer,"- Acolyte",J_Aco,"- Merchant",J_Merch,"- Thief",J_Thief,"- Super Novice",J_SN,"- Baby Novice",J_BN,"- Taekwon",J_Taek,"- Gunslinger",J_Gun,"- Ninja",J_Ninja;
+			} else {
+				goto J_Quit;
+			}
+			break;
+			
+			case Job_Baby:
+			if(JobLevel == 10 && getskilllv(1) == 9) {
+				mes @job_pre$[2];
+				next;
+				menu "- Swordman",J_Swordy,"- Mage",J_Mage,"- Archer",J_Archer,"- Acolyte",J_Aco,"- Merchant",J_Merch,"- Thief",J_Thief,"- Super Baby",J_SN,"- Novice",J_BN;
+			} else {
+				goto J_Quit;
+			}
+			break;
+			
+			case Job_Novice_High:
+			if(JobLevel == 10 && getskilllv(1) == 9) {
+				mes @job_pre$[1];
+				next;
+				menu "- Swordman",J_Swordy,"- Mage",J_Mage,"- Archer",J_Archer,"- Acolyte",J_Aco,"- Merchant",J_Merch,"- Thief",J_Thief;
+			} else {
+				goto J_Quit;
+			}
+			break;
+			
+			case Job_Swordman:
+			case Job_Baby_Swordman:
+			case Job_Swordman_High:
+			next;
+			mes .n$;
+			mes " ";
+			if(@m_job$[1] == "") {
+				mes "I'm sorry, but an error has occured, please contact the GM Team about it.";
+				close;
+			}
+			if(Upper == 0) { mes @job_pre$[0]; mes "Knight or Crusader?"; }
+			if(Upper == 2) { mes @job_pre$[2]; mes "Baby Knight or Baby Crusader?"; }
+			if(Upper == 1) { mes @job_pre$[1]; mes "Lord Knight or Paladin?"; }
+			next;
+			menu "- " + @m_job$[1],J_Kni,
+				 "- " + @m_job$[2],J_Crus;
+			break;
+			
+			case Job_Mage:		
+			case Job_Baby_Mage:
+			case Job_Mage_High:
+			next;
+			mes .n$;
+			mes " ";
+			if(@m_job$[1] == "") {
+				mes "I'm sorry, but an error has occured, please contact the GM Team about it.";
+				close;
+			}
+			if(Upper == 0) { mes @job_pre$[0]; mes "Wizard or Sage?"; }
+			if(Upper == 2) { mes @job_pre$[2]; mes "Baby Wizard or Baby Sage?"; }
+			if(Upper == 1) { mes @job_pre$[1]; mes "High Wizard or Professor?"; }
+			next;
+			menu "- " + @m_job$[1],J_Wiz,
+				 "- " + @m_job$[2],J_Sage;
+			break;
+			
+			case Job_Archer:		
+			case Job_Baby_Archer:
+			case Job_Archer_High:
+			next;
+			mes .n$;
+			mes " ";
+			if(@m_job$[1] == "") {
+				mes "I'm sorry, but an error has occured, please contact the GM Team about it.";
+				close;
+			}
+			if(Upper == 0) { mes @job_pre$[0]; mes "Hunter or Bard/Dancer?"; }
+			if(Upper == 2) { mes @job_pre$[2]; mes "Baby Hunter or Baby Bard/Dancer?"; }
+			if(Upper == 1) { mes @job_pre$[1]; mes "Sniper or Clown/Gypsy?"; }
+			next;
+			menu "- " + @m_job$[1],J_Hunt,
+				 "- " + @m_job$[2],J_BardDanc;
+			break;
+			
+			case Job_Acolyte:		
+			case Job_Baby_Acolyte:
+			case Job_Acolyte_High:
+			next;
+			mes .n$;
+			mes " ";
+			if(@m_job$[1] == "") {
+				mes "I'm sorry, but an error has occured, please contact the GM Team about it.";
+				close;
+			}
+			if(Upper == 0) { mes @job_pre$[0]; mes "Priest or Monk?"; }
+			if(Upper == 2) { mes @job_pre$[2]; mes "Baby Priest or Baby Monk?"; }
+			if(Upper == 1) { mes @job_pre$[1]; mes "High Priest or Champion?"; }
+			next;
+			menu "- " + @m_job$[1],J_Priest,
+				 "- " + @m_job$[2],J_Monk;
+			break;
+			
+			case Job_Merchant:		
+			case Job_Baby_Merchant:
+			case Job_Merchant_High:
+			next;
+			mes .n$;
+			mes " ";
+			if(@m_job$[1] == "") {
+				mes "I'm sorry, but an error has occured, please contact the GM Team about it.";
+				close;
+			}
+			if(Upper == 0) { mes @job_pre$[0]; mes "Blacksmith or Alchemist?"; }
+			if(Upper == 2) { mes @job_pre$[2]; mes "Baby Blacksmith or Baby Alchemist?"; }
+			if(Upper == 1) { mes @job_pre$[1]; mes "Whitesmith or Creator?"; }
+			next;
+			menu "- " + @m_job$[1],J_Blacky,
+				 "- " + @m_job$[2],J_Alch;
+			break;
+			
+			case Job_Thief:		
+			case Job_Baby_Thief:
+			case Job_Thief_High:
+			next;
+			mes .n$;
+			mes " ";
+			if(@m_job$[1] == "") {
+				mes "I'm sorry, but an error has occured, please contact the GM Team about it.";
+				close;
+			}
+			if(Upper == 0) { mes @job_pre$[0]; mes "Assassin or Rogue?"; }
+			if(Upper == 2) { mes @job_pre$[2]; mes "Baby Assassin or Baby Rogue?"; }
+			if(Upper == 1) { mes @job_pre$[1]; mes "Assassin Cross or Stalker?"; }
+			next;
+			menu "- " + @m_job$[1],J_Assa,
+				 "- " + @m_job$[2],J_Rogue;
+			break;
+
+			case Job_Taekwon:
+			next;
+			mes .n$;
+			mes " ";
+			if(@m_job$[1] == "") {
+				mes "I'm sorry, but an error has occured, please contact the GM Team about it.";
+				close;
+			}
+			mes @job_pre$[0];
+			mes "Star Gladiator or Soul Linker?";
+			next;
+			menu "- " + @m_job$[1],J_Star,
+				 "- " + @m_job$[2],J_Soul;
+			break;
+		}	
+		
+		J_BN:
+		mes .n$;
+		mes "I will now change you";
+		if(Upper == 0) {
+			mes "into a Baby:";
+			close2;
+			jobchange Job_Baby;
+		} else if(Upper == 2) {
+			mes "into a Novice:";
+			close2;
+			jobchange Job_Novice;
+		}
+		callsub F_Platinum,$@job_plat;
+		resetlvl(1);
+		end;
+		
+		J_SN:
+		mes .n$;
+		mes "I will now change you";
+		if(Upper == 0) {
+			mes "into a Super Novice:";
+			close2;
+			jobchange Job_SuperNovice;
+		} else if(Upper == 2) {
+			mes "into a Super Baby:";
+			close2;
+			jobchange Job_Super_Baby;
+		}
+		callsub F_Platinum,$@job_plat;
+		end;
+		
+		J_Swordy:
+		mes .n$;
+		mes "I will now change you into the Class Swordman.";
+		close2;
+		if(Upper == 0) jobchange Job_Swordman;
+		else if(Upper == 2) jobchange Job_Baby_Swordman;
+		else if(Upper == 1) jobchange Job_Swordman_High;
+		callsub F_Platinum,$@job_plat;
+		end;
+		
+		J_Mage:
+		mes .n$;
+		mes "I will now change you into the Class Mage.";
+		close2;
+		if(Upper == 0) jobchange Job_Mage;
+		else if(Upper == 2) jobchange Job_Baby_Mage;
+		else if(Upper == 1) jobchange Job_Mage_High;
+		callsub F_Platinum,$@job_plat;
+		end;
+		
+		J_Archer:
+		mes .n$;
+		mes "I will now change you into the Class Archer.";
+		close2;
+		if(Upper == 0) jobchange Job_Archer;
+		else if(Upper == 2) jobchange Job_Baby_Archer;
+		else if(Upper == 1) jobchange Job_Archer_High;
+		callsub F_Platinum,$@job_plat;
+		end;
+		
+		J_Aco:
+		mes .n$;
+		mes "I will now change you into the Class Acolyte.";
+		close2;
+		if(Upper == 0) jobchange Job_Acolyte;
+		else if(Upper == 2) jobchange Job_Baby_Job_Acolyte;
+		else if(Upper == 1) jobchange Job_Acolyte_High;
+		callsub F_Platinum,$@job_plat;
+		end;
+		
+		J_Merch:
+		mes .n$;
+		mes "I will now change you into the Class Merchant.";
+		close2;
+		if(Upper == 0) jobchange Job_Merchant;
+		else if(Upper == 2) jobchange Job_Baby_Merchant;
+		else if(Upper == 1) jobchange Job_Merchant_High;
+		callsub F_Platinum,$@job_plat;
+		end;
+		
+		J_Thief:
+		mes .n$;
+		mes "I will now change you into the Class Thief.";
+		close2;
+		if(Upper == 0) jobchange Job_Thief;
+		else if(Upper == 2) jobchange Job_Baby_Thief;
+		else if(Upper == 1) jobchange Job_Thief_High;
+		callsub F_Platinum,$@job_plat;
+		end;
+		
+		J_Kni:
+		mes .n$;
+		mes "I will now change you into the Class Knight.";
+		close2;
+		if(Upper == 0) jobchange Job_Knight;
+		else if(Upper == 2) jobchange Job_Baby_Knight;
+		else if(Upper == 1) jobchange Job_Lord_Knight;
+		callsub F_Platinum,$@job_plat;
+		end;
+		
+		J_Crus:
+		mes .n$;
+		mes "I will now change you into the Class Crusader.";
+		close2;
+		if(Upper == 0) jobchange Job_Crusader;
+		else if(Upper == 2) jobchange Job_Baby_Crusader;
+		else if(Upper == 1) jobchange Job_Paladin;
+		callsub F_Platinum,$@job_plat;
+		end;
+		
+		J_Wiz:
+		mes .n$;
+		mes "I will now change you into the Class Wizard.";
+		close2;
+		if(Upper == 0) jobchange Job_Wizard;
+		else if(Upper == 2) jobchange Job_Baby_Wizard;
+		else if(Upper == 1) jobchange Job_High_Wizard;
+		callsub F_Platinum,$@job_plat;
+		end;
+		
+		J_Sage:
+		mes .n$;
+		mes "I will now change you into the Class Sage.";
+		close2;
+		if(Upper == 0) jobchange Job_Sage;
+		else if(Upper == 2) jobchange Job_Baby_Sage;
+		else if(Upper == 1) jobchange Job_Professor;
+		callsub F_Platinum,$@job_plat;
+		end;
+		
+		J_Hunt:
+		mes .n$;
+		mes "I will now change you into the Class Hunter.";
+		close2;
+		if(Upper == 0) jobchange Job_Hunter;
+		else if(Upper == 2) jobchange Job_Baby_Hunter;
+		else if(Upper == 1) jobchange Job_Sniper;
+		callsub F_Platinum,$@job_plat;
+		end;
+		
+		J_BardDanc:
+		mes .n$;
+		mes "I will now change you into the Class Bard/Dancer.";
+		close2;
+		if(!Sex) {
+			if(Upper == 0) jobchange Job_Dancer;
+			else if(Upper == 2) jobchange Job_Baby_Dancer;
+			else if(Upper == 1) jobchange Job_Gypsy;
+		} else if(Sex) {
+			if(Upper == 0) jobchange Job_Bard;
+			else if(Upper == 2) jobchange Job_Baby_Bard;
+			else if(Upper == 1) jobchange Job_Clown;
+		}
+		callsub F_Platinum,$@job_plat;
+		end;
+		
+		J_Priest:
+		mes .n$;
+		mes "I will now change you into the Class Priest.";
+		close2;
+		if(Upper == 0) jobchange Job_Priest;
+		else if(Upper == 2) jobchange Job_Baby_Priest;
+		else if(Upper == 1) jobchange Job_High_Priest;
+		callsub F_Platinum,$@job_plat;
+		end;
+		
+		J_Monk:
+		mes .n$;
+		mes "I will now change you into the Class Monk.";
+		close2;
+		if(Upper == 0) jobchange Job_Monk;
+		if(Upper == 2) jobchange Job_Baby_Monk;
+		if(Upper == 1) jobchange Job_Champion;
+		callsub F_Platinum,$@job_plat;
+		end;
+		
+		J_Blacky:
+		mes .n$;
+		mes "I will now change you into the Class Blacksmith.";
+		close2;
+		if(Upper == 0) jobchange Job_Blacksmith;
+		else if(Upper == 2) jobchange Job_Baby_Blacksmith;
+		else if(Upper == 1) jobchange Job_Whitesmith;
+		callsub F_Platinum,$@job_plat;
+		end;
+		
+		J_Alch:
+		mes .n$;
+		mes "I will now change you into the Class Alchemist.";
+		close2;
+		if(Upper == 0) jobchange Job_Alchem;
+		else if(Upper == 2) jobchange Job_Baby_Alchem;
+		else if(Upper == 1) jobchange Job_Creator;
+		callsub F_Platinum,$@job_plat;
+		end;
+		
+		J_Assa:
+		mes .n$;
+		mes "I will now change you into the Class Assassin.";
+		close2;
+		if(Upper == 0) jobchange Job_Assassin;
+		else if(Upper == 2) jobchange Job_Baby_Assassin;
+		else if(Upper == 1) jobchange Job_Assassin_Cross;
+		callsub F_Platinum,$@job_plat;
+		end;
+		
+		J_Rogue:
+		mes .n$;
+		mes "I will now change you into the Class Rogue.";
+		close2;
+		if(Upper == 0) jobchange Job_Rogue;
+		else if(Upper == 2) jobchange Job_Baby_Rogue;
+		else if(Upper == 1) jobchange Job_Stalker;
+		callsub F_Platinum,$@job_plat;
+		end;
+		
+		J_Taek:
+		mes .n$;
+		if(!$@job_taekwon) {
+			mes "I'm sorry, but Taekwon's aren't allowed on this server.";
+			close;
+		}
+		mes "I will now change you into the Class Taekwon.";
+		close2;
+		jobchange Job_Taekwon;
+		end;
+		
+		J_Star:
+		mes .n$;
+		mes "I will now change you into the Class Star Gladiator.";
+		close2;
+		jobchange Job_Star_Gladiator;
+		end;
+		
+		J_Soul:
+		mes .n$;
+		mes "I will now change you into the Class Soullinker:";
+		close2;
+		jobchange Job_Soul_Linker;
+		end;
+		
+		J_Gun:
+		mes .n$;
+		if(!$@job_trans) {
+			mes "I'm sorry, but Gunslinger's aren't allowed on this server.";
+			close;
+		}
+		mes "I will now change you into the Class Gunslinger.";
+		close2;
+		jobchange Job_Gunslinger;
+		end;
+		
+		J_Ninja:
+		mes .n$;
+		if(!$@job_trans) {
+			mes "I'm sorry, but Ninja's aren't allowed on this server.";
+			close;
+		}
+		mes "I will now change you into the Class Ninja.";
+		close2;
+		jobchange Job_Ninja;
+		end;
+		
+		J_Rebirth:
+		mes .n$;
+		if(!$@job_rebirth) {
+			mes "I'm sorry, but I can't let you rebirth, since Rebirth Classes aren't allowed on our Server.";
+			close;
+		}
+		if(checkcart() || checkfalcon() || checkriding ()) goto J_Extra;
+		if($@job_instant) {
+			mes "I will change you now into a " + jobname(RebJob) + ".";
+			mes "Is that okay?";
+			if(select("- Yes, proceed.:- No, stop please.") - 1) {
+				goto N_Quit;
+			} else {
+				next;
+				mes .n$;
+				mes "Okay, let's go.";
+				close2;
+				jobchange RebJob; // Rebirth into Rebirth Char (eg.: Knight > Lord Knight)
+				resetlvl(1); // Reset to 1/1 Like normal Rebirth
+				callsub F_Platinum,$@job_plat;
+				set BaseLevel,68; // Average Base Level till Job Level 50 :D
+				set SkillPoint,58; // Skipping High Novice (9 Jobs)  + 1st Rebirth Class (49 Jobs) == 58 Total Jobs missing
+				end;
+			}
+			
+		} else {
+			mes "I will change you now into a " + jobname(4001) + ".";
+			mes "Is that okay?";
+			if(select("- Yes, proceed.:- No, stop please.") - 1) {
+				goto N_Quit;
+			} else {
+				next;
+				mes .n$;
+				mes "Okay, let's go.";
+				close2;
+				jobchange Job_Novice_High;
+				resetlvl(1);
+				set StatusPoint,200;
+				callsub F_Platinum,$@job_plat;
+				end;
+			}
+		}
+		
+		J_Extra:
+		mes "Please remove your Falcon, Cart or Peco Peco first please.";
+		close;
+		
+		J_SkillP:
+		mes .n$;
+		mes "I'm sorry, but your Skill Points aren't 0.";
+		mes "Please use them or delete them via the Reset Function.";
+		close;
+
+		J_Quit:
+		next;
+		mes .n$;
+		mes "I'm sorry, but either you you don't match the needed requirements or you are already on the highest Class you can be.";
+		close;
+
+		N_Quit:
+		next;
+		mes .n$;
+		mes "Okay, see ya.";
+		close;
+		
+	case 2:
+		setarray .@R_Men$[1],"reset your Status","reset your Skills","do a Status/Skills Reset","do a Novice Reset","do a High Novice Reset","delete your Skill Point's";
+		next;
+		mes .n$;
+		mes "My prices are:";
+		if($@reset_func) {
+			mes "Status Reset: ^FF0000" + (( $@stat_cost != 0 ) ? $@stat_cost+" Zeny" : "Disabled") + "^000000";
+			mes "Skills Reset: ^FF0000" + (( $@skill_cost != 0) ? $@skill_cost+" Zeny" : "Disabled") + "^000000";
+			mes "Status/Skills Reset: ^FF0000" + (( $@statskill_cost != 0) ? $@statskill_cost+" Zeny" : "Disabled") + "^000000";
+			mes "Novice Reset: ^FF0000" + (( $@novice_cost != 0) ? $@novice_cost+" Zeny" : "Disabled") + "^000000";
+			mes "High Novice Reset: ^FF0000" + (( $@noviceh_cost != 0) ? $@noviceh_cost+" Zeny" : "Disabled") + "^000000";
+		}
+		mes "Delete Skill Point's: ^FF0000" + (( $@skillp_cost != 0) ? $@skillp_cost+" Zeny" : "Disabled") + "^000000";
+		mes " ";
+		mes "^FF0000 Note: If you see one of the reset functions is on \"Disabled\",choosing it won't have an effect at all.^000000";
+		switch(select("- Status Reset:- Skill Reset:- Status/Skills Reset:- Novice Reset:- High Novice Reset:- Delete Skill Point's:- Cancel")) {
+		
+			case 7:
+			goto N_Quit;
+			break;
+			
+			default:
+			set @R_M_C,@menu;
+			break;
+		}
+		next;
+		mes .n$;
+		mes "Are you sure you want to "+.@R_Men$[@R_M_C]+"?";
+		if(select("- Yes, proceed:- Nevermind") - 1) {
+			goto N_Quit;
+		} else {
+			switch(@R_M_C) {
+			
+				case 1:
+				if(Zeny < $@stat_cost || !$@stat_cost) goto M_Fail;
+				set Zeny,Zeny - $@stat_cost;
+				resetstatus;
+				break;
+				
+				case 2:
+				if(Zeny < $@skill_cost || !$@skill_cost) goto M_Fail;
+				set Zeny,Zeny - $@skill_cost;
+				resetskill;
+				break;
+				
+				case 3:
+				if(Zeny < $@statskill_cost || !$@statskill_cost) goto M_Fail;
+				set Zeny, Zeny - $@statskill_cost;
+				resetstatus;
+				resetskill;
+				break;
+				
+				case 4:
+				if(Zeny < $@novice_cost || !$@novice_cost || Class == 0) goto M_Fail;
+				set Zeny,Zeny - $@novice_cost;
+				jobchange Job_Novice;
+				resetlvl(1);
+				set ADVJOB,0;
+				set RebJob,0;
+				set ThirdJob,0;
+				set StatusPoint,100;
+				break;
+				
+				case 5:
+				if(Zeny < $@noviceh_cost || !$@noviceh_cost || (!(Class >= 4002 && Class <= 4022))) goto M_Fail;
+				next;
+				mes .n$;
+				mes "So what Job do you want to be later?";
+				switch(prompt("- Lord Knight:- High Priest:- High Wizard:- Whitesmith:- Sniper:- Assassin Cross::- Paladin:- Champion:- Professor:- Stalker:- Creator:- Clown/Gypsy:- Cancel")) {
+				
+					case 13:
+					if(!Sex) set @job_next,20;
+					if(Sex) set @job_next,19;
+					break;
+					
+					case 14:
+					case 255:
+					goto N_Quit;
+					break;
+					
+					default:
+					set @job_next,@menu + 6;
+					break;
+				}
+				//=========== New Job Settings ============
+				set ADVJOB, @job_next+Job_Novice_High; 
+				set ThirdJob,0;
+				set RebJob,ADV_JOB;
+				// ========================================
+				set Zeny,Zeny - $@noviceh_cost;
+				jobchange Job_Novice_High;
+				resetlvl(1);
+				set StatusPoint,200;
+				break;
+				
+				case 6:
+				if(Zeny < $@skillp_cost || !$@skillp_cost || SkillPoint == 0) goto M_Fail;
+				set Zeny,Zeny - $@skillp_cost;
+				set SkillPoint,SkillPoint - SkillPoint;
+				break;
+			}
+		}
+		next;
+		mes .n$;
+		mes "Here you are.";
+		cleararray .@R_Men$[1],"",getarraysize(.@R_Men$);
+		close;
+		
+			M_Fail:
+			next;
+			mes .n$;
+			mes "I'm sorry, but an error has occured.";
+			mes " ";
+			mes "Possible Errors:";
+			mes "----------------";
+			mes "- You don't have enough money.";
+			mes "- The action you chose has been disabled.";
+			if(@R_M_C == 4) {
+				mes "- You are already a Novice so I can't change you into one.";
+				if(checkcart() || checkfalcon() || checkriding ()) mes "- You have a Cart, Falcon or Peco Peco in usage.";
+			} else if(@R_M_C == 5) {
+				mes "- You are not a 1st Rebirth Class and higher, so I can't change you back into a High Novice.";
+				if(checkcart() || checkfalcon() || checkriding ()) mes "- You have a Cart, Falcon or Peco Peco in usage.";
+			} else if(@R_M_C == 6) {
+				mes "- You don't have Skill Points to delete.";
+			}
+			next;
+			mes .n$;
+			mes "If none of the listed problems has occurred";
+			mes "I would like to ask you to write about it in the forum with the option you chose,";
+			mes "which price has been told you and anything else you want to tell us.";
+			close;
+	
+	case 3:
+		if(!$@rental_func) close;
+		next;
+		mes .n$;
+		mes "Each renting costs" + $@rent_cost + " Zeny.";
+		mes "Also, I will tell you if you have already rented something.";
+		switch(select("- Cart " + ( (($@cart_other && getskilllv(39) > 0) || !$@cart_other && (BaseClass == Job_Merchant || BaseJob == Job_SuperNovice)) ? ( (checkcart() ) ? "^FF0000Rented^000000" : "^00FF00Rentable^000000") : "^FF0000Not Rentable^000000"),
+		"- Falcon " + ( (BaseJob != Job_Archer && BaseClass == Job_Archer && getskilllv("HT_FALCON") > 0) ? ( (checkfalcon()) ? "^FF0000Rented^000000" : "^00FF00Rentable^000000") : "^FF0000Not Rentable^000000"),
+		"- Peco Peco " + ( (BaseJob == Job_Knight || BaseJob == Job_Crusader) ? ( (checkriding()) ? "^FF0000Rented^000000" : "^00FF00Rentable^000000") : "^FF0000Not Rentable^000000"))) {
+			case 1:
+			if(!$@cart_other) {
+				if(BaseJob != Job_Merchant || BaseJob != Job_SuperNovice) goto R_Fail;
+			}
+			if(checkcart() || (getskilllv(39) < 1) || Zeny < $@rent_cost) goto R_Fail;
+			setcart;
+			break;
+
+			case 2:
+			if(Zeny < $@rent_cost) goto R_Fail; 
+			if( BaseJob != Job_Archer && BaseClass == Job_Archer && checkfalcon() == 0 && getskilllv("HT_FALCON") > 0)	{
+				setfalcon;
+				break;
+			}
+
+			case 3:
+			if(Zeny < $@rent_cost) goto R_Fail; 
+			next;
+			if(BaseJob != Job_Swordman && BaseClass == Job_Swordman && checkriding() == 0 && getskilllv("KN_RIDING") > 0)	{
+				setriding;
+				break;
+			}
+		}
+		next;
+		set Zeny,Zeny - $@rent_cost;
+		mes .n$;
+		mes "Here you are.";
+		close;
+		
+			R_Fail:
+			next;
+			mes .n$;
+			mes "I'm sorry, but an error has occured.";
+			mes " ";
+			mes "The errors can be the following:";
+			mes "-------------";
+			mes "- You don't have enough money.";
+			mes "- You have already a Cart, Falcon or Peco Peco rented.";
+			mes "- You don't have the required Skills";
+			switch(@menu) {
+				case 1: 
+				if(!$@cart_other) mes "- You aren't a Merchant Class for renting a Cart.";
+				break;
+				
+				case 2:
+				mes "- You aren't a Hunter Class for renting a Falcon.";
+				break;
+				
+				case 3:
+				mes "- You aren't a Knight/Crusader Class for renting a Peco.";
+				break;
+			}
+			next;
+			mes .n$;
+			mes "If none of the listed problems has occurred";
+			mes "I would like to ask you to write about it in the forum with the option you chose,";
+			mes "which price has been told you and anything else you want to tell us.";
+			close;
+			
+	case 4:
+	if(!$@job_plat) close;
+	next;
+	mes .n$;
+	mes "Hello, " + strcharinfo(0)+".";
+	mes "You are a " + jobname(Class)+".";
+	mes "Wanna recieve Skills based on your Class?";
+	if(select("- Yes, please:- No, thanks") - 1) {
+		close;
+	} else {
+		next;
+		mes .n$;
+		mes "Here you are.";
+		close2;
+		unitemote getcharid(3),e_thx;
+		callsub F_Platinum,$@job_plat;
+		end;
+	}
+	
+F_UnallowedClass:
+	mes .n$;
+	mes "I'm sorry, but your current Class isn't allowed on this server.";
+	mes "I will now change you back into an Novice with your current Base Level,";
+	mes "but I'll will delete your Skill Points.";
+	next;
+	mes .n$;
+	mes "For further help, please contact the GM Team.";
+	mes " ";
+	mes "We are sorry for any inconvenience.";
+	close2;
+	jobchange Job_Novice;
+	callsub F_Platinum,$@job_plat;
+	end;
+	
+F_Platinum:
+		if(getarg(0) == 1) {
+			skill 142,1,0; // First Aid
+			if (BaseJob == Job_Novice) {
+				skill 143,1,0; // Play Dead
+			} else if (BaseClass == Job_Swordman) {
+				skill 144,1,0; // Moving HP-Recovery
+				skill 145,1,0; // Fatal Blow
+				skill 146,1,0; // Auto Berserk
+			} else if (BaseClass == Job_Mage) {
+				skill 157,1,0; // Energy Coat
+			} else if (BaseClass == Job_Archer) {
+				skill 147,1,0; // Arrow Crafting
+				skill 148,1,0; // Arrow Repel
+			} else if (BaseClass == Job_Merchant) {
+				skill 153,1,0; // Cart Revolution
+				skill 154,1,0; // Change Cart
+				skill 155,1,0; // Crazy Uproar
+			} else if (BaseClass == Job_Thief) {
+				skill 149,1,0; // Sand Attack
+				skill 150,1,0; // Back Slide
+				skill 151,1,0; // Find Stone
+				skill 152,1,0; // Stone Fling
+			} else if (BaseClass == Job_Acolyte) {
+				skill 156,1,0; // Holy Light
+			}
+			if (BaseJob == Job_Knight) {
+				skill 1001,1,0; // Charge Attack
+			} else if (BaseJob == Job_Crusader) {
+				skill 1002,1,0; // Shrink
+			} else if (BaseJob == Job_Wizard) {
+				skill 1006,1,0; // Sight Blaster
+			} else if (BaseJob == Job_Sage) {
+				skill 1007,1,0; // Create Elemental Converter
+				skill 1008,1,0; // Elemental Change Water
+				skill 1017,1,0; // Elemental Change Earth
+				skill 1018,1,0; // Elemental Change Fire
+				skill 1019,1,0; // Elemental Change Wind
+			} else if (BaseJob == Job_Hunter) {
+				skill 1009,1,0; // Phantasmic Arrow
+			} else if (BaseJob == Job_Bard) {
+				skill 1010,1,0; // Pang Voice
+			} else if (BaseJob == Job_Dancer ) {
+				skill 1011,1,0; // Wink of Charm
+			} else if (BaseJob == Job_Blacksmith) {
+				skill 1012,1,0; // Unfair Trick
+				skill 1013,1,0; // Greed
+			} else if (BaseJob == Job_Alchemist) {
+				skill 238,1,0; // Bioethics
+			} else if (BaseJob == Job_Assassin) {
+				skill 1003,1,0; // Sonic Acceleration
+				skill 1004,1,0; // Throw Venom Knife
+			} else if (BaseJob == Job_Rogue) {
+				skill 1005,1,0; // Close Confine
+			} else if (BaseJob == Job_Priest) {
+				skill 1014,1,0; // Redemptio
+			} else if (BaseJob == Job_Monk) {
+				skill 1015,1,0; // Ki Translation
+				skill 1016,1,0; // Ki Explosion
+			}
+			return;
+		}
+// ====================================== Job Change Calculation & Settings ============================ //
+JOB_CHANGE:
+	set C_Fail,0;
+	cleararray @m_job$[1],"",getarraysize(@m_job$);
+	setarray @job_pre$[0],"====[^AA55FFNormal Class^000000]====","====[^FF0000Rebirth Class^000000]====","====[^0000FFBaby Class^000000]====";
+	//======= Job Change Names into 2nd Class Changes ====================
+//------------ Normal 2nd ---------------------
+	setarray @2nd_class$[1],"Knight","Priest","Wizard","Blacksmith","Hunter","Assassin";
+	setarray @2nd_class$[7],"Crusader","Monk","Sage","Alchemist","Bard/Dancer","Rogue";
+	setarray @2nd_class$[13],"Star Gladiator","Soul Linker";
+//------------ Rebirth 2nd ---------------------
+	setarray @reb_2nd$[1],"Lord Knight","High Priest","High Wizard","Whitesmith","Sniper","Assassin Cross";
+	setarray @reb_2nd$[7],"Paladin","Champion","Professor","Creator","Clown/Gypsy","Stalker";
+
+	if((Class >= 1 && Class <= 6) || (Class >= 4024 && Class <= 4029)) {
+		if(JobLevel >= 40) {
+	// Swordman Class
+			if(Class == 1 || Class == 4024) {
+				setarray @m_job$[1],@2nd_class$[1],@2nd_class$[7];
+
+	// Mage Class
+			} else if(Class == 2 || Class == 4025) {
+				setarray @m_job$[1],@2nd_class$[3],@2nd_class$[9];
+
+	// Archer Class
+			} else if(Class == 3 || Class == 4026) {
+				setarray @m_job$[1],@2nd_class$[5],@2nd_class$[11];
+
+	// Acolyte Class
+			} else if(Class == 4 || Class == 4027) {
+				setarray @m_job$[1],@2nd_class$[2],@2nd_class$[8];
+
+	// Merchant Class
+			} else if(Class == 5 || Class == 4028){
+				setarray @m_job$[1],@2nd_class$[4],@2nd_class$[10];
+
+	// Thief Class
+			} else if(Class == 6 || Class == 4029) {
+				setarray @m_job$[1],@2nd_class$[6],@2nd_class$[12];
+
+	// Taekwon
+			} else if(Class == 4046) {
+				setarray @m_job$[1],@2nd_class$[13],@2nd_class$[14];
+			}
+		} else {
+			set C_Fail,1;
+		}
+	}
+	// Rebirth Job Reset, for GM's basically since they can change their job per command, so nothing gets messed up
+	if(getgmlevel() && (Class <= 6 || (Class >= 4023 && Class <= 4029)) && RebJob > 0) set RebJob,0;
+// =============== Rebirth Class Calculations =================== //
+// Feature Check
+if($@job_rebirth) {
+	
+	// Random Job Row after Rebirth?
+		if($@job_random) {
+		
+		// Meeting Requirements for Rebirth?
+			if(Class >= Job_Knight && Class <= Job_Dancer && (BaseLevel >= 99 && JobLevel >= 50)) set RebJob,4001;
+		
+		// For Random Job Row only:	
+			switch(Class) {
+				
+				case Job_Novice_High:
+				if(JobLevel == 10 || getskilllv(1) == 9) set RebJob,0;
+				break;
+				
+				case Job_Swordman_High:
+				if(JobLevel >= 40) setarray @m_job$[1],@reb_2nd$[1],@reb_2nd$[7];
+				break;
+				
+				case Job_Mage_High:
+				if(JobLevel >= 40) setarray @m_job$[1],@reb_2nd$[3],@reb_2nd$[9];
+				break;
+				
+				case Job_Archer_High:
+				if(JobLevel >= 40) setarray @m_job$[1],@reb_2nd$[5],@reb_2nd$[11];
+				break;
+				
+				case Job_Acolyte_High:
+				if(JobLevel >= 40) setarray @m_job$[1],@reb_2nd$[2],@reb_2nd$[8];
+				break;
+				
+				case Job_Merchant_High:
+				if(JobLevel >= 40) setarray @m_job$[1],@reb_2nd$[4],@reb_2nd$[10];
+				break;
+				
+				case Job_Thief_High:
+				if(JobLevel >= 40) setarray @m_job$[1],@reb_2nd$[6],@reb_2nd$[12];
+				break;
+			}
+			
+		} else if(!$@job_random) {
+		// Rebirth Job Calculation
+			if(Class >= Job_Knight && Class <= Job_Dancer) {
+				if(BaseLevel >= 99 && JobLevel >= 50) {
+					set RebJob,0;
+					if(Class == Job_Knight || Class == Job_Knight2) set RebJob,4008;
+					if(Class == Job_Crusader || Class == Job_Crusader2) set RebJob,4015;
+					if(Class == Job_Priest) set RebJob,4009;
+					if(Class == Job_Monk) set RebJob,4016;
+					if(Class == Job_Wizard) set RebJob,4010;
+					if(Class == Job_Sage) set RebJob,4017;
+					if(Class == Job_Blacksmith) set RebJob,4011;
+					if(Class == Job_Alchemist) set RebJob,4019;
+					if(Class == Job_Hunter) set RebJob,4012;
+					if(Class == Job_Bard) set RebJob,4020;
+					if(Class == Job_Dancer) set RebJob,4021;
+					if(Class == Job_Assassin) set RebJob,4013;
+					if(Class == Job_Rogue) set RebJob,4018;
+					
+				} else {
+					set C_Fail,1;
+				}
+		// High Novice > 1st Rebirth Class according to the Rebirth Job Calculation
+			} else if(Class == 4001 && JobLevel == 10) {
+				if(RebJob == 4008 || RebJob == 4015) goto J_Swordy;
+				if(RebJob == 4010 || RebJob == 4017) goto J_Mage;
+				if(RebJob == 4012 || RebJob == 4020 || RebJob == 4021) goto J_Archer;
+				if(RebJob == 4009 || RebJob == 4016) goto J_Aco;
+				if(RebJob == 4011 || RebJob == 4019) goto J_Merch;
+				if(RebJob == 4013 || RebJob == 4018) goto J_Thief;
+			
+		// 1st Rebirth Class > 2nd Rebirth Class according to the Rebirth Job Calculation
+			} else if(Class >= 4002 && Class <= 4007 && (JobLevel >= 40)) {
+				if(RebJob == 4008) goto J_Kni;
+				if(RebJob == 4015) goto J_Crus;
+				if(RebJob == 4009) goto J_Priest;
+				if(RebJob == 4016) goto J_Monk;
+				if(RebJob == 4010) goto J_Wiz;
+				if(RebJob == 4017) goto J_Sage;
+				if(RebJob == 4011) goto J_Blacky;
+				if(RebJob == 4019) goto J_Alch;
+				if(RebJob == 4012) goto J_Hunt;
+				if(RebJob == 4020 || RebJob == 4021) goto J_BardDanc;
+				if(RebJob == 4013) goto J_Assa;
+				if(RebJob == 4018) goto J_Rogue;
+			}
+		}
+	}
+return;
+}
+}
+
+/* 
+//============ On Login Job Check ============
+//- This part will do the same thing
+//- as you would talk to the Job Master
+//- with an unallowed Class, just on Login already.
+//- Enable it as you like.
+//===========================================
+-	script	JobCheck	-1,{
+	end;
+OnPCLoginEvent:
+	if((!$@job_baby && (Class >= 4023 && Class <= 4045)) || (!$@job_taekwon && (Class >= 4046 && Class <= 4049)) || (!$@job_trans && (Class == 25 || Class == 26)) || (!$@job_rebirth && (Class >= 4001 && Class <= 4022)))	{
+		mes "[Job Master]";
+		mes "I'm sorry, but your current Class isn't allowed on this server.";
+		mes "I will now change you back into an Novice with your current Base Level,";
+		mes "but I'll will delete your Skill Points.";
+		next;
+		mes "[Job Master]";
+		mes "For further help, please contact the GM Team.";
+		mes " ";
+		mes "We are sorry for any inconvenience.";
+		close2;
+		jobchange Job_Novice;
+		skill 142,1,0; // First Aid
+		skill 143,1,0; // Play Dead
+		end;
+
+	}
+}
+*/

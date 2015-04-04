@@ -1,0 +1,170 @@
+//===== eAthena Script =======================================
+//= Global Banker
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0	- Script Made
+//      - Tested and fixxed found Bugs, translated into English
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= Withdraw and Deposit maximum 1,000,000 Zeny.
+//===== Comments =============================================
+//= None....
+//=============================================================
+prontera.gat,147,173,3	script	Bankomat	790,{
+
+mes "[Global Banker]";
+mes "Hello, how can I help you?";
+next;
+switch(select("- View Balance:- Withdraw:- Deposit:- Info")) {
+
+	case 1:
+	callfunc "NPC_Bank",3;
+	break;
+	
+	case 2:
+	callfunc "NPC_Bank",1;
+	break;
+
+	case 3:
+	callfunc "NPC_Bank",2;
+	break;
+	
+	case 4:
+	callfunc "NPC_Bank",4;
+	break;
+}
+close;
+}
+-	script	Banker	-1,{
+end;
+
+OnWhisperGlobal:
+if(@whispervar0$ == "Withdraw") {
+	callfunc "NPC_Bank",1;
+} else if(@whispervar0$ == "Deposit") {
+	callfunc "NPC_Bank",2;
+} else if(@whispervar0$ == "Balance") {
+	callfunc "NPC_Bank",3;
+} else if(@whispervar0$ == "Info" || @whispervar0$ != "Info") {
+	callfunc "NPC_Bank",4;
+}
+end;
+}
+function	script	NPC_Bank	{
+//================== Config ===================================
+set W_Zeny,0;
+set D_Zeny,0;
+set .@n$,"[Global Banker]";
+//=============================================================
+switch(getarg(0)) {
+	
+	case 1:
+		mes .@n$;
+		if(@whispervar1$ != "") {
+			mes "Do you want to withdraw "+@whispervar1$+" Zeny?";
+			if(select("- Yes, please:- No, thanks") - 1) {
+				close;
+			} else {
+				set @acc_draw,@whispervar1$;
+			}
+		} else {
+			mes "How much do you want to withdraw?";
+			input @acc_draw;
+		}
+		if(@acc_draw > 1000000 || @acc_draw < 1) { set L_invalid,1; goto N_money;}
+		if(#bankacc < @acc_draw) { set L_invalid,4; goto N_money;} 
+		set W_Zeny,Zeny + @acc_draw;
+		if(W_Zeny > 2000000000) { set L_invalid,3; goto N_money;}
+		set Zeny,Zeny + @acc_draw;
+		set #bankacc,#bankacc - @acc_draw; 
+		next;
+		mes .@n$;
+		mes "You have withdrawn "+@acc_draw+" Zeny and your current balance is "+#bankacc+" Zeny.";
+		mes "Thank you very much for using our service.";
+		close;
+
+	case 2:
+		mes .@n$;
+		if(@whispervar1$ != "") {
+			mes "Do you want to deposit "+@whispervar1$+" Zeny?";
+			if(select("- Yes, please:- No, thanks") - 1) {
+				close;
+			} else {
+				set @acc_depo,@whispervar1$;
+			}
+		} else {
+			mes "How much do you want to deposit?";
+			input @acc_depo;
+		}
+		if(@acc_depo > 1000000 || @acc_depo < 1) { set L_invalid,1; goto N_money;}
+		if(@acc_depo > Zeny) { set L_invalid,2; goto N_money;}
+		set D_Zeny,#bankacc + @acc_depo;
+		if(D_Zeny > 2000000000) { set L_invalid,3; goto N_money;}
+		set Zeny,Zeny - @acc_depo;
+		set #bankacc,#bankacc + @acc_depo;
+		next;
+		mes .@n$;
+		mes "You have deposited "+@acc_depo+" Zeny and your current balance is "+#bankacc+" Zeny.";
+		mes "Thank you very much for using our service.";
+		close;
+		
+	case 3:
+		mes .@n$;
+		mes "Your current balance is:";
+		mes #bankacc + " Zeny.";
+		close;
+	
+	case 4:
+		mes .@n$;
+		mes "You can deposit and withdraw a total of 1.000.000 Zeny at once.";
+		mes "But the total amount can't be higher than 2.000.000.000 Zeny.";
+		mes "Also you have possibility to deposit or withdraw your money from everywhere.";
+		next;
+		mes .@n$;
+		mes "The format to duo so is:";
+		mes "[WhisperBox]:[   Text Box    ]";
+		mes " ";
+		mes "Here is an example:";
+		mes "[NPC:Banker]:[Attempt#Amount]";
+		mes "Attempt: ^00FF00Balance^000000,";
+		mes "             ^FF0000Withdraw^000000,";
+		mes "             ^0000FFDeposit^000000";
+		mes "		      ^FFFF11Info^000000";
+		mes "If you put nothing at Attempt,";
+		mes "or anything else, you will be shown";
+		mes "the information automatically.";
+		mes " ";
+		mes "Attention: The attempt you have to put";
+		mes "is case-sensitive, also you''ll have to";
+		mes "write exactly like I stated above or it";
+		mes "won't work correctly.";
+		close;
+
+
+//------------ Error Messages (N_error : L_invalid) -----------
+
+N_money:
+next;
+mes .@n$;
+
+// ------------- Issues --------
+if(L_invalid == 1) {
+	mes "I'm sorry, but this amount is not valid.";
+	close;
+
+} else if(L_invalid == 2) {
+	mes "I'm sorry, but you don't have enough money.";
+	close;
+
+} else if(L_invalid == 3) { // Surpassing the maximum allowed amount
+	mes "I'm sorry, but you have put an amount, which would surpass the maximum amount you can hold/deposit.";
+	close;
+	
+} else if(L_invalid == 4) {
+	mes "I'm sorry, but you don't have enough money on your account.";
+	close;
+}
+}
+}

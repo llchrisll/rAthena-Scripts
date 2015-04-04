@@ -1,0 +1,446 @@
+//===== eAthena Script =======================================
+//= Security System
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Made
+//= 1.1 - Fixed SQL Bug (SQL Injection) - Thanks to ToastofDoom
+//= 2.0 - Shortened a bit and made it more dynamically
+//      - Removed OnWhisperGlobal
+//      - Renamed variables (always temp character variables ....)
+//      - Added prevention to use "ALT+M" shortcuts and dying via 
+//        Attacks like Mob or PvP Maps after Login until the security password has been put
+//===== Compatible With ======================================
+//= Every eAthena MySQL Version
+//===== Description ==========================================
+//= Security System - Simple
+//===== Comments =============================================
+//= None....
+//============================================================
+prontera.gat,150,180,4	script	Security Manager	109,{
+
+if (getgmlevel() >= 80) {
+	mes .n$;
+	mes "Which Menu?";
+	menu "- Player Menu",-,"- GM Menu",M_GM;
+	next;
+}
+	mes .n$;
+	mes "Hello, "+strcharinfo(0)+".";
+	mes "What do you wanna do?";
+	next;
+	switch(select("- Add/Change my Password:- Nothing")) {
+		
+	case 1:
+	if($security_pass == 0 && #security_pass == 1) {
+		set #security_pass, 0;
+		mes .n$;
+		mes "The System isn't enabled.";
+		close;
+		
+	} else if($security_pass == 0 && #security_pass == 0) {
+		mes .n$;
+		mes "The System isn't enabled.";
+		close;
+		
+	} else if($security_pass == 1 && #security_pass == 0) {
+		mes .n$;
+		mes "Hello, "+strcharinfo(0)+"";
+		mes "So you want to set your Password?";
+		next;
+		menu "- Yes, please.",-,"- Naa, not now.",N_now;
+
+		setit:
+		mes .n$;
+		// In case the database has not been cleaned before the script has been removed, extra check....
+		query_sql "SELECT `pass` FROM `security_sys` WHERE `account_id` = '"+getcharid(3)+"'",.@sec_pass$;
+		if(.@sec_pass$ != "") {
+			mes "It seems like that the database hasn't been cleared before removing the script.";
+			mes "I will use your password from before, which is "+.@sec_pass$+".";
+			set #security_pass,1;
+			close;
+		}
+		mes "Okay, type the password you want.";
+		input .@sec_pass$;
+		next;
+		mes .n$;
+		mes "The Password is:";
+		mes .@sec_pass$;
+		mes "Is that correct?";
+		next;
+		if(select("- Yes, it is:- No,repeat please") == 1) {
+			set #security_pass, 1;
+			callfunc "SS_PW",$@serv_mode,2,3,.@sec_pass$;
+			mes .n$;
+			mes "Thank you for your time.";
+			mes "Your Password and IP got saved.";
+			mes "Remember it carefully.";
+			close;
+		} else 
+			goto setit;
+
+		N_now:
+		next;
+		mes .n$;
+		mes "Okay, please come back as soon as possible.";
+		close;
+		
+	} else if($security_pass == 1 && #security_pass == 1) {
+		mes .n$;
+		mes "So you want to change";
+		mes "your Password?";
+		if(select("- Yes:- No") == 2) {
+			close;
+		} else {
+			next;
+			mes .n$;
+			mes "Please insert the new Password.";
+			mes "^FF2200 Note: Type \"Cancel\" into";
+			mes "the box to cancel your attempt.^000000";
+			input .@ch_pass$;
+			next;
+			mes .n$;
+			if(.@ch_pass$ == "Cancel") {
+				close;
+			} else if( callfunc("SS_PW",$@serv_mode,1,1,.@ch_pass$) == 1) {
+				mes "I'm sorry, but the new";
+				mes "Password matches the old";
+				mes "one.";
+				close;
+			}
+			
+			mes "The new password is:";
+			mes .@ch_pass$;
+			next;
+			mes .n$;
+			mes "Is that correct?";
+			if(select("- Yes, it is correct:- No, I don't want to change it.") == 2) {
+				next;
+				mes .n$;
+				mes "Okay, see you next time.";
+				close;
+				
+			}
+			next;
+			mes .n$;
+			mes "Thank you for your time.";
+			callfunc("SS_PW",$@serv_mode,2,1,.@ch_pass$);
+			close;
+		}
+	}
+
+	case 2:
+	close;
+	}
+
+M_GM:
+next;
+if($sec_table_created == 1) {
+	mes .n$;
+	mes "Hello, "+strcharinfo(0)+"!";
+	mes "What do you want to do?";
+	next;
+	switch(select("- Disable/Enable the System"+( ($@serv_mode == 1)?":- Delete Table":"")+":- Nothing") ) {
+			
+		case 1:
+		mes .n$;
+		mes "The Security System is " + ( ($security_pass) ? "^00BB22Enabled^000000." : "^FF2200Disabled^000000.");
+		if($security_pass == 0) {
+			mes "Wanna enable it?";
+			if(select("- Yes,please:- No,Thanks") == 2) {
+				next;
+				mes .n$;
+				mes "The Security System is still disabled.";
+				close; 
+				
+			} 
+			next;
+			mes .n$;
+			mes "The Security System is enabled now.";
+			announce "The Security Systen has been enabled.",bc_yellow|bc_all;
+			set $security_pass, 1;
+			close;
+			
+		} else if($security_pass == 1) {
+			mes "Wanna disable it?";
+			if(select("- Yes,please:- No,Thanks") == 2) {
+				next;
+				mes .n$;
+				mes "The Security System is still enabled.";
+				close;
+			}
+			next;
+			mes .n$;
+			mes "The Security system is disabled now.";
+			announce "The Security Systen has been disabled.",bc_yellow|bc_all;
+			set $security_pass, 0;
+			close;
+		}
+
+		case 2:
+		if($@serv_mode == 0) close;
+		mes .n$;
+		mes "Do you really want to delete the whole table?";
+		switch(select("- Yes, I want!!:- Noooo, I misclicked ya o_O")) {
+
+			case 1:
+			next;
+			mes .n$;
+			mes "Okay, it's a 'One-Way Ticket'!!!!";
+			query_sql "DROP TABLE `security_sys`";
+			set $sec_table_created,0;
+			set $security_pass,0;
+			close;
+
+			case 2:
+			next;
+			mes .n$;
+			mes "Okay, No Problem.";
+			close;
+		}
+
+		case 3:
+		next;
+		mes .n$;
+		mes "Goodbye, see ya next time.";
+		close;
+	}
+	
+} else {
+	mes .n$;
+	mes "There isn't a table in your database yet.";
+	mes "Want to create?";
+	next;
+	if(select("- Yes, I want to create one:- No, don't wanna") == 1) {
+		mes .n$;
+		mes "The Table is created now.";
+		query_sql "CREATE TABLE IF NOT EXISTS `security_sys` ( `last_ip` VARCHAR( 100 ) , `account_id` INT( 11 ) , `pass` VARCHAR( 32 ))";
+		set $sec_table_created, 1;
+		set $security_pass, 1;
+		close;
+	}
+	mes .n$;
+	mes "The table wasn't created.";
+	close;
+}
+
+OnInit:
+set .n$,"[Security Manager]";
+//======= Server Mode =======
+//- 0 > TxT
+//- 1 > SQL
+set $@serv_mode,0;
+
+if($@serv_mode == 0) // If Server Mode is TXT, set this to 1.
+	set $sec_table_created,1;
+end;
+}
+
+-	script	SS_PW_Login	-1,{
+end;
+
+OnPCLoginEvent:
+set .@n$,"[Security Manager]";
+// Server Name
+set .@serv_name$,"<Server Name>";
+// Mail Address
+set .@serv_mail$,"<Server Mail Address>";
+// ========== System is offline =======
+if($security_pass == 0) {
+	// Either Password has not been set or the system was temporarly down
+	if(#security_pass == 0 || #security_pass == 3) end;
+	// Password is set but system offline
+	else if(#security_pass == 1) { 
+		announce "The Security System is momentally offline.",bc_red|bc_self;
+		set #security_pass,3;
+	// System Offline but Jail active	
+	} else if(#security_pass == 2) 
+		set #security_pass,0;
+
+// ============= System is online =============
+} else if($security_pass == 1) {
+	// Checking if the Server Mode has been changed:
+	if(#sec_info != $@serv_mode) {
+		announce .@n$+": Seems like the Server Mode has been changed....",bc_red|bc_self;
+		set .@pw$,callfunc("SS_PW",$@serv_mode,1,1,"mode");
+		if( .@pw$ == "-2") // Checking for available password
+			set #security_pass,0;
+			
+		// I know this is unsecure, but until the I make an Password Recovery function (somewhere in the future q.q), it should be enough
+		else announce .@n$+": It seems like you got an password for this mode already, which is \""+.@pw$+"\".",bc_blue|bc_self;
+		set #sec_info,$@serv_mode;
+	}
+	// No Password set yet
+	if(#security_pass == 0) {
+		mes .@n$;
+		mes "Your Security Password hasn't been set yet.";
+		mes "Please come to me and set it.";
+		close;
+	
+	// Jail.....
+	} else if(#security_pass == 2) 
+		goto W_Jail;
+	
+	// System was temporarly offline
+	else if(#security_pass == 3) {
+		announce "The Security System is back online.",bc_red|bc_self;
+		set #security_pass,1;
+		
+	// Password was set
+	} else if(#security_pass == 1) { // Check if Password was set
+		if( callfunc("SS_PW",$@serv_mode,1,2) == 1) goto PW_PASS; // IP Check (SQL Only)
+		
+		sc_start 112,999999,1; //Berserk State, not able to talk/using commands
+		pcblockmove getcharid(3),1; // Preventing from moving
+		atcommand "@battleignore"; // Preventing the player from dying from attacks
+		set @lock,1;
+		
+		mes .@n$;
+		mes "Please insert the Password for your own Security.";
+		next;
+		input .@pass$;
+		if( callfunc("SS_PW",$@serv_mode,1,1,.@pass$) == 1) goto PW_PASS; // Inserted Password Check
+		mes .@n$;
+		mes "The Password you typed is wrong.";
+		mes "You got one more chance to login.";
+		next;
+		input .@pass$;
+		if( callfunc("SS_PW",$@serv_mode,1,1,.@pass$) == 1 ) goto PW_PASS;
+		mes .@n$;
+		mes "You typed the Password wrong twice.";
+		mes "You will be warped to the Jail now.";
+		mes "After Login in, you have to write the password again and if you are write it";
+		mes "again wrong your account will be blocked.";
+		close2;
+		atcommand "@jail "+strcharinfo(0);
+		set #security_pass,2;
+		sc_end 112;
+		pcblockmove getcharid(3),0;
+		atcommand "@battleignore";
+		set @lock,0;
+		sleep2 1500;
+		atcommand "@kick "+strcharinfo(0);
+	}
+}
+end;
+
+// Password Input Passed
+PW_PASS:
+mes .@n$;
+mes "You have successfully logged in. Have Fun on "+.@serv_name$+".";
+close2;
+// Checking if the player has a different IP then before and update it accordingly.
+if(@ip_n) {
+	callfunc("SS_PW",$@serv_mode,2,2,@ip_new$);
+	set @ip_n,0;
+	set @ip_new$,"";
+}
+if(@lock) {
+	sc_end 112;
+	pcblockmove getcharid(3),0;
+	atcommand "@battleignore";
+	percentheal 100,100;
+	set @lock,0;
+}
+end;
+	
+W_Jail:
+sc_start 112,999999,1; //Berserk State, not able to talk/using commands
+pcblockmove getcharid(3),1; // Preventing from moving
+
+mes .@n$;
+mes "Please type the 'correct' Password now or your account will be blocked";
+mes "and you have to write an e-mail to \""+.@serv_mail$+"\" with the content of the right Password.";
+next;
+mes .@n$;
+mes "Example:";
+mes "Subject: Security System - Account Unblock";
+mes "Text: Account Name: *x*";
+mes "      Password:     *x*";
+next;
+mes .@n$;
+mes "Start please:";
+next;
+input .@pass$;
+if( callfunc("SS_PW",$@serv_mode,1,1,.@pass$) == 1 ) {
+	set #security_pass,1;
+	sc_end 112;
+	pcblockmove getcharid(3),0;
+	percentheal 100,100;
+	atcommand "@unjail "+strcharinfo(0);
+	goto PW_PASS;
+}
+mes .@n$;
+mes "The Password you typed is wrong.";
+mes "Your Account will be blocked now.";
+close2;
+atcommand "@block "+strcharinfo(0);
+end;
+}
+
+function	script	SS_PW	{
+// getarg(0) == Server Mode
+// getarg(1) == Data Type
+//   - 1= Read
+//   - 2= Write
+// getarg(2) == Read/Write Type
+//   - 1=PW
+//   - 2=IP (SQL only)
+//   - 3=New Entry
+// getarg(3) == Data Value
+switch(getarg(2)) {
+	case 1: 
+	if(getarg(0) == 1) { // SQL Mode
+		if(getarg(1) == 1) { // Data Type - Read
+			query_sql "SELECT `pass` FROM `security_sys` WHERE `account_id` = '"+getcharid(3)+"'",.@sec_pass$;
+			if(getarg(3) == .@sec_pass$) return 1;
+			else if(getarg(3) == "mode") 
+				if(.@sec_pass$ == "") return -2;
+				else return .@sec_pass$;
+			else return -1;
+		
+		} else if(getarg(1) == 2) // Data Type - Write
+			query_sql "UPDATE `security_sys` SET `pass` = '"+escape_sql(getarg(3))+"' WHERE `account_id` = '"+getcharid(3)+"'";
+		
+		return;
+		
+	} else if(getarg(0) == 0) { // TXT Mode
+		if(getarg(1) == 1)  // Data Type - Read
+			if(getarg(3) == #sec_pass$) return 1;
+			else if(getarg(3) == "mode") 
+				if(#sec_pass$ == "") return -2;
+				else return #sec_pass$;
+			else return -1;
+		else if(getarg(1) == 2) // Data Type - Write
+			set #sec_pass$,getarg(3);
+		
+		return;
+	}
+	
+	case 2:
+	// Checking if the server mode is SQL and checks the IP's afterwards
+	if(getarg(0) == 0) return 1;
+	if(getarg(1) == 1) { // Data Type - Read
+		query_sql "SELECT `last_ip` FROM `login` WHERE `account_id` = '"+getcharid(3)+"'",.@last_ip$;
+		query_sql "SELECT `last_ip` FROM `security_sys` WHERE `account_id` = '"+getcharid(3)+"'",.@last_ip2$;
+		if(.@last_ip$ == .@last_ip2$) return 1;
+		else { 
+			set @ip_n,1; // Got new IP > Update after Password Check passed
+			set @ip_new$,.@last_ip$; // IP Itself
+			return -1;
+		}
+		
+	} else if(getarg(1) == 2) // Data Type - Write
+		query_sql "UPDATE `security_sys` SET `last_ip` = '"+getarg(3)+"' WHERE `account_id` = '"+getcharid(3)+"'";
+	
+	case 3:
+	if(getarg(0) == 1) { // SQL Mode
+		query_sql "SELECT `last_ip` FROM `login` WHERE `account_id` = '"+getcharid(3)+"'",.@last_ip$;
+		query_sql "INSERT INTO `security_sys` (`last_ip` , `account_id` , `pass`) VALUES ('"+.@last_ip$+"' , '"+getcharid(3)+"' , '"+escape_sql(getarg(3))+"')";
+	
+	} else if(getarg(0) == 0) // TXT Mode
+		set #sec_pass$,getarg(3);
+		
+	return;
+}
+}

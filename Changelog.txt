@@ -1,0 +1,751 @@
+// ================= SVN Changelog - GoogleCode =======================
+// = Creator: h0und3y3@gmail.com - Houndeye aka llchrisll
+// = Usage: Athena Scripts
+// = User Profile: 
+//   eAthena: http://www.eathena.ws/board/index.php?showuser=245180
+//   rAthena: http://www.rAthena.org/board/user/402-llchrisll
+// ====================================================================
+// ================== Flag Legend (since 2012/02/28) ==================
+// These flags will only appear in the SVN Log Messages and here, which also defines
+// the folder in which the scripts are. 
+// Also this will the order how the scripts will be finished:
+// = [IC] > Info collection or Request
+// = [WIP] > Work-In-Progress
+// = [UT] > Untested = Finished Scripts, but untested
+// = [TE] > Tested = Tested, but unreleased
+// = [RE] or [REQ]:
+// = > Released = Tested and released
+// = > Request = Tested and will not be released officially
+// ====================================================================
+// ================= Line Indicator (since 2013/10/09) ================
+// *: Date
+// =: Which script has been changed
+// -: Which part of the script
+//   .: More details / *: More details (previous)
+// ?: Comment by me
+// ====================================================================
+// ========= The latest updates will always be on top!!! ==============
+// ====================================================================
+* 2014/11/17
+= Updated Quest System v1.0 [UT]
+- Small bug fixes, continue testing...
+= Uncanceled Party EXP System v1.0 [UT]
+- Rewriting code
+------------------------------------------------------------
+* 2014/09/16
+= Updated PvP-GvG-MvP Arena v1.5 [RE]
+- Rewrote the whole check at the Party PvP, also fixxed the check for 
+  online party member counting > misplaced the variables for "isloggedin" ... - Thanks to Lelantos for the bug report
+= Updated InGame Board v1.1 [RE]
+- Fixxed an bug at the Double-Post prevention by checking an array
+  if there was no previous comment which was resulting in an endless error.
+  Thanks to n0stalgia for the bug report.
+- Exchanged "@" variables into ".@" ones, was saving to much data on the char
+- Modified the comment feature, so that an GM comment is already approved.
+- Exchanged "getgmlevel" to "getgroupid" to make it a bit more compatible with rAthena
+= Updated Broadcaster v1.3 [RE]
+- Fixxed Problem about location > # instead of the : after Global/Map in the Instructions NPC
+  Thanks to junjun7981 for the bugreport
+------------------------------------------------------------
+* 2014/07/20
+= Updated PvP-GvG-MvP Arena v1.5 [RE]
+- Fixxed an Arena Shop bug by using $@arena_pay = 2 (Permanent Price Array)
+  - Thanks for Lelantos for that bug report.
+------------------------------------------------------------
+* 2014/05/04
+= Updated PvP-GvG-MvP Arena v1.5 [RE]
+- Added Custom Bounty Map Feature, see line around '861'
+- Added to the Bounty Hunter an Locater, which locates the player...
+- Fixxed an bug about the Bounty Hunter, forgot to reset the @hunt variable
+- Removed First Blood completely
+- Removed Chat Block part completely + OnPCMapLoadEvent
+------------------------------------------------------------
+* 2014/04/17:2
+= Updated ToDO_List.txt
+- Forgot that -.-
+------------------------------------------------------------
+* 2014/04/17
+= Updated Quest System v1.0 [UT]
+- Finished the whole script
+  > Made it shorter than it would have been
+- Moved, see FLAG.
+- Testing now....
+------------------------------------------------------------
+* 2014/04/15
+= Updated Quest System v1.0 [WIP]
+- Quest Progress Code 100%
+- Quest NPC Template as next
+  - Quest Accepting/Aborting
+  - Adding the Quest Progress Code also
+    > Maybe function later
+  - Quest Delay + Quest Limit code
+------------------------------------------------------------
+* 2014/04/14
+= Updated Quest System v1.0 [WIP]
+- Trying to add Quest Progress and Brainstorming stuff
+------------------------------------------------------------
+* 2014/04/13
+= Updated Quest System v1.0 [WIP]
+- Finished Quest Adding and Deleting
+------------------------------------------------------------
+* 2014/04/10:2
+= Moved Monster Slaughter v1.0 [REQ]
+- into the unreleased/request folder
+= Updated Last Man Standing v1.0 [TE]
+- Fixxed an small bug, which allowed to recieve the reward as much as you want
+= Updated Broadcaster v1.2 [RE]
+- Small change about the code
+= Updated PvP-GvG-MvP Arena v1.5 [UT]
+- Moved the script in the untested folder
+- Forgot something to change about the modification ;I
+------------------------------------------------------------
+* 2014/04/10
+= Updated PvP-GvG-MvP Arena v1.5 [WIP]
+- Finalized modification, testing left
+------------------------------------------------------------
+* 2014/04/08
+= Updated PvP-GvG-MvP Arena v1.5 [WIP]
+- Rewrote the function to a better version
+------------------------------------------------------------
+* 2014/04/07:2
+= Updated PvP-GvG-MvP Arena v1.5 [WIP]
+- Small progress in the modification
+------------------------------------------------------------
+* 2014/04/07
+= Updated Guild Ranker v1.2 [RE]
+- Removed an unnecessary "}" at line 164, don't know how that appeared though o.o.
+= Updated Training System v1.0 [RE]
+- Fixxed an bug with the delay function (Thanks to Isaiah for the bug report)
+= Added a copy of PvP-GvG-MvP Arena v1.4 [RE]
+- Trying to add a custom bounty map feature, where you can put other maps other than the default ones
+  to recieve the bounty in, like WoE maps. (Thanks to Lelantos for the idea)
+  When this is working, it will be v1.5 ;)
+------------------------------------------------------------
+* 2013/10/15
+= Updated Mob Invasion v1.0 [RE]
+- Fixxed major bugs
+  . Login Announcer, which towns are being invaded
+  . Map Check, to check where the player is on to update the correct variables
+    when he/she kills an monster
+  . Monster Spawning in an Multiply Invasion, somehow he wanted to spawn monsters which weren't set
+- Added Specific Map Option to Single Invasion
+  . Options are Random (Default), Big or Small Maps, which exactly will be done per Array Index
+- Edited Author Header
+- Added an missing end; at line 371
+= Removed Guild Rewarder v1.0 [WIP]
+? Didn't work like it should, aborted
+= Removed following from the ToDo_List.txt:
+- TCG Trader v1.0 [TE]
+- Training System v1.0 [RE]
+- Guild Rewarder v1.0
+- Mob Invasion Event v1.0 [RE]
+- PvP-GvG-MvP v1.2 [RE]
+------------------------------------------------------------
+* 2013/10/09
+= Modified Training System v1.0 [RE]
+- Removed Uncustomized Weapon Feature
+  ? Stupid Idea
+------------------------------------------------------------
+* 2013/10/04
+= Modified Training System v1.0 [WIP]
+- Removed Stats Bonus Calculation, above Level 9 it was even less bonus
+- Tested SQL Support
+- Tested Bound Type Change (Account < > Per Char)
+- Fixxed two bugs in the Weapon Mastery, minor bugs but still...
+- Added specialeffects when Equip Bonus is applied
+- Modified Equip Bonus:
+  * Boost for Equipment > Stats Food to DEF Boost
+  * Also added sc_end to remove the boosts before applying newer ones.
+- Modified Uncustomized Weapon Feature:
+  * Changed the autoequip part in the Weapon Mastery Training, had the wrong code :I
+  * Added Debug and GM Panel Options for it
+  * Removed an part > Using an completely different weapon, but still the same type and weapon level
+  * Tested it of course
+- Changed FLAG: [WIP] > [TE]
+----------------------------------------------------------
+* 2013/07/30
+= Updated and Moved PvP-GvG-MvP Arena 1.4 [RE]
+- Fixxed an bug with Auto-Resurrect on Deathmatch Maps
+- Fixxed another Ranking bug, didn't display correctly
+? Finally I managed to finish testing it... No bug anymore, so far...*_*
+----------------------------------------------------------
+* 2013/07/29
+= Moved the whole "untested" folder from "unreleased" to the SVN Root
+= Updated PvP-GvG-MvP Arena v1.3 [RE]
+- Compatible with rAthena
+- Fixed some bugs
+- Made the Sphree Announcer dynamically
+- Made modification regarding the sphree ranking, removed doPromote; function
+- Shorted the ranking display choices
+- Moved writeStats; into the kill part, bug with Logout prevented from saving in ranking
+- Fixed an bug with "First Blood" announcer
+- Updated the MvP Ranker to rAthena @getmonsterinfo has an check for MvP EXP now
+  * Removed MvP Arena limitation
+- Fixxed Ranking bug, didn't save Kills and stuff correctly.
+- Added an addtional Player Counter for each PvP Room
+- Added Class Limitation regarding 3rd Jobs
+= Modified Private Gold Room v1.0 [REQ]
+- Simplified some checks
+- Renamed the variable in line 49 to .GRB_Room
+  - Fixxed an bug, script was letting player join even if the registration was closed
+= Modified Training System v1.0 [UT]
+- Moved "Apply Equip Bonus" along with the payment into the "Mastery Trainer"
+- Added the following to the GM Panel:
+  * Option to change the Bounding Type
+  * Option to configure INT Mastery Settings
+  * Option to configure DEX Mastery Settings
+  * Option to configure Equip Bonus Settings
+- Added Option to VIT Mastery Settings to choose the Mob Spawn Type (Single/Multiply Mobs)
+- Updated the variable ".l_mob" to 3500 regarding the updated mob_db.txt
+- Added an check to inform the player when the Equip Bonus Payment has worn out
+- Changed Effect Applying parts, added duration variables seperatly
+- Changed the Bounding Type Updater
+- Fixed some typos and bugs
+= Modified EC Card System v1.0 [WIP]
+- SQL Table:
+  * Renamed `ec_id` and `ec_id2`to `send_id` and `rec_id`
+  - Removed `send_name` and `reciev_name`
+  + Added `usage` and `status`
+- Simplified GM Level check
+- Changed Menu layout, added seperate menu "Account Management"
+- Removed "WITH_FUNC", "DEPO_FUNC" and "TRANS_FUNC" > Unneeded
+- Added Withdraw, Deposit and Transfer Option, as well an Transfer List
+- Removed TxT Support > would be too complicated, well it would have been possible though
+- Added OnPCLoginEvent: to inform the player of remaining Transfers/Transactions, which are to be accepted manually
+- Added an Transfer Limit and Zeny Limit (how much you are allowed to hold for withdrawal)
+- Rewritten the "MONEY_FUNC" to suit it's original purpose
+- Removed OnWhisperGlobal
+= Modified Class PvP v1.0 [UT]
+- Added an array to store the Map with Coordinates
+- Added "setnpcdisplay" to display the Classes which can fight in it
+= Modified GM Manager v1.0 [UT]
+- Some small changes and edits
+= Moved the following scripts into:
+  * untested:
+    - Mob Invasion v1.0 [UT]
+    - PvP-GvG-MvP Arena v1.2 [UT] - Finalizing
+  * unreleased/snippets:
+    - lvlcap_stats_reset.txt - Stats Reset on Max Base Level Change
+= Updated ToDo_List.txt - Removed ToDo's from my Server
+----------------------------------------------------------
+* 2013/04/14
+= Modified Fame System v1.2 [RE]
+- Fixxed the GM check in the first lines
+= Added Soul Linker v1.0 [TE]
+- An NPC which gives an Soul Link for an fee.
+----------------------------------------------------------
+* 2013/04/13
+= Updated Fame System v1.2 [RE]
+- Compatible with rAthena now
+- Fixxed some bugs and made some small edits
+----------------------------------------------------------
+* 2013/04/08
+= Modified PvP-GvG-MvP Arena v1.1 [RE]
+- Shorted the sphree part a bit, still testing it.
+- Added an Cost Multiplier for the shop to adjust the prices for Mid Rate and higher Servers.
+- Added another function to get the map users in each room and each pvp.
+= Modified Training System v1.0 [UT]
+- Exchanged "getmapmobs" with "mobcount", cause it isn't supported in rAthena anymore.
+= Modified Euro Exchanger v1.0 [RE]
+- Added checkweight at Zeny to Euro Transfer option
+- Added OnInit:, exchanged the ".@" config variables to "." and moved the config after it
+= Added 3 new folders and moved scripts into them:
+- canceled:
+  * Party Exp System v1.0 [WIP]
+- snippets:
+  * AutoItem v1.0 [TE]
+  * Custom Mob Drop v1.0 [TE]
+  * Guild Member Status v1.0 [TE]
+  * Killing PvP v1.0 [TE]
+  * Server Time v1.0 [TE]
+  * PvP Casher v1.0 [TE]
+    ? Fixxed the Map Restriction part
+    ? Added an feature to lose Cash Points if you get killed
+- testing_stuff:
+  * Class Viewer v1.0 [TE]
+  * Loop Tester v1.0 [TE]
+= Modified Global Banker v1.0 [TE]
+- Changed something with the NPC Name
+= Modified WoE Information v2.1 [TE]
+- Fixed an typo
+= Modified GM Manager v1.0 [UT]
+- Added an check if your GM House uses more than one map.
+- Fixed GM Shop
+- Changed the Position Check part
+= Added EC Card System v1.0 [WIP]
+- An Bank script which has the feature to log every transaction.
+= Updated ToDo_List.txt
+----------------------------------------------------------
+* 2013/01/14
+= Modified Training System v1.0 [UT]
+- Weapon Mastery: 
+  * Added an check which prevents the script to spawn the Emperium (1288)
+  * Fixed MvP Usage Problem
+  * Fixed Announce text after Training Completion
+  * Added some lines to the "Information" part about the MvP Usage being active or not.
+- Equip Bonus:
+  * Splitted the Status Bonus in an extra NPC with OnWhisperGlobal and OnPCLoginEvent
+  * Added GM Panel Options for it, which were missing.
+  * Changed the Information part of it
+  * Added an variable to check if the player paied for the bonus to use it.
+  * Moved the Equip Bonus part in the Main NPC after "Information", which
+    shows it in the menu only when the Equip Bonus State is 1
+  * Added at the OnPCLoginEvent an check and announce to tell the player if the payment for it
+    has worn off or not
+  * Merged Weapon Bonus with Equip Bonus
+  * Added "dispbottom" to Weapon Bonus to show the boost and removed the "/10" from the
+    calculation, the training should show it results afterall :I
+* 2012/12/21
+= Modified PvP-GvG-MvP Arena v1.1 [RE]
+- Fixxed an Bounty bug - Bounty bonus wasn't added
+  - Added an mapannounce to announce the end of the Bounty Hunt
+- Changed the First Blood part
+- Changed the Chat Blocking part - "0: Forbidden" > "2: Forbidden"
+  - Since arrays don't see 0 as an valid value....
+  - Added Mapflags instead that MANNER system
+- Exchanged "sc_end SC_ALL;" with "unitskilluseid getcharid(3),"SA_DISPELL",5;"
+  for Dispell PvP.
+- Added an point reset when opening the Shop, so the real value will be used.
+- Added two lines to show how many Bounty Points are available.
+- Added a line to show how many Cash Points are available when using the Arena Shop.
+- Exchanged the query_sql to get the bounty points with "@pts" from the time the shop
+  has been opened.
+= Deleted GM Office v1.0 [WIP] (GM-office.txt)
+- Merged with my GM Manager so not needed anymore.
+= Modified Quest System v1.0 [WIP]
+- Added Raw SQL Table in the Header
+- Added an NPC List with an Quest Counter of each NPC
+- Added Quest Creation/Deletion Part - copied from my Fame System...
+- Added Mob and Item Settings at OnInit
+= Modified Fame System v1.1 [RE]
+- Had ";" at the shops at the end of the file :O
+= Modified Virtual Security Password System v1.2.1 [RE]
+- Added prevention to use "ALT+M" shortcuts and dying via 
+  Attacks like Mob or PvP Maps after Login until the security password has been put
+= Modified Security System v2.0 [RE]
+- Added prevention to use "ALT+M" shortcuts and dying via 
+  Attacks like Mob or PvP Maps after Login until the security password has been put
+- Fixed some typos and added missing checks in the function
+- Removed OnInit: from the SS_PW_Login NPC, renamed . variables into .@ and moved them after OnPCLoginEvent
+- Renamed .serv_mode into $@serv_mode
+- Renamed "ip_n" and "ip_new$" into @ variables, no need to save them permanently
+- Kinda can't fix that "npc_click: npc_id != 0" error :I, Login NPC is -1 already.
+- Moved from "released/sql-based" into "released"
+- TESTED AND WORKING, except that error above = Ignore it until I can finally fix it.
+= Modified Vote NPC v1.1 [RE]
+- Added missing check for Vote Limit (once per acc or after delay)
+= Modified Training System v1.0 [UT]
+- Added variables for Mob Spawn Coordinates in Weapon Mastery
+- Added also debug lines and GM Panel settings for that
+- Fixed some bugs in Weapon Mastery
+- Added an Mob Counter in Weapon Training
+- Fixed two Weapon Mastery Bugs, which didn't save the progress
+  and listed the wrong progress at the beginning.
+- Added an WoE Castle Treasure Chest check to prevent them to spawn. :I (resulted in an error for me o.o)
+- Added an quantity limiter for MvP Spawning when allowed.
+- Exchanged "killmonster .map$,"All";" with "killmonsterall .map$;"
+- Added an check in case monsters are still left on the practice map from the weapon training.
+- Exchanged "strmobinfo(" with "getmonsterinfo("
+- Added an Uncustomized Weapon Setting, which gives you an Weapon without Refine and Cards.
+- Test Progress: ~80% Weapon Mastery is kinda buggy
+= Modified GM Manager v1.0 [UT]
+- Finished the whole NPC
+- Added GM Shop and GM Caller in the GM Office itself.
+----------------------------------------------------------
+* 2012/11/18
+= Modified Security System v2.0 (SQL) [RE]
+- Fixed bugs and added an info when the Server Mode has been changed
+- ToDo: Password Recovery Feature
+- Fixed some typos
+- Testing TxT Version....
+= Modified Training System v1.0 [UT]
+- Splitted the OnPCLoginEvent into an seperate NPC > Error Warning: npc_id != 0
+- Fixed an typo
+- Changed strmobinfo(1,.str_mid) in the debug part into getmonsterinfo(.str_mid+.@m,0) == "null"
+  - .@m is from the for-loop
+= Added WoE Kill Point System v1.1 [REQ] (UNTESTED)
+- Scripted the requested modifications
+  ----------------------------------------------------------
+* 2012/11/04
+= Modified Last Man Standing v1.0 [TE]
+- Just added "Tested with" in the NPC Header.
+- Well final testing and ready to release!!!
+= Modified Security System SQL v2.0 [RE]
+- Changed Map to prontera, still had mine in it.
+- Edited some lines with "if( SS_PW(.serv_mode,1,1,.@pass$) ) goto PW_Pass;" and
+  added "== 1" after ".@pass$)"
+- Added missing function part > Setting up a new Password was still in the old way.
+- Switched "set .@sec_pass$,#sec_pass$;" > "set #sec_pass$,getarg(3);"
+- Cleaned the Login checks a bit, now better overview :I
+- Tested and working so far, but let me test it again, just in case.
+= Modified Training System v1.0 [UT]
+- Finalized Debug section
+- Now adding GM Panel, which changes will be effective until Server Restart or Script Reload.
+  Didn't want to use $ variables...
+- Every Status Mastery works so far, now testing Weapon Mastery
+- Added Equip Bonus Requirements - See OnInit > .equip_req and .equip_r_am
+- Changed DEX Mastery by adding to possiblity how to move the NPC, see "DEX Training" > OnInit
+- Also I had to see that the aspd part wasn't working like I wanted, so I changed that as well.
+= Modified PvP-GvG-MvP Arena v1.1 (SQL) [RE]
+- Fixxed an Bounty bug - Thanks to raijin91
+  = Also the bounty bonus wasn't added, kinda forgot that it seems -.-.
+- Changed the First Blood thingy
+- Changed the Chat blocking part
+= Modified Global NPC Handler v1.0 [RE]
+- Just added "Tested with" in the NPC Header
+----------------------------------------------------------
+* 2012/10/23
+= Modified PvP Casher v1.0 [UT]
+- Added variables to set "Deathmatch", "Cash Points Gain" and "Map Restriction" settings (See OnInit)
+- Edited NPC Header accordingly.
+= Modified Item Trader v2.0 [TE]
+- Forgot to update the bug-fix.
+- Removed the Waiting Room.
+= Modified NPC Global Handler v1.0 [RE]
+- Changed names of some variables from $@ to .
+- Config NPC's are now enable/disable as well
+- Removed at OnScriptUnload: the "atcommand "@unloadnpc "+.conf_npc$;" part
+  I think that was the crash issue, and added it to the Unload Section at the NPC Handler
+  Still have to test it though.....
+- Modified the 4 OnScriptxxxx so that the config NPC will be unload/enabled/disabled as last one.  
+= Modified Fame System v1.1 [TE]
+- Added missing reset part after completing an quest
+- Added Reset Quest Delay Option to GM Panel, Quest Overview and Quest Counter Reset Option to Quest Management menu
+- Moved Class Selection at Quest Management after Quest Quantity List
+- Modified the checks at OnNPCKillEvent:
+- Fixed an typo at Fame Gaining in the function, I forgot to add the new fame, instead it was setting it
+- Changed the "mes" at Progress Displaying by whispering at the NPC into "dispbottom", no need to open a window for that :P
+= Modified InGame CP v1.2 [RE]
+- Fixxed an SQL Syntax Error at Line 185 > "`hair` , `hair_color` , `clothes_color` = '0' , '0' , '0'"
+= Modified Security System SQL v2.0 [RE]
+- Shortened a bit and made it more dynamically
+- Removed OnWhisperGlobal and merged everything into 1 NPC
+- Renamed variables (always temp character variables ....)
+- Didn't test it, so don't use it yet please.
+= Added new folder "request" in "unreleased" folder, also new FLAG "[REQ]", read Flag Legend for more info.
+- Any script which was an request and won't release officially will be put here.
+- Moved the following scripts in there:
+  - 3rd Job Changer v1.0 [REQ] & 3rd Baby Job Changer v1.0 [REQ]
+    - Added NPC Headers....
+  - Freebie NPC v1.0 [REQ]
+  - Private Gold Room v1.0 [REQ]
+  - Item Trader v2.0 [REQ]
+  - Rebirth Reseter v1.0 [REQ]
+  - Reset Master v1.0 [REQ]
+  - Valkyrie Helm Trader v1.1 [REQ]
+----------------------------------------------------------
+* 2012/10/14
+= Modified Private Gold Room v1.0 [TE]
+- Shortened the registration time to 3 minutes.
+- Changed the gold creation on the floor to an easier way.
+- Shortened the waiting time till Battle Start to 10 seconds.
+- Shortened the time in the Gold Room to 1 minute by default.
+- Added an check in case the ".pvp$" has already PvP active and
+  the players are able to attack during the registration time.
+- Changed the part when the time in the Gold Room is over.
+= Modified Weekly Wipe [UT]
+- Moved to unreleased folder.
+- Added NPC Header.
+= Modifed Guild Ranker v1.2 [RE]
+- Removed an "," at line 776 after "`woe`"
+= Modifed AutoItem v1.0 [TE]
+- Just edited the line of format > removed TABs
+= Modified ToDo_List.txt
+- Removed the following:
+  - Gold Room PvP v1.0 (Wrong name anyway ;I)
+  - Weekly Wipe v1.0 (SQL)
+  - Last Man Standing Event v1.0
+  - Weekly EXP Bonus v1.0
+= Modifed Quest System v1.0 [WIP]
+- Added SQL Tables at the NPC header.
+- Modifed the "Overview" by adding an list of the current NPCs.
+- Fixxed some typos
+- Added the quest part as well quest settings (See OnInit part)
+= Moved the following scripts, see FLAG:
+  - Party EXP System v1.0 [UT]
+  - Training System v1.0 [UT]
+  - 3rd Job Changer without Baby v1.0 [TE]
+  - 3rd Job Changer with Baby v1.0 [TE]
+  - AutoItem v1.0 [TE]
+  - Private Gold Room v1.0 [TE]
+  - Last Man Standing Event v1.0 [TE]
+  - TCG Trader v1.0 [TE]
+  - Weekly Wipe v1.0 (SQL) [TE]
+  - Weekly EXP Bonus v1.0 [TE]
+----------------------------------------------------------
+* 2012/10/05
+= Modified Party EXP System v1.0 [WIP]
+- Removed the part when the leader logs out, the party will be
+  deleted from the NPC.
+- Finalized the Party Counter part for the menu - I hope it works thought :O.
+= Updated ToDo_List.txt.
+----------------------------------------------------------
+* 2012/09/24
+= Modified Party EXP System v1.0 [WIP]
+- Tried to script the menu part with party quantity on each map.
+= Forgot to update the SVN Log from the previous commit.
+= Modified Fame System v1.0 [UT]
+- Changed File Header, forgot that as well >->
+----------------------------------------------------------
+* 2012/09/14
+= Added Quest System v1.0 [IC]
+- Similar to the script Mission Board from Anneruru, the idea is.
+- Via the Quest Manager you can easily add any quest to any NPC.
+= Modified ToDo_List.txt
+----------------------------------------------------------
+* 2012/08/27
+= Modified Fame System v1.0 [UT]
+- Completed the shop and quest part
+- Added Level restriction for Monster Hunting
+- Now testing...
+= Moved Class Viewer v1.0 [TE]
+= Modified Training System v1.0 [WIP]
+- Completed SQL Support, but untested yet
+= Moved the following, see Flags for new location:
+- Fame System v1.0 [UT]
+- Last Man Standing Event v1.0 [UT]
+- Newbie Guide v1.0 (Template) [UT]
+- Class Viewer v1.0 [TE]
+- Item Trader v2.0 [TE]
+- Reset Master v1.0 [TE]
+- Valkyrie Helm Trader v1.1 [TE]
+= Modified Class PvP v1.0 [UT]
+- Forgot to add the "setarray" for .map$, <_<
+----------------------------------------------------------
+* 2012/06/11
+= Modified Fame System v1.0 [IC]
+- Edited the quest part at the GM Panel
+----------------------------------------------------------
+* 2012/06/10
+= Modified Training System v1.0 [WIP]
+- Added SQL Support, but not completed
+- Added Debug section, also not completed
+= Added Fame System v1.0 [IC]
+- Gaining Fame by completeting "Fame Quests", class depended
+- Maybe later a quest system...
+= Added an modified MvP Summoner by Rikimaru.
+= Added Class Viewer v1.0 [UT]
+- Shows the values of "BaseClass","BaseJob" and "Class" on click.
+----------------------------------------------------------
+* 2012/04/25
+= Modified Training System v1.0 [WIP]
+- Finished the ".solo" and ".class" parts, also changed the "DATA_D-M" function a bit.
+- Added some more "Information"
+- Scripted the STR Training
+- Added an check,".wm_mvp" for allowing the usage of MvPs or not
+- Added the possiblity to have global warp cooardinates for the practice map, else STR,VIT and DEX has their own variables.
+- Fixed some typos and gonna-be bugs
+= Removed Server Time v1.0 [RE] from "released/for-fun" folder
+- It wasn't released also it wasn't updated correctly.
+= Modifed NPC_Headers.txt
+- Added a line with which SVN it was tested
+----------------------------------------------------------
+* 2012/04/17
+= Modified Training System v1.0 [IC]
+- Already writing the whole NPC Script as base
+- Added new config options:  Delay, function for saving and reading player data
+- Added DEX Training part
+- Now trying to script the ".solo" and ".class" parts, damnit... D;
+----------------------------------------------------------
+* 2012/04/13
+= Modified Training System v1.0 [IC]
+- Changed countdown calculation for VIT practice
+----------------------------------------------------------
+* 2012/04/10
+= Modified Training System v1.0 [IC]
+- Added snippets for VIT training
+----------------------------------------------------------
+* 2012/04/08
+= Modified Training System v1.0 [IC]
+- Added snippets for LUK training, also edited the effect applying part.
+----------------------------------------------------------
+* 2012/04/03
+= Modified Training System v1.0 [IC]
+- Added some more ideas and ways to script this.
+----------------------------------------------------------
+* 2012/04/01
+= Updated and moved Monster Slaughter v1.0 [TE]
+- Finished testing. Working fine.
+- Moved from "untested" to "unreleased"
+= Added Training System v1.0 [IC]
+- Brainstorming...
+----------------------------------------------------------
+* 2012/03/31
+= Modified Monster Slaugther v1.0 [UT]
+- Opens an portal to a map with lots of mobs, no skills allowed. Portal stays 10 mins.
+- Testing...
+= Modified Server Time v1.0 [TE]
+- Added an "while" to check if the second is an parallel number like 5,10,... if .delay is "5"
+= Modified Party EXP System v1.0 [WIP]
+- Party removal only when leader logs out or removes the party from the list.
+- Gonna remove the map checks, unimportant.
+- Adding an party overview how many partys are on each map via function, displayed in the menu it creates each useage.
+----------------------------------------------------------
+* 2012/03/26
+= Modified Party EXP System v1.0 [WIP]
+- Fixed the bug with not recieving any EXP when an party member kills an mob
+- Now trying to fix other bugs
+= Modified Private Gold Room v1.0 [WIP]
+- Trying to fix the bug about the gold to be dropped, "0,0" cooards doesn't work it seems...
+- Added a waiting room to display how many fighters are left on the battlefield. (Just for fun I guess D;)
+= Added Monster Slaughter v1.0 [WIP]
+- This is a request via an rAthena PM
+- Testing...
+= Modified Last Man Standing v1.0 [WIP]
+- Fixed some typos and tested the Job & Level restrictions a bit...
+= Moved Guild Rewarder v1.0 [WIP] & Reset Master v1.0 [WIP]
+- To "untested" folder: [WIP] > [UT]
+----------------------------------------------------------
+* 2012/03/23
+= Modified Guild Ranker v1.2 [MySQL] [RE]
+- Removed an bracket "{" which was too much at line 163.
+----------------------------------------------------------
+* 2012/03/16
+= Modified Private Gold Room v1.0 [WIP]
+= Added NPC Header examples
+----------------------------------------------------------
+* 2012/03/08
+= Modifed Last Man Standing v1.0 [WIP]
+- Fixed bugs by testing
+= Added Private Gold Room v1.0 [IC]
+- A battle over an gold room, which occures on every ".delay" days.
+- Players can visit their gold room for ".dur" minutes, there is no time restriction.
+----------------------------------------------------------
+* 2012/03/06
+= Modified Last Man Standing v1.0 [WIP]
+- Added the possiblity to edit the event settings InGame, which an variable checks if it is allowed to or not > .conf
+- Added explanation on my weird Upper flag settings for the job restriction
+= Modified Party EXP System v1.0 [WIP]
+- Fixed small typo
+----------------------------------------------------------
+* 2012/03/03
+= Modified Last Man Standing v1.0 [WIP]
+- Changed .@job_l$ to .job_l$
+- Removed '""+' in getd(""+.rew_var$) and setd(""+.rew_var$), were unnecessary...
+----------------------------------------------------------
+* 2012/02/28
+= Modified Newbie Guide v1.0 [WIP]
+- Finished the main script, info missing
+----------------------------------------------------------
+* 2012/02/27
+= Updated Last Man Standing v1.0
+- Edited the text at line 62 a bit
+= Moved a few scripts from unreleased/untested to unreleased/untested/WIP folder:
+- Guild Rewarder v1.0 (gld_rewarder.txt)
+- Last Man Standing v1.0 (lms_event.txt)
+- Party EXP System v1.0 (pty-exp-sys.txt)
+= Moved a few scripts from unreleased to unreleased/untested folder
+- Auto Creation Item on Floor v1.0 (AutoItem.txt)
+- Level Cap & Stats Reset v1.0 (lvlcap_stats_reset.txt)
+- TCG Trader v1.0 (TCG_Trader.txt)
+- Weekly EXP Bonus v1.0 (WeeklyBonus.txt)
+= Modified ToDo List
+- Added my own server status I had on my computer (still in german though)
+= Added new Work-In-Progress Scripts in the unreleased/untested/WIP folder:
+- Newbie Guide v1.0 (newbie_guide.txt)
+- Weekly Wipe v1.0 (weekly_wipe.txt)
+= Added new folder "released" in root folder and moved finished scripts into it (for better overview)
+----------------------------------------------------------
+* 2012/02/26
+= Updated Last Man Standing v1.0
+- Changed again the registration part, moved restriction checks to registering part
+- Also removed effects, chat room and added a info for players if restrictions are enabled
+- Added some more debug lines, about the Upper flags
+- Edited Intravision duration (forgot that the variable is now in minutes)
+----------------------------------------------------------
+* 2012/02/24
+= Updated Last Man Standing v1.0
+- Changed the job restriction part
+- Added Debug lines after the main settings and "debugmes" to show if something has been reseted.
+- Changed mf_pvp mapflag to server command "pvpon <Map>;" and "pvpoff <Map>;", let's see how that works D:...
+- Fixxed an typo about .rew_type (had checks for "1" and "2" instead of "0" and "1", changed it global to "1" and "2" now.
+----------------------------------------------------------
+* 2012/02/21
+= Updated Last Man Standing v1.0
+- Rewrote the event start control
+- Fixxed an ")" unmatch in the info part (line 79), found by trying to test the script
+----------------------------------------------------------
+* 2012/02/20
+= New SVN Log Format, looks better in my opinion D:
+* Already thinking if I should do the same with this file or not
+- New File: +
+- Delete: -
+- Updated: *
+- Details: =
+= Updated Character Manager v1.1:
+- Edited "Author" field to the correct one, typo...
+- Uses now npc variables instead of server temporar ones
+= Updated 3rd Class Changer v1.1:
+- Had an Typo in the job calculation to 3rd Job for Gypsy (Job_Gyspsy > Job_Gypsy)
+= Added 3rd Job Changer v1.0
+- Let's 2nd Rebirth Classes jobchange into 3rd Class by passing the level requirement.
+= Added 3rd Baby Job Changer v1.0
+- Same as 3rd Job Changer v1.0, but for Baby Classes.
+= Added Class PvP v1.0
+- Job vs Job PvP Room
+= Updated Last Man Standing v1.0
+- Script complete, Bug Hunting Time!! Goddamn....xD
+- Moved to untested folder
+= Added Faction Menu on Login v1.0
+- Requires rAthena duo setfaction command
+----------------------------------------------------------
+* 2012/02/17
+= Added new folder for Work-In-Progress scripts
+= Added Last Man Standing v1.0 [WIP] (lms_event.txt)
+----------------------------------------------------------
+* 2012/02/15
+= Updated Valkyrie Helm Trader v1.1
+- 4th NPC had in the getitem2 and delitem2 one parameter too much
+----------------------------------------------------------
+* 2012/02/13
+= Updated & Renamed Valkyrie Helm Trader v2.0 (unreleased/untested/vh_trader.txt)
+- Last process done, debug phase!!
+- Renamed Valkyrie Helm Trader to Item Trader,vh_trader.txt to it_trader.txt
+= Added Character Manager v1.1 (for-fun/ch_manager_test_v1-1.txt)
+- Like Character Manager v1.0 this should only be used on test servers,
+  since it can set the Base and Job Level, swap Jobs, give free items
+  and so on. See 'OnInit' for config, where that can be adjusted.
+- v1.1 allows you do add cards to your equip after the refine.
+  See 'OnInit' for ".use_cards".
+= Modified: Changes in the NPC Header, had an typo in my name: lllchrislll > llchrisll
+= Added:
+- Dynamic Shop v1.0 (dynam_shop.txt)
+- Login Settings v1.0 (login_settings.txt)
+- PvP, GvG & MvP Arena v1.0 (pvp-gvg_mvp.txt)
+* /unreleased:
+   - Custom Banker v1.0 (banker_custom_en.txt)
+     * Access everywhere to your bank account.
+   - Class Changer v1.0 & Class Changer with 3rd Class v1.0 (class-changer.txt & class-changer_3rd.txt)
+   - Custom Drop v1.0 (custom_drop.txt)
+   - Rebirth Reseter v1.0 (rebirth_reseter.txt)
+   * / untested
+     - PvP casher v1.0 (pvp_casher.txt)
+= Seems like I forgot to add those...
+----------------------------------------------------------
+* 2012/02/12
+= Script Idea: Valkyrie Helm Trader with all 4 NPC's in one.
+= Updated
+- Used variables for the checks.
+- Menu creation is done, now giving the item to the user...
+----------------------------------------------------------
+* 2012/02/11
+= Updated Valkyrie Helm Trader v1.0 to v1.1 (unreleased/untested/vh_trader.txt)
+- Fixxed bugs & tested.
+----------------------------------------------------------
+* 2012/02/10
+= Added Valkyrie Helm Trader v1.0 (unreleased/untested/vh_trader.txt)
+- Request from vBrenth in the rAthena Board, see header for link.
+= Also moved the Freebie NPC to the "unreleased" folder.
+----------------------------------------------------------
+* 2012/02/09
+= Updated & Renamed Freebie Giver (unreleased/untested/rewarder.txt)
+- Rename: Freebie Giver to Freebie NPC, rewarder.txt to freebie_npc.txt
+- Bug Fixxed and tested!!
+----------------------------------------------------------
+* 2012/02/08
+= Updated Freebie Giver (unreleased/untested/rewarder.txt)
+- Added an type of ranking and fixxed some minor mistakes
+- Fixed some bugs, which revealed themself from testing.
+//==========================================================
+* Older Updates were not logged here,
+  since this files exists only since 2012/02/08.

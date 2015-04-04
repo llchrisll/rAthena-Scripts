@@ -1,0 +1,708 @@
+//===== eAthena Script =======================================
+//= Character Manager
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Made
+//		  Made some text modifings
+//= 1.1 - Added the possibility to add cards to the item.
+//		  OnInit: > ".use_cards" to 1 (default) to use it.
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= This script will be only usefull on Test Servers,,
+//= because it can set the players Level/Stat Points/Skill Points
+//= as well the Job. Also it can give you items.
+//= These functions are unlimited, except that you can
+//= Disable/Enable it who can use it, GM only or all.
+//===== Comments =============================================
+//= None yet
+//============================================================
+prontera.gat,160,192,4	script	Character Manager	108,{
+
+set .@n$,"[Character Manager]";
+set .@last_it,25077; // Highest Item ID
+
+mes .@n$;
+if(!.GMOnly || (.GMOnly && getgmlevel()) ) {
+	mes "What do you want to do?";
+	switch(select(.ch_man_m$)) {
+		
+		case 1:
+		next;
+		mes .@n$;
+		mes "What do you want to change?";
+		mes "^FF0000Note: The number in the";
+		mes "\"( X )\" is your current Level.^000000";
+		menu "Base Level ("+BaseLevel+")",C_BLevel,"Job Level ("+JobLevel+")",C_JLevel,"Nothing",L_Quit;
+		
+			C_BLevel:
+			next;
+			mes .@n$;
+			mes "The max Base Level you can";
+			mes "be is \""+.BLevel+"\"";
+			next;
+			input @new_base;
+			if(@new_base > .BLevel || !@new_base) {
+				mes .@n$;
+				mes "I'm sorry, but you have";
+				mes "put an invalid Level.";
+				close;
+			}
+			next;
+			set BaseLevel,@new_base;
+			mes .@n$;
+			mes "You're Base Level has been";
+			mes "changed. Thanks for using";
+			mes "this service.";
+			close;
+			
+			C_JLevel:
+			next;
+			mes .@n$;
+			mes "The max Job Level you can";
+			mes "be is \""+.JLevel+"\"";
+			mes "^FF0000Note: The Job Level is";
+			mes "Class depended and can't";
+			mes "increase over the";
+			mes "Server Settings.^000000";
+			next;
+			input @new_job;
+			if(@new_job > .JLevel || !@new_job) {
+				mes .@n$;
+				mes "I'm sorry, but you have";
+				mes "put an invalid Level.";
+				close;
+			}
+			next;
+			set JobLevel,1;
+			set SkillPoint,0;
+			set JobLevel,@new_job;
+			mes .@n$;
+			mes "You're Job Level has been";
+			mes "changed. Thanks for using";
+			mes "this service.";
+			close;
+		
+		case 2:
+		if(!.JobSwap) close;
+		next;
+		mes .@n$;
+		mes "Which Job do you want?";
+		menu "Normal",L_NC,"Transcendend",L_TC,"Baby",L_BC,"Rebirth",L_RC;
+		
+			L_NC:
+			next;
+			mes "Now type the number of the Job:";
+			mes "Normal Jobs are";
+			mes " ";
+			mes "Novice - 0";
+			mes "Swordman - 1";
+			mes "Mage - 2";
+			mes "Archer - 3";
+			mes "Acolyte - 4";
+			mes "Merchant - 5";
+			mes "Thief - 6";
+			mes " ";
+			mes "Super Novice - 23";
+			mes "Knight - 7/Crusader - 14";
+			mes "Priest - 8/Monk - 15";
+			mes "Wizard - 9/Sage - 16";
+			mes "Blacksmith - 10/Alchemist - 18";
+			mes "Hunter - 11/Bard - 19/Dancer - 20";
+			mes "Assassin - 12/Rogue - 17";
+			next;
+			input @job_num;
+			if(@job_num > 23) {
+				mes "Number 23 is the highest Class";
+				mes "within the normal Jobs.";
+				mes "If you want to succeed,";
+				mes "try a another job row.";
+				close;
+			} else if(@job_num == Class) {
+				mes .@n$;
+				mes "You are already the chosen";
+				mes "Class.";
+				close;
+			}
+			goto Job_Swap;
+			
+			L_TC:
+			next;
+			mes "Now type the number of the Job:";
+			mes "Transcended Jobs are";
+			mes " ";
+			mes "Gunslinger - 24";
+			mes "Ninja - 25";
+			mes "Taekwon - 4046";
+			mes "Star Gladiator - 4047";
+			mes "Soullinker - 4049";
+			next;
+			input @job_num;
+			if(Class == 24 || Class == 25 || Class == 4046 || Class == 4047 || Class == 4049) {
+				mes .@n$;
+				mes "You are already a";
+				mes Class;
+				close;
+			} else if(!(@job_num == 24 || @job_num == 25 || @job_num == 4046 || @job_num == 4047 || @job_num == 4049)) {
+				mes .@n$;
+				mes "The number you have put is invalid";
+				close;
+			}
+			goto Job_Swap;
+			
+			L_BC:
+			next;
+			mes "Now type the number of the Job:";
+			mes "Baby Jobs are";
+			mes " ";
+			mes "Baby Novice - 4023";
+			mes "Baby Swordman - 4024";
+			mes "Baby Mage - 4025";
+			mes "Baby Archer - 4026";
+			mes "Baby Acolyte - 4027";
+			mes "Baby Merchant - 4028";
+			mes "Baby Thief - 4029";
+			mes " ";
+			mes "Super Baby - 4045";
+			mes "Baby Knight: 4030";
+			mes "Baby Crusader: 4037";
+			mes "Baby Priest: 4031/Baby Monk: 4038";
+			mes "Baby Wizard: 4032/Baby Sage: 4039";
+			mes "Baby Blacksmith: 4033";
+			mes "Baby Alchemist: 4031";
+			mes "Baby Hunter: 4034";
+			mes "Baby Bard: 4042/Baby Dancer - 4043";
+			mes "Baby Assassin: 4035";
+			mes "Baby Rogue: 4040";
+			next;
+			input @job_num;
+			if(@job_num < 4023 || @job_num > 4045) {
+				mes .@n$;
+				mes "The lowest number is 4023 and";
+				mes "the highest is 4045.";
+				close;
+			} else if(@job_num == Class) {
+				mes .@n$;
+				mes "You are already a";
+				mes Class;
+				close;
+			}
+			goto Job_Swap;
+			
+			L_RC:
+			next;
+			mes "Now type the number of the Job:";
+			mes "Rebirth Jobs are";
+			mes " ";
+			mes "High Novice - 4001";
+			mes "High Swordman - 4002";
+			mes "High Mage - 4003";
+			mes "High Archer - 4004";
+			mes "High Acolyte - 4005";
+			mes "High Merchant - 4006";
+			mes "High Thief - 4007";
+			mes " ";
+			mes "Lord Knight: 4008/Paladin: 4015";
+			mes "High Priest: 4009/Champion: 4016";
+			mes "High Wizard: 4010/Professor: 4017";
+			mes "Whitesmith: 4011/Creator: 4019";
+			mes "Sniper: 4012";
+			mes "Clown: 4020/Gypsy: 4021";
+			mes "Assassin Cross: 4013/Stalker: 4018";
+			next;
+			input @job_num;
+			if(@job_num < 4001 || @job_num > 4021) {
+				mes .@n$;
+				mes "The lowest number is 4001 and";
+				mes "the highest is 4021.";
+				close;
+			} else if(@job_num == Class) {
+				mes .@n$;
+				mes "You are already a";
+				mes Class;
+				close;
+			}
+			
+			Job_Swap:
+			jobchange @job_num;
+			mes .@n$;
+			mes "You are now a";
+			mes jobname(@job_num);
+			close;
+			
+		case 3:
+		if(!.StatP) close;
+		next;
+		mes .@n$;
+		mes "Do you want to gain or delete Status Points?";
+		mes "Note: \"Delete\" removes every single point.";
+		next;
+		if(select("- Gain:- Delete") == 2) set StatusPoint,0;
+		mes .@n$;
+		mes "Type the amount of Status Points,";
+		mes "maximum is 10,000";
+		next;
+		if(input(@new_st,1,10000) != 0) {
+			mes .@n$;
+			mes "You have put an invald number,";
+			mes "lowest is 1 and highest is 10,000.";
+			close;
+		}
+		set StatusPoint,@new_st;
+		mes .@n$;
+		mes "You have recieved";
+		mes @new_st+" Status Points.";
+		mes "^FF0000Note: Be aware then this";
+		mes "can be affected by the Server Settings.";
+		close;;
+		
+		
+		case 4:
+		if(!.SkillP) close;
+		next;
+		mes .@n$;
+		mes "Do you want to gain or delete Skill Points?";
+		mes "Note: \"Delete\" removes every single point.";
+		next;
+		if(select("- Gain:- Delete") == 2) set SkillPoint,0;
+		mes .@n$;
+		mes "Type the amount of Skill Points,";
+		mes "maximum is 200.";
+		next;
+		if(input(@new_sk,1,200) != 0) {
+			mes .@n$;
+			mes "You have put an invald number,";
+			mes "lowest is 1 and highest is 200.";
+			close;
+		}
+		set SkillPoint,@new_sk;
+		mes .@n$;
+		mes "You have recieved";
+		mes @new_sk+" Skill Points.";
+		close;
+	
+		
+		case 5:
+		if(!.FreeItem) close;
+		next;
+		mes .@n$;
+		mes "Wanna type a Item ID by yourself or open our Shop?";
+		if(select("- Item ID:- Open Custom Shop") == 2) goto CH_Shop;
+		next;
+		mes .@n$;
+		mes "Type the Item ID which you want.";
+		input .@item_id;
+		next;
+		mes .@n$;
+		if(.@item_id < 512 || .@item_id > .@last_it) {
+			mes "I'm sorry, but you have put a invalid ID.";
+			close;
+		} else if(getiteminfo(.@item_id,3) == -1) {
+			mes "I'm sorry, there is no such item.";
+			close;
+		}
+		mes "Chosen Item: "+getitemname(.@item_id)+ ( (getiteminfo(.@item_id,10) > 0)?" ["+getiteminfo(.@item_id,10)+"]":"");
+		if(getiteminfo(.@item_id,2) != 4 && getiteminfo(.@item_id,2) != 5) {
+			mes "Now the quantity:";
+			input .@item_am;
+			next;
+			mes .@n$;
+			if(.@item_am < 1 || .@item_am > 30000) {
+				mes "I'm sorry, but you have put a invalid value.";
+				close;
+			}
+		} else {
+			set .@item_am,1;
+			next;
+			mes .@n$;
+		}
+			if(checkweight(.@item_id,.@item_am) == 0) {
+				mes "I'm sorry, but this will exceed your weight limit.";
+				close;
+			}
+			set @ref,0;
+			if(getiteminfo(.@item_id,2) == 4 || getiteminfo(.@item_id,2) == 5) {
+				mes "What refine do you want?";
+				next;
+				if(input(@ref,0,.max_ref) != 0) {
+					mes .@n$;
+					mes "Lowest 0, Highest "+.max_ref;
+					close;
+				}
+				mes .@n$;
+				if( set(@slot,getiteminfo(.@item_id,10) ) > 0 && .use_cards) {
+					mes "Do you want to add cards in it?";
+					if(select("- Yes:- No") == 1) {
+						close2;
+						set @n$,.@n$;
+						set @item_id,.@item_id;
+						set @item_am,.@item_am;
+						doevent "CH_CardShops::OnCardStart";
+						end;
+					}
+					next;
+					mes .@n$;
+				}
+			}
+			mes "You have recieved";
+			mes .@item_am+"x "+ ( (@ref)?"+"+@ref+" ":"") + getitemname(.@item_id);
+			getitem2 .@item_id,.@item_am,1,@ref,0,0,0,0,0;
+			close;
+		
+		CH_Shop:
+		callshop "CH_TestShop",1;
+		npcshopattach "CH_TestShop";
+		end;
+
+		OnBuyItem:
+		for( set @bid,0; @bid < getarraysize(@bought_nameid); set @bid,@bid + 1) {
+			for( set @sid,0; @sid < getarraysize(.cshop_id); set @sid,@sid + 1) {
+				if(.cshop_id[@sid] == @bought_nameid[@bid]) {
+					set @cost_item,(.cshop_cost[@sid]*@bought_quantity[@bid]);
+					set @cost_total,(@cost_total+@cost_item);
+					break;
+				}
+			}
+		}
+		if(@cost_total > Zeny) {
+			dispbottom "You don't have enough Zeny.";
+		} else {
+			for( set @buy,0; @buy < getarraysize(@bought_nameid); set @buy,@buy + 1) {
+				getitem @bought_nameid[@buy],@bought_quantity[@buy];
+			}
+			dispbottom "Thank you for shopping.";
+		}
+		set @cost_total,0;
+		deletearray @bought_nameid[0],128;
+		deletearray @bought_quantity[0],128;
+		end;
+		}
+	
+L_Quit:
+next;
+mes .@n$;
+mes "See ya soon.";
+close;
+
+} else {
+	mes "I'm sorry, but";
+	mes "you are not allowed to";
+	mes "use my service.";
+	close;
+}
+
+OnInit:
+set .BLevel,255; // Max Base Level
+set .JLevel,90; // Max Job Level
+// Settings - 1 > On/0 > Off:
+set .JobSwap,1; //  Job Swap
+set .StatP,1; // Stat Points
+set .SkillP,1; // Skill Points
+set .FreeItem,1; // Give Items
+set .use_cards,1; // Allow adding cards?
+set .max_ref,10; // Max Refine
+set .GMOnly,0; // NPC Access, 1 > GM Only, 0 > All
+// Menu - depending on the settings it's showing certain messages:
+set .ch_man_m$,"- Base/Job Level Change:" + ( (.JobSwap)? "- Job Swap":"Job Swap Disabled") + ":" + ( (.StatP)?"- I wanna Stat Points":"No Stat Points for you") + ":" + ( (.SkillP)?"- I wanna Skill Points":"No Skill Points for you") + ":" + ( (.FreeItem)?"- Gimme Items":"No Items for you");
+// Attaching Items To the Shop
+npcshopdelitem "CH_TestShop",512;
+setarray .cshop_id[0],25000,25001,25002,25003,25004,25005,25006,25007,25008,25009,25010,25011,25012,25013,25014,25015,25016,25017,25018,25019,25020,25021,25022,25023,25024,25025,25026,25027,25028,25029,25030,25031,25032,25042,25043,25044,25045,25046,25047,25048,25049,25050,25051,25052,25053,25054,25055,25056,25057,25058,25059,25060,25061,25062,25063,25064,25065,25067,25068,25069,25070,25071,25072,25073,25074,25075,25076,25077,25500,25501,25502,25503,25504,25505,25505,25506,25507,25508,25509,25510,25511,25512,25513,25514;
+setarray .cshop_cost[0],100;
+for ( set .@s,0; .@s < getarraysize(.cshop_id); set .@s,.@s + 1 ) {
+	npcshopadditem "CH_TestShop",.cshop_id[.@s],.cshop_cost[0];
+}
+end;
+}
+// Custom Item Shop
+-	shop	CH_TestShop	-1,512:-1
+
+-	script	CH_CardShops	-1,{
+end;
+
+OnInit:
+// ======= Card Shops ==========
+// ALL Cards included from ratemyserver.net ( Date: 12/19-2011 - 17:04 (5:04 pm)
+// Credits for their database
+
+// ".<Equip>_card" == Normal Cards
+// ".<Equip>_card_boss" == Mini-Boss + MvP Cards
+// 128 Cards maximum for each equip type
+
+// Allow Mini-Boss/MvP cards to be added to the Shops?
+set .mvp_allow,1; 
+
+// - Headgear:
+setarray .head_card[0],4438,4379,4288,4041,4296,4169,4112,4177,4052,4258,4330,4110,4271,4278,4087,4161,4343,4269,4412,4366,4434,4195,4188,4122,4364,4046,4206,4127,4311,4185,4358,4039,4223,4229,4336,4411,4010,4261,4260;
+setarray .head_card_boss[0],4241,4354,4365,4403,4357,4198,4132,4143,4148,4374,4372;
+//debugmes strnpcinfo(0)+": Headgear Cards - "+getarraysize(.head_card);
+//debugmes strnpcinfo(0)+": Headgear Cards (Mini-Boss/MvP) - "+getarraysize(.head_card_boss);
+// - Weapons:
+setarray .weap_card[0],4140,4062,4043,4018,4094,4246,4247,4307,4214,4428,4390,4063,4289,4368,4452,4284,4153,4297,4171,4388,4082,4125,4182,4398,4069,4180,4004,4421,4149,4418,4251,4360,4002,4316,4020,4026,4080,4165,4157,4060,4155,4156,4072,4163,4323,4345,4453,4019,4362,4115,4035,4268,4065,4292,4291,4394,4350,4184,4006,4395,4079,4030,4202,4055,4341,4057,4126,4317,4010,4203,4440,4167,4255,4085,4310,4007,4329,4335,4024,4380,4104,4192,4005,4017,4068,4130,4312,4273,4117,4406,4025,4092,4037,4086,4225,4111,4427,4172,4308,4049,4029,4096,4281,4274;
+setarray .weap_card_boss[0],4425,4147,4142,4134,4137,4276,4361,4399,4121,4407,4263,4367,4318,4305;
+//debugmes strnpcinfo(0)+": Weapon Cards - "+getarraysize(.weap_card);
+//debugmes strnpcinfo(0)+": Weapon Cards (Mini-Boss/MvP) - "+getarraysize(.weap_card_boss);
+// - Armor:
+setarray .armor_card[0],4409,4400,4387,4234,4243,4242,4371,4114,4023,4233,4450,4119,4213,4426,4300,4299,4061,4298,4392,4170,4173,4370,4181,4098,4279,4410,4346,4141,4405,4280,4270,4150,4162,4286,4301,4295,4191,4201,4105,4339,4393,4166,4388,4099,4031,4315,4008,4011,4337,4001,4003,4383,4353,4021,4014,4194,4101,4216,4078,4222,4404,4158,4220,4042,4218,4089,4016,4369,4333,4332,4259,4189,4382;
+setarray .armor_card_boss[0],4054,4386,4451,4047,4408,4324,4363,4419,4135,4342,4302;
+//debugmes strnpcinfo(0)+": Armor Cards - "+getarraysize(.armor_card);
+//debugmes strnpcinfo(0)+": Armor Cards (Mini-Boss/MvP) - "+getarraysize(.armor_card_boss);
+// - Shield:
+setarray .shield_card[0],4253,4032,4248,4013,4138,4443,4240,4075,4074,4447,4448,4449,4397,4444,4217,4250,4439,4322,4413,4045,4136,4445,4124,4067,4231,4090,4420,4207,4254,4066,4309,4314,4083,4414,4120,4059,4226,4304,4442,4340,4058,4012,4277;
+setarray .shield_card_boss[0],4128,4146;
+//debugmes strnpcinfo(0)+": Shield Cards - "+getarraysize(.shield_card);
+//debugmes strnpcinfo(0)+": Shield Cards (Mini-Boss/MvP) - "+getarraysize(.shield_card_boss);
+// - Garment:
+setarray .garm_card[0],4402,4219,4285,4015,4179,4178,4056,4266,4088,4303,4373,4325,4081,4116,4109,4287,4431,4351,4432,4113,4095,4108,4159,4334,4375,4071,4313,4133,4422,4429,4306,4211,4210,4102,4328;
+setarray .garm_card_boss[0],4359,4174,4197,4183;
+//debugmes strnpcinfo(0)+": Garment Cards - "+getarraysize(.garm_card);
+//debugmes strnpcinfo(0)+": Garment Cards (Mini-Boss/MvP) - "+getarraysize(.garm_card_boss);
+// - Shoes:
+setarray .shoes_card[0],4244,4245,4249,4009,4236,4070,4267,4160,4319,4151,4378,4381,4164,4417,4239,4050,4097,4200,4199,4204,4208,4396,4186,4221,4100,4107,4257,4038,4275,4435;
+setarray .shoes_card_boss[0],4236,4290,4168,4123,4441,4352,4376,4131;
+//debugmes strnpcinfo(0)+": Shoes Cards - "+getarraysize(.shoes_card);
+//debugmes strnpcinfo(0)+": Shoes Cards (Mini-Boss/MvP) - "+getarraysize(.shoes_card_boss);
+// - Accessory:
+setarray .acce_card[0],4252,4344,4347,4391,4356,4215,4327,4212,4262,4293,4040,4385,4151,4349,4152,4423,4149,4418,4283,4355,4377,4331,4437,4232,4103,4321,4433,4265,4139,4091,4027,4193,4079,4196,4084,4205,4036,4093,4256,4238,4237,4077,4073,4389,4048,4175,4033,4294,4436,4187,4219,4326,4230,4416,4228,4044,4415,4022,4227,4424,4224,4028,4282,4209,4053,4348,4264,4034,4190,4051,4064,4272;
+setarray .acce_card_boss[0],4145,4384,4430,4144;
+//debugmes strnpcinfo(0)+": Accessory Cards - "+getarraysize(.acce_card);
+//debugmes strnpcinfo(0)+": Accessory Cards (Mini-Boss/MvP) - "+getarraysize(.acce_card_boss);
+//debugmes strnpcinfo(0)+": Card IDs loaded.";
+
+// Auto Delete of Default Item > 512 = Apple
+npcshopdelitem "Test_Headgear",512;
+npcshopdelitem "Test_Weapon",512;
+npcshopdelitem "Test_Armor",512;
+npcshopdelitem "Test_Shield",512;
+npcshopdelitem "Test_Garment",512;
+npcshopdelitem "Test_Shoes",512;
+npcshopdelitem "Test_Acce",512;
+//debugmes strnpcinfo(0)+": Default Items deleted.";
+
+// ============ Auto Add of Cards to their Shops ==========
+// ======== Item Type: NPC Name =======
+// Auto Normal Cards Add
+
+// - Headgear: Test_Headgear
+for( set .@c,0; .@c < getarraysize(.head_card); set .@c,.@c + 1) 
+	npcshopadditem "Test_Headgear",.head_card[.@c],10;
+
+// - Weapon: Test_Weapon
+for( set .@c,0; .@c < getarraysize(.weap_card); set .@c,.@c + 1) 
+	npcshopadditem "Test_Weapon",.weap_card[.@c],10;
+
+// - Armor: Test_Armor
+for( set .@c,0; .@c < getarraysize(.armor_card); set .@c,.@c + 1) 
+	npcshopadditem "Test_Armor",.armor_card[.@c],10;
+
+// - Shield: Test_Shield
+for( set .@c,0; .@c < getarraysize(.shield_card); set .@c,.@c + 1) 
+	npcshopadditem "Test_Shield",.shield_card[.@c],10;
+
+// - Garment: Test_Garment
+for( set .@c,0; .@c < getarraysize(.garm_card); set .@c,.@c + 1) 
+	npcshopadditem "Test_Garment",.garm_card[.@c],10;
+
+// - Shoes: Test_Shoes
+for( set .@c,0; .@c < getarraysize(.shoes_card); set .@c,.@c + 1) 
+	npcshopadditem "Test_Shoes",.shoes_card[.@c],10;
+
+// - Accessory: Test_Acce
+for( set .@c,0; .@c < getarraysize(.acce_card); set .@c,.@c + 1) 
+	npcshopadditem "Test_Acce",.acce_card[.@c],10;
+	
+// ====  Mini-Boss/Mvp Cards ====
+if(.mvp_allow) {
+// - Headgears
+	for( set .@c,0; .@c < getarraysize(.head_card_boss); set .@c,.@c + 1) 
+		npcshopadditem "Test_Headgear",.head_card_boss[.@c],10;
+		
+// - Weapons
+	for( set .@c,0; .@c < getarraysize(.weap_card_boss); set .@c,.@c + 1) 
+		npcshopadditem "Test_Weapon",.weap_card_boss[.@c],10;
+		
+// - Armor
+	for( set .@c,0; .@c < getarraysize(.armor_card_boss); set .@c,.@c + 1) 
+		npcshopadditem "Test_Armor",.armor_card_boss[.@c],10;
+		
+// - Shield
+	for( set .@c,0; .@c < getarraysize(.shield_card_boss); set .@c,.@c + 1) 
+		npcshopadditem "Test_Shield",.shield_card_boss[.@c],10;
+		
+// - Garment
+	for( set .@c,0; .@c < getarraysize(.garm_card_boss); set .@c,.@c + 1) 
+		npcshopadditem "Test_Garment",.garm_card_boss[.@c],10;
+		
+// - Shoes
+	for( set .@c,0; .@c < getarraysize(.shoes_card_boss); set .@c,.@c + 1) 
+		npcshopadditem "Test_Shoes",.shoes_card_boss[.@c],10;
+		
+// - Accessory
+	for( set .@c,0; .@c < getarraysize(.acce_card_boss); set .@c,.@c + 1) 
+		npcshopadditem "Test_Acce",.acce_card_boss[.@c],10;
+}
+	
+//debugmes strnpcinfo(0)+": Corresponding Cards added to their Shops.";
+end;
+
+OnCardStart:
+dispbottom "Character Manager: You can choose from this many cards for your item:";
+switch(getiteminfo(@item_id,5)) {
+	case 1: // Lower Headgear
+	case 256: // Upper Headgear
+	case 512: // Middle Headgear
+	dispbottom "Headgear Cards - "+getarraysize(.head_card);
+	if(.mvp_allow) dispbottom "Mini-Boss/MvP: "+getarraysize(.head_card_boss);
+	break;
+	
+	case 2: // One-Handed Weapons
+	case 34: // Two-Handed Weapons
+	dispbottom "Weapon Cards - "+getarraysize(.weap_card);
+	if(.mvp_allow) dispbottom "Mini-Boss/MvP: "+getarraysize(.weap_card_boss);
+	break;	
+	
+	case 16: // Armor
+	dispbottom "Armor Cards - "+getarraysize(.armor_card);
+	if(.mvp_allow) dispbottom "Mini-Boss/MvP: "+getarraysize(.armor_card_boss);
+	break;
+
+	case 32: // Shield
+	dispbottom "Shield Cards - "+getarraysize(.shield_card);
+	if(.mvp_allow) dispbottom "Mini-Boss/MvP: "+getarraysize(.shield_card_boss);
+	break;
+
+	case 4: // Garment
+	dispbottom "Garment Cards - "+getarraysize(.garm_card);
+	if(.mvp_allow) dispbottom "Mini-Boss/MvP: "+getarraysize(.garm_card_boss);
+	break;
+
+	case 64: // Footgear
+	dispbottom "Shoes Cards - "+getarraysize(.shoes_card);
+	if(.mvp_allow) dispbottom "Mini-Boss/MvP: "+getarraysize(.shoes_card_boss);
+	break;
+
+	case 8: // Accessory 1
+	case 128: // Accessory 2
+	dispbottom "Accessory Cards - "+getarraysize(.acce_card);
+	if(.mvp_allow) dispbottom "Mini-Boss/MvP: "+getarraysize(.acce_card_boss);
+	break;
+}
+
+	
+set @max_c,@slot;
+set @card1,0;
+set @card2,0;
+set @card3,0;
+set @card4,0;
+deletearray @bought_nameid[0],128;
+deletearray @bought_quantity[0],128;
+switch(getiteminfo(@item_id,5)) {
+	case 1: // Lower Headgear
+	case 256: // Upper Headgear
+	case 512: // Middle Headgear
+	set @card_type$,"head";
+	set @shop_type$,"Headgear";
+	break;
+	
+	case 2: // One-Handed Weapons
+	case 34: // Two-Handed Weapons
+	set @card_type$,"weap"; 
+	set @shop_type$,"Weapon";
+	break;	
+	
+	case 16: // Armor
+	set @card_type$,"armor";
+	set @shop_type$,"Armor";
+	break;
+
+	case 32: // Shield
+	set @card_type$,"shield";
+	set @shop_type$,"Shield";
+	break;
+
+	case 4: // Garment
+	set @card_type$,"garm";
+	set @shop_type$,"Garment";
+	break;
+
+	case 64: // Footgear
+	set @card_type$,"shoes";
+	set @shop_type$,"Shoes";
+	break;
+
+	case 8: // Accessory 1
+	case 128: // Accessory 2
+	set @card_type$,"acce";
+	set @shop_type$,"Acce";
+	break;
+}
+	
+// - Shop Call:
+callshop "Test_"+@shop_type$,1;
+npcshopattach "Test_"+@shop_type$;
+end;
+
+OnBuyItem:
+dispbottom "Character Manager: Here is the list of the bought cards:";
+dispbottom "Bought Cards - Quantity:";
+for( set @s,0; @s < getarraysize(@bought_nameid); set @s,@s + 1) 
+	dispbottom getitemname(@bought_nameid[@s])+" - "+@bought_quantity[@s];
+	
+for ( set @s,0; @s < getarraysize(@bought_nameid); set @s,@s + 1) {
+
+	for( set @i,0; @i < getarraysize(getd("."+@card_type$+"_card")); set @i,@i + 1) {
+		if(@bought_nameid[@s] == getd("."+@card_type$+"_card["+@i+"]")) {
+			if(@bought_quantity[@s] <= @max_c) {
+				set @max_c,@max_c - @bought_quantity[@s]; // Card Slots left
+				set @cct,@bought_quantity[@s];
+				for ( set @sct,1; @sct <= @slot; set @sct,@sct + 1) { // Slot Counter
+					if(getd("@card"+@sct) == 0) {
+						setd("@card"+@sct),@bought_nameid[@s];
+						set @cct,@cct - 1; // Card Counter
+					}
+					if(@cct == 0) break; // Next card...
+				}
+			} else {
+				dispbottom "Character Manager: The chosen Item has not the required slots for that many Cards.";
+				end;
+			}
+			break;
+		}
+	}
+	
+	for( set @i,0; @i < getarraysize(getd("."+@card_type$+"_card_boss")); set @i,@i + 1) {
+		if(@bought_nameid[@s] == getd("."+@card_type$+"_card_boss["+@i+"]")) {
+			if(@bought_quantity[@s] <= @max_c) {
+				set @max_c,@max_c - @bought_quantity[@s]; // Card Slots left
+				set @cct,@bought_quantity[@s];
+				for ( set @sct,1; @sct <= @slot; set @sct,@sct + 1) { // Slot Counter
+					if(getd("@card"+@sct) == 0) {
+						setd("@card"+@sct),@bought_nameid[@s];
+						set @cct,@cct - 1; // Card Counter
+					}
+					if(@cct == 0) break; // Next card...
+				}
+			} else {
+				dispbottom "Character Manager: The chosen Item has not the required slots for that many Cards.";
+				end;
+			}
+			break;
+		}
+	}
+}
+dispbottom "Character Manager: You have recieved the following Item:";
+dispbottom "Name:"+ ( (@ref)?" +"+@ref:"") +" "+ getitemname(@item_id) + ", Quantity: "+@item_am +" with these cards:";
+if(@card1) dispbottom "Card 1: "+ getitemname(@card1)+" ["+@card1+"]"; 	else {	dispbottom "No Cards inserted."; }
+if(@card2) dispbottom "Card 2: "+ getitemname(@card2)+" ["+@card2+"]";
+if(@card3) dispbottom "Card 3: "+ getitemname(@card3)+" ["+@card3+"]";
+if(@card4) dispbottom "Card 4: "+ getitemname(@card4)+" ["+@card4+"]";
+getitem2 @item_id,@item_am,1,@ref,0,@card1,@card2,@card3,@card4;
+end;
+}
+-	shop	Test_Headgear	-1,512:-1
+-	shop	Test_Weapon	-1,512:-1
+-	shop	Test_Armor	-1,512:-1
+-	shop	Test_Shield	-1,512:-1
+-	shop	Test_Garment	-1,512:-1
+-	shop	Test_Shoes	-1,512:-1
+-	shop	Test_Acce	-1,512:-1

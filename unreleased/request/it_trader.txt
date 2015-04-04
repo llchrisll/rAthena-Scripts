@@ -1,0 +1,184 @@
+//===== eAthena Script =======================================
+//= Item Trader
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0	- Script Made
+//= 1.1 - Modified the Menu Creation - Should be working now
+//= 2.0 - Compiled all 4 NPC's into one
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= This Script trades the items stored in the ".IT_ID" array to
+//  another, see 'OnInit' for Config.
+//===== Comments =============================================
+//= Request (http://rathena.org/board/topic/57218-valkyrie-assistant/)
+//      by vBrenth (http://rathena.org/board/user/247-vbrenth/)
+//      in the rAthena Board (http://rathena.org/board)
+//===== Credits ==============================================
+//= Emistry:
+//	Took the example script from the request page,
+//	and modified it a bit.
+//===== ToDO List ============================================
+//= ...
+//============================================================
+prontera,160,184,5	script	Item Trader	757,{
+
+mes .n$;
+if(getarraysize(.IT_ID) < 1) {
+	mes "I'm sorry, but there are no items I could trade.";
+	mes "Please come again as soon as I have items available.";
+	close;
+}
+mes "I can trade "+.it_n$+"s against other ones.";
+mes "Also I have limitations based on refine level and cards.";
+next;
+mes .n$;
+mes "There are the current limitations:";
+mes "=====================";
+mes "Cards: "+( (.card)?"Allowed":"Forbidden");
+mes "Refine: "+( (.ref)?"Allowed":( (.ref_lvl > 0)?"+ "+.ref_lvl+" and higher are f":"F")+"orbidden");
+mes " ";
+mes "So what do you want to do?";
+next;
+if(select("- Let's trade!!:- Nevermind") - 1) {
+	mes .n$;
+	mes "Okay, come back when you have changed your mind.";
+	close;
+}
+getinventorylist;
+for( set .@k,0; .@k < getarraysize( .IT_ID ); set .@k,.@k + 1 ) {
+	for(set @l,0; @l < @inventorylist_count; set @l,@l + 1) {
+		if(@inventorylist_id[@l] == .IT_ID[.@k] && @inventorylist_equip[@l] == 0 && @inventorylist_identify[@l] == 1) {
+			set .@ct,1; // Card Slot Counter
+			set .@c,0; // Card Counter
+			while(.@ct <= getitemslots(@inventorylist_id[@l])) {
+				if(getd("@inventorylist_card"+.@ct+"["+@l+"]") != 0) set .@c,.@c+1;
+				set .@ct,.@ct + 1;
+			}
+			if(!.card && .@c != 0) {
+				dispbottom "+"+@inventorylist_refine[@l]+" "+getitemname(@inventorylist_id[@l]) +" has "+.@c+" cards compounded in it and will therefore not be listed.";
+				continue;
+			} else if(!.ref && (!.ref_lvl && @inventorylist_refine[@l] != 0 || .ref_lvl > 0 && @inventorylist_refine[@l] >= .ref_lvl)) {
+				dispbottom getitemname(@inventorylist_id[@l]) +" has "+ @inventorylist_refine[@l] +" while "+( (.ref_lvl > 0)?"+"+.ref_lvl+" and higher":"none")+" are not allowed, on it and will therefore not be listed.";
+				continue;
+			}
+			if(.ref) {
+				set .@t_m$,.@t_m$ + "- +"+@inventorylist_refine[@l]+" "+getitemname( .IT_ID[.@k] )+ ( (@inventorylist_id[@l+1])?":":"");
+				setarray .@eq_ref[.@e],@inventorylist_refine[@l];
+			} else set .@t_m$,.@t_m$ + "- "+getitemname( .IT_ID[.@k] )+ ( (@inventorylist_id[@l+1])?":":"");
+			if(.card) {
+				setarray .@eq_c1[.@e],@inventorylist_card1[@l];
+				setarray .@eq_c2[.@e],@inventorylist_card2[@l];
+				setarray .@eq_c3[.@e],@inventorylist_card3[@l];
+				setarray .@eq_c4[.@e],@inventorylist_card4[@l];
+			}
+			setarray .@eq_id[.@e],@inventorylist_id[@l];
+			set .@e,.@e + 1;
+		}
+	}
+}
+mes .n$;
+if(.@t_m$ == "") {
+	mes "It seems you don't have valid "+.it_n$+"s in your inventory.";
+	mes "I don't accept "+.it_n$+"s";
+	if(!.card) 
+		mes "with cards"+( (!.ref)?( (.ref_lvl > 0)?" and +"+.ref_lvl:" and"):", but with")+" refine.";
+	else if(!.ref) 
+		mes "with refine"+( (!.card)?" and cards.":", but with cards.");
+	close;
+}
+mes "Which "+.it_n$+" do you want to trade to another?";
+mes "^FF0000Important Notice :";
+mes "I will only list which are available.^000000";
+next;
+set @Trade, select( .@t_m$ ) - 1;
+
+mes .n$;
+mes "So, you are going to trade your ^FF0000+"+.@eq_ref[@Trade]+" "+getitemname( .@eq_id[@Trade] )+"^000000 into which "+.it_n$+"?";
+next;
+for( set .@k,0; .@k < getarraysize( .IT_ID ); set .@k,.@k + 1 )
+	set .@o_m$,.@o_m$ + "- "+getitemname( .IT_ID[.@k] ) + ( (.IT_ID[.@k])?":":"");
+	
+set @TradeTo, select( .@o_m$ ) - 1;
+mes .n$;
+
+// ============= Card Slot Check =================================
+// = Checking if the new item has less card slots as your current one.
+// = Like yours has 3 card slots and the new one has only 2.
+if(.card) { 
+	set .@ct,1; // Card Slot Counter
+	set .@c,0; // Card Counter
+	while(.@ct <= getitemslots(.@eq_id[@Trade])) {
+		if(getd(".@eq_c"+.@ct+"["+@Trade+"]") != 0) set .@c,.@c+1;
+		set .@ct,.@ct + 1;
+	}
+	if(.@c > getitemslots(.IT_ID[@TradeTo])) {
+		mes "It seems like the "+getitemname(.IT_ID[@TradeTo])+" has less slots then your current one.";
+		mes "Please remove your cards, repeat this and manually compound them afterwards.";
+		close;
+	}
+}
+// ============= Cards rejected, but refine allowed =============
+if(!.card && .ref) { 
+	if(countitem2(.@eq_id[@Trade],1,.@eq_ref[@Trade],0,0,0,0,0)) {
+		delitem2 .@eq_id[@Trade],1,1,.@eq_ref[@Trade],0,0,0,0,0;
+		getitem2 .IT_ID[@TradeTo],1,1,.@eq_ref[@Trade],0,0,0,0,0;
+	} else goto I_Error;
+
+// ============= Cards allowed, but refine rejected =============
+} else if(.card && !.ref) { 
+
+	// Every refine rejected
+	if(!.ref_lvl) 
+		if(countitem2(.@eq_id[@Trade],1,0,0,.@eq_c1[@Trade],.@eq_c2[@Trade],.@eq_c3[@Trade],.@eq_c4[@Trade])) {
+			delitem2 .@eq_id[@Trade],1,1,0,0,.@eq_c1[@Trade],.@eq_c2[@Trade],.@eq_c3[@Trade],.@eq_c4[@Trade];
+			getitem2 .IT_ID[@TradeTo],1,1,0,0,.@eq_c1[@Trade],.@eq_c2[@Trade],.@eq_c3[@Trade],.@eq_c4[@Trade];
+		} else goto I_Error;
+	
+	// + .ref_lvl and higher rejected
+	else if(.ref_lvl > 0) { 
+		if(.@eq_ref[@Trade] >= .ref_lvl) {
+			mes "You have chosen an "+.it_n$+" which has an refine above or equal +"+.ref_lvl+".";
+			mes "Please choose another one.";
+			close;
+		}
+		if(countitem2(.@eq_id[@Trade],1,.@eq_ref[@Trade],0,.@eq_c1[@Trade],.@eq_c2[@Trade],.@eq_c3[@Trade],.@eq_c4[@Trade])) {
+			delitem2 .@eq_id[@Trade],1,1,.@eq_ref[@Trade],0,.@eq_c1[@Trade],.@eq_c2[@Trade],.@eq_c3[@Trade],.@eq_c4[@Trade];
+			getitem2 .IT_ID[@TradeTo],1,1,.@eq_ref[@Trade],0,.@eq_c1[@Trade],.@eq_c2[@Trade],.@eq_c3[@Trade],.@eq_c4[@Trade];
+		} else goto I_Error;
+	}
+// ============= Cards and Refine rejected =============
+} else if(!.card && !.ref) { 
+	if(countitem2(.@eq_id[@Trade],1,0,0,0,0,0,0)) {
+		delitem2 .@eq_id[@Trade],1,1,0,0,0,0,0,0;
+		getitem2 .IT_ID[@TradeTo],1,1,0,0,0,0,0,0;
+	} else goto I_Error;
+}
+equip .IT_ID[@TradeTo];
+mes "Done... You have changed your ^0000FF"+getitemname( .@eq_id[@Trade] )+"^000000 to ^FF0000"+getitemname( .IT_ID[@TradeTo] )+"^000000.";
+close;
+
+I_Error:
+mes "Huh? Your "+.it_n$+" has vanished....., please make sure you have it in your inventory.";
+close;
+
+
+OnInit:
+set .n$,"["+strnpcinfo(1)+"]";
+// Item ID's:
+setarray .IT_ID[0],5171,25001,25002;
+// Name of items, which you want to trade:
+// Purpose of this is only for trading info.
+set .it_n$,"Valkyrie Helm"; 
+// Refine & Cards:
+// 1 = Allowed
+// 0 = Forbidden:
+//		At refine you can decide if no refine is allowed,
+//	 	then put '0' in .ref_lvl else that value and higher is not allowed
+//		Example: .ref == 0 and .ref_lvl == 4: Items with +4 and higher are not allowed.
+set .ref,1;
+set .ref_lvl,0;
+set .card,0;
+end;
+}

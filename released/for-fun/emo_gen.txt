@@ -1,0 +1,18 @@
+prontera,150,187,4	script	Emotion Generator	110,{
+while( 1 ) {
+	mes "[Emotion Generator]";
+	mes "Input a number starting from 0 and ending at 80 and I will display the emotion bound to it.";
+	mes "Typing \"100\" will cancel your attempt.";
+
+	input @emote;
+	if(@emote == 100) close;
+	if(@emote > 80 && @emote != 100) {
+		mes "I saied till 80.";
+		next;
+	}
+	emotion @emote;
+	next;
+	}
+
+close;
+}

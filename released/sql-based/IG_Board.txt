@@ -1,0 +1,393 @@
+//===== rAthena Script =======================================
+//= InGame Forum
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Made
+//= 1.1 - Fixxed an bug at the Double-Post prevention by checking an array
+//        if there was no previous comment which was resulting in an endless error.
+//        Thanks to n0stalgia for the bug report.
+//      - Exchanged "@" variables into ".@" ones, was saving to much data on the char
+//      - Modified the comment feature, so that an GM comment is already approved.
+//      - Exchanged "getgmlevel" to "getgroupid" to make it a bit more compatible with rAthena
+//===== Credits ==============================================
+//- goddameit for allowing me use his World Chat as example
+//  So that I understood it I wrote it by myself so I didn't really "Copy&Paste" it ;O
+//====== ToDo List ===========================================
+//= Adding a pool maybe ;I
+//
+//===== Compatible/Created/Tested With ======================================
+//= rAthena 17267 SQL Trunk
+//===== Description ==========================================
+//= This Script handles an InGame Board as you can call it.
+//  GM's can make announces and player's can post their comments to it.
+//  Or creating an pool.
+//===== MySQL Entries =======================================
+/*
+DROP TABLE IF EXISTS `igb_anno`;
+CREATE TABLE  `igb_anno` (
+  `anno_id` int(10) unsigned NOT NULL,
+  `title` varchar(255) DEFAULT 'Creation Fail',
+  `text` varchar(255) NOT NULL,
+  `author` varchar(255) NOT NULL,
+  `date` varchar(255) DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`anno_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+DROP TABLE IF EXISTS `igb_com`;
+CREATE TABLE  `igb_com` (
+  `anno_id` int(10) unsigned NOT NULL,
+  `com_id` int(11) unsigned NOT NULL,
+  `com_txt` varchar(255) NOT NULL DEFAULT 'Test Message',
+  `author` varchar(255) NOT NULL DEFAULT 'None',
+  `date` varchar(255) NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `approved` varchar(255) NOT NULL DEFAULT 'No'
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+*/
+//=============================================
+-	script	ChatRoom	-1,{
+end;
+
+OnPCLogoutEvent:
+if(@b_chat) setd("$@igb_ch_"+@b_chat+"_ppl$["+@igb+"]"),"";
+end;
+
+OnWhisperGlobal:
+if(@b_chat) {
+	set .@mes$,strcharinfo(0);
+	set .@chat_txt$,"[Chat] ["+strcharinfo(0)+"]: "+@whispervar0$;
+	dispbottom .@chat_txt$;
+	for( set .@a,0; .@a < getarraysize(getd("$@igb_ch_"+@b_chat+"_ppl$")); set .@a,.@a + 1) {
+		if(.@mes$ != set(.t$,getd("$@igb_ch_"+@b_chat+"_ppl$["+.@a+"]")) && attachrid(getcharid(3,.t$))) {
+			dispbottom .@chat_txt$;
+			detachrid;
+		}
+	}
+
+} else { 
+	dispbottom "[Chat] [Manager]: You didn't join an Room yet."; 
+}
+end; 
+}
+
+prontera,163,169,0	script	Board Manager	100,{
+
+set .@n$,"[Board Manager]";
+set .gm_lvl,60;
+
+mes .@n$;
+mes "Hello "+ strcharinfo(0)+"!";
+query_sql "SHOW TABLES LIKE 'igb_anno'",.@ch_IGB$;
+query_sql "SHOW TABLES LIKE 'igb_com'",.@ch_IGB2$;
+if(.@ch_IGB$[0] == "" || .@ch_IGB2$[0] == "") {
+	mes "I'm sorry, but the Board has not be installed yet.";
+	close;
+}
+mes "How can I help you?";
+switch(select("- Join Chat Room:- Board Access:- Leave")) {
+	
+	case 1:
+	next;
+	mes .@n$;
+	mes "How this works:";
+	mes "First you'll have to join an Chat Room, afterwards";
+	mes "you type into your WhisperBox \"NPC:ChatRoom\".";
+	mes "Then you type your message you want to post.";
+	next;
+	mes .@n$;
+	if(@b_chat) {
+		mes "You'll have to leave the old chat room first.";
+		mes "before you can join a new one.";
+		if(select("- Leave Chat Room:- Nothing") - 1) close;
+		setd("$@igb_ch_"+@b_chat+"_ppl$["+@igb+"]"),"";
+		set @igb,0;
+		set @b_chat,0;
+		next;
+		mes .@n$;
+	}		
+	mes "Now choose which Room you want to join:";
+	mes "The number in the curles = User Quantity.";
+	select("- #1 ("+getarraysize(getd("$@igb_ch_1_ppl$"))+")",
+			"- #2 ("+getarraysize(getd("$@igb_ch_2_ppl$"))+")",
+			"- #3 ("+getarraysize(getd("$@igb_ch_3_ppl$"))+")");
+	next;
+	mes .@n$;
+	if(getarraysize(getd("$@igb_ch_"+@menu+"_ppl$")) >= 128) {
+		mes "I'm sorry, this room is full already.";
+		close;
+	}
+	set @b_chat,@menu;
+	for( set .s,0; .s < 128; set .s,.s + 1) {
+		if(!@igb && getd("$@igb_ch_"+@b_chat+"_ppl$["+.s+"]") == "") {
+			setd("$@igb_ch_"+@b_chat+"_ppl$["+set(@igb,.s)+"]"),strcharinfo(0);
+		}
+	}
+	mes "You have joined Room #"+@b_chat+" and took the "+@igb+". Position which was the next free one.";
+	close;
+	
+	case 2:
+	next;
+	mes .@n$;
+	query_sql "SELECT `anno_id` , `title` , `text` , `author` , `date` FROM `igb_anno` WHERE `anno_id` > '0'",.@a_id,.@a_title$,.@a_txt$,.@a_aut$,.@a_date$;
+	mes "There "+( (.@a_id != 1)?"are":"is")+" "+.@a_id+" Announce(s).";
+	if(getgroupid() > .gm_lvl) {
+		mes "Want to create one?";
+		if(select("Yes:No") == 1) goto F_CT;
+	}
+	if(!.@a_id) goto F_Quit;
+	next;
+	mes .@n$;
+	mes "Info/Rules:";
+	mes "1.) Don't flame in this \"Forum\".";
+	mes "2.) Comments only related to the thread are allowed.";
+	mes "3.) There is a delay of 5 Minutes till the next comment.";
+	mes "4.) Double-comment will be prevented automatically.";
+	mes "More will be coming...";
+	next;
+	mes .@n$;
+	mes "Choose from the titles below.";
+	for( set .@a,0; .@a < getarraysize(.@a_id); set .@a,.@a + 1) {
+		mes .@a_id + ". "+.@a_title$[.@a];
+		mes "Created by: "+ .@a_aut$[.@a];
+		mes "On "+.@a_date$[.@a];
+		mes "==================";
+		set .@an_m$,.@an_m$ + "- "+(.@a + 1)+".:";
+	}
+	set .@an_m$,.@an_m$ + "- Cancel";
+	if((prompt(.@an_m$) - getarraysize(.@a_id)) > 0) 
+		goto F_Quit;
+	else {
+		next;
+		set .@b,@menu - 1;
+		mes .@n$;
+		mes "You have chosen";
+		mes .@a_title$[@b];
+		mes " ";
+		mes "Message:";
+		mes .@a_txt$[@b];
+		mes " ";
+		mes "What now?";
+		query_sql "SELECT count(`com_id`) FROM `igb_com` WHERE `anno_id` = '"+.@a_id[.@b]+"' AND `approved` = 'No'",.@cm_unap;
+		switch(select("- Create Comment:- Read Comments:"+ ( (getgroupid() > .gm_lvl)?"- "+.@cm_unap+" Unapproved Comments:- Delete Comments:":"") + "- Leave")) {
+			
+			case 1:
+			next;
+			mes .@n$;
+			if(getgroupid() < .gm_lvl && (IGB_Delay > gettimetick(2))) {
+				mes "I'm sorry, but the comment delay is still active.";
+				mes "There are "+ (IGB_Delay - gettimetick(2))+" seconds left.";
+				close;
+			}
+			set IGB_Delay,0;
+			query_sql "SELECT `author` FROM `igb_com` WHERE `anno_id` = '"+.@a_id[.@b]+"'",.@cm_aut$;
+			if(.@cm_aut$[0] != "")
+				if(.@cm_aut$[getarraysize(.@cm_aut$) - 1] == strcharinfo(0)) {
+					mes "Double-Posting is not allowed.";
+					mes "Please wait till another player has posted an comment.";
+					goto F_Quit;
+				}
+			mes "Type now the comment please:";
+			mes "Maximum 200 letters.";
+			if(input(.@an_cm$,1,200) != 0) {
+				mes "Invalid Entry.";
+				goto F_Quit;
+			}
+			next;
+			mes .@n$;
+			mes "Following will be posted:";
+			mes .@an_cm$;
+			if(select("- Confirm:- Leave") - 1) goto F_Quit;
+			next;
+			query_sql "SELECT `com_id` FROM `igb_com` WHERE `anno_id` = "+.@a_id[.@b],.@cm_n;
+			query_sql "INSERT INTO `igb_com` ( `anno_id` , `com_id` , `com_txt` , `author` , `date` , `approved` ) VALUES ( '"+.@a_id[.@b]+"' , '"+(.@cm_n + 1)+"' , '"+escape_sql(.@an_cm$)+"' , '"+escape_sql(strcharinfo(0))+"' , '"+escape_sql(gettimestr("%Y-%m-%d %H:%M:%S",21))+"' , '"+( getgroupid()?"Yes":"No")+"')";
+			mes .@n$;
+			mes "Your comment has been saved.";
+			set IGB_Delay,gettimetick(2) + 300;
+			close;
+			
+			case 2:
+			next;
+			query_sql "SELECT `com_id` , `com_txt` , `author` , `date` FROM `igb_com` WHERE `anno_id` = '"+.@a_id[.@b]+"' AND `approved` = 'Yes'",.@cm_id,.@cm_txt$,.@cm_aut$,.@cm_date$;
+			mes .@n$;
+			if(.@cm_id[0] != 0) {
+				for( set .@a,0; .@a < getarraysize(.@cm_id); set .@a,.@a + 1) {
+					mes "Post No.: "+.@cm_id[.@a];
+					mes "----------------";
+					mes .@cm_txt$[.@a];
+					mes "----------------";
+					mes "On "+.@cm_date$[.@a];
+					mes "By "+.@cm_aut$[.@a];
+					mes "==================";
+				}
+			} else {
+				mes "There are no comments to be displayed.";
+				close;
+			}
+			break;
+			
+			case 3:
+			if(getgroupid() < .gm_lvl) goto F_Quit;
+			next;
+			mes .@n$;
+			query_sql "SELECT `com_id` , `com_txt` , `author` , `date` FROM `igb_com` WHERE `anno_id` = '"+.@a_id[.@b]+"' AND `approved` = 'No' ORDER BY `com_id`",.@cm_id,.@cm_txt$,.@cm_aut$,.@cm_date$;
+			if(.@cm_id[0] != 0) {
+				mes "Here is the list of the unapproved comments:";
+				next;
+				mes .@n$;
+				for( set .@a,0; .@a < getarraysize(.@cm_id); set .@a,.@a + 1) {
+					mes "Post No.: "+.@cm_id[.@a];
+					mes "----------------";
+					mes .@cm_txt$[.@a];
+					mes "----------------";
+					mes "On "+.@cm_date$[.@a];
+					mes "By "+ .@cm_aut$[.@a];
+					mes "==================";
+					set .@ap_m$,.@ap_m$ + "- "+.@cm_id[.@a]+".:";
+				}
+				next;
+				set .@ap,select(.@ap_m$) - 1;
+				mes .@n$;
+				mes "You have chosen Post No. "+.@cm_id[.@ap]+",";
+				mes "what now?";
+				next;
+				switch(select("- Approve:- Delete:- Nothing")) {
+				
+					case 1:
+					mes .@n$;
+					mes "The Post No. "+.@cm_id[.@ap]+" has been succesfully approved.";
+					query_sql "UPDATE `igb_com` SET `approved` = 'Yes' WHERE `com_id` = '"+.@cm_id[.@ap]+"' AND `anno_id` = '"+.@a_id[.@b]+"'";
+					close;
+					
+					case 2:
+					mes .@n$;
+					mes "The Post No. "+.@cm_id[.@ap]+" has been succesfully deleted.";
+					query_sql "DELETE FROM `igb_com` WHERE `com_id` = '"+.@cm_id[.@ap]+"' AND `anno_id` = '"+.@a_id[.@b]+"'";
+					close;
+					
+					case 3:
+					goto F_Quit;
+					break;
+				}
+
+			} else {
+				mes "There are no comments to be displayed.";
+				close;
+			}
+			break;
+			
+			case 4:
+			if(getgroupid() < .gm_lvl) goto F_Quit;
+			next;
+			mes .@n$;
+			query_sql "SELECT `com_id` , `com_txt` , `author` , `date` FROM `igb_com` WHERE `anno_id` = '"+.@a_id[.@b]+"' ORDER BY `com_id`",.@cm_id,.@cm_txt$,.@cm_aut$,.@cm_date$;
+			if(.@cm_id[0] != 0) {
+				mes "Here is the list of the comments:";
+				next;
+				mes .@n$;
+				for( set .@a,0; .@a < getarraysize(.@cm_id); set .@a,.@a + 1) {
+					mes "Post No.: "+.@cm_id[.@a];
+					mes "----------------";
+					mes .@cm_txt$[.@a];
+					mes "----------------";
+					mes "On "+.@cm_date$[.@a];
+					mes "By "+ .@cm_aut$[.@a];
+					mes "==================";
+					set .@ap_m$,.@ap_m$ + "- "+.@cm_id[.@a]+".:";
+				}
+				next;
+				set .@ap,select(.@ap_m$) - 1;
+				mes .@n$;
+				mes "You have chosen Post No. "+.@cm_id[.@ap]+",";
+				mes "what now?";
+				next;
+				switch(select("- Delete:- Nothing")) {
+				
+					case 1:
+					mes .@n$;
+					mes "The Post No. "+.@cm_id[.@ap]+" has been succesfully deleted.";
+					query_sql "DELETE FROM `igb_com` WHERE `com_id` = '"+.@cm_id[.@ap]+"' AND `anno_id` = '"+.@a_id[.@b]+"'";
+					close;
+					
+					case 2:
+					goto F_Quit;
+					break;
+				}
+
+			} else {
+				mes "There are no comments to be displayed.";
+				close;
+			}
+			break;
+			
+			case 5:
+			goto F_Quit;
+			break;
+		}
+	}
+	case 3:
+	goto F_Quit;
+	break;
+	
+	F_CT:
+	next;
+	mes .@n$;
+	mes "What title should this announce have?";
+	mes "Note: Maximum 50 letters.";
+	mes "Type 'Cancel' for aborting.";
+	next;
+	if(input(.@anno_title$,1,50) != 0) {
+		mes .@n$;
+		mes "Invalid Title, Maximum 50 letters.";
+		goto F_Quit;
+	}
+	mes .@n$;
+	if(.@anno_title$ == "Cancel") {
+		mes "Aborting creation of an announce....";
+		goto F_Quit;
+	}
+	mes "Now type the message you want.";
+	mes "Note: Maximum 200 letters.";
+	mes "Type 'Cancel' for aborting.";
+	next;
+	if(input(.@anno_txt$,1,200) != 0) {
+		mes .@n$;
+		mes "Invalid Message,";
+		mes "Maximum 200 letters.";
+		goto F_Quit;
+	}
+	mes .@n$;
+	if(.@anno_txt$ == "Cancel") {
+		mes "Aborting creation of an announce....";
+		goto F_Quit;
+	}
+	query_sql "SELECT `anno_id` FROM `igb_anno`",.@a_id;
+	mes "Result:";
+	mes " ";
+	mes "Post No.: "+set(.@anno_id,.@a_id + 1);
+	mes "Title: "+.@anno_title$;
+	mes "----------------";
+	mes .@anno_txt$;
+	mes "----------------";
+	mes "On: "+ set(.@an_date$,gettimestr("%Y-%m-%d %H:%M:%S",21));
+	mes "By: "+ set(.@an_author$,strcharinfo(0));
+	mes "==================";
+	mes "Is that correct?";
+	if(select("- Yes:- No") - 1) goto F_Quit;
+	next;
+	mes .@n$;
+	mes "Your announce has been saved";
+	mes "and broadcasted on the server.";
+	close2;
+	query_sql "INSERT INTO `igb_anno` ( `anno_id` , `title` , `text` , `author` , `date`) VALUES ( '"+.@anno_id+"' , '"+escape_sql(.@anno_title$)+"' , '"+escape_sql(.@anno_txt$)+"' , '"+escape_sql(.@an_author$)+"' , '"+escape_sql(.@an_date$)+"' )";
+	announce "New Announce added to the Board!!",0;
+	sleep2 2000;
+	announce "Post No.:"+.@anno_id+" - Title: "+.@anno_title$+" by "+.@an_author$,0;
+	end;
+}
+
+F_Quit:
+next;
+mes .@n$;
+mes "See ya again.";
+close;
+}

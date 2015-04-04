@@ -1,0 +1,84 @@
+//===== eAthena Script =======================================
+//= Monster Slaughter
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= Opens an warp portal every "OnMinuteXX" minute where lots of
+//  mobs will await the players. The portal will stay opened for 10 mins.
+//  The event will end until the next time the portal opens or
+//  all mobs are defeated.
+//= Reward for each kill is an item, ".tcg_id", TCG Card (7227) from which
+//  the player recieve an random amount between 1 - ".tcg_am".
+//= The mob ids are saved in the array ".mob"
+//  The quantity is saved in the array ".am"
+//===== Comments =============================================
+//= Request (via rAthena PM)
+//	by PapaZola (http://rathena.org/board/user/682-papazola/)
+//	in the rAthena Board (http://www.rathena.org)
+//============================================================
+-	script	MonsterSlaughter	-1,{
+end;
+
+OnInit:
+// Mob ID
+setarray .mob[0],1037,1213,1201;
+// Amounts
+setarray .am[0],50,50,50;
+set .tcg_id,7227; // TCG ID
+set .tcg_am,3; // Amount
+set .map$,"force_3-1"; // Event Map
+end;
+
+OnMinute15: // Every x Minute the event will start
+set .mobs,0; // Resetting Counter
+mapwarp .map$,"prontera",150,180; // Warping players, which are already on the map to Prontera
+killmonsterall .map$;
+announce "The event, Monster Slaughter will begin now. If you want to join please head to the Warp Portal which has been created on the main town.",bc_all;
+sleep 5000;
+announce "This portal will stay 10 minutes.",bc_all;
+sleep 5000;
+enablenpc "sl_warp";
+setmapflag .map$,mf_noskill;
+setmapflag .map$,mf_nowarp;
+setmapflag .map$,mf_nowarpto;
+setmapflag .map$,mf_noteleport;
+setmapflag .map$,mf_noreturn;
+for ( set .@i,0; .@i < getarraysize(.mob); set .@i,.@i + 1) {
+	if( strmobinfo(1,.mob[.@i]) != "null" || strmobinfo(1,.mob[.@i]) != "" || .am[.@i] != 0) {
+		monster .map$,0,0,strmobinfo(1,.mob[.@i]),.mob[.@i],.am[.@i],strnpcinfo(0)+"::OnSlaughtered";
+		set .mobs,.mobs + .am[.@i]; // Adding the mob quantity to the total amount
+	} else debugmes strnpcinfo(1)+": .mob["+.@i+"] has an invalid ID or the correspending quantity is 0 and therefore will not be spawned.";
+}
+sleep 600000;
+disablenpc "sl_warp";
+end;
+
+OnSlaughtered:
+getitem .tcg_id,rand(1,.tcg_am); // Recieving random (1 - .tcg_am) TCG 
+set .mobs,.mobs - 1; // Reducing the counter
+if(.mobs == 0) { // No mob left
+	removemapflag .map$,mf_noskill;
+	removemapflag .map$,mf_nowarp;
+	removemapflag .map$,mf_nowarpto;
+	removemapflag .map$,mf_noteleport;
+	removemapflag .map$,mf_noreturn;
+	mapannounce .map$,"All monsters have been killed, you will now be warped back to prontera.",bc_all;
+	announce .map$,"The event, Monster Slaughter has ended.",bc_all;
+	sleep 5000;
+	mapwarp .map$,"prontera",150,180; // Warping players back to Prontera
+}
+end;
+
+}
+prontera,155,165,0	script	sl_warp	45,5,5,{
+warp getvariableofnpc(.map$,"MonsterSlaughter"),0,0;
+end;
+
+OnInit:
+disablenpc strnpcinfo(0);
+end;
+}

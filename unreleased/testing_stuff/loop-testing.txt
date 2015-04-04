@@ -1,0 +1,24 @@
+prontera,156,178,4	script	for-loop test	120,{
+
+setarray .@test1[0],1,2,3,4,5,6;
+setarray .@test2[1],1,2,3,4,5,6;
+setarray .@test3[1],1,2,1,4,5,6,7;
+
+mes "[Loop Testing #1]";
+for ( set .@t1,0; .@t1 < getarraysize(.@test1); set .@t1,.@t1 + 1) 
+	mes .@test1[.@t1];
+	
+mes " ";
+
+mes "[Loop Testing #2]";
+for ( set .@t2,1; .@t2 != getarraysize(.@test2); set .@t2,.@t2 + 1) 
+	mes .@test2[.@t2];
+
+mes " ";
+
+mes "[Loop Testing #3]";
+for ( set .@t3,1; .@t3 <= getarraysize(.@test3)-1; set .@t3,.@t3 + 1) 
+	if(.@t3 != 3) mes .@test3[.@t3];
+
+close;
+}

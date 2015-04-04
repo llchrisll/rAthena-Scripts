@@ -1,0 +1,29 @@
+//===== eAthena Script =======================================
+//= Server Time
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Made
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Tested With ==========================================
+//= eAthena 14428 SQL Trunk 
+//===== Description ==========================================
+//= Small Snippet to show the Server Time
+//===== Comments =============================================
+//= ...
+//============================================================
+prontera,155,172,4	script	Server Time	857,{
+end;
+
+OnInit:
+set .delay,5; // Delay in seconds when the chat room will be refreshed
+while(1) {
+	while( (gettime(1)%.delay) != 0) sleep 1000; // If the second is not in ".delay" steps, delay by 1 second till it reached it.
+	waitingroom "Time: "+gettimestr("%H:%M:%S",10),0;
+	sleep (.delay*1000);
+	delwaitingroom;
+}
+end;
+}
+	

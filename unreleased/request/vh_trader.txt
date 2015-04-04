@@ -1,0 +1,228 @@
+//===== eAthena Script =======================================
+//= Valykrie Helm Trader
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0	- Script Made
+//= 1.1 - Modified the Menu Creation - Should be working now
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= This Script trades any Valkyrie Helm to another.
+//	There are 4 NPC's:
+//	- 1st NPC doesn't accept VH with cards, but refine.
+//	- 2nd NPC doesn't accept VH with refine, but cards.
+// 	- 2nd NPC #2 doesn't accept VH with refine above or equal +4, 
+//	  but less refine and cards.
+// 	- 3rd NPC doesn't accept VH with cards and refine.
+//===== Comments =============================================
+//= Request (http://rathena.org/board/topic/57218-valkyrie-assistant/)
+//      by vBrenth (http://rathena.org/board/user/247-vbrenth/)
+//      in the rAthena Board (http://rathena.org/board)
+//===== Credits ==============================================
+//= Emistry:
+//	Took the example script from the request page,
+//	and modified it a bit.
+// 	Also added the requested modifications by dividing them into
+//	4 NPC's (changed the y cooard by 2 of each: 181-187)
+//============================================================
+
+// 1st NPC:
+// Doesn't accept VH with cards, but refine.
+prontera,155,181,5 script VH Trader#1 757,{
+setarray .VHID[0],5013,32016,32017,32018,32019,32020,32021,32022,32023;
+set @Menu$,"";
+getinventorylist;
+for( set .@k,0; .@k < getarraysize( .VHID ); set .@k,.@k + 1 )
+	for(set @l,0; @l < @inventorylist_count; set @l,@l + 1) 
+		if(@inventorylist_id[@l] == .VHID[.@k] && @inventorylist_card1[@l] == 0 && @inventorylist_card2[@l] == 0 && @inventorylist_card3[@l] == 0 && @inventorylist_card4[@l] == 0)	{
+			set @Menu$,@Menu$ + "- +"+@inventorylist_refine[@l]+" "+getitemname( .VHID[.@k] )+ ( (@inventorylist_id[@l+1])?":":"");
+			setarray .@eq_id[.@e],@inventorylist_id[@l];
+			setarray .@eq_ref[.@e],@inventorylist_refine[@l];
+			set .@e,.@e + 1;
+		}
+if(@Menu$ == "") {
+	mes "It seems you don't have valid Valkyrie Helms in your inventory.";
+	mes "I don't accept VH with card, but with refine.";
+	close;
+}
+mes "Which Valkyrie Helm do you want to trade to another?";
+mes "^FF0000Important Notice :";
+mes "I will only list the VH which are available.^000000";
+next;
+set @Trade, select( @Menu$ ) - 1;
+
+mes "So, you are going to trade your ^FF0000+"+.@eq_ref[@Trade]+" "+getitemname( .@eq_id[@Trade] )+"^000000 into which Valkyrie Helm?";
+next;
+set @Menu$,"";
+for( set .@k,0; .@k < getarraysize( .VHID ); set .@k,.@k + 1 )
+	set @Menu$,@Menu$ + "- "+getitemname( .VHID[.@k] ) + ( (.VHID[.@k])?":":"");
+	
+set @TradeTo, select( @Menu$ ) - 1;
+
+if(countitem2(.@eq_id[@Trade],1,.@eq_ref[@Trade],0,0,0,0,0)) {
+    unequip EQI_HEAD_TOP;
+    delitem2 .@eq_id[@Trade],1,1,.@eq_ref[@Trade],0,0,0,0,0;
+	getitem2 .VHID[@TradeTo],1,1,.@eq_ref[@Trade],0,0,0,0,0;
+	equip .VHID[@TradeTo];
+} else {
+	mes "Huh? Your VH has vanished....., please make sure you have it in your inventory.";
+	close;
+}
+mes "Done... You have changed your ^0000FF"+getitemname( .VHID[@Trade] )+"^000000 to ^FF0000"+getitemname( .VHID[@TradeTo] )+"^000000.";
+close;
+}
+
+// 2nd NPC:
+// Doesn't accept VH with refine, but cards.
+prontera,155,183,5 script VH Trader#2 757,{
+setarray .VHID[0],5013,32016,32017,32018,32019,32020,32021,32022,32023;
+set @Menu$,"";
+getinventorylist;
+for( set .@k,0; .@k < getarraysize( .VHID ); set .@k,.@k + 1 )
+	for(set @l,0; @l < @inventorylist_count; set @l,@l + 1) 
+		if(@inventorylist_id[@l] == .VHID[.@k] && @inventorylist_refine[@l] == 0) {
+			set @Menu$,@Menu$ + "- "+getitemname( .VHID[.@k] )+ ( (@inventorylist_id[@l+1])?":":"");
+			setarray .@eq_id[.@e],@inventorylist_id[@l];
+			setarray .@eq_c1[.@e],@inventorylist_card1[@l];
+			setarray .@eq_c2[.@e],@inventorylist_card2[@l];
+			setarray .@eq_c3[.@e],@inventorylist_card3[@l];
+			setarray .@eq_c4[.@e],@inventorylist_card4[@l];
+			set .@e,.@e + 1;
+		}
+
+if(@Menu$ == "") {
+	mes "It seems you don't have valid Valkyrie Helms in your inventory.";
+	mes "I don't accept VH with refine, but with cards.";
+	close;
+}
+mes "Which Valkyrie Helm do you want to trade to another?";
+mes "^FF0000Important Notice :";
+mes "I will only list the VH which are available.^000000";
+next;
+set @Trade, select( @Menu$ ) - 1;
+
+mes "So, you are going to trade your ^FF0000"+getitemname( .@eq_id[@Trade] )+"^000000 into which Valkyrie Helm?";
+next;
+set @Menu$,"";
+for( set .@k,0; .@k < getarraysize( .VHID ); set .@k,.@k + 1 )
+	set @Menu$,@Menu$ + "- "+getitemname( .VHID[.@k] ) + ( (.VHID[.@k])?":":"");
+	
+set @TradeTo, select( @Menu$ ) - 1;
+
+if(countitem2(.@eq_id[@Trade],1,0,0,.@eq_c1[@Trade],.@eq_c2[@Trade],.@eq_c3[@Trade],.@eq_c4[@Trade])) {
+    unequip EQI_HEAD_TOP;
+    delitem2 .@eq_id[@Trade],1,1,0,0,.@eq_c1[@Trade],.@eq_c2[@Trade],.@eq_c3[@Trade],.@eq_c4[@Trade];
+	getitem2 .VHID[@TradeTo],1,1,0,0,.@eq_c1[@Trade],.@eq_c2[@Trade],.@eq_c3[@Trade],.@eq_c4[@Trade];
+	equip .VHID[@TradeTo];
+} else {
+	mes "Huh? Your VH has vanished....., please make sure you have it in your inventory.";
+	close;
+}
+mes "Done... You have changed your ^0000FF"+getitemname( .@eq_id[@Trade] )+"^000000 to ^FF0000"+getitemname( .VHID[@TradeTo] )+"^000000.";
+close;
+}
+
+// 2nd NPC #2:
+// Doesn't accept VH with refine above or equal +4, but less refine and cards.
+prontera,155,185,5 script VH Trader#3 757,{
+setarray .VHID[0],5013,32016,32017,32018,32019,32020,32021,32022,32023;
+set @Menu$,"";
+getinventorylist;
+for( set .@k,0; .@k < getarraysize( .VHID ); set .@k,.@k + 1 )
+	for(set @l,0; @l < @inventorylist_count; set @l,@l + 1) 
+		if(@inventorylist_id[@l] == .VHID[.@k] && @inventorylist_refine[@l] < 4) {
+			set @Menu$,@Menu$ + "- +"+@inventorylist_refine[@l]+" "+getitemname( .VHID[.@k] )+ ( (@inventorylist_id[@l+1])?":":"");
+			setarray .@eq_id[.@e],@inventorylist_id[@l];
+			setarray .@eq_ref[.@e],@inventorylist_refine[@l];
+			setarray .@eq_c1[.@e],@inventorylist_card1[@l];
+			setarray .@eq_c2[.@e],@inventorylist_card2[@l];
+			setarray .@eq_c3[.@e],@inventorylist_card3[@l];
+			setarray .@eq_c4[.@e],@inventorylist_card4[@l];
+			set .@e,.@e + 1;
+		}
+
+if(@Menu$ == "") {
+	mes "It seems you don't have valid Valkyrie Helms in your inventory.";
+	mes "I don't accept VH with refine above or equal +4, but with cards.";
+	close;
+}
+mes "Which Valkyrie Helm do you want to trade to another?";
+mes "^FF0000Important Notice :";
+mes "I will only list the VH which are available.^000000";
+next;
+	
+set @Trade, select( @Menu$ ) - 1;
+
+mes "So, you are going to trade your ^FF0000"+getitemname( .@eq_id[@Trade] )+"^000000 into which Valkyrie Helm?";
+next;
+set @Menu$,"";
+for( set .@k,0; .@k < getarraysize( .VHID ); set .@k,.@k + 1 )
+	set @Menu$,@Menu$ + "- "+getitemname( .VHID[.@k] ) + ( (.VHID[.@k])?":":"");
+	
+set @TradeTo, select( @Menu$ ) - 1;
+
+// This should never happen though, but hackers may be able to do something :O.
+if(.@eq_ref[@Trade] >= 4) {
+	mes "You have chosen an VH which has an refine above or equal +4.";
+	mes "Please choose another one.";
+	close;
+}
+if(countitem2(.@eq_id[@Trade],1,.@eq_ref[@Trade],0,.@eq_c1[@Trade],.@eq_c2[@Trade],.@eq_c3[@Trade],.@eq_c4[@Trade])) {
+	unequip EQI_HEAD_TOP;
+	delitem2 .@eq_id[@Trade],1,1,.@eq_ref[@Trade],0,.@eq_c1[@Trade],.@eq_c2[@Trade],.@eq_c3[@Trade],.@eq_c4[@Trade];
+	getitem2 .VHID[@TradeTo],1,1,.@eq_ref[@Trade],0,.@eq_c1[@Trade],.@eq_c2[@Trade],.@eq_c3[@Trade],.@eq_c4[@Trade];
+	equip .VHID[@TradeTo];
+} else {
+	mes "Huh? Your VH has vanished....., please make sure you have it in your inventory.";
+	close;
+}
+mes "Done... You have changed your ^0000FF"+getitemname( .VHID[@Trade] )+"^000000 to ^FF0000"+getitemname( .VHID[@TradeTo] )+"^000000.";
+close;
+}
+
+// 3rd NPC:
+// Doesn't accept VH with cards and refine.
+prontera,155,187,5 script VH Trader#4 757,{
+setarray .VHID[0],5013,32016,32017,32018,32019,32020,32021,32022,32023;
+set @Menu$,"";
+getinventorylist;
+for( set .@k,0; .@k < getarraysize( .VHID ); set .@k,.@k + 1 )
+	for(set @l,0; @l < @inventorylist_count; set @l,@l + 1) 
+		if(@inventorylist_id[@l] == .VHID[.@k] && @inventorylist_refine[@l] == 0 && @inventorylist_card1[@l] == 0 && @inventorylist_card2[@l] == 0 && @inventorylist_card3[@l] == 0 && @inventorylist_card4[@l] == 0) {
+			set @Menu$,@Menu$ + "- "+getitemname( .VHID[.@k] )+ ( (@inventorylist_id[@l+1])?":":"");
+			setarray .@eq_id[.@e],@inventorylist_id[@l];
+			set .@e,.@e + 1;
+		}
+	
+if(@Menu$ == "") {
+	mes "It seems you don't have valid Valkyrie Helms in your inventory.";
+	mes "I don't accept VH with refine and cards.";
+	close;
+}
+mes "Which Valkyrie Helm do you want to trade to another?";
+mes "^FF0000Important Notice :";
+mes "I will only list the VH which are available.^000000";
+next;
+set @Trade, select( @Menu$ ) - 1;
+
+mes "So, you are going to trade your's ^FF0000"+getitemname( .@eq_id[@Trade] )+"^000000 into which Valkyrie Helm?";
+next;
+set @Menu$,"";
+for( set .@k,0; .@k < getarraysize( .VHID ); set .@k,.@k + 1 )
+	set @Menu$,@Menu$ + "- "+getitemname( .VHID[.@k] ) + ( (.VHID[.@k])?":":"");
+	
+set @TradeTo, select( @Menu$ ) - 1;
+
+if(countitem2(.@eq_id[@Trade],1,0,0,0,0,0,0)) {
+    unequip EQI_HEAD_TOP;
+    delitem2 .@eq_id[@Trade],1,1,0,0,0,0,0,0;
+	getitem2 .VHID[@TradeTo],1,1,0,0,0,0,0,0;
+	equip .VHID[@TradeTo];
+} else {
+	mes "Huh? Your VH has vanished....., please make sure you have it in your inventory.";
+	close;
+}
+mes "Done... You have changed your ^0000FF"+getitemname( .@eq_id[@Trade] )+"^000000 to ^FF0000"+getitemname( .VHID[@TradeTo] )+"^000000.";
+close;
+}

@@ -1,0 +1,48 @@
+//===== eAthena Script =======================================
+//= Reset Master
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Created
+//===== Compatible With ======================================
+//= Every eAthena SQL SVN 
+//===== Description ==========================================
+//= This script can reset your Stat Points and Skill Points for an fee
+//  based on your Base Level.
+//===== Comments =============================================
+//= None yet... 
+//===========================================================
+prontera,150,180,0	script	Reset Master	100,{
+
+set .n$,"["+strnpcinfo(1)+"]";
+
+set @cost,0;
+if(BaseLevel >= 71 && BaseLevel < 121) set @cost,250000;
+else if(BaseLevel >= 121) set @cost,400000;
+
+mes .n$;
+mes "Hello there.";
+mes "I can reset your Stats and Skills on these conditions:";
+mes "Base Level 70 and below = free of charge.";
+mes "Base Level 71 till 120 = 250,000 Zeny.";
+mes "Base Level 121 and above = 400,000 Zeny.";
+mes "If you choose \"Reset Both\" the fee will be doubled.";
+next;
+switch(select("- Reset Stats:- Reset Skill:- Reset Both")) {
+
+	default:
+	mes .n$;
+	if(@menu == 3) set @cost,@cost*2;
+	if(Zeny < @cost) {
+		mes "I'm sorry, but you don't have enough Zeny for this service.";
+		mes "You require "+@cost+" Zeny.";
+		close;
+	}	
+	mes "I will now reset your Stats.";
+	close2;
+	if(@menu != 2) ResetStatus;
+	if(@menu != 1) ResetSkill;
+	set Zeny,Zeny - @cost;
+	end;
+}
+}

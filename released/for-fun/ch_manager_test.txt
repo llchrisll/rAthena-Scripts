@@ -1,0 +1,333 @@
+//===== eAthena Script =======================================
+//= Character Manager
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= This script will be only usefull on Test Servers,,
+//= because it can set the players Level/Stat Points/Skill Points
+//= as well the Job. Also it can give you items.
+//= These functions are unlimited, except that you can
+//= Disable/Enable it who can use it, GM only or all.
+//===== Comments =============================================
+//= None yet
+//============================================================
+prontera.gat,160,192,4	script	Character Manager	108,{
+
+set .@n$,"[Character Manager]";
+set .@last_it,25077; // Highest Item ID
+
+mes .@n$;
+if(!$@GMOnly || ($@GMOnly && getgmlevel()) ) {
+	mes "What do you want to do?";
+	switch(select($@ch_man_m$)) {
+		
+		case 1:
+		next;
+		mes .@n$;
+		mes "What do you want to change?";
+		mes "^FF0000Note: The number in the";
+		mes "\"( X )\" is your current Level.^000000";
+		menu "Base Level ("+BaseLevel+")",C_BLevel,"Job Level ("+JobLevel+")",C_JLevel,"Nothing",L_Quit;
+		
+			C_BLevel:
+			next;
+			mes .@n$;
+			mes "The max Base Level you can";
+			mes "be is \""+$@BLevel+"\"";
+			next;
+			input @new_base;
+			if(@new_base > $@BLevel || !@new_base) {
+				mes .@n$;
+				mes "I'm sorry, but you have";
+				mes "put an invalid Level.";
+				close;
+			}
+			next;
+			set BaseLevel,@new_base;
+			mes .@n$;
+			mes "You're Base Level has been";
+			mes "changed. Thanks for using";
+			mes "this service.";
+			close;
+			
+			C_JLevel:
+			next;
+			mes .@n$;
+			mes "The max Job Level you can";
+			mes "be is \""+$@JLevel+"\"";
+			mes "^FF0000Note: The Job Level is";
+			mes "Class depended and can't";
+			mes "increase over the";
+			mes "Server Settings.^000000";
+			next;
+			input @new_job;
+			if(@new_job > $@JLevel || !@new_job) {
+				mes .@n$;
+				mes "I'm sorry, but you have";
+				mes "put an invalid Level.";
+				close;
+			}
+			next;
+			set JobLevel,1;
+			set SkillPoint,0;
+			set JobLevel,@new_job;
+			mes .@n$;
+			mes "You're Job Level has been";
+			mes "changed. Thanks for using";
+			mes "this service.";
+			close;
+		
+		case 2:
+		if(!$@JobSwap) close;
+		next;
+		mes .@n$;
+		mes "Which Job do you want?";
+		menu "Normal",L_NC,"Transcendend",L_TC,"Baby",L_BC,"Rebirth",L_RC;
+		
+			L_NC:
+			next;
+			mes "Now type the number of the Job:";
+			mes "Normal Jobs are";
+			mes " ";
+			mes "Novice - 0";
+			mes "Swordman - 1";
+			mes "Mage - 2";
+			mes "Archer - 3";
+			mes "Acolyte - 4";
+			mes "Merchant - 5";
+			mes "Thief - 6";
+			mes " ";
+			mes "Super Novice - 23";
+			mes "Knight - 7/Crusader - 14";
+			mes "Priest - 8/Monk - 15";
+			mes "Wizard - 9/Sage - 16";
+			mes "Blacksmith - 10/Alchemist - 18";
+			mes "Hunter - 11/Bard - 19/Dancer - 20";
+			mes "Assassin - 12/Rogue - 17";
+			next;
+			input @job_num;
+			if(@job_num > 23) {
+				mes "Number 23 is the highest Class";
+				mes "within the normal Jobs.";
+				mes "If you want to succeed,";
+				mes "try a another job row.";
+				close;
+			} else if(@job_num == Class) {
+				mes .@n$;
+				mes "You are already the chosen";
+				mes "Class.";
+				close;
+			}
+			goto Job_Swap;
+			
+			L_TC:
+			next;
+			mes "Now type the number of the Job:";
+			mes "Transcended Jobs are";
+			mes " ";
+			mes "Gunslinger - 24";
+			mes "Ninja - 25";
+			mes "Taekwon - 4046";
+			mes "Star Gladiator - 4047";
+			mes "Soullinker - 4049";
+			next;
+			input @job_num;
+			if(Class == 24 || Class == 25 || Class == 4046 || Class == 4047 || Class == 4049) {
+				mes .@n$;
+				mes "You are already a";
+				mes Class;
+				close;
+			} else if(!(@job_num == 24 || @job_num == 25 || @job_num == 4046 || @job_num == 4047 || @job_num == 4049)) {
+				mes .@n$;
+				mes "The number you have put is invalid";
+				close;
+			}
+			goto Job_Swap;
+			
+			L_BC:
+			next;
+			mes "Now type the number of the Job:";
+			mes "Baby Jobs are";
+			mes " ";
+			mes "Baby Novice - 4023";
+			mes "Baby Swordman - 4024";
+			mes "Baby Mage - 4025";
+			mes "Baby Archer - 4026";
+			mes "Baby Acolyte - 4027";
+			mes "Baby Merchant - 4028";
+			mes "Baby Thief - 4029";
+			mes " ";
+			mes "Super Baby - 4045";
+			mes "Baby Knight: 4030";
+			mes "Baby Crusader: 4037";
+			mes "Baby Priest: 4031/Baby Monk: 4038";
+			mes "Baby Wizard: 4032/Baby Sage: 4039";
+			mes "Baby Blacksmith: 4033";
+			mes "Baby Alchemist: 4031";
+			mes "Baby Hunter: 4034";
+			mes "Baby Bard: 4042/Baby Dancer - 4043";
+			mes "Baby Assassin: 4035";
+			mes "Baby Rogue: 4040";
+			next;
+			input @job_num;
+			if(@job_num < 4023 || @job_num > 4045) {
+				mes .@n$;
+				mes "The lowest number is 4023 and";
+				mes "the highest is 4045.";
+				close;
+			} else if(@job_num == Class) {
+				mes .@n$;
+				mes "You are already a";
+				mes Class;
+				close;
+			}
+			goto Job_Swap;
+			
+			L_RC:
+			next;
+			mes "Now type the number of the Job:";
+			mes "Rebirth Jobs are";
+			mes " ";
+			mes "High Novice - 4001";
+			mes "High Swordman - 4002";
+			mes "High Mage - 4003";
+			mes "High Archer - 4004";
+			mes "High Acolyte - 4005";
+			mes "High Merchant - 4006";
+			mes "High Thief - 4007";
+			mes " ";
+			mes "Lord Knight: 4008/Paladin: 4015";
+			mes "High Priest: 4009/Champion: 4016";
+			mes "High Wizard: 4010/Professor: 4017";
+			mes "Whitesmith: 4011/Creator: 4019";
+			mes "Sniper: 4012";
+			mes "Clown: 4020/Gypsy: 4021";
+			mes "Assassin Cross: 4013/Stalker: 4018";
+			next;
+			input @job_num;
+			if(@job_num < 4001 || @job_num > 4021) {
+				mes .@n$;
+				mes "The lowest number is 4001 and";
+				mes "the highest is 4021.";
+				close;
+			} else if(@job_num == Class) {
+				mes .@n$;
+				mes "You are already a";
+				mes Class;
+				close;
+			}
+			goto Job_Swap;
+			
+			Job_Swap:
+			jobchange @job_num;
+			mes .@n$;
+			mes "You are now a";
+			mes jobname(@job_num);
+			close;
+			
+		case 3:
+		if(!$@StatP) close;
+		next;
+		mes .@n$;
+		mes "Type the amount of Status Points,";
+		mes "maximum is 10,000";
+		next;
+		if(input(@new_st,1,10000) != 0) {
+			mes .@n$;
+			mes "You have put an invald number,";
+			mes "lowest is 1 and highest is 10,000.";
+			close;
+		}
+		set StatusPoint,@new_st;
+		mes .@n$;
+		mes "You have recieved";
+		mes @new_st+" Status Points.";
+		mes "^FF0000Note: Be aware then this";
+		mes "can be affected by the Server Settings.";
+		close;;
+		
+		
+		case 4:
+		if(!$@SkillP) close;
+		next;
+		mes .@n$;
+		mes "Type the amount of Skill Points,";
+		mes "maximum is 200.";
+		next;
+		if(input(@new_sk,1,200) != 0) {
+			mes .@n$;
+			mes "You have put an invald number,";
+			mes "lowest is 1 and highest is 200.";
+			close;
+		}
+		set SkillPoint,@new_sk;
+		mes .@n$;
+		mes "You have recieved";
+		mes @new_sk+" Skill Points.";
+		close;
+	
+		
+		case 5:
+		if(!$@FreeItem) close;
+		next;
+		mes .@n$;
+		mes "Type the Item ID";
+		mes "which you want.";
+		input .@item_id;
+		next;
+		mes .@n$;
+		if(.@item_id < 512 || .@item_id > .@last_it) {
+			mes "I'm sorry, but you have put";
+			mes "a invalid ID.";
+			close;
+		} else if(getiteminfo(.@item_id,3) == -1) {
+			mes "I'm sorry, there is no such item.";
+			close;
+		}
+		mes "Chosen Item: "+getitemname(.@item_id);
+		mes "Now the quantity:";
+		input .@item_am;
+		next;
+		mes .@n$;
+		if(.@item_am < 1 || .@item_am > 30000) set .@item_am,1;
+		if(checkweight(.@item_id,.@item_am) == 0) {
+			mes "I'm sorry, but this will";
+			mes "exceed your weight limit.";
+			close;
+		}
+		atcommand "@item "+.@item_id + " "+.@item_am;
+		mes "You have recieved";
+		mes .@item_am+"x "+getitemname(.@item_id);
+		close;
+	}
+	
+L_Quit:
+next;
+mes .@n$;
+mes "See ya soon.";
+close;
+
+} else {
+	mes "I'm sorry, but";
+	mes "you are not allowed to";
+	mes "use my service.";
+	close;
+}
+
+OnInit:
+set $@BLevel,255; // Max Base Level
+set $@JLevel,90; // Max Job Level
+// Settings - 1 > On/0 > Off:
+set $@JobSwap,1; //  Job Swap
+set $@StatP,1; // Stat Points
+set $@SkillP,1; // Skill Points
+set $@FreeItem,1; // Give Items
+set $@GMOnly,0; // NPC Access, 1 > GM Only, 0 > All
+// Menu - depending on the settings it's showing certain messages:
+set $@ch_man_m$,"Base/Job Level Change:" + ( ($@JobSwap)? "- Job Swap":"Job Swap Disabled") + ":" + ( ($@StatP)?"- I wanna Stat Points":"No Stat Points for you") + ":" + ( ($@SkillP)?"- I wanna Skill Points":"No Skill Points for you") + ":" + ( ($@FreeItem)?"- Gimme Items":"No Items for you");
+end;
+}

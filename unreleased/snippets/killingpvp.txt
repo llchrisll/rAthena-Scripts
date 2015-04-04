@@ -1,0 +1,93 @@
+//===== eAthena Script =======================================
+//= PvP DM
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Created
+//===== Compatible With ======================================
+//= Every eAthena SQL SVN 
+//===== Description ==========================================
+//= This script respawns the player on pvp maps after he died.
+//= Also it has an Killing Spree System without sounds though.
+//===== Comments =============================================
+//= None yet... 
+//===========================================================
+pvp_y_1-2,128,120,4	script	KillerPvP	857,{
+
+mes "[Killer PvP]";
+mes "Sphree Start with: "+.killstart;
+mes "Auto Res: " + ( (.dm) ? "Online": "Offline");
+close;
+
+OnPCKillEvent:
+if(getmapflag(strcharinfo(3),mf_pvp) == 0) end;
+mapannounce strcharinfo(3),strcharinfo(0) + " has killed "+rid2name(killedrid)+".",0;
+set @killct,@killct + 1;
+if(@killct >= .killstart) {
+	if(@killct < 10) {
+		mapannounce strcharinfo(3),strcharinfo(0) + " is now on Killing Spree!!!!",0;
+	} else if(@killct >= 10 && @killct < 15) {
+		mapannounce strcharinfo(3),strcharinfo(0) + " is now on Dominating!!!!",0;
+	} else if(@killct >= 15 && @killct < 20) {
+		mapannounce strcharinfo(3),strcharinfo(0) + " is now on Mega Kill!!!!",0;	
+	} else if(@killct >= 20 && @killct < 25) {
+		mapannounce strcharinfo(3),strcharinfo(0) + " is now on Ridiculous!!!!",0;	
+	} else if(@killct >= 25 && @killct < 30) {
+		mapannounce strcharinfo(3),strcharinfo(0) + " is now on Unstoppable!!!!",0;
+	} else if(@killct >= 30 && @killct < 50) {
+		mapannounce strcharinfo(3),strcharinfo(0) + " is now on Holy Shit!!!!",0;
+	} else if(@killct >= 50 && @killct < 80) {
+		mapannounce strcharinfo(3),strcharinfo(0) + " is now on Horrendous!!!!",0;
+	} else if(@killct >= 80) {
+		mapannounce strcharinfo(3),strcharinfo(0) + " is now on GodLike!!!!",0;
+	}
+	message strcharinfo(0),"You have killed "+@killct+" Player(s) so far.";
+}
+end;
+
+OnPCDieEvent:
+if(getmapflag(strcharinfo(3),mf_pvp) == 0) end;
+if(strcharinfo(3) != .pvp_m$) end;
+set @killct,0; 
+if(.dm	&& .@k != getcharid(3)) {
+	sleep2 1300;
+	warp strcharinfo(3),0,0;
+	if(HP == 0) atcommand "@alive";
+	percentheal 100,100; 
+}
+end;
+	
+OnInit:
+set .killstart,5;
+set .dm,1;
+set .pvp_m$,"pvp_y_1-2"; // DM Map
+end;
+}
+
+prontera,100,100,0	script	PvP Arena	100,{
+set .@n$,"[PvP Room]";
+
+mes .@n$;
+mes "Which room do you want?";
+next;
+switch(select("- Deathmatch:- Normal:- None")) {
+	case 1:
+	mes .@n$;
+	mes "I'll warp you now in the Deathmatch PvP Room.";
+	mes "I'll also remove all your buffs.";
+	close2;
+	sc_end SC_ALL;
+	warp "pvp_y_1-2.gat",0,0;
+	end;
+	
+	case 3:
+	mes .@n$;
+	mes "I'll warp you now in the PvP Room.";
+	close2;
+	warp "pvp_y_1-1.gat",0,0;
+	end;
+	
+	case 4:
+	close;
+}
+}

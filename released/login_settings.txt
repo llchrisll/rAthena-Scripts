@@ -1,0 +1,105 @@
+//===== eAthena Script =======================================
+//= OnLogin AtCommand Settings
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= This script will be executing AtCommands on Login,
+//= depending on what you have put.
+//===== Comments =============================================
+//= None yet.....
+//============================================================
+prontera,139,173,5	script	Login Settings	57,{
+set .@n$,"[Login Settings]";
+
+mes .@n$;
+mes "Hello, "+strcharinfo(0);
+mes "What setting do you want to change?";
+menu "Autoloot ["+( (login_loot)? "^00BB22On^000000" : "^FF2200Off^000000")+"]",auto_loot,
+	 "Main Chat ["+( (login_main)? "^00BB22On^000000" : "^FF2200Off^000000")+"]",main_chat,
+	 "@NoAsk ["+( (login_noask)? "^00BB22On^000000" : "^FF2200Off^000000")+"]",no_ask;
+
+	auto_loot:
+	next;
+	mes .@n$;
+	mes "Status: "+( (login_loot) ? "^00BB22On^000000" : "^FF2200Off^000000");
+	menu "I want to "+((!login_loot) ? "^00BB22enable^000000" : "^FF2200disable^000000")+" it.",-,"Nothing",L_quit;
+
+	next;
+	mes .@n$;
+	if(login_loot == 0) {
+		mes "Autoloot is now ^00BB22On^000000.";
+		set login_loot,1;
+		atcommand strcharinfo(0) + "@autoloot";
+		
+	} else if(login_loot == 1) {
+		mes "Autoloot is now ^FF2200Off^000000.";
+		set login_loot,0;
+		atcommand strcharinfo(0) + "@autoloot off";
+	}
+	close;
+	
+	main_chat:
+	next;
+	mes .@n$;
+	mes "Status: "+( (login_main) ? "^00BB22On^000000" : "^FF2200Off^000000");
+	menu "I want to "+((!login_main) ? "^00BB22enable^000000" : "^FF2200disable^000000")+" it.",-,"Nothing",L_quit;
+
+	next;
+	mes .@n$;
+	if(login_main == 0) {
+		mes "Main Chat is now ^00BB22On^000000.";
+		set login_main,1;
+		atcommand strcharinfo(0) + "@main";
+		
+	} else if(login_main == 1) {
+		mes "Main Chat is now ^FF2200Off^000000.";
+		set login_main,0;
+		atcommand strcharinfo(0) + "@main off";
+	}
+	close;
+	
+	no_ask:
+	next;
+	mes .@n$;
+	mes "Status: "+( (login_noask) ? "^00BB22On^000000" : "^FF2200Off^000000");
+	menu "I want to "+((!login_noask) ? "^00BB22enable^000000" : "^FF2200disable^000000")+" it.",-,"Nothing",L_quit;
+
+	next;
+	mes .@n$;
+	if(login_noask == 0) {
+		mes "@noask is now ^00BB22On^000000.";
+		set login_noask,1;
+		atcommand strcharinfo(0) + "@noask";
+		
+	} else if(login_noask == 1) {
+		mes "@noask is now ^FF2200Off^000000.";
+		set login_noask,0;
+		atcommand strcharinfo(0) + "@noask off";
+	}
+	close;
+	
+	L_quit:
+	next;
+	mes .@n$;
+	mes "See ya.";
+	close;
+
+OnPCLoginEvent:
+if(login_loot == 1)	{
+	atcommand strcharinfo(0) + "@autoloot";
+	dispbottom "Autoloot is now On.";
+}
+if(login_main == 1) {
+	atcommand strcharinfo(0) + "@main";
+	dispbottom "Main Chat is now On.";
+}
+if(login_noask == 1) {
+	atcommand strcharinfo(0) + "@noask";
+	dispbottom "@noask is now On.";
+}
+end;
+}

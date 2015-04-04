@@ -1,0 +1,396 @@
+//===== eAthena Script =======================================
+//= Dynamical Shop 
+//===== By ===================================================
+//= lllchrislll
+//===== Version ==============================================
+//= 1.0 - Script Created
+//		- Nearly forgot the "OnBuyItem" part (Q.Q)
+//		- Added the possibility to edit the price limit.
+//===== Compatible With ======================================
+//= Every eAthena SVN 
+//===== Description ==========================================
+//= This Shop can be changed dynamically ingame and has two
+//  payment methods, to choose from: Zeny and Cash Points.
+//= Also you can edit the Price Limit as long it doesn't exceed
+//	the server's default settings in the conf/script_athena.conf
+//	> input_max_value. By default I put it on 10,000,000, near
+//	line 76 you can find a small hint, which value is the max,
+//	if it isn't noted inside of that file already.
+//===== Comments =============================================
+//= None yet... 
+//===========================================================
+prontera,146,172,0	script	Cash Shop	100,{
+function ShopStuff;
+
+if(getgmlevel() >= .gm) {
+	set @shop,0;
+	mes .n$;
+	mes "Hello, "+strcharinfo(0)+".";
+	mes "Current Currency: "+$Cur$[$Cur];
+	while(1) {
+		if(@shop) {
+			close2;
+			break;
+		}
+		next;
+		mes .n$;
+		mes "How can I help you?";
+		next;
+		switch(select("- View Settings:- Reset Shop:- Open Shop:- Nothing")) {
+
+			case 1:
+			mes .n$;
+			mes "What do you want view?";
+			next;
+			if(select("- Shop Managment:- Currency Setting") - 1) {
+				mes .n$;
+				if(getgmlevel() < .gm_pr) {
+					mes "You don't have access to this service.";
+					continue;
+				}
+				mes "What now?";
+				mes "^FF0000Note: On currency change I will delete every entry in the shop you have made so far.^000000";
+				switch(select("- Change currency ("+$Cur$[$Cur]+"):- Change Price Limit:- Nothing")) {
+					case 1:
+					next;
+					mes .n$;
+					mes "Please choose from the menu below, which currency I should use:";
+					select("- "+$Cur$[1]+":- "+$Cur$[2]);
+					set $Cur,@menu;
+					deletearray $cash_it[0],128;
+					deletearray $cash_p[0],128;
+					ShopStuff(4);
+					continue;
+					break;
+				
+					case 2:
+					next;
+					mes .n$;
+					mes "Current Setting: "+$limit[@lim];
+					mes "Change?";
+					if(select("- Yes:- No") - 1) continue;
+					next;
+					mes .n$;
+					mes "Please type the new value:";		
+					
+					// ========= Changing Max Limit of 10,000,000 ============ //
+					// 10,000,000 is the default setting for the max input.
+					// To change that open the conf/script_athena.conf and 
+					// edit the value of "input_max_value:" to "2147483647",
+					// which is the highest value possible.
+					// Then you only need to change it here :D.
+					// ======================================================= //
+					
+					mes "Note: But you can't go higher than the server setting of 10,000,000.";
+					next;
+					if(input(@n_lim,1,10000000) != 0) {
+						mes .n$;
+						mes "Invalid Value, max 10,000,000.";
+						continue;
+					}
+					mes .n$;
+					mes "New Limit has been set.";
+					setarray $limit[@lim],@n_lim;
+					continue;
+					break;
+					
+					case 3:
+					continue;
+					break;
+				}
+			}
+			if($Cur == 0) {
+				mes .n$;
+				mes "I'm sorry, but I don't know with which Currency I should trade yet.";
+				mes "Please choose an currency first.";
+				continue;
+			}
+			if($limit[$Cur] == 0) {
+				mes .n$;
+				mes "You haven't set an price limit yet.";
+				continue;
+			}
+			mes .n$;
+			if(getarraysize($cash_it) < 1) {
+				mes "There is no item in the Shop yet.";
+			} else {
+				mes "There are currently the following "+getarraysize($cash_it)+" Items in the Shop:";
+				mes "============================";
+				for ( set .@i,0; .@i < getarraysize($cash_it); set .@i,.@i + 1) {
+					mes getitemname($cash_it[.@i])+" (ID: "+$cash_it[.@i]+")";
+					mes "Price:"+$cash_p[.@i]+" "+$Cur$[$Cur];
+					mes ( ($cash_it[.@i+1] != 0)?"---------------------------------":"============================");
+				}
+			}
+			next;
+			switch(select("- Add Items:- Edit Items:- Delete Items:- Nothing")) {
+				case 1:
+				mes .n$;
+				if(getarraysize($cash_it) >= 128) {
+					mes "The Shop is full, please remove an item first.";
+					continue;
+				}
+				mes "Please type the Item ID you want to add:";
+				mes "Max is 128 Items.";
+				next;
+				if(input(@item,501,.last_id) != 0) {
+					mes .n$;
+					mes "The id you have put is either too low or too high.";
+					continue;
+				}
+				if(getitemname(@item) == "null" || getitemname(@item) == "") {
+					mes .n$;
+					mes "The item you requested doesn't exist.";
+					continue;
+				}
+				mes .n$;
+				mes "Chosen Item: "+getitemname(@item);
+				mes " ";
+				mes "Now input the price it should have, the current currency is \""+$Cur$[$Cur]+"\".";
+				mes "Maximum is "+$limit[$Cur];
+				next;
+				if(input(@price,1,$limit[$Cur]) != 0) {
+					mes .n$;
+					mes "You have put an invalid price.";
+					mes "Maximum is "+$limit[$Cur];
+					continue;
+				}
+				mes .n$;
+				mes "Price: "+@price+" "+$Cur$[$Cur];
+				mes "Is that correct?";
+				if(select("- Yes:- No") - 1) continue;
+				ShopStuff(1,0,@item,@price);
+				continue;
+				break;
+				
+				case 2:
+				mes .n$;
+				if(getarraysize($cash_it) < 1) {
+					mes "There is no Item to edit.";
+					mes "Please add one first :D.";
+					continue;
+				}
+				mes "Please choose the item you want to edit:";
+				mes "Format: Name (Current Price)";
+				next;
+				set @ed_list$,"";
+				for ( set .@e,0; .@e < getarraysize($cash_it); set .@e,.@e + 1)
+					set @ed_list$,@ed_list$ + "- "+getitemname($cash_it[.@e])+" ("+$cash_p[.@e]+")" + ( ($cash_it[.@e+1])?":":"");
+					
+				set @ed,select(@ed_list$) - 1;
+				
+				mes .n$;
+				mes "Chosen Item: "+ getitemname($cash_it[@ed]);
+				mes "Price: "+ $cash_p[@ed]+" "+$Cur$[$Cur];
+				mes "Correct?";
+				if(select("- Yes:- No") - 1) continue;
+				next;
+				mes .n$;
+				mes "What do you want to edit?";
+				next;
+				if(select("- Item ID:- Price") - 1) {
+					mes .n$;
+					mes "Input the new price:";
+					next;
+					if(input(@price,1,$limit[$Cur]) != 0) {
+						mes .n$;
+						mes "You have put an invalid price.";
+						mes "Maximum is "+$limit[$Cur];
+						continue;
+					}
+					mes .n$;
+					mes "Chosen Price: "+@price+" "+$Cur$[$Cur];
+					mes "Correct?";
+					if(select("- Yes:- No") - 1) continue;
+					ShopStuff(3,@ed,$cash_it[@ed],@price);
+					
+				} else {
+					mes .n$;
+					mes "Input the new item id:";
+					next;
+					if(input(@item,501,.last_id) != 0) {
+						mes .n$;
+						mes "The id you have put is either too low or too high.";
+						continue;
+					}
+					if(getitemname(@item) == "null" || getitemname(@item) == "") {
+						mes .n$;
+						mes "The item you requested doesn't exist.";
+						continue;
+					}
+					mes .n$;
+					mes "Chosen Item: "+getitemname(@item);
+					mes "Correct?";
+					if(select("- Yes:- No") - 1) continue;
+					ShopStuff(3,@ed,@item,$cash_p[@ed]);
+				}	
+				continue;
+				break;
+				
+				case 3:
+				mes .n$;
+				if(getarraysize($cash_it) < 1) {
+					mes "There is no Item to remove.";
+					mes "Please add one first :D.";
+					continue;
+				}
+				mes "Please choose the item you want to remove:";
+				mes "Format: Name (Current Price)";
+				next;
+				set @r_list$,"";
+				for ( set .@e,0; .@e < getarraysize($cash_it); set .@e,.@e + 1)
+					set @r_list$,@r_list$ + "- "+getitemname($cash_it[.@e])+" ("+$cash_p[.@e]+")" + ( ($cash_it[.@e+1])?":":"");
+					
+				set @re,select(@r_list$) - 1;
+				
+				mes .n$;
+				mes "Chosen Item: "+ getitemname($cash_it[@re]);
+				mes "Price: "+ $cash_p[@re]+" "+$Cur$[$Cur];
+				mes "Correct?";
+				if(select("- Yes:- No") - 1) continue;
+				ShopStuff(2,@ed);
+				continue;
+				break;
+				
+				case 4:
+				continue;
+				break;
+			}
+			
+			case 2:
+			mes .n$;
+			mes "Do you really want to reset the shop?";
+			if(select("- Yes:- No") - 1) continue;
+			ShopStuff(4);
+			continue;
+			break;
+			
+			case 3:
+			set @shop,1;
+			break;
+			
+			case 4:
+			close;
+		}
+	}
+}
+if(!$Cur) {
+	mes .n$;
+	mes "I'm sorry, but I don't know with which Currency I should trade yet.";
+	close;
+}
+if(getarraysize($cash_it) < 1) {
+	mes .n$;
+	mes "There are no items to purchase yet.";
+	mes "Please come back as soon as I have some.";
+	close;
+}
+if(.first == 1) ShopStuff(5);
+npctalk strnpcinfo(1)+": Accepted Payment Method: "+$Cur$[$Cur];
+dispbottom strnpcinfo(1)+": You have "+ ( ($Cur == 1)?Zeny:#CASHPOINTS)+" "+$Cur$[$Cur];
+npctalk "Notice: Discount Skill won't work at me, you'll have to pay the full price.";
+callshop "Dynam_Shop",1;
+npcshopattach "Dynam_Shop";
+end;
+
+OnBuyItem:
+for ( set .@b,0; .@b < getarraysize(@bought_nameid); set .@b,.@b + 1) {
+	for ( set .@l,0; .@l < getarraysize($cash_it); set .@l,.@l + 1) {
+		if(@bought_nameid[.@b] == $cash_it[.@l]) {
+			if(checkweight($cash_it[.@l],@bought_quantity[.@b]) == 1) {
+				set @cost,$cash_p[.@l]*@bought_quantity[.@b];
+				set @total,@total+@cost;
+			} else {
+				dispbottom "Cash Shop: You would be overweight, please remove some items or buy less.";
+				set @cost,0;
+				set @total,0;
+				deletearray @bought_nameid[0],128;
+				deletearray @bought_quantity[0],128;
+				end;
+			}
+		}
+	}
+}
+if(@total > ( ($Cur == 1)?Zeny:#CASHPOINTS) ) {
+	dispbottom strnpcinfo(1)+": You don't have the required "+$Cur$[$Cur];
+	dispbottom strnpcinfo(1)+": You need "+@total +" "+$Cur$[$Cur]+".";
+	set @cost,0;
+	set @total,0;
+	deletearray @bought_nameid[0],128;
+	deletearray @bought_quantity[0],128;
+	end;
+}
+// In case the lower version doesn't work accordingly. q.q
+//if($Cur == 1) set Zeny,Zeny - @total;
+//else if($Cur == 2) set #CASHPOINTS,#CASHPOINTS - @total;
+
+set ( ($Cur == 1)?Zeny:#CASHPOINTS),( ($Cur == 1)?Zeny:#CASHPOINTS) - @total;
+
+for ( set .@s,0; .@s < getarraysize(@bought_nameid); set .@s,.@s + 1)
+	getitem @bought_nameid[.@s],@bought_quantity[.@s];
+	
+set @cost,0;
+set @total,0;
+deletearray @bought_nameid[0],128;
+deletearray @bought_quantity[0],128;
+end;
+
+function	ShopStuff	{
+// ==================================================== //
+// getarg(0):
+//	* 1 - Add
+//	* 2 - Remove
+//	* 3 - Edit
+//	* 4 - Delete Shop
+//	* 5 - Shop Creation
+// getarg(1): Array Position for Edit & Remove
+// getarg(2): Item ID
+// getarg(3): Price
+// ==================================================== //
+	// =========== Item Adding ============ //
+	if(getarg(0) == 1) {
+		npcshopadditem "Dynam_Shop",getarg(2),getarg(3);
+		setarray $cash_it[getarraysize($cash_it)],getarg(2);
+		setarray $cash_p[getarraysize($cash_p)],getarg(3);
+		
+	// =========== Item Removal ============ //	
+	} else if(getarg(0) == 2) {
+		npcshopdelitem "Dynam_Shop",$cash_it[getarg(1)];
+		deletearray $cash_it[getarg(1)],1;
+		deletearray $cash_p[getarg(1)],1;
+		
+	// =========== Item Edit ============ //
+	} else if(getarg(0) == 3) {
+		setarray $cash_it[getarg(1)],getarg(2);
+		setarray $cash_p[getarg(1)],getarg(3);
+		// Re-Create Shop after Edit
+		npcshopitem "Dynam_Shop",$cash_it[0],$cash_p[0];
+		for ( set .@s,1; .@s < getarraysize($cash_it); set .@s,.@s + 1) 
+				npcshopadditem "Dynam_Shop",$cash_it[.@s],$cash_p[.@s];
+				
+	// =========== Reset Shop ============ //				
+	} else if(getarg(0) == 4) {
+		npcshopitem "Dynam_Shop",512,10;
+		set .first,1;
+
+	// =========== Shop Creation ============ //		
+	} else if(getarg(0) == 5) {
+		ShopStuff(4);
+		npcshopdelitem "Dynam_Shop",512;
+		for ( set .@s,0; .@s < getarraysize($cash_it); set .@s,.@s + 1) 
+			npcshopadditem "Dynam_Shop",$cash_it[.@s],$cash_p[.@s];
+		set .first,0;
+	}
+	return;
+}
+
+OnInit:
+set .n$,"["+strnpcinfo(1)+"]";
+set .gm,60; // General Access Level
+set .gm_pr,80; // Currency Setting Access Level
+set .first,1; // First Shop Creation
+set .last_id,30000; // Highest Item ID
+setarray $Cur$[0],"None","Zeny","Cash Points";
+end;
+}
+-	shop	Dynam_Shop	-1,512:-1

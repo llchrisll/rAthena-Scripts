@@ -1,0 +1,96 @@
+//===== eAthena Script =======================================
+//= Weekly Wipe (SQL)
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Created
+//===== Compatible With ======================================
+//= Every eAthena SQL SVN 
+//===== Tested With ==========================================
+//= eAthena 14428 SQL Trunk 
+//===== Description ==========================================
+//= This script automatically wipes your data in your
+//  SQL Database every "$@wipe_d", you also can decide if
+//  the GM accounts should be deleted too or not.
+//===== Comments =============================================
+//= I was kinda lazy to test that, so if bugs appear, leave me a pm.
+//  Or write an issue report at http://llchrisll-scripts.googlecode.com
+//============================================================
+-	script	WeeklyWipe	-1,{
+end;
+
+OnInit:
+set $@wipe_d,0; // 0-6 = Sunday - Saturday
+set $@gm_acc,1; // GM Accs too?
+end;
+
+OnClock0001:
+if(gettime(4) != $@wipe_d) end;
+if($@gm_acc) {
+	query_sql "DELETE FROM `char`";
+	query_sql "DELETE FROM `cart_inventory`";
+	query_sql "DELETE FROM `friends`";
+	query_sql "DELETE FROM `globa_reg_value`";
+	query_sql "DELETE FROM `guild`";
+	query_sql "DELETE FROM `guild_alliance`";
+	query_sql "DELETE FROM `guild_castle`";
+	query_sql "DELETE FROM `guild_expulsion`";
+	query_sql "DELETE FROM `guild_member`";
+	query_sql "DELETE FROM `guild_position`";
+	query_sql "DELETE FROM `guild_skill`";
+	query_sql "DELETE FROM `guild_storage`";
+	query_sql "DELETE FROM `homunculus`";
+	query_sql "DELETE FROM `hotkey`";
+	query_sql "DELETE FROM `inventory`";
+	query_sql "DELETE FROM `login`";
+	query_sql "DELETE FROM `mail`":
+	query_sql "DELETE FROM `memo`";
+	query_sql "DELETE FROM `mercenary`";
+	query_sql "DELETE FROM `mercenary_owner`";
+	query_sql "DELETE FROM `party`";
+	query_sql "DELETE FROM `pet`";
+	query_sql "DELETE FROM `quest`";
+	query_sql "DELETE FROM `sc_data`";
+	query_sql "DELETE FROM `skill`";
+	query_sql "DELETE FROM `storage`";
+} else {
+	query_sql "SELECT `account_id` FROM `login` WHERE `level` = '0'",.@acc;
+	for( set .@c,0; .@c < getarraysize(.acc); set .@c,.@c + 1) {
+		query_sql "SELECT `char_id`,`guild_id` FROM `char` WHERE `account_id` = '"+.@acc[.@c]+"'",.@del,.@gld;
+		for( set .@d,0; .@d < getarraysize(.@del); set .@d,.@d + 1) {
+			
+			query_sql "DELETE FROM `char` WHERE `char_id` = '"+.@del[.@d]+"'";
+			query_sql "DELETE FROM `cart_inventory` WHERE `char_id` = '"+.@del[.@d]+"'";
+			query_sql "DELETE FROM `friends` WHERE `char_id` = '"+.@del[.@d]+"'";
+			query_sql "DELETE FROM `globa_reg_value` WHERE `char_id` = '"+.@del[.@d]+"'";
+			if(.@del[.@d] == query_sql("SELECT `char_id` FROM `guild` WHERE `guild_id` = '"+.@gld[.@d]+"'",.@lead)) {
+				query_sql "DELETE FROM `guild` WHERE `char_id` = '"+.@del[.@d]+"'";
+				query_sql "DELETE FROM `guild_alliance` WHERE `guild_id` = '"+.@gld[.@d]+"'";
+				query_sql "DELETE FROM `guild_castle` WHERE `guild_id` = '"+.@gld[.@d]+"'";
+				query_sql "DELETE FROM `guild_expulsion` WHERE `guild_id` = '"+.@gld[.@d]+"'";
+				query_sql "DELETE FROM `guild_member` WHERE `guild_id` = '"+.@gld[.@d]+"'";
+				query_sql "DELETE FROM `guild_position` WHERE `guild_id` = '"+.@gld[.@d]+"'";
+				query_sql "DELETE FROM `guild_skill` WHERE `guild_id` = '"+.@gld[.@d]+"'";
+				query_sql "DELETE FROM `guild_storage` WHERE `guild_id` = '"+.@gld[.@d]+"'";
+			} else query_sql "DELETE FROM `guild_member` WHERE `char_id` = '"+.@del[.@d]+"'";
+			query_sql "DELETE FROM `homunculus` WHERE `char_id` = '"+.@del[.@d]+"'";
+			query_sql "DELETE FROM `hotkey` WHERE `char_id` = '"+.@del[.@d]+"'";
+			query_sql "DELETE FROM `inventory` WHERE `char_id` = '"+.@del[.@d]+"'";
+			query_sql "DELETE FROM `login` WHERE `account_id` = '"+.@acc[.@c]+"'";
+			query_sql "DELETE FROM `mail` WHERE `dest_id` = '"+.@del[.@d]+"'";
+			query_sql "DELETE FROM `memo` WHERE `char_id` = '"+.@del[.@d]+"'";
+			query_sql "DELETE FROM `mercenary` WHERE `char_id` = '"+.@del[.@d]+"'";
+			query_sql "DELETE FROM `mercenary_owner` WHERE `char_id` = '"+.@del[.@d]+"'";
+			query_sql "DELETE FROM `party` WHERE `leader_id` = '"+.@del[.@d]+"'";
+			query_sql "DELETE FROM `pet` WHERE `char_id` = '"+.@del[.@d]+"'";
+			query_sql "DELETE FROM `quest` WHERE `char_id` = '"+.@del[.@d]+"'";
+			query_sql "DELETE FROM `sc_data`";
+			query_sql "DELETE FROM `skill` WHERE `char_id` = '"+.@del[.@d]+"'";
+			query_sql "DELETE FROM `storage` WHERE `account_id` = '"+.@acc[.@c]+"'";
+		}
+	}
+}
+query_sql "DELETE FROM `sstatus`";
+query_sql "DELETE FROM `mapreg`";
+end;
+}

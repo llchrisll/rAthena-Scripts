@@ -1,0 +1,302 @@
+//===== eAthena Script =======================================
+//= GM Activity Log
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Made
+//=		  Added "Edit GM List" - Part
+//        Made some improvements about the Log Timer
+//===== Compatible With ======================================
+//= Every eAthena SVN 
+//===== Description ==========================================
+//= This Scripts allows you to log the activity,
+//  how many days, weeks, months and years he was online.
+//===== Comments =============================================
+//= None yet.....
+//====== TO/WANNA DO List ==========================================
+//= Giving out presents for reaching a certain Activity Time like
+//  for 1 Month = 100m Zeny on legit account or like that
+//  maybe in using the activity as a kind of credit
+//= Adding more "Edit" Options for the GM List
+//============================================================
+function	script	GMLog	{
+
+if(getgmlevel() >= 1) {
+	if(gettimetick(2) >= #gm_time && ($gm_logger == 1)) {
+		set @day,0;
+		set @week,0;
+		set @month,0;
+		set @year,0;
+		query_sql "SELECT `acc_id`,`gm_name`,`day`,`week`,`month`,`year` FROM `gm_log` WHERE `acc_id` = '"+getcharid(3)+"'",@acc_id,@gm_name$,@day,@week,@month,@year;
+		if(!@acc_id) {
+				query_sql "INSERT INTO `gm_log` ( `acc_id` , `gm_name` , `day` , `week` , `month` , `year` ) VALUES (  '"+getcharid(3)+"' , '"+escape_sql(strcharinfo(0))+"' , '1' , '0' , '0' , '0' )";
+				set @day,1;
+				set #gm_time,gettimetick(2) + 86400;
+				announce "Your Activity Status has been updated to "+@day+" day(s), "+@week+" week(s), "+@month+" month(s), "+@year+" year(s).",3,0xff0000;
+				sleep2 2000;
+				announce "See ya tomorrow =3.",0,0xff0000;
+				return;
+			}
+		if(@acc_id == getcharid(3) && @gm_name$ != strcharinfo(0)) {
+			query_sql "UPDATE `gm_log` SET `gm_name` = '"+escape_sql(strcharinfo(0))+"' WHERE `acc_id` = '"+getcharid(3)+"'";
+		}
+		set @day,@day + 1;
+		if(@day > 7) {set @day,0; set @week,@week + 1;}
+		if(@week > 4) {set @week,0; set @month,@month + 1;}
+		if(@month > 12) {set @month,0; set @year,@year + 1;}
+		announce "Your Activity Status has been updated to "+@day+" day(s), "+@week+" week(s), "+@month+" month(s), "+@year+" year(s).",3,0xff0000;
+		sleep2 2000;
+		announce "See ya tomorrow =3.",3,0xff0000;
+		query_sql "UPDATE `gm_log` SET `day` = '"+@day+"' WHERE `acc_id` = '"+getcharid(3)+"'";
+		query_sql "UPDATE `gm_log` SET `week` = '"+@week+"' WHERE `acc_id` = '"+getcharid(3)+"'";
+		query_sql "UPDATE `gm_log` SET `month` = '"+@month+"' WHERE `acc_id` = '"+getcharid(3)+"'";
+		query_sql "UPDATE `gm_log` SET `year` = '"+@year+"' WHERE `acc_id` = '"+getcharid(3)+"'";
+		set #gm_time,gettimetick(2) + 86400;		
+
+	} else if(!#gm_time && $gm_logger == 1) {
+		query_sql "INSERT INTO `gm_log` ( `acc_id` , `gm_name` , `day` , `week` , `month` , `year` ) VALUES (  '"+getcharid(3)+"' , '"+escape_sql(strcharinfo(0))+"' , '1' , '0' , '0' , '0' )";
+		set #gm_time,gettimetick(2) + 86400;
+		
+	} else if(#gm_time > 1 && $gm_logger == 0) {
+		announce "The GM Logging System is momentally offline.",bc_red|bc_self;
+		set #gm_time,1;
+	} else if(#gm_time == 1 && $gm_logger == 1) {
+		announce "The GM Logging System is back online.",bc_red|bc_self;
+		set #gm_time,gettimetick(2) + 86400;
+	}
+}
+return;
+}
+
+help_lobby.gat,138,158,4	script	GM Activity Log	833,{
+set .@n$,"[GM Activity Log]";
+
+mes .@n$;
+if(getgmlevel() >= 80) {
+	if($gm_table == 1) {
+		mes "Hello, GM.";
+		mes "What do ya wanna do?";
+		switch(select("- Show Log Entries:- En/Disable the System:- Edit GM List:- Delete MySQL Table")) {
+			case 1:
+			next;
+			cleararray @day[0],0,getarraysize(@day);
+			cleararray @week[0],0,getarraysize(@week);
+			cleararray @month[0],0,getarraysize(@month);
+			cleararray @year[0],0,getarraysize(@year);
+			cleararray @gm_name$[0],"",getarraysize(@gm_name$);
+			cleararray @acc_id[0],0,getarraysize(@acc_id);
+			query_sql "SELECT `gm_name`,`acc_id`,`day`,`week`,`month`,`year` FROM `gm_log` ORDER BY `acc_id` ASC",@gm_name$,@acc_id,@day,@week,@month,@year;
+			mes .@n$;
+			mes "I will list now the Entries:";
+			if(@gm_name$ == "") {
+				mes " ";
+				mes "There are no Entries";
+				mes "in the Log.";
+				close;
+			}
+			for( set @o,0; @o < getarraysize(@acc_id); set @o,@o + 1) {
+				next;
+				mes "^FF0000"+@gm_name$[@o]+"^000000:";
+				mes "-----------------";
+				mes @day[@o]+" Day's";
+				mes @week[@o]+" Week's";
+				mes @month[@o]+" Month's";
+				mes @year[@o]+" Year's";
+				mes "======================";
+			}
+			close;
+			
+			case 2:
+				next;
+				mes .@n$;
+				mes "Do you want to";
+				mes (!$gm_logger) ? "enable" : "disable";
+				mes "GM Logging System?";
+				menu "I want to "+((!$gm_logger) ? "^00BB22enable^000000" : "^FF2200disable^000000")+" it.",-,"Nothing",L_quit;
+					next;
+					mes .@n$;
+					if($gm_logger == 0) {
+						mes "I enabled the GM Logging System.";
+						set $gm_logger,1;
+						
+					} else if($gm_logger == 1) {
+						mes "I disabled the GM Logging System.";
+						set $gm_logger,0;
+					}
+					close;
+				
+				case 3:
+				next;
+				mes .@n$;
+				mes "I will now list the GM's.";
+				cleararray @day[0],0,getarraysize(@day);
+				cleararray @week[0],0,getarraysize(@week);
+				cleararray @month[0],0,getarraysize(@month);
+				cleararray @year[0],0,getarraysize(@year);
+				cleararray @gm_name$[0],"",getarraysize(@gm_name$);
+				cleararray @acc_id[0],0,getarraysize(@acc_id);
+				query_sql "SELECT `gm_name`,`acc_id`,`day`,`week`,`month`,`year` FROM `gm_log` ORDER BY `acc_id` ASC",@gm_name$,@acc_id,@day,@week,@month,@year;
+				mes " ";
+				if(@gm_name$ == "") {
+					mes "There is no GM";
+					mes "in the Log.";
+					mes " ";
+				}
+				set @gm_list$,"- "+@gm_name$[0]+"";
+					mes "^FF0000"+@gm_name$[0]+"^000000:";
+					mes "-----------------";
+				if(@gm_name$[1] != "") {
+					for( set @o,1; @o < getarraysize(@acc_id); set @o,@o + 1) {
+						mes "^FF0000"+@gm_name$[@o]+"^000000:";
+						mes "-----------------";
+						set @gm_list$,@gm_list$ + ":- "+@gm_name$[@o]+"";
+					}
+				}
+				mes "What do you want to do?";
+				next;
+				switch(select("- Add:- Edit:- Remove")) {
+					
+					case 1:
+					set @gm_aid,0;
+					set @new_gm$,"";
+					set @gm_lvl,0;
+					mes .@n$;
+					mes "Now type the name of";
+					mes "the GM you want to add.";
+					next;
+					input @new_gm$;
+					mes .@n$;
+					for( set @g,0; @g < getarraysize(@gm_name$); set @g,@g + 1) {
+						if(@new_gm$ == @gm_name$[@g]) {	mes "This GM is already in the list."; close; }
+					}
+					query_sql "SELECT `account_id` FROM `char` WHERE `name` = '"+@new_gm$+"'",@gm_aid;
+					if(!@gm_aid) { mes "This character doesn't exists, try again please."; close; }
+					query_sql "SELECT `level` FROM `login` WHERE `account_id` = '"+@gm_aid+"'",@gm_lvl;
+					if(!@gm_lvl) { mes "This isn't a GM, please try again."; close;	}
+					query_sql "INSERT INTO `gm_log` ( `acc_id` , `gm_name` , `day` , `week` , `month` , `year` ) VALUES (  '"+@gm_aid+"' , '"+@new_gm$+"' , '1' , '0' , '0' , '0' )";
+					mes "The GM " + @new_gm$;
+					mes "has been added to the Log.";
+					close;
+					
+					case 2:
+					mes .@n$;
+					mes "Which GM do you want to edit?";
+					switch(select(@gm_list$)) {
+					
+						default:
+						set @l,@menu - 1;
+						break;
+					}
+					next;
+					mes .@n$;
+					mes "You have chosen";
+					mes @gm_name$[@l] + ",";
+					mes "what now?";
+					next;
+					if(select("- Reset Activity Timers:- Nothing") - 1) {
+						close;
+					} else {
+						mes .@n$;
+						mes "The times of the GM";
+						mes @gm_name$[@l] + " has";
+						mes "been reseted.";
+						close2;
+						query_sql "UPDATE `gm_log` SET `day` = '0' WHERE `acc_id` = '"+getcharid(3,@gm_name$[@l])+"'";
+						query_sql "UPDATE `gm_log` SET `week` = '0' WHERE `acc_id` = '"+getcharid(3,@gm_name$[@l])+"'";
+						query_sql "UPDATE `gm_log` SET `month` = '0' WHERE `acc_id` = '"+getcharid(3,@gm_name$[@l])+"'";
+						query_sql "UPDATE `gm_log` SET `year` = '0' WHERE `acc_id` = '"+getcharid(3,@gm_name$[@l])+"'";
+						set #gm_time,0;
+						end;
+					}
+				
+					case 3:
+					mes .@n$;
+					mes "Which GM do you want to remove?";
+					switch(select(@gm_list$)) {
+					
+						default:
+						set @d,@menu - 1;
+						break;
+					}
+					next;
+					mes "You have chosen " + @gm_name$[@d];
+					mes "Really want to delete this GM";
+					mes "from the Logs?";
+					if(select("- No, stop:- Yes, please") - 1) {
+						mes .@n$;
+						query_sql "DELETE FROM `gm_log` WHERE `gm_name` = '"+escape_sql(@gm_name$[@d])+"'";
+						mes "The GM "+@gm_name$[@d];
+						mes "has been deleted from the Logs.";
+						close;
+					} else {
+						close;
+					}
+				}
+				
+				case 4:
+				next;
+				mes .@n$;
+				mes "Do you really want to";
+				mes "delete the MySQL Tables?";
+				menu "Yes, I wanna",-,"No, don't!!!",L_quit;
+					
+					next;
+					query_sql "DROP TABLE `gm_log`";
+					set $gm_logger,0;
+					set $gm_table,0;
+					mes .@n$;
+					mes "The MySQL Tables got deleted";
+					mes "and the System automatically";
+					mes "deactivated.";
+					close;
+					
+				L_quit:
+				close;
+		}
+		
+	} else if(!$gm_table) {
+		mes "There is no Table for the";
+		mes "GM Log System in your";
+		mes "MySQL Database.";
+		menu "Please create one",-,"And now?",L_go;
+			next;
+			query_sql "CREATE TABLE IF NOT EXISTS `gm_log` ( `gm_name` CHAR( 255 ) , `acc_id` INT( 10 ) , `day` INT( 8 ) , `week` INT( 8 ) , `month` INT( 8 ) , `year` INT( 8 ))";
+			set $gm_table,1;
+			set $gm_logger,1;
+			mes .@n$;
+			mes "The Tables were created";
+			mes "and the System automatically";
+			mes "activated.";
+			close;
+		
+		L_go:
+		close;
+	}
+	
+} else if(getgmlevel() >= 1 && getgmlevel() < 80) {
+	mes "Wanna see your";
+	mes "Online Activity?";
+	if(select("- No, leave:- Yes, please") - 1) {
+		close;
+	} else {
+		query_sql "SELECT `day`,`week`,`month`,`year` FROM `gm_log` WHERE `acc_id` == '"+getcharid(3)+"'",@day,@week,@month,@year;
+		if(!(@day && @week && @month && @year)) {
+			next;
+			mes "I'm sorry, but";
+			mes "there isn't";
+			mes "any Log of you.";
+			close;
+		}
+		mes " ";
+		mes @day+" Day's";
+		mes @week+" Week's";
+		mes @month+" Month's";
+		mes @year+" Year's";
+		close;
+	}
+} else {
+	mes "I'm sorry, but";
+	mes "I can't help you.";
+	close;
+}
+}

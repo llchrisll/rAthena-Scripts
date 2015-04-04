@@ -1,0 +1,6 @@
+prontera.gat,160,185,0	script	Class Viewer	100,{
+
+mes "["+strnpcinfo(1)+"]";
+mes "BaseClass: "+BaseClass+", BaseJob: "+BaseJob+", Class: "+Class;
+close;
+}
