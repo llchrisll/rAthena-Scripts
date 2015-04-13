@@ -1,11 +1,11 @@
-//===== eAthena Script =======================================
+//===== rAthena Script =======================================
 //= Party EXP System
 //===== By ===================================================
 //= lllchrislll
 //===== Version ==============================================
 //= 1.0
 //===== Compatible With ======================================
-//= Every eAthena Version
+//= Every rAthena Version
 //===== Description ==========================================
 //= This Script handles an Party EXP System, which allows you
 //	to give an party an EXP Bonus depending on the member quantity.
@@ -17,7 +17,7 @@
 //	I couldn't ask the permission to use an part of the script.
 //	I used the map coordinates.
 //===== ToDo List ============================================
-//= ...
+//= Nothing
 //============================================================
 prontera,151,185,4	script	Party EXP Service	110,{
 function	EXP_FUNC;
@@ -37,7 +37,7 @@ switch(select("- Choose Map:- Information:- Nothing")) {
 			mes "Do you want to join a party?";
 			if(getarraysize(.pty_id) < 1) {
 				mes "But since there is no party yet you could join, you need to create one yourself.";
-				mes "Also you require 2 and more members to use the Party EXP Service.";
+				mes "Also you require 2 or more members to use the Party EXP Service.";
 				close;
 			}
 			next;
@@ -150,8 +150,9 @@ switch(select("- Choose Map:- Information:- Nothing")) {
 			setarray getd(".pty_"+getcharid(1)+"_st$[0]"),""+getd("."+.fieldpre$[@d]+"$["+(@l+1)+"]"),"0","0";
 			// Warping Party ...
 			warpparty getd(".pty_"+getcharid(1)+"_st$[0]")+".gat",0,0,getcharid(1);
-			// Enabling Party Re-/Join Feature, kinda...
-			setmapflag getd("."+.fieldpre$[@d]+"$["+(@l+1)+"]"),mf_loadevent;
+			// Attaching Timer to the Party Leader
+			attachnpctimer(getpartyleader(getcharid(1)));
+			initnpctimer;
 			
 	// ================== Dungeons ============
 		} else {
@@ -232,8 +233,9 @@ switch(select("- Choose Map:- Information:- Nothing")) {
 			setarray getd(".pty_"+getcharid(1)+"_st$[0]"),""+getd("."+.dungpre$[@d]+"$["+(@l+1)+"]"),""+getd("."+.dungpre$[@d]+"$["+(@l+2)+"]"),""+getd("."+.dungpre$[@d]+"$["+(@l+3)+"]");
 			// Warping Party ...
 			warpparty getd(".pty_"+getcharid(1)+"_st$[0]")+".gat",getd(".pty_"+getcharid(1)+"_st$[1]"),getd(".pty_"+getcharid(1)+"_st$[2]"),getcharid(1);
-			// Enabling Party Re-/Join Feature, kinda...
-			setmapflag getd("."+.dungpre$[@d]+"$["+(@l+1)+"]"),mf_loadevent;
+			// Attaching Timer to the Party Leader
+			attachnpctimer(getpartyleader(getcharid(1)));
+			initnpctimer;
 		}
 		setarray .pty_id[getarraysize(.pty_id)],getcharid(1);
 // ============ Party is already registered ==============
@@ -356,7 +358,8 @@ setarray .umbal$[0],"Carpender's Shop in The Tree","um_dun01","205","16","Passag
 setarray .gld_cas$[0],"Prontera Guild Castles","prt_gld","159","91","Aldebaran Guild Castles","alde_gld","186","157","Payon Guild Castles","pay_gld","202","173","Geffen Guild Castles","gef_fild13","270","225";
 // ============== EXP Settings ================== //
 setarray .ppl[1],2,5,7,9; // Minimum Players required for the bonus
-setarray .exp[1],20,50,75,100; // EXP Bonus in percent
+setarray .exp[1],20,50,75,100; // EXP Bonus in %
+end;
 
 OnNPCKillEvent:
 if(!getcharid(1)) end;
@@ -364,7 +367,6 @@ if(getmapflag(strcharinfo(3),mf_pvp) == 1 || getmapflag(strcharinfo(3),mf_gvg) =
 if(getd(".pty_"+getcharid(1)+"_st$[0]") == "") end; // Not registered at the NPC.
 // If the player is not on the chosen leveling map anymore,
 // attach the leader, if he/she is not already, retrieve the new map. If found, update it.
-// Else remove the party from the NPC.
 if(strcharinfo(3) != getd(".pty_"+getcharid(1)+"_m$")) {
 	if(strcharinfo(0) != getpartyleader(getcharid(1))) {
 		set .@p,getcharid(1);
@@ -380,57 +382,33 @@ OnPCDieEvent:
 if(!getcharid(1)) end;
 if(getmapflag(strcharinfo(3),mf_pvp) == 1 || getmapflag(strcharinfo(3),mf_gvg) == 1) end; // On PvP or GvG Maps = No effect
 if(getd(".pty_"+getcharid(1)+"_m$") == "") end; // Not registered at the NPC.
-set @die,1;
-set @lpt,getcharid(1);
 set .@mem$,strcharinfo(0);
-dispbottom .n$+": You have 30 seconds to rejoin your party. Otherwise I'll have to recalulate the EXP Bonus.";
-if(strcharinfo(0) != getpartyleader(@lpt)) {
+if(strcharinfo(0) != getpartyleader(getcharid(1))) {
 	detachrid;
 	attachrid(getpartyleader(getcharid(1,.@mem$),1));
 }
-dispbottom .n$+": One of your members, "+.@mem$+", has died. Please resurrect him/her as soon as possible or I'll have to recalculate your EXP Bonus.";
-dispbottom .n$+": I give you 30 seconds to do so.";
-attachnpctimer(.@mem$);
+dispbottom .n$+": One of your members, "+.@mem$+", has died. I'm going to recalculate the EXP Bonus.";
+EXP_FUNC(getcharid(1),1);
+end;
+
+OnTimer180000:
+set .@pt,getcharid(1);
+stopnpctimer;
+attachrid(getcharid(3,getpartyleader(.@pt)));
+attachnpctimer;
+EXP_FUNC(getcharid(1),1);
+dispbottom .n$+": Your party will now recieve an bonus of "+getd(".pty_"+getcharid(1)+"_exp")+"%.";
 initnpctimer;
 end;
 
-OnTimer30000:
-stopnpctimer;
-set .@pt,@lpt;
-if(!getcharid(1) || getcharid(1) != .@pt) { // In case the player left the party.
-	set @lpt,0;
-	set @die,0;
-	detachrid;
-	attachrid(getpartyleader(.@pt,1));
-	dispbottom .n$+": One of your members, which died previously died, has left your party.";
-}
-if(strcharinfo(3) != getd(".pty_"+getcharid(1)+"_m$")) {
-	set @die,0;
-	detachrid;
-	attachrid(getpartyleader(.@pt,1));
-	dispbottom .n$+": One of your members, which died previously died, didn't manage to come back.";
-	EXP_FUNC(getcharid(1),1);
-} else {
-	detachrid;
-	attachrid(getpartyleader(.@pt,1));
-	dispbottom .n$+": One of your members, which died previously died, has come back.";
-}
-dispbottom .n$+": Your party will now recieve an bonus of "+getd(".pty_"+getarg(0)+"_exp")+"%.";
-end;
-
+// Party Leader logged off
+// > Changing Leader Position to the next Member
 OnTimerQuit:
-stopnpctimer;
-OnPCLogOutEvent:
-if(!getcharid(1)) end;
-if(getmapflag(strcharinfo(3),mf_pvp) == 1 || getmapflag(strcharinfo(3),mf_gvg) == 1) end; // On PvP or GvG Maps = No effect
-if(getd(".pty_"+getcharid(1)+"_m$") == "") end; // Not registered at the NPC.
-// Recheck of party members on the same map,
-// in case someone logged out.
-set .@pt,getcharid(1);
-detachrid;	
-attachrid(getpartyleader(.@pt,1));
+if(!getcharid(1)) end; // Not in a Party > Just in Case
+if(getd(".pty_"+getcharid(1)+"_m$") == "") end; // Not registered at the NPC > same as above
+EXP_FUNC(getcharid(1),5);
 EXP_FUNC(getcharid(1),1);
-dispbottom "Your party will now recieve an bonus of "+getd(".pty_"+getarg(0)+"_exp")+"%.";
+dispbottom "Your party will now recieve an bonus of "+getd(".pty_"+getcharid(1)+"_exp")+"%.";
 end;
 
 // ============= Recalculate EXP Bonus on Whisper ==============
@@ -441,33 +419,8 @@ if(getd(".pty_"+getcharid(1)+"_m$") == "") end; // Not registered at the NPC.
 if(@whispervar0$ != "Reset" && strcharinfo(0) != getpartyleader(getcharid(1))) end;
 dispbottom .n$+": I will recalculate your EXP Rate....";
 if(strcharinfo(3) == getd(".pty_"+getcharid(1)+"_m$")) EXP_FUNC(getcharid(1),2); 
-else EXP_FUNC(getcharid(1),1);
-dispbottom .n$+": Your party will now recieve an bonus of "+getd(".pty_"+getarg(0)+"_exp")+"%."; 
-end;
-
-// ==================== Party Joining Feature =================
-OnPCLoadMapEvent:
-if(!@join && !@die) end;
-set .@pt,getcharid(1);
-if(@die && strcharinfo(3) == getd(".pty_"+getcharid(1)+"_m$")) {
-	stopnpctimer;
-	set @die,0;
-	if(strcharinfo(0) != getpartyleader(.@pt)) {
-		detachrid;
-		attachrid(getpartyleader(.@pt,1));
-	}
-	dispbottom .n$+": One of your members, which died previously died, has come back.";
-}
-if(@join && strcharinfo(3) == getd(".pty_"+getcharid(1)+"_m$")) {
-	set @join,0;
-	if(strcharinfo(0) != getpartyleader(.@pt)) {
-		detachrid;
-		attachrid(getpartyleader(.@pt,1));
-	}
-	dispbottom .n$+": A new member has joined your party.";
-}
-EXP_FUNC(getcharid(1),2);
-dispbottom .n$+": Your party will now recieve an bonus of "+getd(".pty_"+getarg(0)+"_exp")+"%."; 
+EXP_FUNC(getcharid(1),1);
+dispbottom .n$+": Your party will now recieve an bonus of "+getd(".pty_"+getcharid(1)+"_exp")+"%."; 
 end;
 
 // ===================== EXP Bonus Function =================
@@ -478,12 +431,23 @@ function	EXP_FUNC	{
 //	- 2 = Party is in Dungeon
 //	- 3 = Delete party from the register/NPC
 //	- 4 = Giving EXP to the party members
+//  - 5 = Changing Party Leader
 	getpartymember(getarg(0),2);
 	set .@partyct,$@partymembercount;
 	copyarray .@pty_aid[0],$@partymemberaid[0],.@partyct;
 
+// ======== Party is still at the NPC =================
+	if(getarg(1) == 1 && .@pty_map == 0) {
+		set .@pty_map,.@partyct; 
+		setd(".pty_"+getarg(0)+"_exp"),0;
+		for ( set .@e,1; .@e < getarraysize(.exp); set .@e,.@e + 1) 
+			if(.@pty_map >= .ppl[.@e]) set .@r,.@e;
+		
+		if(.@r) setd(".pty_"+getarg(0)+"_exp"),.exp[.@r];
+		setd(".pty_"+getarg(0)+"_mem"),.@pty_map;
+		
 // ======== Party is in Dungeon =================
-	if(getarg(1) == 2) {
+	} else if(getarg(1) == 2) {
 		for ( set .@p,0; .@p < .@partyct; set .@p,.@p + 1) {
 			// Recheck of party members on the same map,
 			// in case someone died or logged out.
@@ -491,13 +455,13 @@ function	EXP_FUNC	{
 			if(isloggedin(.@pty_aid[.@p]) == 1) { // Member is logged in
 				detachrid;
 				attachrid(.@pty_aid[.@p]);
-				if(strcharinfo(3) == getd(".pty_"+getcharid(1)+"_m$"))  // Member is on the leveling map
+				if(strcharinfo(3) == getd(".pty_"+getarg(0)+"_m$"))  // Member is on the same map
 					if(HP > 0)  // Member is alive
 						set .@pty_map,.@pty_map + 1; // Adding counter for EXP Rate recalculate
 			}
 		}
 		if(.@pty_map < getd(".pty_"+getarg(0)+"_mem")) 
-			dispbottom .n$+": One of your party members have left the leveling map.";
+			dispbottom .n$+": One of your party members have left the map.";
 			
 		else if(.@pty_map > getd(".pty_"+getarg(0)+"_mem"))
 			dispbottom .n$+": Your party members have increased.";
@@ -513,9 +477,8 @@ function	EXP_FUNC	{
 			if(isloggedin(.@pty_aid[.@p]) == 1 && .@pty_aid[.@p] != getpartyleader(getarg(0),1)) {
 				detachrid;
 				attachrid(.@pty_aid[.@p]);
-				if(getarg(2) == 1) dispbottom .n$+": Your party leader wants to remove your party from my list, so....";
-				else dispbottom .n$+": Your party leader has logged out.";
-				dispbottom .n$+": I will delete this party from my list and warp you all in 10 seconds to your Save Points.";
+				dispbottom .n$+": Your party leader wants to remove your party from my list, so....";
+				dispbottom .n$+": I will warp you all in 10 seconds to your Save Points.";
 			}
 		}
 		sleep2 10000;
@@ -528,7 +491,6 @@ function	EXP_FUNC	{
 		for ( set .@d,0; .@d < getarraysize(.pty_id); set .@d,.@d + 1) 
 			if(getarg(0) == .pty_id[.@d]) 
 				deletearray .pty_id[.@d],1;
-		end;
 		
 // ======== Giving EXP to the party members =====
 	} else if(getarg(1) == 4) {
@@ -549,17 +511,19 @@ function	EXP_FUNC	{
 				}
 			}
 		}
-		end;
-	}
-	// When the NPC tries to get the exp rate at the first time (standing at the NPC)
-	// it will be checked if getarg(1) has 1 so it can set the exp rate accordingly
-	if(getarg(1) == 1 && .@pty_map == 0) set .@pty_map,.@partyct; 
-	setd(".pty_"+getarg(0)+"_exp"),0;
-	for ( set .@e,1; .@e < getarraysize(.exp); set .@e,.@e + 1) 
-		if(.@pty_map >= .ppl[.@e]) set .@r,.@e;
 		
-	if(.@r) setd(".pty_"+getarg(0)+"_exp"),.exp[.@r];
-	setd(".pty_"+getarg(0)+"_mem"),.@pty_map;
+	} else if(getarg(1) == 5) {
+		for ( set .@p,0; .@p < .@partyct; set .@p,.@p + 1)
+			// Member is logged in and is not the current Party Leader
+			if(isloggedin(.@pty_aid[.@p]) == 1 && .@pty_aid[.@p] == getpartyleader(getarg(0),1)) 
+				continue;
+			
+			detachrid;
+			attachrid(.@pty_aid[.@p]);
+			party_changeleader(getarg(0),getcharid(0));
+			attachnpctimer;
+			initnpctimer;
+	}
 	return;
 }
 // ===================== Map Data Function =================
@@ -579,24 +543,26 @@ else if(getarg(0) == 2)
 		if(strcharinfo(3) == getd("."+.dungpre$[getarg(1)]+"$["+@m+"]"))	
 			setd(".pty_"+getcharid(1)+"_m$"),getd("."+.dungpre$[getarg(1)]+"$["+@m+"]");
 			
-if(getd(".pty_"+getcharid(1)+"_m$") != "") return; else dispbottom "You're Map is different from the main party, you won't recieve any EXP Bonus for now.";
+if(getd(".pty_"+getcharid(1)+"_m$") != "") return; 
+else dispbottom "You're Map is different from the main party, you won't recieve any EXP Bonus for now.";
 }
 
 // ==================== Field and Dungeon Menu Creation ===========
 // = Retrieving the party amount on each map and displaying the number in the menu
 //	 which will be created afterwards.
+/* Function Call Format:
+	Field List:
+	PT_MAP(1,.fieldpre$[.@fi]);
 
-// Field List:
-// PT_MAP(1,.fieldpre$[.@fi]);
+	Field Levels List:
+	PT_MAP(1,.fieldpre$[@d],@m);
 
-// Field Levels List:
-// PT_MAP(1,.fieldpre$[@d],@m);
+	Dungeon List:
+	PT_MAP(2,.dungpre$[.@du]);
 
-// Dungeon List:
-// PT_MAP(2,.dungpre$[.@du]);
-
-// Dungeon Levels List:
-// PT_MAP(2,.dungpre$[@d],@m);
+	Dungeon Levels List:
+	PT_MAP(2,.dungpre$[@d],@m);
+*/
 
 function	PT_MAP	{
 // getarg(0)	0 = Menu Creation

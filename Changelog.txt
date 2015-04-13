@@ -26,6 +26,14 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/04/13
+= Updated Party EXP System v1.0 [UT]
+- Added code when the Party Leader logs out, making next member as Leader
+- Replaced the Timer when an player died, before the EXP Bonus gets recalculated
+  into an Timer of 3 Minutes when the EXP Bonus gets recalculated automatically
+  attached to the Party Leader
+- Bug Fixes and stuff
+------------------------------------------------------------
 * 2014/11/17
 = Updated Quest System v1.0 [UT]
 - Small bug fixes, continue testing...
