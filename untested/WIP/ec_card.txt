@@ -341,13 +341,18 @@ switch(select( ( (#EC_CT == 0)?"Create Bank Account":"Account Management") +":- 
 					next;
 					switch(select("- To EC ID:- To Inventory:- "+( (.@c != #EC_CT)?"Next EC ID":"Nothing") )) {
 						
-					// ToDO: Choosing which transaction you want to "deposit" into your account or inventory.
-					// Currently it's all at once.
 						
 						case 1:
 						next;
 						mes .n$;
+						mes "Please choose, which transaction you want to transfer first:";
+						
+						
+						// ToDO: Choosing which transaction you want to "deposit" into your account or inventory.
+						// Currently it's all at once.
 						query_sql "SELECT `amount` FROM ´ec_system´ WHERE `ec_id` = '"+getd("#EC_ID"+.@c)+"'",.@ec_cash;
+						
+						
 						if( (.@ec_cash + getd(".@am_"+.@c) ) > .max_limit) {
 							mes "The chosen amount would exceed the maximal amount your account can hold.";
 							close;
