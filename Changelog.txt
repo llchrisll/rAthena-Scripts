@@ -26,6 +26,12 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/05/26
+= Updated Party EXP System v1.0 [UT]
+- Added ideas to the ToDo List
+- Renamed to Dungeon Party System v1.0
+- Still collecting ideas though
+------------------------------------------------------------
 * 2015/04/13
 = Updated Party EXP System v1.0 [UT]
 - Added code when the Party Leader logs out, making next member as Leader
