@@ -37,7 +37,6 @@
 //  - Medium: 100% - 4+ Members
 //  - Hard: 150% - 8+ Members
 //= Party Settings:
-//  - x Parties per Dungeon
 //  - NPC shows Party Quantity
 //  - Parties when there is place can be joined
 //= Dungeons:
@@ -46,13 +45,6 @@
 //      > NPC Header: <Name>:<Dungeon> - NPC ID#<No.>
 //      > Mob Counter > setarray .<Dungeon_Name>_mct,<Dungeon Level>,...;
 //      > Level Check
-//  - Reward:
-//    - Regular Dungeon Points
-//      0= Off, 1= On
-//    - Base Points*Difficulty
-//    - MvP Dungeon Points
-//      0= Off, 1= Custom Character Permanent Variable, 2=#CASHPOINTS
-//  - EXP Bonus changeable
 //= Party Join Feature:
 //  - Message to Leader: <Character Name>, <Level>, <Class> requests to join your party.
 //             NPC Whisper: Accept/Refuse
@@ -263,11 +255,34 @@ end;
 OnInit:
 // =============== NPC Name ===============
 set .n$,"["+strnpcinfo(1)+"]";
+// ============== Party Settings ================== //
+set .pt_limit,2; // x Parties per Dungeon
+// Maximum x Members per Party
+// (see src/common/mmo.h > #define MAX_PARTY to put it on the same value)
+set .pt_max,12;
 // ============== Dungeon Settings ================== //
+setarray .exp[1],50,100,150; // EXP Rate in % for Difficulty: Easy/Medium/Hard
+set .dg_rew,1; // Dungeon Reward > 0 = Off, 1 = On
+set .dg_var$,"DG_Pts";
+set .dg_pts,10; // Base Dungeon Points, will be multiplied by Difficulty
+set .mvp_rew,1; // MvP Reward for each MvP > 0 = Off, 1 = Permanent Character Variable, 2 = #CASHPOINTS
+set .mvp_var$,"MvP_Pts";
+set .mvp_pts,1; // Base MvP Points, will also be multiplied by Difficulty
 // =============== Dungeon Names ===============
-setarray .dungn$[0],"Abyss Lake","Amatsu Dungeon","Ant Hell","Ayothaya Dungeon","Bylan","Clock Tower","Coal Mine","Culvert","Einbech Dungeon","Gefenia","Geffen Dungeon","Glast Heim","Gonyrun Dungeon","Ice Dungeon","Labyrinth","Juperos","Lightalzen Bio Lab","Louyang Dungeon","Magma Dungeon","Odin Temple","Orc Dungeon","Payon Dungeon","Pyramid Dungeon","Sphinx Dungeon","Sunken Ship Dungeon","Thanatos Tower","Toy Factory Dungeon","Turtle Dungeon","Umbala Dungeon","Guild Castles";
+setarray .dungn$[0],"Abyss Lake","Amatsu Dungeon","Ant Hell","Ayothaya Dungeon","Bylan","Clock Tower","Coal Mine","Culvert","Einbech Dungeon","Gefenia","Geffen Dungeon","Glast Heim","Gonyrun Dungeon","Ice Dungeon","Labyrinth","Juperos","Lightalzen Bio Lab","Louyang Dungeon","Magma Dungeon","Odin Temple","Orc Dungeon","Payon Dungeon","Pyramid Dungeon","Sphinx Dungeon","Sunken Ship Dungeon","Thanatos Tower","Toy Factory Dungeon","Turtle Dungeon","Umbala Dungeon","Thor Volcano Dungeon";
+// =============== Dungeon Difficulty ===============
+// 1 = Easy, 2 = Medium, 3 = Hard
+setarray .diff[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
+// =============== Dungeon Level Requirements ===============
+// 1 = None, 2+ = Level Requirement
+setarray .level[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
+// =============== Dungeon Mob Counter ===============
+// = Every dungeon has a base mob quantity, which has to be killed before a party can proceed
+//   This counter will be multiplied for each next level a party succeeds
+//   For the actual calculation, see line "xxx" > Dungeon Guard
+setarray .mob_base[0],20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20;
 // =============== Dungeon Prefixes ===============
-setarray .dungpre$[0],"abyss","amat","anth","ayot","bylan","c_tower","coal","culv","einb","gefenia","gefd","glast","gonr","iced","maze","jupe","lhz","louy","magma","odin","orcsd","payd","pyram","sphinx","pirate","thana","toy","turtle","umbal","gld_cas";
+setarray .dungpre$[0],"abyss","amat","anth","ayot","bylan","c_tower","coal","culv","einb","gefenia","gefd","glast","gonr","iced","maze","jupe","lhz","louy","magma","odin","orcsd","payd","pyram","sphinx","pirate","thana","toy","turtle","umbal","thor_v";
 // =============== Dungeon Data ===============
 // = Format: Menu Name, Map Name.gat, X, Y, .....
 setarray .abyss$[0],"Entrance","hu_fild05","189","207","Level 1","abyss_01","264","271","Level 2","abyss_02","275","270","Level 3","abyss_03","116","27";
@@ -299,10 +314,7 @@ setarray .thana$[0],"Level 1","tha_t01","150","36","Level 2","tha_t02","150","36
 setarray .toy$[0],"Level 1","xmas_dun01","205","16","Level 2","xmas_dun02","129","133";
 setarray .turtle$[0],"Entrance","tur_dun01","161","34","Level 1","tur_dun02","148","256","Level 2","tur_dun03","132","190","Level 3","tur_dun04","100","192";
 setarray .umbal$[0],"Carpender's Shop in The Tree","um_dun01","205","16","Passage to a Foreign World","um_dun02","48","30","Hvergelmir's Fountain","yggdrasil01","40","63";
-setarray .gld_cas$[0],"Prontera Guild Castles","prt_gld","159","91","Aldebaran Guild Castles","alde_gld","186","157","Payon Guild Castles","pay_gld","202","173","Geffen Guild Castles","gef_fild13","270","225";
-// ============== EXP Settings ================== //
-setarray .exp[1],50,100,150; // EXP Rate in % for Difficulty: Easy/Medium/Hard
-// ============== Party Settings ================== //
+// setarray .thor_v$[0],""; // Thor Volcano Dungeon
 end;
 
 OnNPCKillEvent:
@@ -334,16 +346,6 @@ dispbottom .n$+": One of your members, "+.@mem$+", has died. I'm going to recalc
 EXP_FUNC(getcharid(1),1);
 end;
 
-OnTimer180000:
-set .@pt,getcharid(1);
-stopnpctimer;
-attachrid(getcharid(3,getpartyleader(.@pt)));
-attachnpctimer;
-EXP_FUNC(getcharid(1),1);
-dispbottom .n$+": Your party will now recieve an bonus of "+getd(".pty_"+getcharid(1)+"_exp")+"%.";
-initnpctimer;
-end;
-
 // Party Leader logged off
 // > Changing Leader Position to the next Member
 OnTimerQuit:
@@ -354,6 +356,7 @@ EXP_FUNC(getcharid(1),1);
 dispbottom "Your party will now recieve an bonus of "+getd(".pty_"+getcharid(1)+"_exp")+"%.";
 end;
 
+/*
 // ============= Recalculate EXP Bonus on Whisper ==============
 OnWhisperGlobal:
 if(!getcharid(1)) end;
@@ -365,7 +368,7 @@ if(strcharinfo(3) == getd(".pty_"+getcharid(1)+"_m$")) EXP_FUNC(getcharid(1),2);
 EXP_FUNC(getcharid(1),1);
 dispbottom .n$+": Your party will now recieve an bonus of "+getd(".pty_"+getcharid(1)+"_exp")+"%."; 
 end;
-
+*/
 // ===================== EXP Bonus Function =================
 function	EXP_FUNC	{
 //	getarg(0) = Party ID
@@ -456,41 +459,55 @@ function	PT_MAP	{
 // getarg(0)	0 = Menu Creation
 //		        1= Dungeon
 // getarg(1) == Dungeon Prefix
-// ==== Dungeon only =====
 // getarg(2) == Array Index of the Level
-if(getarg(0) == 0) {
-	set .men_dung$,"";
-		
-	// =============== Creating Dungeon Menu ===============
-	for ( set .@du,0; .@du < getarraysize(.dungn$); set .@du,.@du + 1) 
-		set .men_dung$,.men_dung$ + "- "+.dungn$[.@du] +" ("+PT_MAP(1,.dungpre$[.@du])+")"+ ( (.dungn$[.@du+1] != "")?":":"");
-		
-	return;
+	if(getarg(0) == 0) {
+		set .men_dung$,"";
+			
+		// =============== Creating Dungeon Menu ===============
+		for ( set .@du,0; .@du < getarraysize(.dungn$); set .@du,.@du + 1) 
+			set .men_dung$,.men_dung$ + "- "+.dungn$[.@du] +" ("+PT_MAP(1,.dungpre$[.@du])+")"+ ( (.dungn$[.@du+1] != "")?":":"");
+			
+		return;
 
-// ========== Dungeon Party Counter =========
-} else if(getarg(0) == 1) {
-	// Party Looping
-	for( set .@i,0; .@i < getarraysize(.pty_id); set .@i,.@i + 1) {
-	
-		// Party is in a dungeon
-		if(getd(".pty_"+.pty_id[.@i]+"[0]") == 2 ) 		
-			// Checking if the current Party is on this map
-				if(getd(".pty_"+.pty_id[.@i]+"_m$") == getd("."+getarg(1)+"$["+getarg(2)+"]")) {
-					// Counter for the main list
-					if(getarg(3) == 0) 
-						setd(".@"+getarg(1)+"_ct"),getd(".@"+getarg(1)+"_ct") + 1;
-					else 
-						setd(".@"+getarg(1)+"-"+getarg(3)+"_ct"),getd(".@"+getarg(1)+"-"+getarg(3)+"_ct") + 1;
-				}
-		// If not in a dungeon, next party please....	
-		else continue;
+	// ========== Dungeon Party Counter =========
+	} else if(getarg(0) == 1) {
+		// Party Looping
+		for( set .@i,0; .@i < getarraysize(.pty_id); set .@i,.@i + 1) {
+		
+			// Party is in a dungeon
+			if(getd(".pty_"+.pty_id[.@i]+"[0]") == 2 ) 		
+				// Checking if the current Party is on this map
+					if(getd(".pty_"+.pty_id[.@i]+"_m$") == getd("."+getarg(1)+"$["+getarg(2)+"]")) {
+						// Counter for the main list
+						if(getarg(3) == 0) 
+							setd(".@"+getarg(1)+"_ct"),getd(".@"+getarg(1)+"_ct") + 1;
+						else 
+							setd(".@"+getarg(1)+"-"+getarg(3)+"_ct"),getd(".@"+getarg(1)+"-"+getarg(3)+"_ct") + 1;
+					}
+			// If not in a dungeon, next party please....	
+			else continue;
+		}
+		if(getarg(3) == 0) 
+			return getd(".@"+getarg(1)+"_ct");
+		else 
+			return getd(".@"+getarg(1)+"-"+getarg(3)+"_ct");
 	}
-	if(getarg(3) == 0) 
-		return getd(".@"+getarg(1)+"_ct");
-	else 
-		return getd(".@"+getarg(1)+"-"+getarg(3)+"_ct");
-}
 // ======================= End of PT_MAP Function =====================
-}	
-// ======================= End of Script =====================
 }
+// ======================= Inside Dungeon NPC =====================
+-	script	Dungeon Guard#main::DG_Main	110,{
+
+
+
+OnInit:
+if(strnpcinfo(2) == "main") end; // If its the main NPC, don't continue (would lead to errors)
+set .hidden$,""+strnpcinfo(2);
+set .arraysize, getarraysize(getvariableofnpc("Dungeon Party Service",getd("."+.hidden$+"$")));
+debugmes "Dungeon Guard: getvariableofnpc test on arrays: "+.arraysize;
+for (set .@n,0; .@n < getarraysize(getvariableofnpc("Dungeon Party Service",getd("."+.hidden$+"$")) ); set .@n,.@n + 1) {
+
+}
+
+}
+	
+// ======================= End of Script =====================

@@ -26,6 +26,11 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/05/27
+= Updated Dungeon Party System v1.0 [WIP]
+- Wrote some codes
+- Moved to untested/WIP
+------------------------------------------------------------
 * 2015/05/26
 = Updated Party EXP System v1.0 [UT]
 - Added ideas to the ToDo List
