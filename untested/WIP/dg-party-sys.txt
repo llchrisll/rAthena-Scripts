@@ -504,8 +504,8 @@ if(strnpcinfo(2) == "main") end; // If its the main NPC, don't continue (would l
 set .hidden$,""+strnpcinfo(2);
 set .arraysize, getarraysize(getvariableofnpc("Dungeon Party Service",getd("."+.hidden$+"$")));
 debugmes "Dungeon Guard: getvariableofnpc test on arrays: "+.arraysize;
-for (set .@n,0; .@n < getarraysize(getvariableofnpc("Dungeon Party Service",getd("."+.hidden$+"$")) ); set .@n,.@n + 1) {
-
+for (set .@n,0; .@n < 128); set .@n,.@n + 1) {
+Copyarray setd("."+strnpcinfo(2)+"$["+.@n+"]"), getvariableofnpc(getd("."+strnpcinfo(2)+"$["+.@n+"]"),"Dungeon Party Service"),1;
 }
 
 }
