@@ -26,6 +26,21 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/05/30
+= Updated Dungeon Party System v1.0 [WIP]
+- Removed some ToDos
+- Removed EXP Function completely
+- Removed Dungeon Level menu
+- Moved Dungeon Menu Creation
+- Added Max Party Member Limit to Party Join Option
+- Updated Party Join Feature
+  . Added NPC for Party Join Feature (near the end of the file)
+- Updated party arrays
+- Removed OnTimer labels and commands
+- Added information about Dungeon Rewards and updated EXP Rates display
+- Updated reward settings to OnInit
+- Updated Dungeon Exit NPC array content gathering
+------------------------------------------------------------
 * 2015/05/27
 = Updated Dungeon Party System v1.0 [WIP]
 - Wrote some codes
