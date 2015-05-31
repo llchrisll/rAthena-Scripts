@@ -26,6 +26,16 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/05/31
+= Updated Dungeon Party System v1.0 [WIP]
+- Making NPC Function PT_MAP into an global one with different code
+  > Added some snippets
+- Added Party Limit check
+- Added Mob Counter to Dungeon
+- Optimized some code parts
+- Re-added Party Leader change, which I forgot to mention last commit about it's removal
+- Nearly finished Dungeon Exit NPC
+------------------------------------------------------------
 * 2015/05/30
 = Updated Dungeon Party System v1.0 [WIP]
 - Removed some ToDos
