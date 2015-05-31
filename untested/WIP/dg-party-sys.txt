@@ -48,7 +48,7 @@ next;
 switch(select("- Choose Map:- Information:- Nothing")) {
 	case 1:
 	mes .n$;
-	if(getd(".pty_"+getcharid(1)+"_m$") == "") {
+	if(getd("$@pty_"+getcharid(1)+"_m$") == "") {
 		set @join,0;
 		if(!getcharid(1)) {
 			mes "Do you want to join a party?";
@@ -165,9 +165,9 @@ switch(select("- Choose Map:- Information:- Nothing")) {
 		// Saving Array Index of the Dungeon for .dungpre$ or .dungn$
 		setd(".pty_"+getcharid(1)+"_ix"),@d;
 		// Used to save the current Leveling Map of the party
-		setd(".pty_"+getcharid(1)+"_m$"),""+getd("."+.dungpre$[@d]+"$[1]"); 
+		setd("$@pty_"+getcharid(1)+"_m$"),""+getd("."+.dungpre$[@d]+"$[1]"); 
 		// Saving Dungeon Prefix
-		setd(".pty_"+getcharid(1)+"$"),""+.dungpre$[@d];
+		setd("$@pty_"+getcharid(1)+"$"),""+.dungpre$[@d];
 		// Setting Mob Counter
 		setd("@pt_"+.dungpre$[@d]+"_mct"),.mob_base[@d];
 		// Setting Start Point
@@ -193,7 +193,7 @@ switch(select("- Choose Map:- Information:- Nothing")) {
 		mes "You won't be able to gain any bonus EXP until you re-register your party!"
 		next;
 		if(select("- Yes:- No") - 1) close;
-		if(getd("pt_"+getcharid(1)+"_m$") == "Reward") {
+		if(getd("$@pt_"+getcharid(1)+"_m$") == "Reward") {
 			mes .n$;
 			mes "I'm sorry, but you still haven't collected your reward from your completed dungeon.";
 			close;
@@ -212,9 +212,9 @@ switch(select("- Choose Map:- Information:- Nothing")) {
 		}
 		sleep2 10000;
 		warpparty "SavePointAll",0,0,getcharid(1);
-		setd(".pty_"+getcharid(1)+"_m$"),"";
+		setd("$@pty_"+getcharid(1)+"_m$"),"";
 		setd(".pty_"+getcharid(1)+"_ix"),0;
-		deletearray getd(".pty_"+getcharid(1)+"[0]"),128;
+		setd("$@pty_"+getcharid(1)+"$"),"";
 		deletearray getd(".pty_"+getcharid(1)+"_st$[0]"),128;
 		for ( set .@d,0; .@d < getarraysize(.pty_id); set .@d,.@d + 1) 
 			if(getcharid(1) == .pty_id[.@d]) 
@@ -240,7 +240,7 @@ switch(select("- Choose Map:- Information:- Nothing")) {
 		for ( set .@p,0; .@p < @partyct; set .@p,.@p + 1) {
 			if(isloggedin(getcharid(3,@partymemb$[.@p]),getcharid(0,@partymemb$[.@p])) == 1) { // Member logged in?
 				getmapxy(@map$,@mapx,@mapy,0,@partymemb$[.@p]);
-				if(@map$ == getd(".pty_"+getcharid(1)+"_m$")) { // Member on same Map as registered?
+				if(@map$ == getd("$@pty_"+getcharid(1)+"_m$")) { // Member on same Map as registered?
 					set @pty_ml$,@pty_ml$ + "- "+@partymemb$[.@p] + ( (@partymemb$[.@p] == getpartyleader(getcharid(1)))?" (Leader)":"");
 				}
 			}
@@ -376,21 +376,13 @@ for ( set .@d,0; .@d < getarraysize(.dungn$); set .@d,.@d + 1)
 */
 end;
 
-OnDGNext:
-setd(".pt_"+getcharid(1)+"_m$"),getd("."+getd(".pt_"+getcharid(1)+"$")+"$["+(@m+1)+"]");
-end;
-
-OnDGReward:
-setd("pt_"+getcharid(1)+"_m$"),"Reward";
-end;
-
 OnNPCKillEvent:
 if(!getcharid(1)) end;
 if(getmapflag(strcharinfo(3),mf_pvp) == 1 || getmapflag(strcharinfo(3),mf_gvg) == 1) end; // On PvP or GvG Maps = No effect
-if(getd(".pty_"+getcharid(1)+"$[0]") == "") end; // Not registered at the NPC.
+if(getd("$@pty_"+getcharid(1)+"$") == "") end; // Not registered at the NPC.
 // If the player is not on the chosen leveling map anymore,
 // attach the leader, if he/she is not already, retrieve the new map. If found, update it.
-if(strcharinfo(3) != getd(".pty_"+getcharid(1)+"_m$")) {
+if(strcharinfo(3) != getd("$@pty_"+getcharid(1)+"_m$")) {
 	if(strcharinfo(0) != getpartyleader(getcharid(1))) {
 		set .@p,getcharid(1);
 		detachrid;
@@ -409,7 +401,7 @@ for ( set .@p,0; .@p < .@partyct; set .@p,.@p + 1) {
 	if(isloggedin(.@pty_aid[.@p]) == 1) { // Member is logged in
 		detachrid;
 		attachrid(.@pty_aid[.@p]);
-		if(strcharinfo(3) == getd(".pty_"+getcharid(1)+"_m$")) { // Member is on the leveling map
+		if(strcharinfo(3) == getd("$@pty_"+getcharid(1)+"_m$")) { // Member is on the leveling map
 			if(HP > 0) { // Member is alive
 				getexp @bexp,.@jexp;
 				dispbottom .n$+": Recieved Bonus: "+.@expr+"% - Base EXP: "+.@bexp+"/Job EXP: "+.@jexp;
@@ -431,7 +423,7 @@ end;
 // > Changing Leader Position to the next Member
 OnPCLogOutEvent:
 if(!getcharid(1)) end; // Not in a Party > Just in Case
-if(getd(".pty_"+getcharid(1)+"_m$") == "") end; // Not registered at the NPC > same as above
+if(getd("$@pty_"+getcharid(1)+"_m$") == "") end; // Not registered at the NPC > same as above
 if(getpartyleader(getcharid(1),1) != getcharid(3)) end; // Attached player is not party leader
 getpartymember(getcharid(1),2);
 for ( set .@p,0; .@p < $@partymembercount; set .@p,.@p + 1)
@@ -540,7 +532,7 @@ if(getd("."+.dg_info$[0]+"$["+@m+"]") == "") {
 	mes "You also have completed this dungeon.";
 	if(getvariableofnpc(.dg_rew,"Dungeon Party Service") == 1) {
 		mes "Please visit the \"Dungeon Party Service\" for your rewards.";
-		doevent "Dungeon Party Service:OnDGReward";
+		setd("$@pt_"+getcharid(1)+"_m$"),"Reward";
 	}
 	mes "You will now be warped to your save points.";
 	close2;
@@ -549,7 +541,7 @@ if(getd("."+.dg_info$[0]+"$["+@m+"]") == "") {
 }
 mes "You will now be warped to next level: "+getd("."+.dg_info$[0]+"$["+.@m+"]");
 close2;
-doevent "Dungeon Party Service:OnDGNext";
+setd("$@pt_"+getcharid(1)+"_m$"),getd("."+getd("$@pt_"+getcharid(1)+"$")+"$["+(@m+1)+"]");
 warpparty getd("."+.dg_info$[0]+"$["+(.@m+1)+"]"),getd("."+.dg_info$[0]+"$["+(.@m+2)+"]"),getd("."+.dg_info$[0]+"$["+(.@m+3)+"]"),getcharid(1);
 end;
 
