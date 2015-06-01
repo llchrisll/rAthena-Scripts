@@ -25,7 +25,7 @@
 //  - MvP Dungeon Points (On/Off Function)
 //    Per slain MvP, you gain "x" Points (changeable)
 //    Different kind of Points are: Custom Character Permanent Variable for Exchanger or #CASHPOINTS
-//  - Dungeon Points Exchanger:
+//  - Dungeon Points Exchanger
 //===== Credits	==============================================
 //= To the author of the "Ultimate Warper" from the eAthena Board.
 //	Since no header was included and I forgot the name of him/her,
@@ -34,10 +34,7 @@
 //===== ToDo List ============================================
 //= Dungeons:
 //  - Removing Dungeon Warps, custom scripts_warps.cfg
-//    - Per Dungeon Map one Exit NPC
-//      > NPC Header: <Name>:<Dungeon> - NPC ID#<No.>
-//      > Mob Counter > setarray .<Dungeon_Name>_mct,<Dungeon Level>,...;
-//      > Level Check
+//  - Dungeon/MvP Points Exchanger - complete with calculation
 //============================================================
 prontera,151,185,4	script	Dungeon Party Service	110,{
 
@@ -45,7 +42,7 @@ mes .n$;
 mes "Hello, "+strcharinfo(0)+"!";
 mes "How can I help you?";
 next;
-switch(select("- Choose Map:- Information:- Nothing")) {
+switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchanger:- Nothing":"Nothing") )) {
 	case 1:
 	mes .n$;
 	if(getd("$@pty_"+getcharid(1)+"_m$") == "") {
@@ -97,15 +94,23 @@ switch(select("- Choose Map:- Information:- Nothing")) {
 				if(getd(".pty_"+.pty_id[.@i]+"$") == .dungpre$[.@du])
 					setd(".@"+.dungpre$[.@du]+"_ct"),getd(".@"+.dungpre$[.@du]+"_ct") + 1;
 			}
-			set .men_dung$,.men_dung$ + "- "+.dungn$[.@du] +" ("+getd(".@"+.dungpre$[.@du]+"_ct")+"/"+.pt_limit+")"+ ( (.dungn$[.@du+1] != "")?":":"");
+			set .men_dung$,.men_dung$ + "- "+.dungn$[.@du] +" ("+getd(".@"+.dungpre$[.@du]+"_ct")+"/"+.pt_limit+") (Minimum Level: "+.level[.@du]+")"+ ( (.dungn$[.@du+1] != "")?":":"");
 		}
 			
 		set @d,select( .men_dung$ ) - 1;
 		mes .n$;
 		mes "Dungeon: "+.dungn$[@d];
 		mes "Difficulty: "+( (.diff[@d] == 1)?"Easy":( (.diff[@d] == 2)?"Medium":"Hard") );
+		mes "Minimum Level: "+.level[@d];
 		mes "Existing Parties: "+getd(".@"+.dungpre$[@d]+"_ct");
+		next;
+		mes .n$;
 		if(@join) {
+			if(BaseLevel < .level[@d]) {
+				mes "I'm sorry, but you don't meet the level requirement, which is "+.level[@d]+"!";
+				mes "Please try an other dungeon or level up until you reach that level.";
+				close;
+			}
 			mes "I will now list the available parties:";
 			mes " ";
 			set @pty_menu$,"";
@@ -158,6 +163,7 @@ switch(select("- Choose Map:- Information:- Nothing")) {
 			mes "Please choose a different one.";
 			close;
 		}
+		// Adding Level check for party members
 		mes "Your party will recieve an bonus of "+.exp[.diff[@d]]+"%."; 
 		mes "I will warp you and your party now to the "+.dungn$[@d]+ ( (compare(.dungn$[@d],"Dungeon") == 1)?" ":" Dungeon ");
 		mes "Happy leveling!!!";
@@ -177,104 +183,138 @@ switch(select("- Choose Map:- Information:- Nothing")) {
 		
 	setarray .pty_id[getarraysize(.pty_id)],getcharid(1);
 	
-// ============ Party is already registered ==============
-} else {
-	mes "How can I help you?";
-	next;
-	switch(select("- Remove Party from list:- Warp Options:- "+( (.dg_rew == 1)?"Dungeon Reward":"Nothing") )) {
-		
-		case 1:
-		mes .n$;
-		if(strcharinfo(0) != getpartyleader(getcharid(1))) {
-			mes "I'm sorry, but only your party leader can can do this.";
-			close;
-		}
-		mes "Do you really want to delete your party from my list?";
-		mes "You won't be able to gain any bonus EXP until you re-register your party!"
+	// ============ Party is already registered ==============
+	} else {
+		mes "How can I help you?";
 		next;
-		if(select("- Yes:- No") - 1) close;
-		if(getd("$@pt_"+getcharid(1)+"_m$") == "Reward") {
+		switch(select("- Remove Party from list:- Warp Options:- "+( (.dg_rew == 1)?"Dungeon Reward":"Nothing") )) {
+			
+			case 1:
 			mes .n$;
-			mes "I'm sorry, but you still haven't collected your reward from your completed dungeon.";
-			close;
-		}
-		close2;
-		getpartymember(getcharid(1));
-		set .@partyct,$@partymembercount;
-		copyarray .@partymemb$[0],$@partymembername$[0],.@partyct;
-		for ( set .@p,0; .@p < .@partyct; set .@p,.@p + 1) {
-			if(isloggedin(.@pty_aid[.@p]) == 1 && .@pty_aid[.@p] != getpartyleader(getcharid(1),1)) {
-				detachrid;
-				attachrid(.@pty_aid[.@p]);
-				dispbottom .n$+": Your party leader wants to remove your party from my list, so....";
-				dispbottom .n$+": I will warp you all in 10 seconds to your Save Points.";
+			if(strcharinfo(0) != getpartyleader(getcharid(1))) {
+				mes "I'm sorry, but only your party leader can can do this.";
+				close;
 			}
-		}
-		sleep2 10000;
-		warpparty "SavePointAll",0,0,getcharid(1);
-		setd("$@pty_"+getcharid(1)+"_m$"),"";
-		setd(".pty_"+getcharid(1)+"_ix"),0;
-		setd("$@pty_"+getcharid(1)+"$"),"";
-		deletearray getd(".pty_"+getcharid(1)+"_st$[0]"),128;
-		for ( set .@d,0; .@d < getarraysize(.pty_id); set .@d,.@d + 1) 
-			if(getcharid(1) == .pty_id[.@d]) 
-				deletearray .pty_id[.@d],1;
-		end;
-	
-		case 2:
-		mes .n$;
-		mes "Do you want to be warped to one of your party members or to the start point?";
-		if(select("- To my comrades:- Start Point") - 1) {
+			mes "Do you really want to delete your party from my list?";
+			mes "You won't be able to gain any bonus EXP until you re-register your party!"
+			next;
+			if(select("- Yes:- No") - 1) close;
+			if(getd("$@pt_"+getcharid(1)+"_m$") == "Reward") {
+				mes .n$;
+				mes "I'm sorry, but you still haven't collected your reward from your completed dungeon.";
+				close;
+			}
 			close2;
-			warp getd(".pty_"+getcharid(1)+"_st$[0]")+".gat",getd(".pty_"+getcharid(1)+"_st$[1]"),getd(".pty_"+getcharid(1)+"_st$[2]");
-			end;
-		}
-		next;
-		mes .n$;
-		mes "Please select to which party member you want to be warped to:";
-		next;
-		set @pty_ml$,"";
-		getpartymember(getcharid(1));
-		set @partyct,$@partymembercount;
-		copyarray @partymemb$[0],$@partymembername$[0],@partyct;
-		for ( set .@p,0; .@p < @partyct; set .@p,.@p + 1) {
-			if(isloggedin(getcharid(3,@partymemb$[.@p]),getcharid(0,@partymemb$[.@p])) == 1) { // Member logged in?
-				getmapxy(@map$,@mapx,@mapy,0,@partymemb$[.@p]);
-				if(@map$ == getd("$@pty_"+getcharid(1)+"_m$")) { // Member on same Map as registered?
-					set @pty_ml$,@pty_ml$ + "- "+@partymemb$[.@p] + ( (@partymemb$[.@p] == getpartyleader(getcharid(1)))?" (Leader)":"");
+			getpartymember(getcharid(1));
+			set .@partyct,$@partymembercount;
+			copyarray .@partymemb$[0],$@partymembername$[0],.@partyct;
+			for ( set .@p,0; .@p < .@partyct; set .@p,.@p + 1) {
+				if(isloggedin(.@pty_aid[.@p]) == 1 && .@pty_aid[.@p] != getpartyleader(getcharid(1),1)) {
+					detachrid;
+					attachrid(.@pty_aid[.@p]);
+					dispbottom .n$+": Your party leader wants to remove your party from my list, so....";
+					dispbottom .n$+": I will warp you all in 10 seconds to your Save Points.";
 				}
 			}
-		}
-		if(@pty_ml$ == "") {
-			mes .n$;
-			mes "I'm sorry, but no member of your party has been found on the dungeon map.";
-			close;
-		}
-		set @pm,select(@pty_ml$) - 1;
-		mes .n$;
-		mes @partymemb$[@pm] + ( (@partymemb$[@pm] == getpartyleader(getcharid(1)))?" (Leader)":"");
-		mes "Correct?";
-		if(select("- Yes:- No") - 1) close;
-		close2;
-		// Since there is no server command for warping an player to another one
-		// and I didn't wanted to create another array for that ...
-		atcommand "@warpto "+@partymemb$[@pm];
-		end;
+			sleep2 10000;
+			warpparty "SavePointAll",0,0,getcharid(1);
+			setd("$@pty_"+getcharid(1)+"_m$"),"";
+			setd(".pty_"+getcharid(1)+"_ix"),0;
+			setd("$@pty_"+getcharid(1)+"$"),"";
+			deletearray getd(".pty_"+getcharid(1)+"_st$[0]"),128;
+			for ( set .@d,0; .@d < getarraysize(.pty_id); set .@d,.@d + 1) 
+				if(getcharid(1) == .pty_id[.@d]) 
+					deletearray .pty_id[.@d],1;
+			end;
 		
-		// Dungeon Reward
-		case 3:
-		if(!.dg_rew) close;
-		mes .n$;
-		mes "";
-		getd(".pty_"+getcharid(1)+"_ix");
-		// party loop 
-		// if(.dg_rew == 1)
+			case 2:
+			mes .n$;
+			mes "Do you want to be warped to one of your party members or to the start point?";
+			if(select("- To my comrades:- Start Point") - 1) {
+				close2;
+				warp getd(".pty_"+getcharid(1)+"_st$[0]")+".gat",getd(".pty_"+getcharid(1)+"_st$[1]"),getd(".pty_"+getcharid(1)+"_st$[2]");
+				end;
+			}
+			next;
+			mes .n$;
+			mes "Please select to which party member you want to be warped to:";
+			next;
+			set @pty_ml$,"";
+			getpartymember(getcharid(1));
+			set @partyct,$@partymembercount;
+			copyarray @partymemb$[0],$@partymembername$[0],@partyct;
+			for ( set .@p,0; .@p < @partyct; set .@p,.@p + 1) {
+				if(isloggedin(getcharid(3,@partymemb$[.@p]),getcharid(0,@partymemb$[.@p])) == 1) { // Member logged in?
+					getmapxy(@map$,@mapx,@mapy,0,@partymemb$[.@p]);
+					if(@map$ == getd("$@pty_"+getcharid(1)+"_m$")) { // Member on same Map as registered?
+						set @pty_ml$,@pty_ml$ + "- "+@partymemb$[.@p] + ( (@partymemb$[.@p] == getpartyleader(getcharid(1)))?" (Leader)":"");
+					}
+				}
+			}
+			if(@pty_ml$ == "") {
+				mes .n$;
+				mes "I'm sorry, but no member of your party has been found on the dungeon map.";
+				close;
+			}
+			set @pm,select(@pty_ml$) - 1;
+			mes .n$;
+			mes @partymemb$[@pm] + ( (@partymemb$[@pm] == getpartyleader(getcharid(1)))?" (Leader)":"");
+			mes "Correct?";
+			if(select("- Yes:- No") - 1) close;
+			close2;
+			// Since there is no server command for warping an player to another one
+			// and I didn't wanted to create another array for that ...
+			atcommand "@warpto "+@partymemb$[@pm];
+			end;
+			
+			// Dungeon Reward
+			case 3:
+			if(!.dg_rew) close;
+			mes .n$;
+			mes "Hello!";
+			mes "Let me check, if you have completed an dungeon to claim an reward.";
+			next;
+			mes .n$;
+			if(getd("$@pty_"+getcharid(1)+"_m$") != "Reward") {
+				mes "I'm sorry, but it seems like your party didn't complete an dungeon yet.";
+				mes "Come again, when you did.";
+				close;
+			}
+			mes "Congratulation for completing the dungeon, "+.dungn$[getd(".pty_"+getcharid(1)+"_ix")]+"!";
+			mes "I will now reward you and your party with "+set(.@res, (.dg_pts*.diff[getd(".pty_"+getcharid(1)+"_ix")]) )+"x Dungeon Points.";
+			mes "To reuse my service, please register your party again for the next dungeon.";
+			close2;
+			getpartymember(getcharid(1));
+			set .@partyct,$@partymembercount;
+			copyarray .@partymemb$[0],$@partymembername$[0],.@partyct;
+			for ( set .@p,0; .@p < .@partyct; set .@p,.@p + 1) {
+				if(isloggedin(.@pty_aid[.@p]) == 1 && .@pty_aid[.@p]) {
+					detachrid;
+					attachrid(.@pty_aid[.@p]);
+					setd(""+.dg_var$),getd(""+.dg_var$) + .@res;
+					dispbottom .n$+": For completing the dungeon, "+.dungn$[getd(".pty_"+getcharid(1)+"_ix")]+", you will be rewarded with "+.@res+"x Dungeon Points!";
+					dispbottom .n$+": Your new balance is: "+getd(""+.dg_var$)+" Dungeon Points!";
+					dispbottom .n$+": Also just in case you are still in the dungeon, I will warp you to your Save Point!";
+				}
+			}
+			sleep2 10000;
+			warpparty "SavePointAll",0,0,getcharid(1);
+			setd("$@pty_"+getcharid(1)+"_m$"),"";
+			setd(".pty_"+getcharid(1)+"_ix"),0;
+			setd("$@pty_"+getcharid(1)+"$"),"";
+			deletearray getd(".pty_"+getcharid(1)+"_st$[0]"),128;
+			for ( set .@d,0; .@d < getarraysize(.pty_id); set .@d,.@d + 1) 
+				if(getcharid(1) == .pty_id[.@d]) 
+					deletearray .pty_id[.@d],1;
+			end;
+		}
 	}
 
 	case 2:
 	mes .n$;
 	mes "I can offer my Dungeon Party Service to any Party, which uses my Dungeon Warp Service, which allows the party to recieve more EXP based on the dungeons difficulty.";
 	mes "For each Dungeon exists an party limit, how many parties can be in one Dungeon at once. Which is "+.pt_limit;
+	mes "Also every Dungeon has a Level Requirement, minimum level is 10, which each party member must have reached!";
 	next;
 	mes .n$;
 	if(.dg_rew == 1) {
@@ -296,9 +336,18 @@ switch(select("- Choose Map:- Information:- Nothing")) {
 	mes "Hard: "+.exp[3]+"%";
 	close;
 	
+	// Dungeon Points Exchanger, if .dg_rew == 1
 	case 3:
-	close; 
+	if(!.dg_rew) close;
+	mes .n$;
+	
+	
+	case 4:
+	if(.dg_rew) close;
+	close;
 }
+end;
+
 OnInit:
 // =============== NPC Name ===============
 set .n$,"["+strnpcinfo(1)+"]";
@@ -314,11 +363,26 @@ set .dg_rew,1;
 if(.dg_rew == 1) {
 	set .dg_var$,"DG_Pts";
 	set .dg_pts,10; // Base Dungeon Points, will be multiplied by Difficulty
+	// Dungeon Points Exchanger:
+	// > Item IDs 
+	setarray .dg_ex[0],512;
+	// > How many items you get per exchange?
+	setarray .dg_ex_am[0],10;
+	// > How much does one exchange cost?
+	setarray .dg_ex_cost[0],2;
 	// MvP Reward for each MvP > 0 = Off, 1 = Permanent Character Variable, 2 = #CASHPOINTS
 	set .mvp_rew,1;
 	if(.mvp_rew == 1) {
-	set .mvp_var$,"MvP_Pts";
-	set .mvp_pts,1; // Base MvP Points, will also be multiplied by Difficulty
+		set .mvp_var$,"MvP_Pts";
+		set .mvp_pts,1; // Base MvP Points, will also be multiplied by Difficulty
+		// MvP Points Exchanger:
+		// > Item IDs 
+		setarray .mvp_ex[0],512;
+		// > How many items you get per exchange?
+		setarray .mvp_ex_am[0],10;
+		// > How much does one exchange cost?
+		setarray .mvp_ex_cost[0],2;
+	}
 // =============== Dungeon Names ===============
 setarray .dungn$[0],"Abyss Lake","Amatsu Dungeon","Ant Hell","Ayothaya Dungeon","Bylan","Clock Tower","Coal Mine","Culvert","Einbech Dungeon","Gefenia","Geffen Dungeon","Glast Heim","Gonyrun Dungeon","Ice Dungeon","Labyrinth","Juperos","Lightalzen Bio Lab","Louyang Dungeon","Magma Dungeon","Odin Temple","Orc Dungeon","Payon Dungeon","Pyramid Dungeon","Sphinx Dungeon","Sunken Ship Dungeon","Thanatos Tower","Toy Factory Dungeon","Turtle Dungeon","Umbala Dungeon","Thor Volcano Dungeon";
 // =============== Dungeon Difficulty ===============
@@ -380,15 +444,13 @@ OnNPCKillEvent:
 if(!getcharid(1)) end;
 if(getmapflag(strcharinfo(3),mf_pvp) == 1 || getmapflag(strcharinfo(3),mf_gvg) == 1) end; // On PvP or GvG Maps = No effect
 if(getd("$@pty_"+getcharid(1)+"$") == "") end; // Not registered at the NPC.
-// If the player is not on the chosen leveling map anymore,
-// attach the leader, if he/she is not already, retrieve the new map. If found, update it.
-if(strcharinfo(3) != getd("$@pty_"+getcharid(1)+"_m$")) {
-	if(strcharinfo(0) != getpartyleader(getcharid(1))) {
-		set .@p,getcharid(1);
-		detachrid;
-		attachrid(getpartyleader(.@p,1)); 
-	}
-}
+/*
+Making this part to use less resources
+Is aweful!
+Idea: Storing the players account ids in an array and then calling those values
+    > also adding that array code at the Party Join Feature
+	> not sure about the prefix yet, $@ or . arrays
+*/
 getpartymember(getcharid(1));
 set .@partyct,$@partymembercount;
 copyarray .@partymemb$[0],$@partymembername$[0],.@partyct;

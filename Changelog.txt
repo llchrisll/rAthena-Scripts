@@ -26,6 +26,12 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/06/01
+= Updated Dungeon Party System v1.0 [WIP]
+- Added Level check to Dungeon Menu and Dungeon Points Exchanger menu option
+- Added Dungeon Points Exchanger setting to OnInit:
+- Added idea about storing party member account ids to make part of the code less "getpartymember" resourceless in usage
+------------------------------------------------------------
 * 2015/05/31
 = Updated Dungeon Party System v1.0 [WIP]
 - Making NPC Function PT_MAP into an global one with different code
