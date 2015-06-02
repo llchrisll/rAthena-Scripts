@@ -6,6 +6,8 @@
 //= 1.0
 //===== Compatible With ======================================
 //= Every rAthena Version
+//===== Tested With ==========================================
+//= rAthena - Not yet
 //===== Description ==========================================
 //= Additional EXP Bonus (in Percent) based on Dungeon's Difficulty
 //  - Difficulties: Easy, Medium, Hard
@@ -31,10 +33,12 @@
 //	Since no header was included and I forgot the name of him/her,
 //	I couldn't ask the permission to use an part of the script.
 //	I used the map coordinates.
+//===== Installation =========================================
+//= Search in "npc/", "npc/pre-re" and "npc/re" for "scripts_warps.conf" and
+//  just comment the dungeon warps out with "//" at the start of the line
+//  Or use "/*" before the 1st warp and "*/" after the last warp for block comment
 //===== ToDo List ============================================
-//= Dungeons:
-//  - Removing Dungeon Warps, custom scripts_warps.cfg
-//  - Dungeon/MvP Points Exchanger - complete with calculation
+//= Testing
 //============================================================
 prontera,151,185,4	script	Dungeon Party Service	110,{
 
@@ -57,7 +61,7 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 			next;
 			if(select("- Yes:- No") - 1) {
 				mes .n$;
-				mes "Then you need to create one first, also you require 2 and more members to use the Party EXP Service.";
+				mes "Then you need to create one first, also you require 2 and more members to use the Dungeon Party Service.";
 				close;
 			}
 			mes .n$;
@@ -68,17 +72,16 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 		}
 		if(!@join) {
 			if(strcharinfo(0) != getpartyleader(getcharid(1))) {
-				mes "Only the party leader can register your party for the Party EXP Service.";
+				mes "Only the party leader can register your party for the Dungeon Party Service.";
 				close;
 			}
 			getpartymember(getcharid(1),2);
-			copyarray .@pty_aid[0],$@partymemberaid[0],$@partymembercount;
 			for ( set .@p,0; .@p < $@partymembercount; set .@p,.@p + 1) 
-				if(isloggedin(.@pty_aid[.@p]) == 1)  // Member logged in?
+				if(isloggedin($@partymemberaid[.@p]) == 1)  // Member logged in?
 					set .@ct,.@ct + 1;
 					
 			if(.@ct < 2) {
-				mes "A party requires 2 members minimum to use the Party EXP Service.";
+				mes "A party requires 2 members minimum to use the Dungeon Party Service.";
 				close;
 			}
 			set .@partyct,$@partymembercount;
@@ -163,11 +166,34 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 			mes "Please choose a different one.";
 			close;
 		}
-		// Adding Level check for party members
+		mes "I will now check the levels of your party members. Please wait....";
+		getpartymember(getcharid(1),1);
+		for ( set .@l,0; .@l < $@partymembercount; set .@l,.@l + 1)
+			if(readparam(BaseLevel,$@partymembercid[.@l]) < .level[@d]) 
+				set .@l_ct,.@l_ct + 1;
+		
+		next;
+		mes .n$;
+		if(.@l_ct > 0) {
+			mes "It seems like "+.@l_ct+" of your members haven't reached the required level for this dungeon.";
+			mes "Please choose either a different dungeon or try to level up your members with lower level.";
+			mes "The minimum level for this dungeon is "+.level[@d]+"!";
+			close;
+		}
 		mes "Your party will recieve an bonus of "+.exp[.diff[@d]]+"%."; 
 		mes "I will warp you and your party now to the "+.dungn$[@d]+ ( (compare(.dungn$[@d],"Dungeon") == 1)?" ":" Dungeon ");
 		mes "Happy leveling!!!";
 		close2;
+		
+		// Saving Account and Character ID about Party Members
+		getpartymember(getcharid(1),1);
+		getpartymember(getcharid(1),2);
+		copyarray .@pt_aid[0],$@partymemberaid[0],$@partymembercount;
+		copyarray .@pt_cid[0],$@partymembercid[0],$@partymembercount;
+		for ( set .@p,0; .@p < $@partymembercount; set .@p,.@p + 1) {
+			setarray getd("$@pt_"+getcharid(1)+"_maid["+.@p+"]"),.@pt_aid[.@p];
+			setarray getd("$@pt_"+getcharid(1)+"_mcid["+.@p+"]"),.@pt_cid[.@p];
+		}	
 		// Saving Array Index of the Dungeon for .dungpre$ or .dungn$
 		setd(".pty_"+getcharid(1)+"_ix"),@d;
 		// Used to save the current Leveling Map of the party
@@ -175,7 +201,7 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 		// Saving Dungeon Prefix
 		setd("$@pty_"+getcharid(1)+"$"),""+.dungpre$[@d];
 		// Setting Mob Counter
-		setd("@pt_"+.dungpre$[@d]+"_mct"),.mob_base[@d];
+		setd("$@pt_"+getcharid(1)+"_mct"),.mob_base[@d];
 		// Setting Start Point
 		setarray getd(".pty_"+getcharid(1)+"_st$[0]"),""+getd("."+.dungpre$[@d]+"$[1]"),""+getd("."+.dungpre$[@d]+"$[2]"),""+getd("."+.dungpre$[@d]+"$[3]");
 		// Warping Party ...
@@ -188,7 +214,7 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 		mes "How can I help you?";
 		next;
 		switch(select("- Remove Party from list:- Warp Options:- "+( (.dg_rew == 1)?"Dungeon Reward":"Nothing") )) {
-			
+
 			case 1:
 			mes .n$;
 			if(strcharinfo(0) != getpartyleader(getcharid(1))) {
@@ -222,6 +248,8 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 			setd(".pty_"+getcharid(1)+"_ix"),0;
 			setd("$@pty_"+getcharid(1)+"$"),"";
 			deletearray getd(".pty_"+getcharid(1)+"_st$[0]"),128;
+			deletearray getd("$@pt_"+getcharid(1)+"_maid[0]"),128;
+			deletearray getd("$@pt_"+getcharid(1)+"_mcid[0]"),128;
 			for ( set .@d,0; .@d < getarraysize(.pty_id); set .@d,.@d + 1) 
 				if(getcharid(1) == .pty_id[.@d]) 
 					deletearray .pty_id[.@d],1;
@@ -303,6 +331,8 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 			setd(".pty_"+getcharid(1)+"_ix"),0;
 			setd("$@pty_"+getcharid(1)+"$"),"";
 			deletearray getd(".pty_"+getcharid(1)+"_st$[0]"),128;
+			deletearray getd("$@pt_"+getcharid(1)+"_maid[0]"),128;
+			deletearray getd("$@pt_"+getcharid(1)+"_mcid[0]"),128;
 			for ( set .@d,0; .@d < getarraysize(.pty_id); set .@d,.@d + 1) 
 				if(getcharid(1) == .pty_id[.@d]) 
 					deletearray .pty_id[.@d],1;
@@ -340,10 +370,78 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 	case 3:
 	if(!.dg_rew) close;
 	mes .n$;
+	mes "Which points do you want to exchange?";
+	next;
+	switch(select("- Dungeon Points:- MvP Points")) {
+		
+		case 1:
+		mes .n$;
+		mes "Please choose the item you want your points to exchange to:";
+		mes "Format: Amount x Item (Price per Exchange)";
+		next;
+		set .@b,select(.ex_m$) - 1;
+		mes .n$;
+		mes "You have selected "+.dg_ex_am+"x "+getitemname(.dg_ex[.@b])+".";
+		mes "Is that correct?";
+		if(select("- Yes:- No") - 1) close;
+		next;
+		mes .n$;
+		mes "Now type the how often you want to exchange:";
+		mes "Price per exchange: "+.dg_ex_cost[.@b];
+		mes "Your balance: "+getd(""+.dg_var$);
+		// Setting exchange limit base on the current points you have
+		set .@l,(getd(""+.dg_var$)/.dg_ex_cost[.@b]);
+		next;
+		if(input(.@buy,1,.@l) != 0) {
+			mes .n$;
+			mes "It seems like you put either a 0 or more than "+.@l+", which is the maximum you could exchange based on your points.";
+			close;
+		}
+		mes .n$;
+		getitem .dg_ex[.@b],.dg_ex_am[.@b];
+		setd(""+.dg_var$),getd(""+.dg_var$) - (.@buy*.dg_ex_cost[.@b]);
+		mes "Your exchange has been completed.";
+		mes "See you again for the next exchange.";
+		break;
+		
+		case 2:
+		mes .n$;
+		if(!.mvp_rew) {
+			mes "I'm sorry, but this exchange service is not currently available duo the fact MvP Points not being gainable.";
+			mes "Please come back another time.";
+			close;
+		}
+		mes "Please choose the item you want your points to exchange to:";
+		mes "Format: Amount x Item (Price per Exchange)";
+		next;
+		set .@b,select(.ex_mvp_m$) - 1;
+		mes .n$;
+		mes "You have selected "+.mvp_ex_am+"x "+getitemname(.mvp_ex[.@b])+".";
+		mes "Is that correct?";
+		if(select("- Yes:- No") - 1) close;
+		next;
+		mes .n$;
+		mes "Now type the how often you want to exchange:";
+		mes "Price per exchange: "+.mvp_ex_cost[.@b];
+		mes "Your balance: "+getd(""+.mvp_var$);
+		// Setting exchange limit base on the current points you have
+		set .@l,(getd(""+.mvp_var$)/.mvp_ex_cost[.@b]);
+		next;
+		if(input(.@buy,1,.@l) != 0) {
+			mes .n$;
+			mes "It seems like you put either a 0 or more than "+.@l+", which is the maximum you could exchange based on your points.";
+			close;
+		}
+		mes .n$;
+		getitem .mvp_ex[.@b],.mvp_ex_am[.@b];
+		setd(""+.mvp_var$),getd(""+.mvp_var$) - (.@buy*.mvp_ex_cost[.@b]);
+		mes "Your exchange has been completed.";
+		mes "See you again for the next exchange.";
+		break;
+	}
 	
 	
 	case 4:
-	if(.dg_rew) close;
 	close;
 }
 end;
@@ -370,6 +468,9 @@ if(.dg_rew == 1) {
 	setarray .dg_ex_am[0],10;
 	// > How much does one exchange cost?
 	setarray .dg_ex_cost[0],2;
+	// Creating exchange menu
+	for ( set .@m,0; .@m < getarraysize(.dg_ex); set .@m,.@m + 1)
+		set .ex_m$,.ex_m$ + "- "+.dg_ex_am[.@m]+"x "+getitemname(.dg_ex[.@m])+" ("+.dg_ex_cost[.@m]+")"+ ( (.dg_ex[.@m+1] != 0)?":":"");
 	// MvP Reward for each MvP > 0 = Off, 1 = Permanent Character Variable, 2 = #CASHPOINTS
 	set .mvp_rew,1;
 	if(.mvp_rew == 1) {
@@ -382,7 +483,10 @@ if(.dg_rew == 1) {
 		setarray .mvp_ex_am[0],10;
 		// > How much does one exchange cost?
 		setarray .mvp_ex_cost[0],2;
+		for ( set .@m,0; .@m < getarraysize(.mvp_ex); set .@m,.@m + 1)
+			set .ex_mvp_m$,.ex_mvp_m$ + "- "+.mvp_ex_am[.@m]+"x "+getitemname(.mvp_ex[.@m])+" ("+.mvp_ex_cost[.@m]+")"+ ( (.mvp_ex[.@m+1] != 0)?":":"");
 	}
+}
 // =============== Dungeon Names ===============
 setarray .dungn$[0],"Abyss Lake","Amatsu Dungeon","Ant Hell","Ayothaya Dungeon","Bylan","Clock Tower","Coal Mine","Culvert","Einbech Dungeon","Gefenia","Geffen Dungeon","Glast Heim","Gonyrun Dungeon","Ice Dungeon","Labyrinth","Juperos","Lightalzen Bio Lab","Louyang Dungeon","Magma Dungeon","Odin Temple","Orc Dungeon","Payon Dungeon","Pyramid Dungeon","Sphinx Dungeon","Sunken Ship Dungeon","Thanatos Tower","Toy Factory Dungeon","Turtle Dungeon","Umbala Dungeon","Thor Volcano Dungeon";
 // =============== Dungeon Difficulty ===============
@@ -444,41 +548,49 @@ OnNPCKillEvent:
 if(!getcharid(1)) end;
 if(getmapflag(strcharinfo(3),mf_pvp) == 1 || getmapflag(strcharinfo(3),mf_gvg) == 1) end; // On PvP or GvG Maps = No effect
 if(getd("$@pty_"+getcharid(1)+"$") == "") end; // Not registered at the NPC.
-/*
-Making this part to use less resources
-Is aweful!
-Idea: Storing the players account ids in an array and then calling those values
-    > also adding that array code at the Party Join Feature
-	> not sure about the prefix yet, $@ or . arrays
-*/
-getpartymember(getcharid(1));
-set .@partyct,$@partymembercount;
-copyarray .@partymemb$[0],$@partymembername$[0],.@partyct;
+if(strcharinfo(3) != getd("$@pty_"+getcharid(1)+"_m$")) end; // Member is on the leveling map?
+
+// Reading EXP values from Mob Database
 set .@expr,.exp[.diff[getd(".pty_"+getcharid(1)+"_ix")]];
 set .@bexp,getmonsterinfo(killedrid,3)*.@expr/100;
 set .@jexp,getmonsterinfo(killedrid,4)*.@expr/100;
-for ( set .@p,0; .@p < .@partyct; set .@p,.@p + 1) {
-	// Recheck of party members on the same map,
-	// in case someone died or logged out.
-	if(isloggedin(.@pty_aid[.@p]) == 1) { // Member is logged in
-		detachrid;
-		attachrid(.@pty_aid[.@p]);
-		if(strcharinfo(3) == getd("$@pty_"+getcharid(1)+"_m$")) { // Member is on the leveling map
-			if(HP > 0) { // Member is alive
-				getexp @bexp,.@jexp;
-				dispbottom .n$+": Recieved Bonus: "+.@expr+"% - Base EXP: "+.@bexp+"/Job EXP: "+.@jexp;
-				// Killed MvP > rewarding with points if .mvp_rew > 0
-				if(getmonsterinfo(killedrid,22) != 0 && .mvp_rew > 0) {
-					switch(.mvp_rew) {
-						case 1:	set MvP_Pts,MvP_Pts + set(.@m_res,(.mvp_pts*.diff[getd(".pty_"+getcharid(1)+"_ix")])); break;
-						case 2: set #CASHPOINTS,#CASHPOINTS + set(.@m_res,(.mvp_pts*.diff[getd(".pty_"+getcharid(1)+"_ix")])); break;
-					}
-					dispbottom .n$+": Recieved MVP Points: "+.@m_res+"x "+ ( (.mvp_rew == 1)?"MvP Points":"Cash Points")+".";
-				}
+
+// Increasing Party Mob Counter
+setd("$@pt_"+getcharid(1)+"_mct"),getd("$@pt_"+getcharid(1)+"_mct") + 1;
+
+// Reading party arrays and setting a temporar npc variable for better overview
+for ( set .@p,0; .@p < getarraysize(getd("$@pt_"+getcharid(1)+"_maid")); set .@p,.@p + 1) {
+	set .@c_aid,getd("$@pt_"+getcharid(1)+"_maid["+.@p+"]"); // Current selected Member's Account ID
+	set .@c_cid,getd("$@pt_"+getcharid(1)+"_mcid["+.@p+"]"); // Current selected Member's Character ID
+		
+	// Check if the party is the same as the one in the dungeon
+	if(getcharid(1,strcharinfo(0,.@c_cid)) != getcharid(1))
+		for ( set .@p,0; .@p < getarraysize(getd("$@pt_"+getcharid(1)+"_mcid")); set .@p,.@p + 1)
+			if(.@c_cid == getd("$@pt_"+getcharid(1)+"_mcid["+.@p+"]")) {
+				deletearray getd("$@pt_"+getcharid(1)+"_maid["+.@p+"]"),1;
+				deletearray getd("$@pt_"+getcharid(1)+"_mcid["+.@p+"]"),1;
+				break;
 			}
+
+	// Member logged in? 
+	if(isloggedin(.@c_aid,.@c_cid) == 0) continue;
+	
+	// Member is alive
+	if(readparam(HP,strcharinfo(0,.@c_cid)) < 1) continue;
+
+	getexp .@bexp,.@jexp,.@c_cid;
+	dispbottom .n$+": Recieved Bonus: "+.@expr+"% - Base EXP: "+.@bexp+"/Job EXP: "+.@jexp,,.@c_cid;
+	// Killed MvP > rewarding with points if .mvp_rew > 0
+	if(getmonsterinfo(killedrid,22) != 0 && .mvp_rew > 0) {
+		set .@m_res,.mvp_pts*.diff[getd(".pty_"+getcharid(1)+"_ix")];
+		switch(.mvp_rew) {
+			case 1:	set MvP_Pts,MvP_Pts + .@m_res,.@c_cid; break;
+			case 2: set #CASHPOINTS,#CASHPOINTS + .@m_res,.@c_cid; break;
 		}
+		dispbottom .n$+": Recieved MVP Points: "+.@m_res+"x "+ ( (.mvp_rew == 1)?"MvP Points":"Cash Points")+".",.@c_cid;
 	}
 }
+		}
 end;
 
 // Party Leader logged off
@@ -549,10 +661,17 @@ if(@whispervar0$ == "List" || @whispervar0$ == "list") {
 		dispbottom .n$+": An bug has occured, in which I couldn't find the list for your party members.";
 		dispbottom .n$+": Possible Bug: You logged off or disconnected. Please repeat the previous step.";
 		end;
-	}
-	atcommand "@warpto "+@partymemb$[@whispervar2$];
+	} 
+	charcommand "#warpto "+@partymemb$[@whispervar2$]+" "+getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+@whispervar1$+"]")+"$[0]");
+	
+	// Adding applicant to party member list
+	setarray getd("$@pt_"+getcharid(1)+"_maid["+getarraysize(getd("$@pt_"+getcharid(1)+"_maid"))+"]"),getcharid(3,getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+@whispervar1$+"]")+"$[0]"));
+	setarray getd("$@pt_"+getcharid(1)+"_mcid["+getarraysize(getd("$@pt_"+getcharid(1)+"_mcid"))+"]"),getcharid(0,getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+@whispervar1$+"]")+"$[0]"));
+	
+	// Deleting applicant from application list
 	deletearray getd("$@req_"+getcharid(1)+"_id["+@whispervar1$+"]"),1;
 	deletearray getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+@whispervar1$+"]")+"$[0]"),128;
+	
 	
 // Declining requesters
 } else if(compare(@whispervar0$,"Decline") == 1 || compare(@whispervar0$,"Abort") == 1) {
@@ -615,5 +734,8 @@ for (set .@n,0; .@n < 128); set .@n,.@n + 1)
 end;
 
 }
-	
+// ======================= Start of NPC Duplicates =====================
+//dungeon_map,x,y,facing	duplicate(DG_Main)	Dungeon Level 1 - Exit#<dungeon prefix>_<dungeon level>	110
+abyss_01,100,100,2	duplicate(DG_Main)	Abyss Level 1 - Exit#abyss_1	110
+// ======================= End of NPC Duplicates =====================
 // ======================= End of Script =====================

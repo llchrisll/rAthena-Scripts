@@ -26,6 +26,18 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/06/02
+= Updated Dungeon Party System v1.0 [WIP]
+- Added installation instructions
+- Emptied my ToDo list, still have to test
+- Fixxed some typos
+- Completed the idea about Party Member data storage in $@ arrays
+- Finished adding Level check
+- Changed . variable for mob counter to a $@ variable
+- Completed Dungeon Points exchanger
+- Changed atcommand "@warpto" to charcommand "#warpto" because it couldn't work like it was
+- Added one NPC duplicate for the dungeons later, still need coordinates
+------------------------------------------------------------
 * 2015/06/01
 = Updated Dungeon Party System v1.0 [WIP]
 - Added Level check to Dungeon Menu and Dungeon Points Exchanger menu option
