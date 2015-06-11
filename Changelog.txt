@@ -26,6 +26,13 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/06/11
+= Updated Dynamic Shop NPC v1.1 [RE]
+- Added more Currency options
+- Added possiblity to use pre-defined items + prices,
+  which are always in the shop, see 'OnInit:' > $cash_pre_it and $cash_pre_p
+- Fixed an bug about the price limit
+------------------------------------------------------------
 * 2015/06/02
 = Updated Dungeon Party System v1.0 [WIP]
 - Added installation instructions
