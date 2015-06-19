@@ -26,6 +26,30 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/06/19
+= Updated ToDO List
+= Deleted following files:
+- GM Manager v1.0 [UT] (untested/)
+- EC Card System v1.0 [WIP] (untested/WIP)
+= Updated Dungeon Party System v1.0 [UT]
+- Removed installation notes duo non-importance
+- Changed most variable prefixes to $@
+- Changed "$@pty_"+getcharid(1)+"_m$" into an array to save the dungeon maps
+- Moved Difficulty, Level and Mob Counter arrays in the dungeon arrays,
+  also added for each dungeon level an extra value
+- Added atoi()
+- Added new variable as Check Point to update the current map of the party via @map value
+- Merged double Party Unregister into one by calling it via goto
+- Added extra variable for reward if .dg_rew is 1
+- Added missing coordinates to a few dungeons and exchanged a few with others (like empty dungeons)
+- Added an map check to update the leveling map of the party by using the Check Point variable mentioned above
+- Changed Mob Counters variable layout by adding the map name in the getd()
+- Removed usage of warp function to next dungeon map via the Exit NPC in the Dungeon
+  Now displaying progress of mob counter
+- Added code to check if the next array index in the for() in the Main Dungeon Exit NPC is empty or not
+- Finished adding NPC Duplicates for each Dungeon
+- Fixed minor bugs by pre-testing
+------------------------------------------------------------
 * 2015/06/11
 = Updated Dynamic Shop NPC v1.1 [RE]
 - Added more Currency options

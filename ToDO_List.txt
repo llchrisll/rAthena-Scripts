@@ -7,9 +7,8 @@
 // ====================================================================
 
 Projects currently in work-in-progress:
-	- EC Card System v1.0
+	- None
 	
 Projects currently in test phase:
-	- GM Manager v1.0
 	- Quest System v1.0
-	- Party EXP System v1.0
+	- Dungeon Party Service v1.0
