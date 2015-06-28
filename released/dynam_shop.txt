@@ -10,6 +10,7 @@
 //      - Added possiblity to use pre-defined items + prices,
 //        which are always in the shop, see 'OnInit:' > $cash_pre_it and $cash_pre_p
 //      - Fixed an bug about the price limit
+//      - Changed all $cash variables to .cash
 //===== Compatible With ======================================
 //= Every rAthena SVN 
 //===== Tested With ==========================================
@@ -27,7 +28,7 @@
 //  > Bug about the price limit
 //  > Modification request about more currency options
 //===========================================================
-prontera,146,172,0	script	Cash Shop	100,{
+prontera,152,177,4	script	Cash Shop	100,{
 function ShopStuff;
 
 // Reading Currency Display Name
@@ -135,8 +136,8 @@ if(getgmlevel() >= .gm) {
 						set .CR,4;
 						break;
 					}
-					deletearray $cash_it[0],128;
-					deletearray $cash_p[0],128;
+					deletearray .cash_it[0],128;
+					deletearray .cash_p[0],128;
 					ShopStuff(4);
 					continue;
 					break;
@@ -189,22 +190,22 @@ if(getgmlevel() >= .gm) {
 				continue;
 			}
 			mes .n$;
-			if(getarraysize($cash_it) < 1) {
+			if(getarraysize(.cash_it) < 1) {
 				mes "There is no item in the Shop yet.";
 			} else {
-				mes "There are currently the following "+getarraysize($cash_it)+" Items in the Shop:";
+				mes "There are currently the following "+getarraysize(.cash_it)+" Items in the Shop:";
 				mes "============================";
-				for ( set .@i,0; .@i < getarraysize($cash_it); set .@i,.@i + 1) {
-					mes getitemname($cash_it[.@i])+" (ID: "+$cash_it[.@i]+")";
-					mes "Price:"+$cash_p[.@i]+" "+.Cur_N$;
-					mes ( ($cash_it[.@i+1] != 0)?"---------------------------------":"============================");
+				for ( set .@i,0; .@i < getarraysize(.cash_it); set .@i,.@i + 1) {
+					mes getitemname(.cash_it[.@i])+" (ID: "+.cash_it[.@i]+")";
+					mes "Price:"+.cash_p[.@i]+" "+.Cur_N$;
+					mes ( (.cash_it[.@i+1] != 0)?"---------------------------------":"============================");
 				}
 			}
 			next;
 			switch(select("- Add Items:- Edit Items:- Delete Items:- Nothing")) {
 				case 1:
 				mes .n$;
-				if(getarraysize($cash_it) >= 128) {
+				if(getarraysize(.cash_it) >= 128) {
 					mes "The Shop is full, please remove an item first.";
 					continue;
 				}
@@ -243,7 +244,7 @@ if(getgmlevel() >= .gm) {
 				
 				case 2:
 				mes .n$;
-				if(getarraysize($cash_it) < 1) {
+				if(getarraysize(.cash_it) < 1) {
 					mes "There is no Item to edit.";
 					mes "Please add one first :D.";
 					continue;
@@ -252,14 +253,14 @@ if(getgmlevel() >= .gm) {
 				mes "Format: Name (Current Price)";
 				next;
 				set @ed_list$,"";
-				for ( set .@e,0; .@e < getarraysize($cash_it); set .@e,.@e + 1)
-					set @ed_list$,@ed_list$ + "- "+getitemname($cash_it[.@e])+" ("+$cash_p[.@e]+")" + ( ($cash_it[.@e+1])?":":"");
+				for ( set .@e,0; .@e < getarraysize(.cash_it); set .@e,.@e + 1)
+					set @ed_list$,@ed_list$ + "- "+getitemname(.cash_it[.@e])+" ("+.cash_p[.@e]+")" + ( (.cash_it[.@e+1])?":":"");
 					
 				set @ed,select(@ed_list$) - 1;
 				
 				mes .n$;
-				mes "Chosen Item: "+ getitemname($cash_it[@ed]);
-				mes "Price: "+ $cash_p[@ed]+" "+.Cur_N$;
+				mes "Chosen Item: "+ getitemname(.cash_it[@ed]);
+				mes "Price: "+ .cash_p[@ed]+" "+.Cur_N$;
 				mes "Correct?";
 				if(select("- Yes:- No") - 1) continue;
 				next;
@@ -280,7 +281,7 @@ if(getgmlevel() >= .gm) {
 					mes "Chosen Price: "+.@price+" "+.Cur_N$;
 					mes "Correct?";
 					if(select("- Yes:- No") - 1) continue;
-					ShopStuff(3,@ed,$cash_it[@ed],.@price);
+					ShopStuff(3,@ed,.cash_it[@ed],.@price);
 					
 				} else {
 					mes .n$;
@@ -300,14 +301,14 @@ if(getgmlevel() >= .gm) {
 					mes "Chosen Item: "+getitemname(.@item);
 					mes "Correct?";
 					if(select("- Yes:- No") - 1) continue;
-					ShopStuff(3,@ed,.@item,$cash_p[@ed]);
+					ShopStuff(3,@ed,.@item,.cash_p[@ed]);
 				}	
 				continue;
 				break;
 				
 				case 3:
 				mes .n$;
-				if(getarraysize($cash_it) < 1) {
+				if(getarraysize(.cash_it) < 1) {
 					mes "There is no Item to remove.";
 					mes "Please add one first :D.";
 					continue;
@@ -316,14 +317,14 @@ if(getgmlevel() >= .gm) {
 				mes "Format: Name (Current Price)";
 				next;
 				set @r_list$,"";
-				for ( set .@e,0; .@e < getarraysize($cash_it); set .@e,.@e + 1)
-					set @r_list$,@r_list$ + "- "+getitemname($cash_it[.@e])+" ("+$cash_p[.@e]+")" + ( ($cash_it[.@e+1])?":":"");
+				for ( set .@e,0; .@e < getarraysize(.cash_it); set .@e,.@e + 1)
+					set @r_list$,@r_list$ + "- "+getitemname(.cash_it[.@e])+" ("+.cash_p[.@e]+")" + ( (.cash_it[.@e+1])?":":"");
 					
 				set @re,select(@r_list$) - 1;
 				
 				mes .n$;
-				mes "Chosen Item: "+ getitemname($cash_it[@re]);
-				mes "Price: "+ $cash_p[@re]+" "+.Cur_N$;
+				mes "Chosen Item: "+ getitemname(.cash_it[@re]);
+				mes "Price: "+ .cash_p[@re]+" "+.Cur_N$;
 				mes "Correct?";
 				if(select("- Yes:- No") - 1) continue;
 				ShopStuff(2,@ed);
@@ -357,7 +358,7 @@ if(!.CR) {
 	mes "I'm sorry, but I don't know with which Currency I should trade yet.";
 	close;
 }
-if(getarraysize($cash_it) < 1) {
+if(getarraysize(.cash_it) < 1) {
 	mes .n$;
 	mes "There are no items to purchase yet.";
 	mes "Please come back as soon as I have some.";
@@ -375,10 +376,10 @@ end;
 
 OnBuyItem:
 for ( set .@b,0; .@b < getarraysize(@bought_nameid); set .@b,.@b + 1) {
-	for ( set .@l,0; .@l < getarraysize($cash_it); set .@l,.@l + 1) {
-		if(@bought_nameid[.@b] == $cash_it[.@l]) {
-			if(checkweight($cash_it[.@l],@bought_quantity[.@b]) == 1) {
-				set @cost,$cash_p[.@l]*@bought_quantity[.@b];
+	for ( set .@l,0; .@l < getarraysize(.cash_it); set .@l,.@l + 1) {
+		if(@bought_nameid[.@b] == .cash_it[.@l]) {
+			if(checkweight(.cash_it[.@l],@bought_quantity[.@b]) == 1) {
+				set @cost,.cash_p[.@l]*@bought_quantity[.@b];
 				set @total,@total+@cost;
 			} else {
 				dispbottom "Cash Shop: You would be overweight, please remove some items or buy less.";
@@ -436,23 +437,23 @@ function	ShopStuff	{
 	// =========== Item Adding ============ //
 	if(getarg(0) == 1) {
 		npcshopadditem "Dynam_Shop",getarg(2),getarg(3);
-		setarray $cash_it[getarraysize($cash_it)],getarg(2);
-		setarray $cash_p[getarraysize($cash_p)],getarg(3);
+		setarray .cash_it[getarraysize(.cash_it)],getarg(2);
+		setarray .cash_p[getarraysize(.cash_p)],getarg(3);
 		
 	// =========== Item Removal ============ //	
 	} else if(getarg(0) == 2) {
-		npcshopdelitem "Dynam_Shop",$cash_it[getarg(1)];
-		deletearray $cash_it[getarg(1)],1;
-		deletearray $cash_p[getarg(1)],1;
+		npcshopdelitem "Dynam_Shop",.cash_it[getarg(1)];
+		deletearray .cash_it[getarg(1)],1;
+		deletearray .cash_p[getarg(1)],1;
 		
 	// =========== Item Edit ============ //
 	} else if(getarg(0) == 3) {
-		setarray $cash_it[getarg(1)],getarg(2);
-		setarray $cash_p[getarg(1)],getarg(3);
+		setarray .cash_it[getarg(1)],getarg(2);
+		setarray .cash_p[getarg(1)],getarg(3);
 		// Re-Create Shop after Edit
-		npcshopitem "Dynam_Shop",$cash_it[0],$cash_p[0];
-		for ( set .@s,1; .@s < getarraysize($cash_it); set .@s,.@s + 1) 
-				npcshopadditem "Dynam_Shop",$cash_it[.@s],$cash_p[.@s];
+		npcshopitem "Dynam_Shop",.cash_it[0],.cash_p[0];
+		for ( set .@s,1; .@s < getarraysize(.cash_it); set .@s,.@s + 1) 
+				npcshopadditem "Dynam_Shop",.cash_it[.@s],.cash_p[.@s];
 				
 	// =========== Reset Shop ============ //				
 	} else if(getarg(0) == 4) {
@@ -464,13 +465,13 @@ function	ShopStuff	{
 		ShopStuff(4);
 		npcshopdelitem "Dynam_Shop",512;
 		// Adding pre-defined items to the shop array
-		for ( set .@s,0; .@s < getarraysize($cash_pre_it); set .@s,.@s + 1) {
-			setarray $cash_it[getarraysize($cash_it)],$cash_pre_it[.@s];
-			setarray $cash_p[getarraysize($cash_p)],$cash_pre_p[.@s];		
+		for ( set .@s,0; .@s < getarraysize(.cash_pre_it); set .@s,.@s + 1) {
+			setarray .cash_it[getarraysize(.cash_it)],.cash_pre_it[.@s];
+			setarray .cash_p[getarraysize(.cash_p)],.cash_pre_p[.@s];		
 		}
 		// Adding items to the shop
-		for ( set .@s,0; .@s < getarraysize($cash_it); set .@s,.@s + 1) 
-			npcshopadditem "Dynam_Shop",$cash_it[.@s],$cash_p[.@s];
+		for ( set .@s,0; .@s < getarraysize(.cash_it); set .@s,.@s + 1) 
+			npcshopadditem "Dynam_Shop",.cash_it[.@s],.cash_p[.@s];
 		set .first,0;
 	}
 	return;
@@ -481,9 +482,15 @@ set .n$,"["+strnpcinfo(1)+"]";
 set .gm,80; // General Access Level
 set .first,1; // First Shop Creation
 set .last_id,30000; // Highest Item ID
+if(getarraysize($cash_it) > 0) {
+	deletearray $cash_it,128;
+	deletearray $cash_p,128;
+	deletearray $cash_pre_it,128;
+	deletearray $cash_pre_p,128;
+}
 // Pre-Defined Items in the Shop, they are always in it!
-setarray $cash_pre_it[0],2792,2793,2374,2375,2357,2524,2421,2115,2729;
-setarray $cash_pre_p[0],100,100,100,100,100,100,100,100,100;
+setarray .cash_pre_it[0],2792,2793,2374,2375,2357,2524,2421,2115,2729;
+setarray .cash_pre_p[0],100,100,100,100,100,100,100,100,100;
 end;
 }
 -	shop	Dynam_Shop	-1,512:-1

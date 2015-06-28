@@ -10,7 +10,7 @@ Default
 //===== Compatible With ======================================
 //= Every Athena SQL SVN 
 //===== Tested With ==========================================
-//= rAthena 17267 SQL Trunk 
+//= rAthena SQL 11.06.2015 - Updated Revision
 //===== Description ==========================================
 //= ...
 //===== Comments =============================================
@@ -27,7 +27,7 @@ Request:
 //===== Compatible With ======================================
 //= Every Athena SQL SVN 
 //===== Tested With ==========================================
-//= rAthena 17267 SQL Trunk 
+//= rAthena SQL 11.06.2015 - Updated Revision
 //===== Description ==========================================
 //= ...
 //===== Comments =============================================

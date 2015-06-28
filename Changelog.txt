@@ -1,12 +1,12 @@
-// ================= SVN Changelog - GoogleCode =======================
+// ================= RO Scripts - GitHub Changelog =======================
 // = Creator: h0und3y3@gmail.com - Houndeye aka llchrisll
 // = Usage: Athena Scripts
 // = User Profile: 
 //   eAthena: http://www.eathena.ws/board/index.php?showuser=245180
 //   rAthena: http://www.rAthena.org/board/user/402-llchrisll
 // ====================================================================
-// ================== Flag Legend (since 2012/02/28) ==================
-// These flags will only appear in the SVN Log Messages and here, which also defines
+// ================== Tags Legend (since 2012/02/28) ==================
+// These tags will only appear in the SVN Log Messages and here, which also defines
 // the folder in which the scripts are. 
 // Also this will the order how the scripts will be finished:
 // = [IC] > Info collection or Request
@@ -26,6 +26,29 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/06/28
+= Updated Dynamic Shop v1.1 [RE]
+- Changed all $cash variables to .cash
+  > Added an deletearray to delete the old $cash variables at OnInit:
+= Updated Global NPC Handler v1.0 [RE]
+- To v1.1:
+  > Removed "OnScriptUnload" Event and exchanged "atcommand @unloadnpc" with "atcommand @unloadnpcfile"
+  > Changed values for the arrays, had 0 for off and 1 for on but arrays doesn't read '0'
+  > Removed NPC example for seperate Config npc, not needed anymore, just add it at the main NPC after the OnInit:
+  > Removed doevent strnpcinfo(0)+"::OnInit" after "OnScriptLoad", OnInit will be loaded on @loadnpc
+= Updated Quest System v1.0 [UT]
+- Fixxed major bugs
+- Changed query_sql checks
+- Added Item Weight Check before adding reward to the database and before giving the player
+- Added QSys_xxx_Limit and QSys_xxx_QDelay resets when deleting an quest
+- Removed "*1000" multiplicator at quest delay settings, forgot that gettimetick(2) is in seconds
+- Added "MobHunt_<MobID>" as variable to check if the killed mob is an quest mob
+- Removed my newbie duplicate removal code > SELECT DISTINCT!!
+- Added Player Information about the quest system
+- Some text optimizations
+= Updated NPC_Headers.txt
+- Changed "Tested with" part
+------------------------------------------------------------
 * 2015/06/19
 = Updated ToDO List
 = Deleted following files:
