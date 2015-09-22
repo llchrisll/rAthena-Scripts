@@ -26,6 +26,20 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/09/22
+= Updated Quest System v1.0 [RE]
+- Moved into "released/sql-based" folder
+= Updated Fame System v1.2 [RE]
+- Added OnAtCommand for Quest Progress Display
+= Updated Dungeon Party System v1.0 [UT]
+- Exchanged at "readparam" the variables with their numbers, since it didn't work otherwise
+- Changed the Map Check code
+- Modified the Party Mob Counter Variable to use the Mob Killer's current map (strcharinfo(3))
+- Added an check at the Template NPC in case the player didn't register his party at the main npc
+- Fixxed the Mob Counter Display by Map at the Template NPC
+- Exchanged copyarray with setarray at the Template NPC::OnInit since it didn't work that way
+- Moved to untested folder
+------------------------------------------------------------
 * 2015/06/28
 = Updated Dynamic Shop v1.1 [RE]
 - Changed all $cash variables to .cash

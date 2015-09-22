@@ -18,6 +18,7 @@
 //= 1.2 - Compatible with rAthena now
 //      - Fixxed some bugs and made some small edits
 //      - Fixxed the GM check in the first lines
+//      - Added OnAtCommand for Quest Progress Display per request
 //===== Compatible With ======================================
 //= Every Athena SQL SVN 
 //===== Tested With ==========================================
@@ -171,6 +172,11 @@ deletearray @bought_nameid[0],128;
 deletearray @bought_quantity[0],128;
 end;
 	
+OnAtcommand:
+if(set(@t,BaseClass) < 1 || @t > 6) end;
+if(!FameQuest) end;
+dispbottom FAME_FUNC(0,@t,FameQuest);
+end;
 	
 OnNPCKillEvent:
 if(FameQuest == 0 || getd("$f_quest_"+FameQuest+"_"+BaseClass+"_type") != 1) end;
@@ -183,7 +189,7 @@ dispbottom FAME_FUNC(0,BaseClass,FameQuest);
 end;
 
 OnWhisperGlobal:
-if(getgmlevel() > .gm && @whispervar0$ == "OnInit") goto OnInit;
+if(getgmlevel() >= .gm && @whispervar0$ == "OnInit") goto OnInit;
 if(FameQuest == 0) {
 	dispbottom .n$+": I'm sorry, but you haven't accepted an quest yet, therefore you can't see your progress.";
 	end;
@@ -592,6 +598,9 @@ set .time,86400;
 set .last_id,25000;
 // Maximum Price, should be not more than .m_fame, else an Item would be unbuyable.
 set .m_price,.m_fame;
+// Custom atcommand: @famequest
+bindatcmd "famequest",strnpcinfo(0)+"::OnAtcommand";
+end;
 
 function	FAME_FUNC	{
 // getarg(0) - Identifier
