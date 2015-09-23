@@ -26,6 +26,11 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/09/23
+= Updated Quest System v1.0 [RE]
+- Added an limit when an quest monster has been killed should stop,
+   by checking if the wanted quantity has been reached or not.
+------------------------------------------------------------
 * 2015/09/22
 = Updated Quest System v1.0 [RE]
 - Moved into "released/sql-based" folder

@@ -492,8 +492,10 @@ end;
 OnNPCKillEvent:
 if($@q_tab$[0] == "") end;
 if(!getd("MobHunt_"+killedrid)) end; // Checking if the killed monster is wanted
-setd("@KilledMob_"+killedrid),getd("@KilledMob_"+killedrid) + 1;
-dispbottom "Mob - "+strmobinfo(1,killedrid)+" : "+getd("@KilledMob_"+killedrid);
+if(getd("@KilledMob_"+killedrid) < getd("MobHunt_"+killedrid+"_CT") {
+	setd("@KilledMob_"+killedrid),getd("@KilledMob_"+killedrid) + 1;
+	dispbottom "Monster Hunting - "+strmobinfo(1,killedrid)+" : "+getd("@KilledMob_"+killedrid)+"/"+getd("MobHunt_"+killedrid+"_CT"),0x00FF00;
+}
 end;
 
 OnPCLoginEvent:
@@ -626,6 +628,7 @@ switch(.@s) {
 		if(.@q_type[.@q_c] == 1) { // Monster Hunting
 			query_sql "INSERT INTO `quest_player` ( `npc_id` , `char_id` , `quest_id` , `mob_id` , `check` ) VALUES ( '"+strnpcinfo(2)+"' , '"+getcharid(0)+"' , '"+.@q_id[.@q_c]+"' , '"+.@req1[.@a]+"' , '1' )";
 			setd("MobHunt_"+.@req1[.@a]),1;
+			setd("MobHunt_"+.@req1[.@a]+"_CT"),.@req2;
 		} else // Item Collecting
 			query_sql "INSERT INTO `quest_player` ( `npc_id` , `char_id` , `quest_id` , `check` ) VALUES ( '"+strnpcinfo(2)+"' , '"+getcharid(0)+"' , '"+.@q_id[.@q_c]+"' , '1' )";
 	break;
@@ -707,8 +710,8 @@ switch(.@s) {
 			// Reseting Mob ID Variable and Mob Counter
 			setd("MobHunt_"+.@req1[.@r]),0;
 			setd("@KilledMob_"+.@req1[.@r]),0;
-		}
-		else
+			setd("MobHunt_"+.@req1[.@a]+"_CT"),0;
+		} else
 			delitem .@req1[.@l],.@req2[.@l];
 		
 	query_sql "DELETE FROM `quest_player` WHERE `npc_id` = '"+strnpcinfo(2)+"' AND `quest_id` = '"+.@q_id[.@q_c]+"' AND `char_id` = '"+getcharid(0)+"'";
