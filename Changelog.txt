@@ -11,11 +11,11 @@
 // Also this will the order how the scripts will be finished:
 // = [IC] > Info collection or Request
 // = [WIP] > Work-In-Progress
-// = [UT] > Untested = Finished Scripts, but untested
+// = [UT] > Untested = Finished Scripts, currently testing
 // = [TE] > Tested = Tested, but unreleased
 // = [RE] or [REQ]:
-// = > Released = Tested and released
-// = > Request = Tested and will not be released officially
+// = > Released = Rleased
+// = > Request = Will not be released officially
 // ====================================================================
 // ================= Line Indicator (since 2013/10/09) ================
 // *: Date
@@ -26,6 +26,29 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/09/30
+= Updated Dungeon Party System v1.0 [RE]
+- Exchanged variable prefixes . with $@, which I had overseen
+- Some optimization at the "Join Party" feature
+- Put the "getpartymember" code to save the party member data into an global function > "SyncPartyData"
+- Added Debug messages nearly everywhere with the possiblity to turn them on or off at OnInit: (.debug)
+- Modified the way to load the Dungeon NPC's by loading the config of them when a party gets into an dungeon
+- Optimized some text lines about grammatic and stuff
+- Added an Balance Overview of your Dungeon/MvP Points
+- Added an info line to see how much exchanges are possible with your current amount of points
+- Exchanged the "SavePointAll" at "warpparty" with "prontera.gat,156,191"; Maybe adding an setting to change the dynamically
+- Edited some values in the dungeon arrays for testing
+- Added an Global Timer to resync party member data every 5 Minutes
+- Added an check to see if the Mob Counter has been reached
+- Added another check to display the mob counter, if it wasn't reached yet otherwise
+  displaying some information how to proceed
+- Fixxed an typo about mvp reward, had the variable itself instead of "(getd""+.mvp_var$)" like I intended to
+- Fixed my Party Leader Change feature on Leader Logout
+- Changed the colour of the "dispbottom" at the Party Join Whisper NPC
+- Added for "Accept" and "Abort" parts at the Party Join NPC an variable for better overview
+- Moved into "released" folder
+= Renamed "untested" folder into "testing"
+------------------------------------------------------------
 * 2015/09/23
 = Updated Quest System v1.0 [RE]
 - Added an limit when an quest monster has been killed should stop,
