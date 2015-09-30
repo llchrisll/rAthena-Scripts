@@ -4,14 +4,15 @@
 //= llchrisll
 //===== Version ==============================================
 //= 1.0 - Initial Release
+//      - Added OnAtcommand (@checkquest) for Quest Progress Display per request
+//        also an info for the players of the existence of that command
 //===== Compatible With ======================================
 //= rAthena SQL 11.06.2015 Rev+
 //===== Tested With ==========================================
-//= rAthena SQL 11.06.2015 - Updated Revision
+//= rAthena SQL 11.06.2015 Rev
 //===== Description ==========================================
-//= Every NPC has an unique ID and can hold up 128 Quests (Array Limit)
+//= Every NPC has an unique ID and can hold up .array Quests
 //  You can put as many as you want Quest NPC's on one map.
-//  Well the "Overview" will also only show 128, but shouldn't really affect anything major.
 //= Quests:
 //  - Monster Hunting
 //  - Item Collecting
@@ -89,6 +90,9 @@ if(getgroupid() < .gm) {
 	mes "The maximum amount of items, which can be collected at once is "+.item_ct+".";
 	mes "The maximum amount per item to be collected is "+.item_max+".";
 	next;
+	mes "[== Custom @Command ==]";
+	mes "To help you, to check your quest progresses anytime and anywhere, there is an custom @command, which is \"@checkquest\".";
+	next;
 	mes "[== Quest Limit & Delay ==]";
 	mes "Each quest has an limit how often it can be done in a row.";
 	mes "This limit resets itself, when the quest was done often enough.";
@@ -127,7 +131,7 @@ switch(select("- Overview:- Quest Management:- "+( ($@q_tab$[0] == "")?"Create":
 	for( set .@n,0; .@n < getarraysize(.@n_ids); set .@n,.@n + 1) {
 		query_sql "SELECT DISTINCT `quest_id` FROM `quest_list` WHERE `npc_id` = '"+.@n_ids[.@n]+"'",.@q_ids;
 		set .@q_total,.@q_total + getarraysize(.@q_ids);
-		deletearray .@q_ids[0],128;
+		deletearray .@q_ids[0],getarraysize(.@q_ids);
 	}
 	mes "Total Quests: "+.@q_total;
 	mes "Total NPCs: "+getarraysize(.@n_ids);
@@ -137,7 +141,7 @@ switch(select("- Overview:- Quest Management:- "+( ($@q_tab$[0] == "")?"Create":
 		query_sql "SELECT `npc_name` FROM `quest_npc` WHERE `npc_id` = '"+.@n_ids[.@l]+"'",.@n_name$;
 		query_sql "SELECT DISTINCT `quest_id` FROM `quest_list` WHERE `npc_id` = '"+.@n_ids[.@l]+"'",.@q_ids;
 		mes "- "+.@n_name$+": "+getarraysize(.@q_ids);
-		deletearray .@q_ids[0],128;
+		deletearray .@q_ids[0],getarraysize(.@q_ids);
 	}
 	break;
 	
@@ -172,7 +176,7 @@ switch(select("- Overview:- Quest Management:- "+( ($@q_tab$[0] == "")?"Create":
 	switch(select("- Add Quests:- Remove Quests:- Nothing")) {
 		case 1:
 		mes .n$;
-		if(query_sql("SELECT `quest_id` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@npc_c]+"'",.@q_list) >= 128) {
+		if(query_sql("SELECT `quest_id` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@npc_c]+"'",.@q_list) >= .array) {
 			mes "I'm sorry, but you can't add anymore quests to this NPC, please try another one.";
 			close;
 		}
@@ -434,6 +438,11 @@ OnInit:
 set $@QSys,0; // Quest System not loaded yet
 set .n$,"["+strnpcinfo(1)+"]";
 set .gm,60; // GM Access Level
+// Server Array Limit
+// > rAthena since commit 6295c77 (Script Engine Upgrade):
+// = 2000000000000 (2 Billion)
+// > Others/Default: 128
+set .array,128;
 // ===== Quest Settings =====
 // Minimum and Maximum Mob Amount
 set .mob_min,1;
@@ -483,8 +492,38 @@ set .rew_weight,10000;
 // ========================
 query_sql "DELETE FROM `quest_map`";
 query_sql "SHOW TABLES LIKE 'quest_list'",$@q_tab$;
+// Custom atcommand: @checkquest
+bindatcmd "checkquest",strnpcinfo(0)+"::OnAtcommand";
 set $@QSys,1; // Quest System loaded
 end;
+
+OnAtCommand:
+if($@q_tab$[0] == "") end;
+query_sql "SELECT DISTINCT `quest_id` , `npc_id` FROM `quest_player` WHERE `char_id` = '"+getcharid(0)+"'",.@q_id,.@n_id;
+if(getarraysize(.@q_id) < 1) {
+	dispbottom .n$+": You don't have any active quests.";
+	end;
+}
+dispbottom .n$+": You have "+getarraysize(.@q_id)+" active Quests.";
+dispbottom .n$+": I will now list them per NPC with the info about the NPC:";
+for ( set .@l,0; .@l < getarraysize(.@q_id); set .@l,.@l + 1) {
+	dispbottom " ----- Quest #"+.@q_id[.@l]+" - Progress: -----";
+	query_sql "SELECT `quest_type` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@q_type;
+	dispbottom "Type: "+( (.@q_type == 1)?"Monster Hunting":"Item Collecting");
+	if(.@q_type == 1)
+		query_sql "SELECT `mob_id` , `mob_am` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@req1,.@req2;
+	else
+		query_sql "SELECT `item_id` , `item_am` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@req1,.@req2;
+	
+	for ( set .@p,0; .@p < getarraysize(.@req1); set .@p,.@p + 1)
+		if(.@q_type == 1) dispbottom "Mob#"+(.@p+1)+": "+strmobinfo(1,.@req1[.@p])+" - "+query_sql("SELECT `mob_am` FROM `quest_player` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"' AND `char_id` = '"+getcharid(0)+"' AND `mob_id` = '"+.@req1[.@p]+"'",.@m_got)+"/"+.@req2[.@p];
+		else dispbottom "Item#"+(.@p+1)+": "+getitemname(.@req1[.@p])+" - "+countitem(.@req1[.@p])+"/"+.@req2[.@p];
+		
+	dispbottom "----- NPC Location: -----";
+	query_sql "SELECT `npc_name` , `npc_map` , `npc_x` , `npc_y` FROM `quest_npc` WHERE `npc_id` = '"+.@n_id[.@l]+"'",.@n_name$,.@n_map$,.@n_x,.@n_y;
+	dispbottom "Name: "+.@n_name$;
+	dispbottom "Map: "+.@n_map$+", X: "+.@n_x+", Y: "+.@n_y;
+}
 }
 
 -	script	QuestSysEvents	-1,{
@@ -492,7 +531,7 @@ end;
 OnNPCKillEvent:
 if($@q_tab$[0] == "") end;
 if(!getd("MobHunt_"+killedrid)) end; // Checking if the killed monster is wanted
-if(getd("@KilledMob_"+killedrid) < getd("MobHunt_"+killedrid+"_CT") {
+if(getd("@KilledMob_"+killedrid) < getd("MobHunt_"+killedrid+"_CT")) {
 	setd("@KilledMob_"+killedrid),getd("@KilledMob_"+killedrid) + 1;
 	dispbottom "Monster Hunting - "+strmobinfo(1,killedrid)+" : "+getd("@KilledMob_"+killedrid)+"/"+getd("MobHunt_"+killedrid+"_CT"),0x00FF00;
 }

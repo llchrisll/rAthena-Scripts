@@ -5,9 +5,9 @@
 //===== Version ==============================================
 //= 1.0
 //===== Compatible With ======================================
-//= Every rAthena Version
+//= rAthena SQL 11.06.2015 Rev+
 //===== Tested With ==========================================
-//= rAthena - Not yet
+//= rAthena SQL 11.06.2015 Rev
 //===== Description ==========================================
 //= Additional EXP Bonus (in Percent) based on Dungeon's Difficulty
 //  - Difficulties: Easy, Medium, Hard
@@ -39,7 +39,7 @@
 //  dungeon is connected with each other, so it was difficult to decide
 //  where to put the "Exit"
 //===== ToDo List ============================================
-//= Testing
+//= Thinking if my funtion "SyncPartyData" is useful or not about the memory usage
 //============================================================
 prontera,151,185,4	script	Dungeon Party Service	110,{
 
@@ -92,7 +92,7 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 		set .men_dung$,"";
 		// =============== Creating Dungeon Menu ===============
 		for ( set .@du,0; .@du < getarraysize(.dungn$); set .@du,.@du + 1) {
-			
+			setd(".@"+.dungpre$[.@du]+"_ct"),0;
 			// ========== Dungeon Party Counter =========
 			for( set .@i,0; .@i < getarraysize(.pty_id); set .@i,.@i + 1) {
 				// Checking if the current Party is in this dungeon
@@ -122,7 +122,7 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 			mes " ";
 			for ( set .@l,0; .@l < getarraysize(.pty_id); set .@l,.@l + 1) {
 				getpartymember(.pty_id[.@l]);
-				if(getd(".pty_"+.pty_id[.@l]+"$") == .dungpre$[@d] && $@partymembercount < .pt_max) {
+				if(getd("$@pty_"+.pty_id[.@l]+"$") == .dungpre$[@d] && $@partymembercount < .pt_max) {
 					mes "===================";
 					mes "Party Name: "+getpartyname(.pty_id[.@l]);
 					mes "Leader: "+getpartyleader(.pty_id[.@l]);
@@ -132,27 +132,29 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 					mes ( (.pty_id[.@l+1] != 0)?"":"===================");
 				}
 			}
-			next;
 			if(getarraysize(.@pty_list) < 1) {
+				next;
 				mes .n$;
 				mes "I'm sorry, but there is no party on this map.";
 				close;
 			}
-			set @p,select(.@pty_menu$) - 1;
-			mes .n$;
-			if(isloggedin(getpartyleader(.@pty_list[@p],1),getpartyleader(.@pty_list[@p],2)) == 1) {
+			mes " ";
+			mes "Please choose, which party you want to send an application at:";
+			set .@p,select(.@pty_menu$) - 1;
+			if(isloggedin(getpartyleader(.@pty_list[.@p],1),getpartyleader(.@pty_list[.@p],2)) == 1) {
 				mes "I will send now an request to the party leader with your Level and Class.";
 				mes "Please wait until the leader will accept or decline your request.";
 				mes "If the leader doesn't respond in any way, please try to PM him/her by yourself.";
-				mes "The leader's name is ["+getpartyleader(.@pty_list[@p])+"].";
+				mes "The leader's name is ["+getpartyleader(.@pty_list[.@p])+"].";
 				close2;
+				set .@req_id,getcharid(0);
 				// Creating Applicant array for the party
-				setarray getd("$@req_"+.@pty_list[@p]+"_id["+(getarraysize(getd("$@req_"+.@pty_list[@p]+"_id"))+1 )+"]"),getcharid(0);
+				setarray getd("$@req_"+.@pty_list[.@p]+"_id["+getarraysize(getd("$@req_"+.@pty_list[.@p]+"_id"))+"]"),.@req_id;
 				// Applicant Info
-				setarray getd("$@req_"+getcharid(0)+"$[0]"),strcharinfo(0),""+BaseLevel+"/"+JobLevel,"Class: "+jobname(Class);
+				setarray getd("$@req_"+.@req_id+"$[0]"),strcharinfo(0),""+BaseLevel+"/"+JobLevel,"Class: "+jobname(Class);
 				detachrid;
-				attachrid(getpartyleader(.@pty_list[@p],1));
-				announce .n$+": The player ["+getd("$@req_"+getcharid(0)+"$[0]")+"] with "+getd("$@req_"+getcharid(0)+"$[1]")+", "+getd("$@req_"+getcharid(0)+"$[2]")+" requests to join your party. You can accept/decline by sending an whisper to me via \"NPC:Party_Join\" and as text \"List\". There you gain additional information.",bc_self;
+				attachrid(getpartyleader(.@pty_list[.@p],1));
+				announce .n$+": The player ["+getd("$@req_"+.@req_id+"$[0]")+"] with Level "+getd("$@req_"+.@req_id+"$[1]")+", "+getd("$@req_"+.@req_id+"$[2]")+" requests to join your party. You can accept/decline by sending an whisper to me via \"NPC:Party_Join\" and as text \"List\". There you gain additional information.",bc_self;
 				end;
 
 			} else {
@@ -170,7 +172,7 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 		}
 		mes "I will now check the levels of your party members. Please wait....";
 		getpartymember(getcharid(1),1);
-		for ( set .@l,0; .@l < $@partymembercount; set .@l,.@l + 1)
+		for ( set .@l,0; .@l < $@partymembercount; set .@l,.@l + 1) // Checking Level of each party member
 			if(readparam(11,""+strcharinfo(0,$@partymembercid[.@l])) < atoi(getd("."+.dungpre$[@d]+"$[1]"))) 
 				set .@l_ct,.@l_ct + 1;
 		next;
@@ -187,37 +189,44 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 		close2;
 		
 		// Saving Account and Character ID about Party Members
-		getpartymember(getcharid(1),1);
-		getpartymember(getcharid(1),2);
-		copyarray .@pt_aid[0],$@partymemberaid[0],$@partymembercount;
-		copyarray .@pt_cid[0],$@partymembercid[0],$@partymembercount;
-		for ( set .@p,0; .@p < $@partymembercount; set .@p,.@p + 1) {
-			setarray getd("$@pt_"+getcharid(1)+"_maid["+.@p+"]"),.@pt_aid[.@p];
-			setarray getd("$@pt_"+getcharid(1)+"_mcid["+.@p+"]"),.@pt_cid[.@p];
-		}	
+		callfunc "SyncPartyData",getcharid(1);
+
 		// Saving Array Index of the Dungeon for .dungpre$ or .dungn$
 		setd(".pty_"+getcharid(1)+"_ix"),@d;
+		
 		// Used to save the Leveling Maps of the party
 		for ( set .@d,3; .@d < getarraysize(getd("."+.dungpre$[@d]+"$")); set .@d,.@d + 4)
 			setarray getd("$@pty_"+getcharid(1)+"_m$["+getarraysize(getd("$@pty_"+getcharid(1)+"_m$"))+"]"),""+getd("."+.dungpre$[@d]+"$["+.@d+"]"); 
+		
 		// Saving Dungeon Prefix
 		setd("$@pty_"+getcharid(1)+"$"),""+.dungpre$[@d];
+		
 		// Setting Start Point
 		setarray getd(".pty_"+getcharid(1)+"_st$[0]"),""+getd("."+.dungpre$[@d]+"$[3]"),""+getd("."+.dungpre$[@d]+"$[4]"),""+getd("."+.dungpre$[@d]+"$[5]");
+		
 		// Setting Check Point variable to the 1st level of the dungeon, used to update the Start Point when reaching a new map
 		setd(".pty_"+getcharid(1)+"_cp"),1;
+		
 		// Warping Party ...
 		warpparty getd(".pty_"+getcharid(1)+"_st$[0]")+".gat",atoi(getd(".pty_"+getcharid(1)+"_st$[1]")),atoi(getd(".pty_"+getcharid(1)+"_st$[2]")),getcharid(1);
 		
-	/* Debug Messages
-		for ( set .@b,0; .@b < getarraysize(getd("$@pty_"+getcharid(1)+"_m$")); set .@b,.@b + 1)
-			debugmes "Leveling Map Array - ["+.@b+"]: "+getd("$@pty_"+getcharid(1)+"_m$["+.@b+"]");
-		debugmes "Dungeon Prefix: "+getd("$@pty_"+getcharid(1)+"$");
-		debugmes "Start Point Array - [0]:"+getd(".pty_"+getcharid(1)+"_st$[0]")+", [1]: "+getd(".pty_"+getcharid(1)+"_st$[1]")+", [2]: "+getd(".pty_"+getcharid(1)+"_st$[2]");
-		debugmes "Check Point: "+getd(".pty_"+getcharid(1)+"_cp");
-		debugmes "WarpParty - Array: "+getd(".pty_"+getcharid(1)+"_st$[0]")+".gat,"+atoi(getd(".pty_"+getcharid(1)+"_st$[1]"))+","+atoi(getd(".pty_"+getcharid(1)+"_st$[2]"));
-	*/	
+		// Debug Messages
+		if(.debug) {
+			for ( set .@b,0; .@b < getarraysize(getd("$@pty_"+getcharid(1)+"_m$")); set .@b,.@b + 1)
+				debugmes "Leveling Map Array - ["+.@b+"]: "+getd("$@pty_"+getcharid(1)+"_m$["+.@b+"]");
+			debugmes "Dungeon Prefix: "+getd("$@pty_"+getcharid(1)+"$");
+			debugmes "Start Point Array - [0]:"+getd(".pty_"+getcharid(1)+"_st$[0]")+", [1]: "+getd(".pty_"+getcharid(1)+"_st$[1]")+", [2]: "+getd(".pty_"+getcharid(1)+"_st$[2]");
+			debugmes "Check Point: "+getd(".pty_"+getcharid(1)+"_cp");
+			debugmes "WarpParty - Array: "+getd(".pty_"+getcharid(1)+"_st$[0]")+".gat,"+atoi(getd(".pty_"+getcharid(1)+"_st$[1]"))+","+atoi(getd(".pty_"+getcharid(1)+"_st$[2]"));
+		}
 		setarray .pty_id[getarraysize(.pty_id)],getcharid(1);
+		
+		// Loading Dungeon NPC, if it is not loaded yet
+		if(.debug) debugmes .n$+": Loading Dungeon NPC, if it is not loaded yet";
+		if(getvariableofnpc(.DGN_Load,"DG Party Progress#"+getd("$@pty_"+getcharid(1)+"$")) == 0) {
+			donpcevent "DG Party Progress#"+getd("$@pty_"+getcharid(1)+"$")+"::OnDGLoad";
+			if(.debug) debugmes .n$+": Dungeon NPC - \"DG Party Progress#"+getd("$@pty_"+getcharid(1)+"$")+"\" - Status: "+( (getvariableofnpc(.DGN_Load,"DG Party Progress#"+getd("$@pty_"+getcharid(1)+"$")) == 1)?"Online":"Offline");
+		}
 		break;
 	
 	// ============ Party is already registered ==============
@@ -246,7 +255,7 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 			for ( set .@p,0; .@p < getarraysize(getd("$@pt_"+getcharid(1)+"_maid")); set .@p,.@p + 1) {
 				set .@p_aid,getd("$@pt_"+getcharid(1)+"_maid["+.@p+"]"); // Current selected Member's Account ID
 				set .@p_cid,getd("$@pt_"+getcharid(1)+"_mcid["+.@p+"]"); // Current selected Member's Character ID
-				if(isloggedin(.@p_aid) == 1 && .@p_aid != getpartyleader(getcharid(1),1)) {
+				if(isloggedin(.@p_aid,.@p_cid) == 1 && .@p_aid != getpartyleader(getcharid(1),1)) {
 					dispbottom .n$+": Your party leader wants to remove your party from my list, so....",0x00FF00,.@p_cid;
 					dispbottom .n$+": I will warp you all in 10 seconds to your Save Points.",0x00FF00,.@p_cid;
 				}
@@ -266,39 +275,42 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 			mes .n$;
 			mes "Please select to which party member you want to be warped to:";
 			next;
-			set @pty_ml$,"";
-			getpartymember(getcharid(1));
-			set @partyct,$@partymembercount;
-			copyarray @partymemb$[0],$@partymembername$[0],@partyct;
-			for ( set .@p,0; .@p < @partyct; set .@p,.@p + 1) {
-				if(isloggedin(getcharid(3,@partymemb$[.@p]),getcharid(0,@partymemb$[.@p])) == 1) { // Member logged in?
-					getmapxy(@map$,@mapx,@mapy,0,@partymemb$[.@p]);
+			set .@pty_ml$,"";
+			callfunc "SyncPartyData",getcharid(1);
+			for ( set .@p,0; .@p < getarraysize(getd("$@pt_"+getcharid(1)+"_maid")); set .@p,.@p + 1) {
+				set .@p_aid,getd("$@pt_"+getcharid(1)+"_maid["+.@p+"]"); // Current selected Member's Account ID
+				set .@p_cid,getd("$@pt_"+getcharid(1)+"_mcid["+.@p+"]"); // Current selected Member's Character ID
+				if(isloggedin(.@p_aid,.@p_cid) == 1) { // Member logged in?
+					getmapxy(@map$,@mapx,@mapy,0,strcharinfo(0,.@p_cid));
 					for ( set .@c,0; .@c < getarraysize(getd("$@pty_"+getcharid(1)+"_m$")); set .@c,.@c + 1)
 						if(@map$ == getd("$@pty_"+getcharid(1)+"_m$["+.@c+"]")) { // Member on an leveling Map as registered?
-							set @pty_ml$,@pty_ml$ + "- "+@partymemb$[.@p] + ( (@partymemb$[.@p] == getpartyleader(getcharid(1)))?" (Leader)":"");
-					}
+							set .@pty_ml$,.@pty_ml$ + "- "+strcharinfo(0,.@p_cid) + ( (.@p_aid) == getpartyleader(getcharid(1),1)?" (Leader)":"")+":";
+							setarray .@pty_mlc[getarraysize(.@pty_mlc)],.@p_cid;
+						}
 				}
 			}
-			if(@pty_ml$ == "") {
+			if(.@pty_ml$ == "") {
 				mes .n$;
 				mes "I'm sorry, but no member of your party has been found on the dungeon map.";
 				close;
 			}
-			set @pm,select(@pty_ml$) - 1;
+			set .@pm,select(.@pty_ml$) - 1;
 			mes .n$;
-			mes @partymemb$[@pm] + ( (@partymemb$[@pm] == getpartyleader(getcharid(1)))?" (Leader)":"");
+			mes strcharinfo(0,.@pty_mlc[.@pm]) + ( (.@pty_mlc[.@pm] == getpartyleader(getcharid(1),2))?" (Leader)":"");
 			mes "Correct?";
 			if(select("- Yes:- No") - 1) close;
 			close2;
-			// Since there is no server command for warping an player to another one
-			// and I didn't wanted to create another array for that ...
-			atcommand "@warpto "+@partymemb$[@pm];
+			atcommand "@warpto "+strcharinfo(0,.@pty_mlc[.@pm]);
 			end;
 			
 			// Dungeon Reward
 			case 3:
 			if(!.dg_rew) close;
 			mes .n$;
+			if(strcharinfo(0) != getpartyleader(getcharid(1))) {
+				mes "I'm sorry, but only your party leader can can do this.";
+				close;
+			}
 			mes "Hello!";
 			mes "Let me check, if you have completed an dungeon to claim an reward.";
 			next;
@@ -309,18 +321,19 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 				close;
 			}
 			mes "Congratulation for completing the dungeon, "+.dungn$[getd(".pty_"+getcharid(1)+"_ix")]+"!";
-			mes "I will now reward you and your party with "+set(.@res, (.dg_pts*atoi(getd("."+.dungpre$[getd(".pty_"+getcharid(1)+"_ix")]+"$[1]") ) ))+"x Dungeon Points.";
+			mes "I will now reward you and your party with "+set(.@res, (.dg_pts*atoi(getd("."+.dungpre$[getd(".pty_"+getcharid(1)+"_ix")]+"$[0]") ) ))+"x Dungeon Points.";
 			mes "To reuse my service, please register your party again for the next dungeon.";
 			close2;
-			getpartymember(getcharid(1));
-			for ( set .@p,0; .@p < $@partymembercount; set .@p,.@p + 1) {
-				set .@p_aid,getcharid(3,$@partymembername$[.@p]);
-				set .@p_cid,getcharid(1,$@partymembername$[.@p]);
-				if(isloggedin(.@p_aid) == 1 && .@p_aid != getpartyleader(getcharid(1),1) ) {
+			callfunc "SyncPartyData",getcharid(1);
+			for ( set .@p,0; .@p < getarraysize(getd("$@pt_"+getcharid(1)+"_maid")); set .@p,.@p + 1) {
+				set .@p_aid,getd("$@pt_"+getcharid(1)+"_maid["+.@p+"]"); // Current selected Member's Account ID
+				set .@p_cid,getd("$@pt_"+getcharid(1)+"_mcid["+.@p+"]"); // Current selected Member's Character ID
+				if(isloggedin(.@p_aid,.@p_cid) == 1) {
 					setd(""+.dg_var$),getd(""+.dg_var$) + .@res,.@p_cid;
-					dispbottom .n$+": For completing the dungeon, "+.dungn$[getd(".pty_"+getcharid(1)+"_ix")]+", you will be rewarded with "+.@res+"x Dungeon Points!",0x00FF00,.@p_cid;
-					dispbottom .n$+": Your new balance is: "+getd(""+.dg_var$)+" Dungeon Points!",0x00FF00,.@p_cid;
-					dispbottom .n$+": Also just in case you are still in the dungeon, I will warp you to your Save Point!",0x00FF00,.@p_cid;
+					if(.@p_aid != getpartyleader(getcharid(1),1) ) {
+						dispbottom .n$+": For completing the dungeon, "+.dungn$[getd(".pty_"+getcharid(1)+"_ix")]+", you will be rewarded with "+.@res+"x Dungeon Points!",0x00FF00,.@p_cid;
+						dispbottom .n$+": Also just in case you are still in the dungeon, I will warp you to Prontera!",0x00FF00,.@p_cid;
+					}
 				}
 			}
 			goto OnPartyDelete;
@@ -333,17 +346,17 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 	mes .n$;
 	mes "I can offer my Dungeon Party Service to any Party, which uses my Dungeon Warp Service, which allows the party to recieve more EXP based on the dungeons difficulty.";
 	mes "For each Dungeon exists an party limit, how many parties can be in one Dungeon at once. Which is "+.pt_limit;
-	mes "Also every Dungeon has a Level Requirement, minimum level is 10, which each party member must have reached!";
+	mes "Also every Dungeon has a Level Requirement, which each party member must have reached!";
 	next;
 	mes .n$;
 	if(.dg_rew == 1) {
 		mes "[====== Dungeon Rewards ======]";
 		mes "Depending on the Dungeon's Difficulty, you can get different amount of rewards.";
-		mes "You can gain currently "+.dg_pts+" Dungeon Points multiplied by \"1\" for Easy, by \"2\" for Medium, by \"3\" for Hard.";
+		mes "Currently you can gain "+.dg_pts+" Dungeon Points multiplied by \"1\" for Easy, by \"2\" for Medium, by \"3\" for Hard, Dungeons.";
 		if(.mvp_rew == 1) {
 			mes " ";
 			mes "Also you can gain special points for each MvP your party kills:";
-			mes .mvp_pts +"x "+( (.mvp_rew == 1)?"MvP Points":"Cash Points")+", which also be multiplied by the same as above.";
+			mes .mvp_pts +"x "+( (.mvp_rew == 1)?"MvP Points":"Cash Points")+", which also be multiplied by the difficulty of the Dungeon.";
 		}
 	}
 	next;
@@ -359,6 +372,8 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 	if(!.dg_rew) close;
 	mes .n$;
 	mes "Which points do you want to exchange?";
+	mes "Your Dungeon Points: "+getd(""+.dg_var$);
+	mes "Your MvP Points: "+getd(""+.mvp_var$);
 	next;
 	switch(select("- Dungeon Points:- MvP Points")) {
 		
@@ -376,9 +391,10 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 		mes .n$;
 		mes "Now type the how often you want to exchange:";
 		mes "Price per exchange: "+.dg_ex_cost[.@b];
-		mes "Your balance: "+getd(""+.dg_var$);
-		// Setting exchange limit base on the current points you have
+		mes "Your Dungeon Points: "+getd(""+.dg_var$);
+		// Setting exchange limit based on the current points you have
 		set .@l,(getd(""+.dg_var$)/.dg_ex_cost[.@b]);
+		mes "Maximum possible: "+.@l+", based on your current points.";
 		next;
 		if(input(.@buy,1,.@l) != 0) {
 			mes .n$;
@@ -411,9 +427,10 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 		mes .n$;
 		mes "Now type the how often you want to exchange:";
 		mes "Price per exchange: "+.mvp_ex_cost[.@b];
-		mes "Your balance: "+getd(""+.mvp_var$);
+		mes "Your MvP Points: "+getd(""+.mvp_var$);
 		// Setting exchange limit base on the current points you have
 		set .@l,(getd(""+.mvp_var$)/.mvp_ex_cost[.@b]);
+		mes "Maximum possible: "+.@l+", based on your current points.";
 		next;
 		if(input(.@buy,1,.@l) != 0) {
 			mes .n$;
@@ -436,7 +453,8 @@ end;
 
 OnPartyDelete:
 sleep2 10000;
-warpparty "SavePointAll",0,0,getcharid(1);
+if(getd("$@pty_"+getcharid(1)+"_rew") != 1) 
+	warpparty "prontera.gat",156,191,getcharid(1);
 setd(".pty_"+getcharid(1)+"_ix"),0;
 setd("$@pty_"+getcharid(1)+"$"),"";
 setd("$@pty_"+getcharid(1)+"_rew"),0;
@@ -455,6 +473,11 @@ end;
 OnInit:
 // =============== NPC Name ===============
 set .n$,"["+strnpcinfo(1)+"]";
+// =============== Debug Mode ===============
+// * (Debug Messages in Map Server)
+// > 0: Off
+// > 1: On 
+set .debug,0; 
 // ============== Party Settings ================== //
 set .pt_limit,2; // x Parties per Dungeon
 // Maximum x Members per Party
@@ -518,36 +541,35 @@ setarray .glas$[0],"1","1","20","gl_church","156","8","20","gl_chyard","147","15
 setarray .gonr$[0],"1","1","20","gon_dun01","143","59","20","gon_dun02","17","114","20","gon_dun03","68","9";
 setarray .iced$[0],"1","1","20","ice_dun01","157","14","20","ice_dun02","151","155","20","ice_dun03","149","22","20","ice_dun04","34","139";
 setarray .maze$[0],"1","1","20","prt_maze01","176","7","20","prt_maze02","103","18","20","prt_maze03","23","8";
-setarray .jupe$[0],"1","1","20","juperos_01","99","92","20","juperos_02","34","59","20","jupe_core","150","285";
-setarray .kiel$[0],"1","1","20","kh_dun01","28","226","20","kh_dun02","41","198";
+setarray .jupe$[0],"2","65","20","juperos_01","99","92","20","juperos_02","34","59","20","jupe_core","150","285";
+setarray .kiel$[0],"2","1","20","kh_dun01","28","226","20","kh_dun02","41","198";
 setarray .lhz$[0],"2","60","20","lhz_dun01","151","286","20","lhz_dun02","18","148","20","lhz_dun03","140","136";
-setarray .louy$[0],"1","1","20","lou_dun01","218","196","20","lou_dun02","282","20","20","lou_dun03","165","37";
-setarray .magma$[0],"1","1","20","mag_dun01","126","69","20","mag_dun02","47","32";
-setarray .odin$[0],"1","1","20","odin_tem01","98","144","20","odin_tem02","22","181","20","odin_tem03","121","51";
+setarray .louy$[0],"2","50","20","lou_dun01","218","196","20","lou_dun02","282","20","20","lou_dun03","165","37";
+setarray .magma$[0],"2","60","20","mag_dun01","126","69","20","mag_dun02","47","32";
+setarray .odin$[0],"3","70","20","odin_tem01","98","144","20","odin_tem02","22","181","20","odin_tem03","121","51";
 setarray .orcsd$[0],"1","1","20","orcsdun01","32","169","20","orcsdun02","21","185";
 setarray .pay$[0],"1","1","20","pay_dun00","22","180","20","pay_dun01","19","33","20","pay_dun02","19","63","20","pay_dun03","155","159","20","pay_dun04","201","204";
 setarray .pyram$[0],"1","1","20","moc_pryd01","192","9","20","moc_pryd02","10","192","20","moc_pryd03","100","92","20","moc_pryd04","181","11","20","moc_pryd05","94","96","20","moc_pryd06","192","8";
 setarray .sphinx$[0],"1","1","20","in_sphinx1","192","9","20","in_sphinx2","149","81","20","in_sphinx3","210","54","20","in_sphinx4","10","222","Level 5","in_sphinx5","100","99";
 setarray .pirate$[0],"1","1","20","treasure01","69","24","20","treasure02","102","27";
 setarray .thana$[0],"1","1","20","tha_t01","150","36","20","tha_t02","150","36","20","tha_t03","220","158","20","tha_t04","59","143","20","tha_t05","62","11","20","tha_t06","89","221","20","tha_t07","35","166","20","tha_t08","93","148","20","tha_t09","29","107","20","tha_t10","159","138","20","tha_t11","19","20","20","tha_t12","130","52","5";
-setarray .toy$[0],"1","1","20","xmas_dun01","205","16","20","xmas_dun02","129","133";
-setarray .turtle$[0],"1","1","20","tur_dun01","161","34","20","tur_dun02","148","256","20","tur_dun03","132","190","20","tur_dun04","100","192";
-setarray .thor_v$[0],"1","1","20","thor_v01","21","228","20","thor_v02","75","205","20","thor_v03","34","272";
-/* 
+setarray .toy$[0],"1","40","20","xmas_dun01","205","16","20","xmas_dun02","129","133";
+setarray .turtle$[0],"2","50","20","tur_dun01","161","34","20","tur_dun02","148","256","20","tur_dun03","132","190","20","tur_dun04","100","192";
+setarray .thor_v$[0],"3","90","20","thor_v01","21","228","20","thor_v02","75","205","20","thor_v03","34","272";
 // Mapflags
 for ( set .@d,0; .@d < getarraysize(.dungn$); set .@d,.@d + 1)
-	for ( set .@p,1; .@p < getarraysize(getd("."+.dungpre$[.@d]+"$")); set .@p,.@p + 4) {
+	for ( set .@p,3; .@p < getarraysize(getd("."+.dungpre$[.@d]+"$")); set .@p,.@p + 4) {
 		setmapflag getd("."+.dungpre$[.@d]+"$["+.@p+"]"),mf_nowarp;
-}
-
-*/
+	}
+if(.debug) debugmes "Starting Global Timer for Party Member Sync";
+initnpctimer; // Timer for re-copying Party Member Data
 end;
 
 OnNPCKillEvent:
 if(!getcharid(1)) end;
 if(getmapflag(strcharinfo(3),mf_pvp) == 1 || getmapflag(strcharinfo(3),mf_gvg) == 1) end; // On PvP or GvG Maps = No effect
 if(getd("$@pty_"+getcharid(1)+"$") == "") end; // Not registered at the NPC.
-if(strcharinfo(3) != getd("$@pty_"+getcharid(1)+"_m$["+@map+"]")) 
+if(strcharinfo(3) != getd("$@pty_"+getcharid(1)+"_m$["+@map+"]"))
 	for ( set .@m,0; .@m < getarraysize(getd("$@pty_"+getcharid(1)+"_m$")); set .@m,.@m + 1)
 		if(strcharinfo(3) != getd("$@pty_"+getcharid(1)+"_m$["+.@m+"]")) // Member is on the leveling map?
 			set .@f,1;
@@ -576,28 +598,25 @@ set .@bexp,(getmonsterinfo(killedrid,3)*.@expr)/100;
 set .@jexp,(getmonsterinfo(killedrid,4)*.@expr)/100;
 
 // Increasing Party Mob Counter
-setd("$@pt_"+getcharid(1)+"_"+strcharinfo(3)+"_mct"),getd("$@pt_"+getcharid(1)+"_"+strcharinfo(3)+"_mct") + 1;
+if(getd("$@pt_"+getcharid(1)+"_"+strcharinfo(3)+"_mct") < atoi(getd("."+getd("$@pty_"+getcharid(1)+"$")+"$["+( (4*(.@m+1)) - 2)+"]")))
+	setd("$@pt_"+getcharid(1)+"_"+strcharinfo(3)+"_mct"),getd("$@pt_"+getcharid(1)+"_"+strcharinfo(3)+"_mct") + 1;
 
 // Reading party arrays and setting a temporar npc variable for better overview
 for ( set .@p,0; .@p < getarraysize(getd("$@pt_"+getcharid(1)+"_maid")); set .@p,.@p + 1) {
 	set .@c_aid,getd("$@pt_"+getcharid(1)+"_maid["+.@p+"]"); // Current selected Member's Account ID
 	set .@c_cid,getd("$@pt_"+getcharid(1)+"_mcid["+.@p+"]"); // Current selected Member's Character ID
 		
-	// Member logged in? 
-	if(isloggedin(.@c_aid,.@c_cid) == 0) continue;
 		
 	// Check if the selected member is still in the same party as before
 	if(getcharid(1,strcharinfo(0,.@c_cid)) != getcharid(1))
-		for ( set .@p,0; .@p < getarraysize(getd("$@pt_"+getcharid(1)+"_mcid")); set .@p,.@p + 1)
-			if(.@c_cid == getd("$@pt_"+getcharid(1)+"_mcid["+.@p+"]")) {
-				deletearray getd("$@pt_"+getcharid(1)+"_maid["+.@p+"]"),1;
-				deletearray getd("$@pt_"+getcharid(1)+"_mcid["+.@p+"]"),1;
-				break;
-			}
+		callfunc "SyncPartyData",getcharid(1);
 	
 	// Current selected Character ID is not the same as the one attached
 	// wouldn't make sense, since it was called by the attached player :P
 	if(getcharid(0) != .@c_cid) {
+
+		// Member logged in? 
+		if(isloggedin(.@c_aid,.@c_cid) == 0) continue;
 	
 		// Member is alive
 		if(readparam(5,strcharinfo(0,.@c_cid)) < 1) continue;
@@ -605,15 +624,18 @@ for ( set .@p,0; .@p < getarraysize(getd("$@pt_"+getcharid(1)+"_maid")); set .@p
 		// Member is on the same Map as the one who killed something
 		if(strcharinfo(3,.@c_cid) != strcharinfo(3)) continue;
 	}
+	if(getd("$@pt_"+getcharid(1)+"_"+strcharinfo(3)+"_mct") < atoi(getd("."+getd("$@pty_"+getcharid(1)+"$")+"$["+( (4*(.@m+1)) - 2)+"]")))
+		dispbottom .n$+": Mobs Killed on "+strcharinfo(3)+": "+getd("$@pt_"+getcharid(1)+"_"+strcharinfo(3)+"_mct") +"/"+getd("."+getd("$@pty_"+getcharid(1)+"$")+"$["+( (4*(.@m+1)) - 2)+"]")+"!",0x00FF00,.@c_cid;
+	else 
+		dispbottom .n$+": You're Party has reached the required mob quantity to proceed to the next level or visit the \"DG Party Progress\" NPC to complete the Dungeon.",0x00FF00,.@c_cid;
 	
-	dispbottom .n$+": Mobs Killed on "+strcharinfo(3)+": "+getd("$@pt_"+getcharid(1)+"_"+strcharinfo(3)+"_mct") +"/"+getd("."+getd("$@pty_"+getcharid(1)+"$")+"$["+( (4*(.@m+1)) - 2)+"]")+"!",0x00FF00,.@c_cid;
 	getexp .@bexp,.@jexp,.@c_cid;
 	dispbottom .n$+": Recieved Bonus: "+.@expr+"% - Base EXP: "+.@bexp+"/Job EXP: "+.@jexp,0x00FF00,.@c_cid;
 	// Killed MvP > rewarding with points if .mvp_rew > 0
 	if(getmonsterinfo(killedrid,22) != 0 && .mvp_rew > 0) {
-		set .@m_res,.mvp_pts*atoi(getd("."+.dungpre$[getd(".pty_"+getcharid(1)+"_ix")]+"$[1]"));
+		set .@m_res,.mvp_pts*atoi(getd("."+.dungpre$[getd(".pty_"+getcharid(1)+"_ix")]+"$[0]"));
 		switch(.mvp_rew) {
-			case 1:	set MvP_Pts,MvP_Pts + .@m_res,.@c_cid; break;
+			case 1:	setd(""+.mvp_var$),getd(""+.mvp_var$) + .@m_res,.@c_cid; break;
 			case 2: set #CASHPOINTS,#CASHPOINTS + .@m_res,.@c_cid; break;
 		}
 		dispbottom .n$+": Recieved MVP Points: "+.@m_res+"x "+ ( (.mvp_rew == 1)?"MvP Points":"Cash Points")+".",0x00FF00,.@c_cid;
@@ -621,23 +643,59 @@ for ( set .@p,0; .@p < getarraysize(getd("$@pt_"+getcharid(1)+"_maid")); set .@p
 }
 end;
 
-// Party Leader logged off
-// > Changing Leader Position to the next Member
-OnPCLogOutEvent:
-if(!getcharid(1)) end; // Not in a Party > Just in Case
-if(getd("$@pty_"+getcharid(1)+"_m$") == "") end; // Not registered at the NPC > same as above
-if(getpartyleader(getcharid(1),1) != getcharid(3)) end; // Attached player is not party leader
-getpartymember(getcharid(1),2);
-for ( set .@p,0; .@p < $@partymembercount; set .@p,.@p + 1)
-	// Member is logged in and is not the current Party Leader
-	if(isloggedin($@partymemberaid[.@p]) == 1 && $@partymemberaid[.@p] == getpartyleader(getcharid(1),1)) 
-		continue;
-
-detachrid;
-attachrid(.@pty_aid[.@p]);
-party_changeleader(getcharid(1),getcharid(0));
-end;
+// Re-copying Party Member Data every 5 Minutes
+OnTimer300000:
+stopnpctimer;
+if(.debug) debugmes "OnTimer Executed at 5 Minute:";
+if(getarraysize(.pty_id) > 0) {
+	for ( set .@t,0; .@t < getarraysize(.pty_id); set .@t,.@t + 1) {
+		if(.debug) debugmes "Synchronizing Member Data of Party ID"+.pty_id[.@t];
+		callfunc "SyncPartyData",.pty_id[.@t];
+		sleep 2500;
+	}
 }
+if(.debug) debugmes "Restarting Timer....";
+initnpctimer;
+end;
+
+OnPCLogoutEvent:
+if(!getcharid(1)) end; // Not in a Party > Just in Case
+if(getd("$@pty_"+getcharid(1)+"_m$[0]") == "") end; // Not registered at the NPC > same as above
+if(getpartyleader(getcharid(1),1) != getcharid(3)) end; // Attached player is not party leader
+if(.debug) debugmes "Party Leader logged off, changing leader:";
+set .@pty_id,getcharid(1);
+set .@pty_lead,getpartyleader(getcharid(1),1);
+if(.debug) debugmes "Party ID: "+.@pty_id+", Party Leader Acc ID:"+ .@pty_lead;
+for ( set .@p,0; .@p < getarraysize(getd("$@pt_"+.@pty_id+"_maid")); set .@p,.@p + 1) {
+	set .@c_aid,getd("$@pt_"+.@pty_id+"_maid["+.@p+"]"); // Current selected Member's Account ID
+	set .@c_cid,getd("$@pt_"+.@pty_id+"_mcid["+.@p+"]"); // Current selected Member's Character ID
+	if(.debug) debugmes "Current Acc and Char ID: "+.@c_aid+", "+.@c_cid;
+	// Member is logged in and is not the current Party Leader
+	if(isloggedin(.@c_aid,.@c_cid) == 1 && .@c_aid != .@pty_lead) {
+		if(.debug) debugmes "Changing Leader of party "+.@pty_id+" to "+.@c_cid;
+		party_changeleader(.@pty_id,.@c_cid);
+		break;
+	}
+}
+end;
+
+}
+
+// Function to Re-Copy the Account ID and Character ID for each Party Member in an array
+function	script	SyncPartyData	{
+// ============================================
+// getarg(0) = Party ID
+// ============================================
+getpartymember(getarg(0),1);
+getpartymember(getarg(0),2);
+copyarray getd("$@pt_"+getarg(0)+"_maid[0]"),$@partymemberaid[0],$@partymembercount;
+copyarray getd("$@pt_"+getarg(0)+"_mcid[0]"),$@partymembercid[0],$@partymembercount;
+if(getd("$@pt_"+getarg(0)+"_maid[0]") == 0)
+	debugmes .n$+": Copy Array for Party ID "+getarg(0)+" failed. Use \"setarray\"!!!";
+
+return;
+}
+
 // ======================= Party Join Feature - NPC =====================
 -	script	Party_Join	-,{
 
@@ -652,26 +710,32 @@ if(strcharinfo(0) != getpartyleader(getcharid(1))) end;
 
 // List of the requesters
 if(@whispervar0$ == "List" || @whispervar0$ == "list") {
-	dispbottom .n$+": I will now list the requesters, which want to join your party.";
-	dispbottom .n$+": Each requester gets an number, like 1.<Name>.";
-	dispbottom .n$+": With this number, you have to re-pm me, but instead of \"List\", you have to use \"Join\" or \"Abort\".\"Accept\" or \"Decline\" does also work.";
-	dispbottom .n$+": After \"Join\"/\"Accept\" or \"Abort\"/\"Decline\", you have to add \"#<Number of requester>\".";
+	if(getarraysize(getd("$@req_"+getcharid(1)+"_id")) < 1) {
+		dispbottom .n$+": I'm sorry, but there are no applicants to list!",0x00FFFF;
+		end;
+	}
+	dispbottom .n$+": I will now list the requesters, which want to join your party.",0x00FFFF;
+	dispbottom .n$+": Each requester gets an number, like 1.<Name>.",0x00FFFF;
+	dispbottom .n$+": With this number, you have to re-pm me, but instead of \"List\", you have to use \"Join\" or \"Abort\".\"Accept\" or \"Decline\" does also work.",0x00FFFF;
+	dispbottom .n$+": After \"Join\"/\"Accept\" or \"Abort\"/\"Decline\", you have to add \"#<Number of requester>\".",0x00FFFF;
 	dispbottom "===================";
+	dispbottom "- Number: Name, Level:, Class",0xFF2200;
 	for ( set .@r,0; .@r < getarraysize(getd("$@req_"+getcharid(1)+"_id")); set .@r,.@r + 1)
-		dispbottom "- "+(.@r+1)+": "+getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+.@r+"]")+"$[0]")+", Level: "+getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+.@r+"]")+"$[1]")+", "+getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+.@r+"]")+"$[2]");
+		dispbottom "- "+(.@r+1)+": "+getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+.@r+"]")+"$[0]")+", "+getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+.@r+"]")+"$[1]")+", "+getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+.@r+"]")+"$[2]"),0xFF2200;
 	
 	dispbottom "===================";
-	dispbottom .n$+": I will now list here your party members, also with a number, to warp the chosen player to that party member.";
-	dispbottom .n$+": To let the player warp to one of your party members add after the number of the player \"#<Number of Member>\".";
-	dispbottom .n$+": So it would look something like this: \"Join#1#1\", this would let the 1st requester in the list to the 1st party member, most cases you.";
-	dispbottom .n$+": Note: If you use \"Abort\"/\"Decline\" the number of the party member won't take effect, of course.";
+	dispbottom .n$+": I will now list here your party members, also with a number, to warp the chosen player to that party member.",0x00FFFF;
+	dispbottom .n$+": To let the player warp to one of your party members add after the number of the player \"#<Number of Member>\".",0x00FFFF;
+	dispbottom .n$+": So it would look something like this: \"Join#1#1\", this would let the 1st requester in the list to the 1st party member, most cases you.",0x00FFFF;
+	dispbottom .n$+": Note: If you use \"Abort\"/\"Decline\" the number of the party member won't take effect, of course.",0x00FFFF;
 	dispbottom "===================";
 	getpartymember(getcharid(1));
 	set @partyct,$@partymembercount;
 	copyarray @partymemb$[0],$@partymembername$[0],@partyct;
+	dispbottom "- Number: Member Name:",0xFF2200;
 	for ( set .@p,0; .@p < @partyct; set .@p,.@p + 1)
 		if(isloggedin(getcharid(3,@partymemb$[.@p]),getcharid(0,@partymemb$[.@p])) == 1) // Member logged in?
-			dispbottom "- "+(.@p+1)+"."+@partymemb$[.@p] + ( (@partymemb$[.@p] == getpartyleader(getcharid(1)))?" (Leader)":"");
+			dispbottom "- "+(.@p+1)+"."+@partymemb$[.@p] + ( (@partymemb$[.@p] == getpartyleader(getcharid(1)))?" (Leader)":""),0xFF2200;
 
 	dispbottom "===================";
 
@@ -681,25 +745,24 @@ if(@whispervar0$ == "List" || @whispervar0$ == "list") {
 		dispbottom .n$+": Either you didn't put the requesters number or the number of the party member he should be warped to!";
 		end;
 	}
-	message getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+@whispervar1$+"]")+"$[0]"),.n$+": Your request has been accepted, you will be warped to the party member chosen from the leader.";
-	sleep2 2000;
-	party_addmember(getcharid(1),getd("$@req_"+getcharid(1)+"_id["+@whispervar1$+"]"));
 	// In case the leader logged of, the "@" variables were deleted
-	if(@partymemb$[atoi(@whispervar2$)] == "") {
+	if(@partymemb$[atoi(@whispervar2$)-1] == "") {
 		dispbottom .n$+": An bug has occured, in which I couldn't find the list for your party members.";
 		dispbottom .n$+": Possible Bug: You logged off or disconnected. Please repeat the previous step.";
 		end;
 	} 
-	charcommand "#warpto "+@partymemb$[atoi(@whispervar2$)]+" "+getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+@whispervar1$+"]")+"$[0]");
+	set .@nr,atoi(@whispervar1$)-1;
+	message getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+.@nr+"]")+"$[0]"),.n$+": Your request has been accepted, you will be warped to the party member chosen from the leader.";
+	party_addmember(getcharid(1),getd("$@req_"+getcharid(1)+"_id["+.@nr+"]"));
+	sleep2 2000;
+	charcommand "#warpto \""+strcharinfo(0,getd("$@req_"+getcharid(1)+"_id["+.@nr+"]"))+"\" "+@partymemb$[atoi(@whispervar2$)-1];
 	
-	// Adding applicant to party member list
-	setarray getd("$@pt_"+getcharid(1)+"_maid["+getarraysize(getd("$@pt_"+getcharid(1)+"_maid"))+"]"),getcharid(3,getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+@whispervar1$+"]")+"$[0]"));
-	setarray getd("$@pt_"+getcharid(1)+"_mcid["+getarraysize(getd("$@pt_"+getcharid(1)+"_mcid"))+"]"),getcharid(0,getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+@whispervar1$+"]")+"$[0]"));
+	// Resync of Party Member Data
+	callfunc "SyncPartyData",getcharid(1);
 	
 	// Deleting applicant from application list
-	deletearray getd("$@req_"+getcharid(1)+"_id["+@whispervar1$+"]"),1;
-	deletearray getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+@whispervar1$+"]")+"$[0]"),128;
-	
+	deletearray getd("$@req_"+getcharid(1)+"_id["+.@nr+"]"),1;
+	deletearray getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+.@nr+"]")+"$[0]"),128;
 	
 // Declining requesters
 } else if(compare(@whispervar0$,"Decline") == 1 || compare(@whispervar0$,"Abort") == 1) {
@@ -707,9 +770,12 @@ if(@whispervar0$ == "List" || @whispervar0$ == "list") {
 		dispbottom .n$+": You didn't put the requesters number!";
 		end;
 	}
-	message getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+@whispervar1$+"]")+"$[0]"),.n$+": I'm sorry, but your request has been declined.";
-	deletearray getd("$@req_"+getcharid(1)+"_id["+@whispervar1$+"]"),1;
-	deletearray getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+@whispervar1$+"]")+"$[0]"),128;
+	set .@nr,atoi(@whispervar1$)-1;
+	if(isloggedin(getcharid(3,strcharinfo(0,getd("$@req_"+getcharid(1)+"_id["+.@nr+"]"))),getd("$@req_"+getcharid(1)+"_id["+.@nr+"]")) != 0)
+		message getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+.@nr+"]")+"$[0]"),.n$+": I'm sorry, but your request has been declined.";
+	dispbottom .n$+": The applicant ["+getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+.@nr+"]")+"$[0]")+"] has been deleted from the list.";
+	deletearray getd("$@req_"+getcharid(1)+"_id["+.@nr+"]"),1;
+	deletearray getd("$@req_"+getd("$@req_"+getcharid(1)+"_id["+.@nr+"]")+"$[0]"),128;
 
 } else 
 	dispbottom .n$+": I'm not sure, what you wanted from me, but I can't do that.";
@@ -733,7 +799,10 @@ if(getd("$@pty_"+getcharid(1)+"_m$[0]") == "") {
 }
 if(getarraysize(getd("."+strnpcinfo(2)+"$")) < 1) {
 	mes "An bug has occured, please contact an GM.";
-	close;
+	mes "But talk to me again!!";
+	set .debug,1;
+	close2;
+	goto OnDGLoad;
 }
 mes "Here is your party's progress so far:";
 for ( set .@m,0; .@m < getarraysize(getd("$@pty_"+getcharid(1)+"_m$")); set .@m,.@m + 1) {
@@ -760,55 +829,61 @@ if(getvariableofnpc(.dg_rew,"Dungeon Party Service") == 1) {
 	mes "Please visit the \"Dungeon Party Service\" for your rewards.";
 	setd("$@pty_"+getcharid(1)+"_rew"),1;
 }
-mes "You will now be warped to your save points.";
+mes "You*re party will now be warped to Prontera.";
 close2;
-for ( set .@m,0; .@m < getarraysize(getd("$@pty_"+getcharid(1)+"_m$")); set .@m,.@m + 1)
-	setd("$@pt_"+getcharid(1)+"_"+getd("$@pty_"+getcharid(1)+"_m$["+.@m+"]")+"_mct"),0;
-warpparty "SavePointAll",0,0,getcharid(1);
-
+warpparty "prontera",156,191,getcharid(1);
 end;
 
-OnInit:
-if(strnpcinfo(2) == "main") end; // If its the main NPC, don't continue (would lead to errors)
-for (set .@n,0; .@n < 128; set .@n,.@n + 1)
-	if(getvariableofnpc(getd("."+strnpcinfo(2)+"$["+.@n+"]"),"Dungeon Party Service") != "")
-		setarray getd("."+strnpcinfo(2)+"$["+.@n+"]"),getvariableofnpc(getd("."+strnpcinfo(2)+"$["+.@n+"]"),"Dungeon Party Service"),1;
-	else 
-		break;
+OnDGLoad:
+set .DGN_Load,1;
+while(getvariableofnpc(getd("."+strnpcinfo(2)+"$["+.@n+"]"),"Dungeon Party Service") != "") {
+	setarray getd("."+strnpcinfo(2)+"$["+.@n+"]"),getvariableofnpc(getd("."+strnpcinfo(2)+"$["+.@n+"]"),"Dungeon Party Service");
+	if(.debug) debugmes strnpcinfo(0)+": getvariableofnpc:"+ getvariableofnpc(getd("."+strnpcinfo(2)+"$["+.@n+"]"),"Dungeon Party Service");
+	set .@n,.@n + 1;
+	sleep 100;
+}
+if(.debug) set .debug,0;
 end;
 }
 // ======================= Start of Dungeon Exit - NPC Duplicates =====================
-//dungeon_map,x,y,facing	duplicate(DG_Main)	Dungeon P.Service#<dungeon array prefix>	110
-abbey03,234,216,4	duplicate(DG_Main)	Abbey P.Service#abbey	110
-abyss_03,98,103,4	duplicate(DG_Main)	Abyss P.Service#abyss	110
-ama_dun03,120,223,4	duplicate(DG_Main)	Amatsu P.Service#amat	110
-ayo_dun02,149,246,4	duplicate(DG_Main)	Ayothaya P.Service#ayot	110
-iz_dun04,130,222,4	duplicate(DG_Main)	Bylan P.Service#bylan	110	
-c_tower4,82,138,4	duplicate(DG_Main)	Clock T. P.Service#c_tow	110
-alde_dun04,165,268,4	duplicate(DG_Main)	Aldebaran P.Service#alde	110
-mjo_dun03,34,52,4	duplicate(DG_Main)	Coal Mine P.Service#coal	110
-prt_sewb4,34,52,4	duplicate(DG_Main)	Culvert P.Service#culv	110
-ein_dun02,25,88,4	duplicate(DG_Main)	Einbech P.Service#einb	110
-gefenia04,160,30,4	duplicate(DG_Main)	Gefenia P.Service#gefia	110
-gef_dun03,119,104,4	duplicate(DG_Main)	Geffen P.Service#gefd	110
-glast_01,191,120,4	duplicate(DG_Main)	Glastheim P.Service#glas	110
-gon_dun03,99,183,4	duplicate(DG_Main)	Gonyrun P.Service#gonr	110
-ice_dun03,149,116,4	duplicate(DG_Main)	Ice Cave P.Service#iced	110
-prt_maze03,177,89,4	duplicate(DG_Main)	Maze P.Service#maze	110
-jupe_core,150,129,4	duplicate(DG_Main)	Juperos P.Service#jupe	110
-kh_dun02,129,98,4	duplicate(DG_Main)	Kiel P.Service#kiel	110
-lhz_dun02,150,145,4	duplicate(DG_Main)	Bio Lab P.Service#lhz	110
-lou_dun03,170,153,4	duplicate(DG_Main)	Louyang P.Service#louy	110
-mag_dun02,43,44,4	duplicate(DG_Main)	Magma P.Service#magma	110
-odin_tem03,278,236,4	duplicate(DG_Main)	Odin P.Service#odin	110
-orcsdun02,77,88,4	duplicate(DG_Main)	Orcs P.Service#orcsd	110
-pay_dun04,120,116,4	duplicate(DG_Main)	Payon Cave P.Service#pay	110
-moc_pryd06,97,59,4	duplicate(DG_Main)	Pyramid P.Service#pyram	110
-in_sphinx5,100,149,4	duplicate(DG_Main)	Sphinx P.Service#sphinx	110
-treasure02,101,166,4	duplicate(DG_Main)	Ship P.Service#pirate	110
-tha_t12,136,65,4	duplicate(DG_Main)	Thanatos P.Service#thana	110
-xmas_dun02,134,134,4	duplicate(DG_Main)	Toy F. P.Service#toy	110
-tur_dun04,92,100,4	duplicate(DG_Main)	Turtle P.Service#turtle	110
-thor_v03,151,162,4	duplicate(DG_Main)	Thor P.Service#thor_v	110
+//dungeon_map,x,y,facing	duplicate(DG_Main)	DG Party Progress#<dungeon array prefix>	110
+// NOTE: Don't change the "DG Party Progress" part of the npc names unless you change it everywhere in the script,
+//       just search for it and exchange it with the new name.
+// You can add more dungeons as you like, except instance dungeons, which aren't supported by this script.
+// 1.: Take a look at the OnInit: above with the dungeon settings.
+// 2.: Add your dungeon data like the others.
+// 3.: Add an NPC Duplicate like below.
+// 4.: Restart the server/ @reloadscript
+abbey03,234,216,4	duplicate(DG_Main)	DG Party Progress#abbey	110
+abyss_03,98,103,4	duplicate(DG_Main)	DG Party Progress#abyss	110
+ama_dun03,120,223,4	duplicate(DG_Main)	DG Party Progress#amat	110
+ayo_dun02,149,246,4	duplicate(DG_Main)	DG Party Progress#ayot	110
+iz_dun04,130,222,4	duplicate(DG_Main)	DG Party Progress#bylan	110	
+c_tower4,82,138,4	duplicate(DG_Main)	DG Party Progress#c_tow	110
+alde_dun04,165,268,4	duplicate(DG_Main)	DG Party Progress#alde	110
+mjo_dun03,34,52,4	duplicate(DG_Main)	DG Party Progress#coal	110
+prt_sewb4,34,52,4	duplicate(DG_Main)	DG Party Progress#culv	110
+ein_dun02,25,88,4	duplicate(DG_Main)	DG Party Progress#einb	110
+gefenia04,160,30,4	duplicate(DG_Main)	DG Party Progress#gefia	110
+gef_dun03,119,104,4	duplicate(DG_Main)	DG Party Progress#gefd	110
+glast_01,191,120,4	duplicate(DG_Main)	DG Party Progress#glas	110
+gon_dun03,99,183,4	duplicate(DG_Main)	DG Party Progress#gonr	110
+ice_dun03,149,116,4	duplicate(DG_Main)	DG Party Progress#iced	110
+prt_maze03,177,89,4	duplicate(DG_Main)	DG Party Progress#maze	110
+jupe_core,150,129,4	duplicate(DG_Main)	DG Party Progress#jupe	110
+kh_dun02,129,98,4	duplicate(DG_Main)	DG Party Progress#kiel	110
+lhz_dun02,150,145,4	duplicate(DG_Main)	DG Party Progress#lhz	110
+lou_dun03,170,153,4	duplicate(DG_Main)	DG Party Progress#louy	110
+mag_dun02,43,44,4	duplicate(DG_Main)	DG Party Progress#magma	110
+odin_tem03,278,236,4	duplicate(DG_Main)	DG Party Progress#odin	110
+orcsdun02,77,88,4	duplicate(DG_Main)	DG Party Progress#orcsd	110
+pay_dun04,120,116,4	duplicate(DG_Main)	DG Party Progress#pay	110
+moc_pryd06,97,59,4	duplicate(DG_Main)	DG Party Progress#pyram	110
+in_sphinx5,100,149,4	duplicate(DG_Main)	DG Party Progress#sphinx	110
+treasure02,101,166,4	duplicate(DG_Main)	DG Party Progress#pirate	110
+tha_t12,136,65,4	duplicate(DG_Main)	DG Party Progress#thana	110
+xmas_dun02,134,134,4	duplicate(DG_Main)	DG Party Progress#toy	110
+tur_dun04,92,100,4	duplicate(DG_Main)	DG Party Progress#turtle	110
+thor_v03,151,162,4	duplicate(DG_Main)	DG Party Progress#thor_v	110
 // ======================= End of NPC Duplicates =====================
 // ======================= End of Script =====================
