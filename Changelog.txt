@@ -26,6 +26,23 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/10/01
+= Updated Fame System v1.2 [RE]
+- Added an info for the players of the existence of the custom command
+- Added an Repeat Limit per quest and per Class via request
+- Added an SQL Ranking via request
+- Added the "feature" to benefit from joining an party
+- Modified Level Requirement Setting
+- Added an setting to define the Array Limit, to make it compatible with
+  older revisions, which doesn't have the Script Engine Upgrade
+= Updated Quest System v1.0 [RE]
+- Added OnAtcommand (@checkquest) for Quest Progress Display per request
+  also an info for the players of the existence of that command
+- Added the "feature" to benefit from joining an party
+- Modified Level Requirement Setting
+- Added an setting to define the Array Limit, to make it compatible with
+ older revisions, which doesn't have the Script Engine Upgrade
+------------------------------------------------------------
 * 2015/09/30
 = Updated Dungeon Party System v1.0 [RE]
 - Exchanged variable prefixes . with $@, which I had overseen

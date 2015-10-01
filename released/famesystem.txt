@@ -18,11 +18,19 @@
 //= 1.2 - Compatible with rAthena now
 //      - Fixxed some bugs and made some small edits
 //      - Fixxed the GM check in the first lines
-//      - Added OnAtCommand for Quest Progress Display per request
+//      - Added OnAtCommand for Quest Progress Display via request
+//      - Added an info for the players of the existence of the custom command
+//      - Added an Repeat Limit per quest and per Class via request
+//      - Added an SQL Ranking via request (See OnInit: for more)
+//      - Added the "feature" to benefit from joining an party
+//      - Modified Level Requirement Setting (See 'OnInit:')
+//        0 = Off / MAX_LEVEL - Server Max Level (src/map/map.h)
+//      - Added an setting to define the Array Limit, to make it compatible with
+//        older revisions, which doesn't have the Script Engine Upgrade (See 'set .array')
 //===== Compatible With ======================================
-//= Every Athena SQL SVN 
+//= rAthena SQL 11.06.2015 Rev+
 //===== Tested With ==========================================
-//= eAthena 14428 SQL Trunk 
+//= rAthena SQL 11.06.2015 Rev
 //===== Description ==========================================
 //= Gain Fame by doing "Fame Quests" and use the gained points
 //  in the Fame Shop, where the GM's above lvl ".gm" can add/remove
@@ -31,8 +39,21 @@
 //  Fame Quests are listed via the Class Row you are in.
 //= See "OnInit:" for the Config.
 //===== Comments =============================================
-//= Note: I will NOT!!!! add an SQL Support for this.
+//= Note: I will NOT!!!! add an FULL SQL Support for this.
+//===== Modification Requests =============================================
+//= Custom @famequest to display your Quest Progress by Azeroth
+//= Quest Repeat Limit with an Timer (when the Repeat Limit will be reseted) by Azeroth
+//= SQL Ranking by Azeroth
 //============================================================
+/*
+CREATE TABLE IF NOT EXISTS `fame_rank` (
+ `char_id` int(10) unsigned NOT NULL default '1',
+ `char_name` varchar(255) default 'Unknown',
+ `class` int(10) unsigned default '0',
+ `fame` tinyint(3) unsigned default '0',
+ PRIMARY KEY (`char_id`)
+ ) ENGINE=MyISAM;
+ */
 prontera,161,182,4	script	Fame Manager	110,{
 function	FAME_FUNC;
 
@@ -44,16 +65,43 @@ mes "By completeing so called \"Fame Quests\" you can gain fame points,";
 mes "which can be spent in the Shop.";
 mes "You can have up to "+.m_fame+" Fame Points each class.";
 mes "The quests depends on the class row in which you are,";
-mes "like Knight belongs to the Class Row Swordman";
+mes "like Knight belongs to the Class Row Swordsman";
 mes "Please choose what you want to do now:";
-if(set(.@m,select("- Fame Quests:- Open Shop:- Nothing")) == 3) close;
+if(set(.@m,select("- Fame Quests:- Open Shop:- Ranking:- Nothing")) == 4) close;
 next;
 mes .n$;
+if(.@m == 3) {
+	if(!.fame_sql) {
+		mes "I'm sorry, but the Ranking Feature isn't enabled.";
+		close;
+	}
+	while(set(.@c,.@c + 1) < 7) {
+		mes "[ Ranks - Class Row: "+jobname(.@c)+" ]";
+		query_sql "SELECT `char_name` , `fame` FROM `fame_rank` WHERE `class` = '"+.@c+"' ORDER BY `fame` DESC LIMIT "+.rank_limit,.@c_name$,.@fame;
+		if(.@c_name$[0] == "") {
+			mes "There is no player ranked yet.";
+			if(.@c != 6)
+				mes "===================";
+			continue;
+		}
+		for ( set .@r,0; .@r < getarraysize(.@c_name$); set .@r,.@r + 1)
+			mes (.@r+1)+". "+.@c_name$[.@r]+" - "+.@fame[.@r];
+		
+		deletearray .@c_name$[0],.array;
+		deletearray .@fame$[0],.array;
+		
+		if(.@c != 6) 
+			mes "===================";
+	}
+	close;
+}
+
 if(set(@t,BaseClass) < 1 || @t > 6) {
 	mes "I'm sorry, but you can't gain any fame.";
 	close;
 }
 if(.@m == 1) {
+	mes "Hint: To check your quest progresses anytime and anywhere, there is an custom @command, which is \"@famequest\".";
 	if(FameDelay < gettimetick(2)) {
 		if(getarraysize(getd("$f_quest_id_"+@t)) < 1) {
 			mes "I'm sorry, but there are no \"Fame Quests\" yet.";
@@ -83,6 +131,7 @@ if(.@m == 1) {
 				mes "Target: "+ ( (.@t == 1)?getd("$f_quest_"+.@q_id+"_"+@t+"_mam[0]")+"x "+strmobinfo(1,getd("$f_quest_"+.@q_id+"_"+@t+"_mid[0]")):getd("$f_quest_"+.@q_id+"_"+@t+"_iam[0]")+"x "+getitemname(getd("$f_quest_"+.@q_id+"_"+@t+"_iid[0]")) );
 				for ( set .@l,1; .@l < getarraysize( getd("$f_quest_"+.@q_id+"_"+@t+"_"+( (.@t == 1)?"m":"i")+"id") ); set .@l,.@l + 1) 
 					mes "        "+ ( (.@t == 1)?getd("$f_quest_"+.@q_id+"_"+@t+"_mam["+.@l+"]")+"x "+strmobinfo(1,getd("$f_quest_"+.@q_id+"_"+@t+"_mid["+.@l+"]")):getd("$f_quest_"+.@q_id+"_"+@t+"_iam["+.@l+"]")+"x "+getitemname(getd("$f_quest_"+.@q_id+"_"+@t+"_iid["+.@l+"]")) );
+				mes "Repeat Limit: "+getd("$f_quest_"+.@q_id+"_"+@t+"_rlimit");
 				mes "=================";
 				set .@fm_menu$,.@fm_menu$ + "- Quest ID#"+getd("$f_quest_id_"+@t+"["+.@m+"]") + ( (getd("$f_quest_id_"+@t+"["+(.@m+1)+"]") == 0)?"":":");
 			}
@@ -97,10 +146,25 @@ if(.@m == 1) {
 			mes "Target: "+ ( (.@t == 1)?getd("$f_quest_"+.@id+"_"+@t+"_mam[0]")+"x "+strmobinfo(1,getd("$f_quest_"+.@id+"_"+@t+"_mid[0]")):getd("$f_quest_"+.@id+"_"+@t+"_iam[0]")+"x "+getitemname(getd("$f_quest_"+.@id+"_"+@t+"_iid[0]")) );
 			for ( set .@l,1; .@l < getarraysize( getd("$f_quest_"+.@id+"_"+@t+"_"+( (.@t == 1)?"m":"i")+"id") ); set .@l,.@l + 1) 
 				mes "        "+ ( (.@t == 1)?getd("$f_quest_"+.@id+"_"+@t+"_mam["+.@l+"]")+"x "+strmobinfo(1,getd("$f_quest_"+.@id+"_"+@t+"_mid["+.@l+"]")):getd("$f_quest_"+.@id+"_"+@t+"_iam["+.@l+"]")+"x "+getitemname(getd("$f_quest_"+.@id+"_"+@t+"_iid["+.@l+"]")) );
+			mes "Repeat Limit: "+getd("$f_quest_"+.@id+"_"+@t+"_rlimit");
+			mes " ";
 			mes "Is that correct?";
 			if(select("- Yes:- No") - 1) close;
 			next;
 			mes .n$;
+			debugmes "Repeat Counter: "+getd("FameRepeat_"+.@id+"_"+@t);
+			debugmes "Repeat Limit: "+getd("$f_quest_"+.@id+"_"+@t+"_rlimit");
+			debugmes "Repeat Timer: "+getd("FameRepeat_"+.@id+"_"+@t+"_Timer");
+			debugmes "Current Tick: "+ gettimetick(2);
+			if(getd("FameRepeat_"+.@id+"_"+@t) >= getd("$f_quest_"+.@id+"_"+@t+"_rlimit")) {
+				if(getd("FameRepeat_"+.@id+"_"+@t+"_Timer") <= gettimetick(2)) {
+					setd("FameRepeat_"+.@id+"_"+@t+"_Timer"),0;
+					setd("FameRepeat_"+.@id+"_"+@t),0;
+				} else {
+					mes "I'm sorry, but you can't do this quest for while.";
+					close;
+				} 
+			}
 			if(.level && (BaseLevel < getd("$f_quest_"+.@id+"_"+@t+"_level")) ) {
 				mes "I'm sorry, but you don't meet the level requirement.";
 				close;
@@ -111,7 +175,8 @@ if(.@m == 1) {
 		}
 	} else {
 		mes "I'm sorry, but you can't do any Fame Quest for the time being.";
-		mes "Come back later.";
+		set .@sec,FameDelay-gettimetick(2); // Base Delay in seconds
+		mes "Please come back in "+.@sec+" seconds"+ ( (.@sec/60 > 0)?", which are "+.@sec/60+" Minutes":"") + ( (.@sec/3600 > 0)?", which are "+.@sec/3600+" Hour(s)":"") + ( (.@sec/86400 > 0)?", which are "+.@sec/86400+" Day(s)":"");
 		close;
 	}
 
@@ -145,8 +210,8 @@ for ( set .@b,0; .@b < getarraysize(@bought_nameid); set .@b,.@b + 1) {
 				dispbottom "Cash Shop: You would be overweight, please remove some items or buy less.";
 				set @cost,0;
 				set @total,0;
-				deletearray @bought_nameid[0],128;
-				deletearray @bought_quantity[0],128;
+				deletearray @bought_nameid[0],.array;
+				deletearray @bought_quantity[0],.array;
 				end;
 			}
 		}
@@ -157,8 +222,8 @@ if(@total > getd("FamePoints_"+@t) ) {
 	dispbottom strnpcinfo(1)+": You need "+@total+" Fame Points.";
 	set @cost,0;
 	set @total,0;
-	deletearray @bought_nameid[0],128;
-	deletearray @bought_quantity[0],128;
+	deletearray @bought_nameid[0],.array;
+	deletearray @bought_quantity[0],.array;
 	end;
 }
 setd("FamePoints_"+@t),getd("FamePoints_"+@t) - @total;
@@ -168,8 +233,8 @@ for ( set .@s,0; .@s < getarraysize(@bought_nameid); set .@s,.@s + 1)
 	
 set @cost,0;
 set @total,0;
-deletearray @bought_nameid[0],128;
-deletearray @bought_quantity[0],128;
+deletearray @bought_nameid[0],.array;
+deletearray @bought_quantity[0],.array;
 end;
 	
 OnAtcommand:
@@ -179,14 +244,33 @@ dispbottom FAME_FUNC(0,@t,FameQuest);
 end;
 	
 OnNPCKillEvent:
-if(FameQuest == 0 || getd("$f_quest_"+FameQuest+"_"+BaseClass+"_type") != 1) end;
-for ( set .@m,0; .@m < getarraysize(getd("$f_quest_"+FameQuest+"_"+BaseClass+"_mid")); set .@m,.@m + 1) 
+// Player is in a party
+if(getcharid(1) != 0) {
+	getpartymember(getcharid(1),1);
+	getpartymember(getcharid(1),2);
+	for ( set .@p,0; .@p < $@partymembercount; set .@p,.@p + 1) {
+		if(isloggedin($@partymemberaid[.@p],$@partymembercid[.@p]) == 0) continue;
+		attachrid($@partymemberaid[.@p]);
+		callsub OnFameMobKill;
+	}
+	end;
+}
+OnFameMobKill:
+if(FameQuest == 0 || getd("$f_quest_"+FameQuest+"_"+BaseClass+"_type") != 1) 
+	if(getcharid(1) != 0) return; else end;
+for ( set .@m,0; .@m < getarraysize(getd("$f_quest_"+FameQuest+"_"+BaseClass+"_mid")); set .@m,.@m + 1)
 	if( killedrid == getd("$f_quest_"+FameQuest+"_"+BaseClass+"_mid["+.@m+"]") ) {
-		setd(killedrid+"_Kill"),getd(killedrid+"_Kill") + 1;
+		if(getd(killedrid+"_Kill") < getd("$f_quest_"+FameQuest+"_"+BaseClass+"_mam["+.@m+"]"))
+			setd(killedrid+"_Kill"),getd(killedrid+"_Kill") + 1;
+		else 
+			set .@i,.@i + 1;
+			
+		if(.@i == getarraysize(getd("$f_quest_"+FameQuest+"_"+BaseClass+"_mid")))
+			end;
 		break;
 	}
 dispbottom FAME_FUNC(0,BaseClass,FameQuest);
-end;
+if(getcharid(1) != 0) return; else end;
 
 OnWhisperGlobal:
 if(getgmlevel() >= .gm && @whispervar0$ == "OnInit") goto OnInit;
@@ -217,7 +301,7 @@ switch(select("- Quest Management:- Shop Management:- Reset Fame Quest Delay:- N
 	mes "But first choose in the Job Row:";
 	set @t,select("- Swordman:- Mage:- Archer:- Acolyte:- Merchant:- Thief");
 	next;
-	switch(select("- Quest Overview:- Add Quests:- Delete Quests:- Reset Quest Counter")) {
+	switch(select("- Quest Overview:- Add Quests:- Delete Quests:- Reset Quest Counter:- Reset Repeat Limit&Timer")) {
 		case 1:
 		mes .n$;
 		if(getarraysize(getd("$f_quest_id_"+@t)) < 1) {
@@ -235,14 +319,15 @@ switch(select("- Quest Management:- Shop Management:- Reset Fame Quest Delay:- N
 			mes "Target: "+ ( (.@t == 1)?getd("$f_quest_"+.@q_id+"_"+@t+"_mam[0]")+"x "+strmobinfo(1,getd("$f_quest_"+.@q_id+"_"+@t+"_mid[0]")):getd("$f_quest_"+.@q_id+"_"+@t+"_iam[0]")+"x "+getitemname(getd("$f_quest_"+.@q_id+"_"+@t+"_iid[0]")) );
 			for ( set .@l,1; .@l < getarraysize( getd("$f_quest_"+.@q_id+"_"+@t+"_"+( (.@t == 1)?"m":"i")+"id") ); set .@l,.@l + 1) 
 				mes "        "+ ( (.@t == 1)?getd("$f_quest_"+.@q_id+"_"+@t+"_mam["+.@l+"]")+"x "+strmobinfo(1,getd("$f_quest_"+.@q_id+"_"+@t+"_mid["+.@l+"]")):getd("$f_quest_"+.@q_id+"_"+@t+"_iam["+.@l+"]")+"x "+getitemname(getd("$f_quest_"+.@q_id+"_"+@t+"_iid["+.@l+"]")) );
+			mes "Repeat Limit: "+getd("$f_quest_"+.@q_id+"_"+@t+"_rlimit");
 			mes "=================";
 		}
 		break;
 		
 		case 2:
 		mes .n$;		
-		if(getarraysize(getd("$f_quest_id_"+@t)) >= 128) {
-			mes "I'm sorry, but you can't any more quests thus the limit is 128.";
+		if(getarraysize(getd("$f_quest_id_"+@t)) >= .array) {
+			mes "I'm sorry, but you can't add any more quests thus the limit is "+.array+".";
 			close;
 		}
 		set .@que_id,getd("$f_quest_id_"+@t+"_last") + 1;
@@ -250,6 +335,22 @@ switch(select("- Quest Management:- Shop Management:- Reset Fame Quest Delay:- N
 		next;
 		set .@type,select("- Monster Hunting:- Item Collecting");
 		set .@count,0;
+		mes .n$;
+		mes "Now decide the limit how often the quest can be done per day:";
+		mes "0 - Unlimited, Maximum: "+.f_repeat;
+		input .@f_rep;
+		if(.@f_rep > .f_repeat) {
+			next;
+			mes .n$;
+			mes "Invalid Amount, please try again.";
+			close;
+		}
+		next;
+		mes .n$;
+		mes "Repeat Limit: "+( (.@f_rep == 0)?"Unlimited":.@f_rep+" times");
+		mes "Is that correct?";
+		if(select("- Yes:- No") - 1) close;
+		next;
 		mes .n$;
 
 		// Monster Hunting
@@ -266,8 +367,9 @@ switch(select("- Quest Management:- Shop Management:- Reset Fame Quest Delay:- N
 				next;
 				mes .n$;
 				mes "Now please choose the level requirement:";
-				mes "^FF0000Note: You can't go over the maximum level of "+.m_level+"!^000000";
-				if(input(.@lvl,1,.m_level) != 0) {
+				mes "^FF0000Note: '0' is invalid!^000000";
+				mes "^FF0000Note: You can't go over the maximum level of "+.level+"!^000000";
+				if(input(.@lvl,1,.level) != 0) {
 					next;
 					mes .n$;
 					mes "Invalid Level, please try again.";
@@ -338,6 +440,7 @@ switch(select("- Quest Management:- Shop Management:- Reset Fame Quest Delay:- N
 		mes "The Quest ID#"+.@que_id+" has been added successfully.";
 		setd("$f_quest_"+.@que_id+"_"+@t+"_type"),.@type;
 		setd("$f_quest_"+.@que_id+"_"+@t+"_ct"),.@ct;
+		setd("$f_quest_"+.@que_id+"_"+@t+"_rlimit"),.@f_rep;
 		setarray getd("$f_quest_id_"+@t+"["+getarraysize(getd("$f_quest_id_"+@t))+"]"),.@que_id;
 		setd("$f_quest_id_"+@t+"_last"),getd("$f_quest_id_"+@t+"_last") + 1;
 		break;
@@ -358,9 +461,10 @@ switch(select("- Quest Management:- Shop Management:- Reset Fame Quest Delay:- N
 				set .@t,getd("$f_quest_"+.@q_id+"_"+@t+"_type");
 				mes "Type: "+ ( (.@t == 1)?"Monster Hunting":"Item Collecting");
 				if(.@t == 1) mes "Required Level: "+getd("$f_quest_"+.@q_id+"_"+@t+"_level");
-				mes "Target: "+ ( (.@t == 1)?getd("$f_quest_"+.@q_id+"_mam[0]")+"x "+strmobinfo(1,getd("$f_quest_"+.@q_id+"_"+@t+"_mid[0]")):getd("$f_quest_"+.@q_id+"_"+@t+"_iam[0]")+"x "+getitemname(getd("$f_quest_"+.@q_id+"_"+@t+"_iid[0]")) );
+				mes "Target: "+ ( (.@t == 1)?getd("$f_quest_"+.@q_id+"_"+@t+"_mam[0]")+"x "+strmobinfo(1,getd("$f_quest_"+.@q_id+"_"+@t+"_mid[0]")):getd("$f_quest_"+.@q_id+"_"+@t+"_iam[0]")+"x "+getitemname(getd("$f_quest_"+.@q_id+"_"+@t+"_iid[0]")) );
 				for ( set .@l,1; .@l < getarraysize( getd("$f_quest_"+.@q_id+"_"+@t+"_"+( (.@t == 1)?"m":"i")+"id") ); set .@l,.@l + 1) 
 					mes "        "+ ( (.@t == 1)?getd("$f_quest_"+.@q_id+"_"+@t+"_mam["+.@l+"]")+"x "+strmobinfo(1,getd("$f_quest_"+.@q_id+"_"+@t+"_mid["+.@l+"]")):getd("$f_quest_"+.@q_id+"_"+@t+"_iam["+.@l+"]")+"x "+getitemname(getd("$f_quest_"+.@q_id+"_"+@t+"_iid["+.@l+"]")) );
+				mes "Repeat Limit: "+getd("$f_quest_"+.@q_id+"_"+@t+"_rlimit");
 				mes "=================";
 				set .@fm_del$,.@fm_del$ + "- Quest ID#"+getd("$f_quest_id_"+@t+"["+.@m+"]")+ ( (getd("$f_quest_id_"+@t+"["+(.@m+1)+"]") == 0)?"":":");
 			}
@@ -374,14 +478,15 @@ switch(select("- Quest Management:- Shop Management:- Reset Fame Quest Delay:- N
 		mes .n$;
 		mes "The Quest ID#"+.@q_del+" has been deleted successfully.";
 		if(getd("$f_quest_"+.@q_del+"_"+@t+"_type") == 1) {
-			deletearray getd("$f_quest_"+.@q_del+"_"+@t+"_mid[0]"),128;
-			deletearray getd("$f_quest_"+.@q_del+"_"+@t+"_mam[0]"),128;
+			deletearray getd("$f_quest_"+.@q_del+"_"+@t+"_mid[0]"),.array;
+			deletearray getd("$f_quest_"+.@q_del+"_"+@t+"_mam[0]"),.array;
 		} else {
-			deletearray getd("$f_quest_"+.@q_del+"_"+@t+"_iid[0]"),128;
-			deletearray getd("$f_quest_"+.@q_del+"_"+@t+"_iam[0]"),128;
+			deletearray getd("$f_quest_"+.@q_del+"_"+@t+"_iid[0]"),.array;
+			deletearray getd("$f_quest_"+.@q_del+"_"+@t+"_iam[0]"),.array;
 		}
 		deletearray getd("$f_quest_id_"+@t+"["+.@del+"]"),1;
 		setd("$f_quest_"+.@q_del+"_"+@t+"_type"),0;
+		setd("$f_quest_"+.@q_del+"_"+@t+"_rlimit"),0;
 		break;
 	
 		case 4:
@@ -392,6 +497,43 @@ switch(select("- Quest Management:- Shop Management:- Reset Fame Quest Delay:- N
 		mes .n$;
 		mes "Quest Counter Reseted.";
 		setd("$f_quest_id_"+@t+"_last"),0;
+		break;
+		
+		case 5:
+		mes .n$;
+		if(getarraysize(getd("$f_quest_id_"+@t)) < 1) {
+			mes "I'm sorry, but this class row doesn't have any quests, where the Repeat Limit and Repeat Timer can be reseted.";
+			mes "Please create one first.";
+			close;
+		}
+		mes "Now choose which quest you want to reset the Repeat Limit and Repeat Timer:";
+		mes "Note: This only resets your own Limit and Timer, NOT of other players!";
+		mes " ";
+		for ( set .@m,0; .@m < getarraysize(getd("$f_quest_id_"+@t)); set .@m,.@m + 1) {
+				mes "Quest ID: "+getd("$f_quest_id_"+@t+"["+.@m+"]");
+				set .@q_id,getd("$f_quest_id_"+@t+"["+.@m+"]");
+				mes "----------------";
+				set .@t,getd("$f_quest_"+.@q_id+"_"+@t+"_type");
+				mes "Type: "+ ( (.@t == 1)?"Monster Hunting":"Item Collecting");
+				if(.@t == 1) mes "Required Level: "+getd("$f_quest_"+.@q_id+"_"+@t+"_level");
+				mes "Target: "+ ( (.@t == 1)?getd("$f_quest_"+.@q_id+"_"+@t+"_mam[0]")+"x "+strmobinfo(1,getd("$f_quest_"+.@q_id+"_"+@t+"_mid[0]")):getd("$f_quest_"+.@q_id+"_"+@t+"_iam[0]")+"x "+getitemname(getd("$f_quest_"+.@q_id+"_"+@t+"_iid[0]")) );
+				for ( set .@l,1; .@l < getarraysize( getd("$f_quest_"+.@q_id+"_"+@t+"_"+( (.@t == 1)?"m":"i")+"id") ); set .@l,.@l + 1) 
+					mes "        "+ ( (.@t == 1)?getd("$f_quest_"+.@q_id+"_"+@t+"_mam["+.@l+"]")+"x "+strmobinfo(1,getd("$f_quest_"+.@q_id+"_"+@t+"_mid["+.@l+"]")):getd("$f_quest_"+.@q_id+"_"+@t+"_iam["+.@l+"]")+"x "+getitemname(getd("$f_quest_"+.@q_id+"_"+@t+"_iid["+.@l+"]")) );
+				mes "Repeat Limit: "+getd("$f_quest_"+.@q_id+"_"+@t+"_rlimit");
+				mes "=================";
+				set .@fm_rreset$,.@fm_rreset$ + "- Quest ID#"+getd("$f_quest_id_"+@t+"["+.@m+"]")+ ( (getd("$f_quest_id_"+@t+"["+(.@m+1)+"]") == 0)?"":":");
+			}
+		next;
+		set .@del,select(.@fm_rreset$) - 1;
+		mes .n$;
+		mes "You have chosen Quest ID #"+set(.@qr_reset,getd("$f_quest_id_"+@t+"["+.@del+"]") );
+		mes "Is that correct?";
+		next;
+		if(select("- Yes:- No") - 1) close;
+		mes .n$;
+		mes "The Repeat Limit and Repeat Timer of Quest ID#"+.@qr_reset+" has been reseted successfully.";
+		setd("FameRepeat_"+.@qr_reset+"_"+@t),0;
+		setd("FameRepeat_"+.@qr_reset+"_"+@t+"_Timer"),0;
 		break;
 	}
 	break;
@@ -424,12 +566,12 @@ switch(select("- Quest Management:- Shop Management:- Reset Fame Quest Delay:- N
 			
 			case 2:
 			mes .n$;
-			if(getarraysize(getd("$f_shop_"+.@t+"_id")) >= 128) {
+			if(getarraysize(getd("$f_shop_"+.@t+"_id")) >= .array) {
 				mes "The Shop is full, please remove an item first.";
 				continue;
 			}
 			mes "Please type the Item ID you want to add:";
-			mes "Max is 128 Items.";
+			mes "Maximum is "+.array+" Items.";
 			next;
 			if(input(@item,501,.last_id) != 0) {
 				mes .n$;
@@ -573,26 +715,44 @@ OnInit:
 set .n$,"["+strnpcinfo(1)+"]";
 // GM Access Level for GM Panel
 set .gm,80;
+// Server Array Limit
+// > rAthena since commit 6295c77 (Script Engine Upgrade):
+// = 2000000000000 (2 Billion)
+// > Others/Default: 128
+set .array,128;
+// SQL Ranking:
+// Want SQL Ranking? Then install the "fame_rank" table,
+// it will be activated automatically
+if(query_sql("SHOW TABLES LIKE 'fame_rank'",.@fame_tb$) != -1) {
+	set .fame_sql,1;
+	set .rank_limit,10;	// Top x Questers
+}
 // Minimum and Maximum Mob Amount
 set .mob_min,1;
 set .mob_max,100;
 // Maximum Mobs you can hunt at the same time
 set .mob_ct,3;
 // Level Restriction
-set .level,1; // 1 = On / 0 = Off
-set .m_level,99; // Max Base Level of the Server
+set .level,MAX_LEVEL; // 0 = Off / MAX_LEVEL - Server Max Level (src/map/map.h)
 // Minimum and Maximum Item Amount
 set .item_min,1;
 set .item_max,200;
 // Maximum Items you can collect at the same time
 set .item_ct,5;
+// Maximum Repeat Limit per .f_repeat_timer
+set .f_repeat,100;
+// Repeat Timer in seconds
+// = The player can't do the same quest again,
+//   until the Limit has been reseted, which happens only when the Timer reaches 0.
+set .f_repeat_timer,86400; // Default: 86400 = 1 Day
 // Maximum Fame
 set .m_fame,10000;
 // Random Fame Values
 set .min_f,10;
 set .max_f,100;
-// Delay Duration
-set .time,86400;
+// Global Quest Delay (Duration in seconds)
+// = While this is active, the player can't do any quests
+set .time,300;  // Default: 300 = 5 Minutes
 // Shop Settings
 // Last Item ID in the Database
 set .last_id,25000;
@@ -716,14 +876,24 @@ if(getarg(0) == 0) {
 		} else 
 			return "Bug appeared: .@c_que_t == 0, at Quest completing by removing items from the inventory/reseting mob variables.";
 		
-		// Reseting Quest Variable
-		set .@fq,FameQuest;
+		// Reseting Quest Variables; Setting Delay, Repeat Limit and giving Fame Points
+		set .@f_id,getarg(2);
 		set FameQuest,0;
 		set FameDelay,gettimetick(2)+.time;
+		setd("FameRepeat_"+.@f_id+"_"+getarg(1)),getd("FameRepeat_"+.@f_id+"_"+getarg(1)) + 1;
+		if(getd("FameRepeat_"+.@f_id+"_"+getarg(1)+"_Timer") == 0)
+			setd("FameRepeat_"+.@f_id+"_"+getarg(1)+"_Timer"),gettimetick(2) + .f_repeat_timer;
 		set .@f_gain,rand(.min_f,.max_f);
 		setd("FamePoints_"+getarg(1)),getd("FamePoints_"+getarg(1)) + .@f_gain;
+		
+		if(.fame_sql) {
+			if(query_sql("SELECT `fame` FROM `fame_rank` WHERE `char_id` = '"+getcharid(0)+"'",.@fame) == -1)
+				query_sql "INSERT INTO `fame_rank` ( `char_id` , `char_name` , `class` , `fame` ) VALUES ( '"+getcharid(0)+"' , '"+escape_sql(strcharinfo(0))+"' , '"+BaseClass+"' , '"+.@f_gain+"')";
+			else 
+				query_sql "UPDATE `fame_rank` SET `fame` = `fame` + '"+.@f_gain+"' WHERE `char_id` = '"+getcharid(0)+"'";
+		}
 		dispbottom .n$+": You have gained "+.@f_gain+" Fame Points.";
-		return .n$+": Quest ID#"+.@fq+" completed";
+		return .n$+": Quest ID#"+.@f_id+" completed";
 		
 	}
 	

@@ -6,6 +6,11 @@
 //= 1.0 - Initial Release
 //      - Added OnAtcommand (@checkquest) for Quest Progress Display per request
 //        also an info for the players of the existence of that command
+//      - Added the "feature" to benefit from joining an party
+//      - Modified Level Requirement Setting (See 'OnInit:')
+//        0 = Off / MAX_LEVEL - Server Max Level (src/map/map.h)
+//      - Added an setting to define the Array Limit, to make it compatible with
+//        older revisions, which doesn't have the Script Engine Upgrade (See 'set .array')
 //===== Compatible With ======================================
 //= rAthena SQL 11.06.2015 Rev+
 //===== Tested With ==========================================
@@ -23,6 +28,8 @@
 //  - On Login Progress Display
 //===== Comments =============================================
 //= None yet... 
+//===== Modification Requests =============================================
+//= Custom @checkquest to display your Quest Progress by Azeroth
 //===== SQL Tables ==========================================
 /*
 CREATE TABLE IF NOT EXISTS `quest_list` (
@@ -206,8 +213,9 @@ switch(select("- Overview:- Quest Management:- "+( ($@q_tab$[0] == "")?"Create":
 			mes .@ct+" Mobs should be hunted.";
 			mes " ";
 			mes "Now choose the level requirement:";
-			mes "^FF0000Note: You can't go over the maximum level of the server, which is "+.m_level+"!^000000";
-			if(input(.@lvl,1,.m_level) != 0) {
+			mes "^FF0000Note: '0' is invalid!^000000";
+			mes "^FF0000Note: You can't go over the maximum level of the server, which is "+.level+"!^000000";
+			if(input(.@lvl,1,.level) != 0) {
 				next;
 				mes .n$;
 				mes "Invalid Level, please try again.";
@@ -450,7 +458,7 @@ set .mob_max,10;
 // Maximum Mobs you can hunt at the same time
 set .mob_ct,3;
 // Level Restriction
-set .m_level,175; // Max Base Level of the Server
+set .level,MAX_LEVEL; // 0 = Off / MAX_LEVEL - Server Max Level (src/map/map.h)
 // Minimum and Maximum Item Amount
 set .item_min,1;
 set .item_max,200;
@@ -490,8 +498,9 @@ set .rew_item,10000;
 // (= Item Weight* Reward Amount)
 set .rew_weight,10000;
 // ========================
-query_sql "DELETE FROM `quest_map`";
 query_sql "SHOW TABLES LIKE 'quest_list'",$@q_tab$;
+if($@q_tab$[0] != "")
+	query_sql "DELETE FROM `quest_map`";
 // Custom atcommand: @checkquest
 bindatcmd "checkquest",strnpcinfo(0)+"::OnAtcommand";
 set $@QSys,1; // Quest System loaded
@@ -530,12 +539,25 @@ for ( set .@l,0; .@l < getarraysize(.@q_id); set .@l,.@l + 1) {
 
 OnNPCKillEvent:
 if($@q_tab$[0] == "") end;
-if(!getd("MobHunt_"+killedrid)) end; // Checking if the killed monster is wanted
+// Player is in a party
+if(getcharid(1) != 0) {
+	getpartymember(getcharid(1),1);
+	getpartymember(getcharid(1),2);
+	for ( set .@p,0; .@p < $@partymembercount; set .@p,.@p + 1) {
+		if(isloggedin($@partymemberaid[.@p],$@partymembercid[.@p]) == 0) end;
+		attachrid($@partymemberaid[.@p]);
+		callsub OnQuestMobKill;
+	}
+	end;
+}
+OnQuestMobKill:		
+if(getd("MobHunt_"+killedrid) == 0) // Checking if the killed monster is wanted
+	if(getcharid(1) != 0) return; else end;
 if(getd("@KilledMob_"+killedrid) < getd("MobHunt_"+killedrid+"_CT")) {
 	setd("@KilledMob_"+killedrid),getd("@KilledMob_"+killedrid) + 1;
 	dispbottom "Monster Hunting - "+strmobinfo(1,killedrid)+" : "+getd("@KilledMob_"+killedrid)+"/"+getd("MobHunt_"+killedrid+"_CT"),0x00FF00;
 }
-end;
+if(getcharid(1) != 0) return; else end;
 
 OnPCLoginEvent:
 if($@q_tab$[0] == "") end;
