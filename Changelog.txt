@@ -26,6 +26,15 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/10/03
+= Moved Last Man Standing Event v1.0 [RE]
+- into "released"
+= Updated Dungeon Party System v1.0 [RE]
+- Just removed some lines in the header, which aren't correct anymore
+= Updated ToDO_List
+= Removed NPC_Headers.txt
+- That's only for my lazyness :P
+------------------------------------------------------------
 * 2015/10/01
 = Updated Fame System v1.2 [RE]
 - Added an info for the players of the existence of the custom command

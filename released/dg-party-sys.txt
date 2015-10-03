@@ -19,8 +19,6 @@
 //= Party Join Feature
 //  - Requesting to join an existing Party, on accept the Leader can decide
 //    to which member the applicant will be warped to
-//= Dungeons only access able via this NPC
-//  So nobody can interfere, except other parties depending on the Party Limit
 //= Dungeon Rewards:
 //  - Regular Dungeon Points (On/Off Function)
 //    Base Points*Difficulty of Dungeon

@@ -1,4 +1,4 @@
-// ================= ToDo List - GoogleCode =======================
+// ================= ToDo List - GitHub =======================
 // = Creator: h0und3y3@gmail.com - Houndeye aka llchrisll
 // = Usage: Script Projects Overview
 // = User Profile: 
@@ -7,8 +7,7 @@
 // ====================================================================
 
 Projects currently in work-in-progress:
-	- None
+	- Merging Dungeon Party System with Quest System (SQL)
 	
 Projects currently in test phase:
-	- Quest System v1.0
-	- Dungeon Party Service v1.0
+	- None
