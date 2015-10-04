@@ -133,7 +133,7 @@ prontera,150,180,4	script	Mastery Trainer	110,{
 				query_sql "INSERT INTO `trainsystem` ( `id` ) VALUES ( '"+.@id+"' )";
 			}
 		} else {
-			if(.train_mode == 1 && query_sql("SHOW TABLES LIKE 'trainsystem'",.@db_ck) == 0) {
+			if(.train_mode == 1 && query_sql("SHOW TABLES LIKE 'trainsystem'",.@db_ck) == -1) {
 				mes "I'm sorry, but the database wasn't added to the system yet.";
 				mes "Please contact the GM Team.";
 				close;
@@ -870,7 +870,7 @@ switch(select("- Initial Settings:- Delay Settings:- Mastery Settings")) {
 		mes .n$;
 		mes "The Server Mode has been changed to "+ ( (.train_mode == 0)?"SQL":"TxT")+".";
 		set .train_mode,!.train_mode;
-		if(.train_mode == 1 && query_sql("SHOW TABLES LIKE 'trainsystem'",.@db_ck) == 0)
+		if(.train_mode == 1 && query_sql("SHOW TABLES LIKE 'trainsystem'",.@db_ck) == -1)
 			query_sql "CREATE TABLE IF NOT EXISTS `trainsystem` ( `id` INT(10) UNSIGNED NOT NULL, `str` INT(8) UNSIGNED DEFAULT '0', `agi` INT(8) UNSIGNED DEFAULT '0', `vit` INT(8) UNSIGNED DEFAULT '0', `int` INT(8) UNSIGNED DEFAULT '0', `dex` INT(8) UNSIGNED DEFAULT '0', `luk` INT(8) UNSIGNED DEFAULT '0', `dagger` INT(8) UNSIGNED DEFAULT '0', `one-sword` INT(8) UNSIGNED DEFAULT '0', `two-sword` INT(8) UNSIGNED DEFAULT '0', `one-spear` INT(8) UNSIGNED DEFAULT '0', `two-spear` INT(8) UNSIGNED DEFAULT '0', `one-axe` INT(8) UNSIGNED DEFAULT '0', `two-axe` INT(8) UNSIGNED DEFAULT '0', `mace` INT(8) UNSIGNED DEFAULT '0', `unused` INT(8) UNSIGNED DEFAULT '0', `stave` INT(8) UNSIGNED DEFAULT '0', `bow` INT(8) UNSIGNED DEFAULT '0', `knuck` INT(8) UNSIGNED DEFAULT '0', `music` INT(8) UNSIGNED DEFAULT '0', `whip` INT(8) UNSIGNED DEFAULT '0', `book` INT(8) UNSIGNED DEFAULT '0', `katar` INT(8) UNSIGNED DEFAULT '0', `revol` INT(8) UNSIGNED DEFAULT '0', `rifle` INT(8) UNSIGNED DEFAULT '0', `gatl` INT(8) UNSIGNED DEFAULT '0', `shotg` INT(8) UNSIGNED DEFAULT '0', `grenade` INT(8) UNSIGNED DEFAULT '0', `fuuma` INT(8) UNSIGNED DEFAULT '0')";
 		break;
 		
@@ -2161,7 +2161,7 @@ set .n$,"["+strnpcinfo(1)+"]";
 // TxT = via server temporar variables > $@<name>
 // SQL = obviously via SQL Database
 set .train_mode,0;
-if(.train_mode == 1 && query_sql("SHOW TABLES LIKE 'trainsystem'",.@sys_ck) == 0)
+if(.train_mode == 1 && query_sql("SHOW TABLES LIKE 'trainsystem'",.@sys_ck) == -1)
 	query_sql "CREATE TABLE IF NOT EXISTS `trainsystem` ( `id` INT(10) UNSIGNED NOT NULL, `str` INT(8) UNSIGNED DEFAULT '0', `agi` INT(8) UNSIGNED DEFAULT '0', `vit` INT(8) UNSIGNED DEFAULT '0', `int` INT(8) UNSIGNED DEFAULT '0', `dex` INT(8) UNSIGNED DEFAULT '0', `luk` INT(8) UNSIGNED DEFAULT '0', `dagger` INT(8) UNSIGNED DEFAULT '0', `one-sword` INT(8) UNSIGNED DEFAULT '0', `two-sword` INT(8) UNSIGNED DEFAULT '0', `one-spear` INT(8) UNSIGNED DEFAULT '0', `two-spear` INT(8) UNSIGNED DEFAULT '0', `one-axe` INT(8) UNSIGNED DEFAULT '0', `two-axe` INT(8) UNSIGNED DEFAULT '0', `mace` INT(8) UNSIGNED DEFAULT '0', `unused` INT(8) UNSIGNED DEFAULT '0', `stave` INT(8) UNSIGNED DEFAULT '0', `bow` INT(8) UNSIGNED DEFAULT '0', `knuck` INT(8) UNSIGNED DEFAULT '0', `music` INT(8) UNSIGNED DEFAULT '0', `whip` INT(8) UNSIGNED DEFAULT '0', `book` INT(8) UNSIGNED DEFAULT '0', `katar` INT(8) UNSIGNED DEFAULT '0', `revol` INT(8) UNSIGNED DEFAULT '0', `rifle` INT(8) UNSIGNED DEFAULT '0', `gatl` INT(8) UNSIGNED DEFAULT '0', `shotg` INT(8) UNSIGNED DEFAULT '0', `grenade` INT(8) UNSIGNED DEFAULT '0', `fuuma` INT(8) UNSIGNED DEFAULT '0')";
 set .map$,"new_zone04.gat"; // Map for Practice
 // Use Global Cooardinates? Default: 1
@@ -2756,7 +2756,7 @@ if(getarg(0) == 1) {
 		}
 		
 		// Checking if the entry in the database even exists
-		if(query_sql("SELECT `id` FROM `trainsystem` WHERE `id` = '"+.@id+"'",.@sql_res) == 0) 
+		if(query_sql("SELECT `id` FROM `trainsystem` WHERE `id` = '"+.@id+"'",.@sql_res) == -1) 
 			query_sql "INSERT INTO `trainsystem` ( `id` ) VALUES ( '"+.@id+"' )";
 		
 		// Save or Read

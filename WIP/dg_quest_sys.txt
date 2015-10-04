@@ -1,0 +1,66 @@
+//===== rAthena Script =======================================
+//= Dungeon Quest System
+//===== By ===================================================
+//= lllchrislll
+//===== Version ==============================================
+//= 1.0 - Initial Release
+//===== Compatible With ======================================
+//= rAthena SQL 11.06.2015 Rev+
+//===== Tested With ==========================================
+//= rAthena SQL 11.06.2015 Rev
+//===== Description ==========================================
+//= Additional EXP Bonus (in Percent) based on Dungeon's Difficulty
+//  - Difficulties: Easy, Medium, Hard
+//  - EXP Rates: 50%, 100%, 150% (changeable)
+//= Dungeon Warp Service
+//  - Warp to the Entrance only
+//= Party Settings dynamically changeable
+//  - Quantity of Parties in 1 Dungeon
+//= Party Join Feature
+//  - Requesting to join an existing Party, on accept the Leader can decide
+//    to which member the applicant will be warped to
+//= Dungeon Rewards:
+//  - Regular Dungeon Points (On/Off Function)
+//    Base Points*Difficulty of Dungeon
+//  - MvP Dungeon Points (On/Off Function)
+//    Per slain MvP, you gain "x" Points (changeable)
+//    Different kind of Points are: Custom Character Permanent Variable for Exchanger or #CASHPOINTS
+//  - Dungeon Points Exchanger
+//= Quests per Dungeons
+//  - Each Dungeon can have an infinite amount of quests
+//===== Credits	==============================================
+//= To the author of the "Ultimate Warper" from the eAthena Board.
+//	Since no header was included and I forgot the name of him/her,
+//	I couldn't ask the permission to use an part of the script.
+//	I used the map coordinates.
+//===== ToDo List ============================================
+//= Testing
+//============================================================
+/*
+CREATE TABLE IF NOT EXISTS `dqs_list` (
+ `dg_id` int(10) unsigned NOT NULL,
+ `quest_id` int(10) unsigned default '1',
+ `quest_type` tinyint(3) unsigned default '1',
+ `mob_id` int(10) unsigned default '0',
+ `mob_am` int(12) unsigned default '0',
+ `item_id` int(10) unsigned default '0',
+ `item_am` int(10) unsigned default '0',
+ `reward_id` int(10) unsigned default '0',
+ `reward_am` int(10) unsigned default '0',
+ `limit` tinyint(3) unsigned default '0'
+ ) ENGINE=MyISAM;
+ 
+ CREATE TABLE IF NOT EXISTS `dqs_party` (
+ `dg_id` int(10) unsigned,
+ `pty_id` int(10) unsigned default '0',
+ `start` int(10) unsigned default '1'
+ `quest_id` int(10) unsigned NOT NULL,
+ `mob_id` int(10) unsigned default '0',
+ `mob_am` int(12) unsigned default '0',
+ `check` tinyint(3) unsigned default '0'
+ ) ENGINE=MyISAM;
+*/
+prontera,151,185,4	script	Dungeon Party Service	110,{
+
+}
+// ======================= End of Script =====================
