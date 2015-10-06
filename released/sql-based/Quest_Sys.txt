@@ -11,6 +11,8 @@
 //        0 = Off / MAX_LEVEL - Server Max Level (src/map/map.h)
 //      - Added an setting to define the Array Limit, to make it compatible with
 //        older revisions, which doesn't have the Script Engine Upgrade (See 'set .array')
+//      - Fixxed @checkquest command, by showing an wrong quantity for Monster Hunting Quests
+//        Thanks to Azeroth for the bug report
 //===== Compatible With ======================================
 //= rAthena SQL 11.06.2015 Rev+
 //===== Tested With ==========================================
@@ -502,37 +504,9 @@ query_sql "SHOW TABLES LIKE 'quest_list'",$@q_tab$;
 if($@q_tab$[0] != "")
 	query_sql "DELETE FROM `quest_map`";
 // Custom atcommand: @checkquest
-bindatcmd "checkquest",strnpcinfo(0)+"::OnAtcommand";
+bindatcmd "checkquest","QuestSysEvents::OnPCLoginEvent";
 set $@QSys,1; // Quest System loaded
 end;
-
-OnAtCommand:
-if($@q_tab$[0] == "") end;
-query_sql "SELECT DISTINCT `quest_id` , `npc_id` FROM `quest_player` WHERE `char_id` = '"+getcharid(0)+"'",.@q_id,.@n_id;
-if(getarraysize(.@q_id) < 1) {
-	dispbottom .n$+": You don't have any active quests.";
-	end;
-}
-dispbottom .n$+": You have "+getarraysize(.@q_id)+" active Quests.";
-dispbottom .n$+": I will now list them per NPC with the info about the NPC:";
-for ( set .@l,0; .@l < getarraysize(.@q_id); set .@l,.@l + 1) {
-	dispbottom " ----- Quest #"+.@q_id[.@l]+" - Progress: -----";
-	query_sql "SELECT `quest_type` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@q_type;
-	dispbottom "Type: "+( (.@q_type == 1)?"Monster Hunting":"Item Collecting");
-	if(.@q_type == 1)
-		query_sql "SELECT `mob_id` , `mob_am` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@req1,.@req2;
-	else
-		query_sql "SELECT `item_id` , `item_am` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@req1,.@req2;
-	
-	for ( set .@p,0; .@p < getarraysize(.@req1); set .@p,.@p + 1)
-		if(.@q_type == 1) dispbottom "Mob#"+(.@p+1)+": "+strmobinfo(1,.@req1[.@p])+" - "+query_sql("SELECT `mob_am` FROM `quest_player` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"' AND `char_id` = '"+getcharid(0)+"' AND `mob_id` = '"+.@req1[.@p]+"'",.@m_got)+"/"+.@req2[.@p];
-		else dispbottom "Item#"+(.@p+1)+": "+getitemname(.@req1[.@p])+" - "+countitem(.@req1[.@p])+"/"+.@req2[.@p];
-		
-	dispbottom "----- NPC Location: -----";
-	query_sql "SELECT `npc_name` , `npc_map` , `npc_x` , `npc_y` FROM `quest_npc` WHERE `npc_id` = '"+.@n_id[.@l]+"'",.@n_name$,.@n_map$,.@n_x,.@n_y;
-	dispbottom "Name: "+.@n_name$;
-	dispbottom "Map: "+.@n_map$+", X: "+.@n_x+", Y: "+.@n_y;
-}
 }
 
 -	script	QuestSysEvents	-1,{
@@ -562,22 +536,37 @@ if(getcharid(1) != 0) return; else end;
 OnPCLoginEvent:
 if($@q_tab$[0] == "") end;
 query_sql "SELECT DISTINCT `quest_id` , `npc_id` FROM `quest_player` WHERE `char_id` = '"+getcharid(0)+"'",.@q_id,.@n_id;
-if(getarraysize(.@q_id) < 1) end;
+set .@n$,"[Quest System]";
+if(getarraysize(.@q_id) < 1) {
+	dispbottom .@n$+": You don't have any active quests.";
+	end;
+}
+dispbottom .@n$+": You have "+getarraysize(.@q_id)+" active Quests.";
+dispbottom .@n$+": I will now list them per NPC with the info about the NPC:";
 	
 // Displaying Quest Progress
 for ( set .@l,0; .@l < getarraysize(.@q_id); set .@l,.@l + 1) {
 	dispbottom " ----- Quest #"+.@q_id[.@l]+" - Progress: -----";
 	query_sql "SELECT `quest_type` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@q_type;
 	dispbottom "Type: "+( (.@q_type == 1)?"Monster Hunting":"Item Collecting");
-	if(.@q_type == 1)
+	if(.@q_type == 1) {
 		query_sql "SELECT `mob_id` , `mob_am` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@req1,.@req2;
-	else
+		for ( set .@p,0; .@p < getarraysize(.@req1); set .@p,.@p + 1) {
+			// Updating SQL Table for Monster Hunting Quests
+			query_sql "UPDATE `quest_player` SET `mob_am` = `mob_am` + '"+getd("@KilledMob_"+.@req1[.@p])+"' WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"' AND `char_id` = '"+getcharid(0)+"' AND `mob_id` = '"+.@req1[.@p]+"'";
+			setd("@KilledMob_"+.@req1[.@p]),0;
+			setd("MobHunt_"+.@req1[.@p]),1;
+		}
+	} else
 		query_sql "SELECT `item_id` , `item_am` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@req1,.@req2;
 	
 	for ( set .@p,0; .@p < getarraysize(.@req1); set .@p,.@p + 1)
-		if(.@q_type == 1) dispbottom "Mob#"+(.@p+1)+": "+strmobinfo(1,.@req1[.@p])+" - "+query_sql("SELECT `mob_am` FROM `quest_player` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"' AND `char_id` = '"+getcharid(0)+"' AND `mob_id` = '"+.@req1[.@p]+"'",.@m_got)+"/"+.@req2[.@p];
-		else dispbottom "Item#"+(.@p+1)+": "+getitemname(.@req1[.@p])+" - "+countitem(.@req1[.@p])+"/"+.@req2[.@p];
-		
+		if(.@q_type == 1) {
+			query_sql "SELECT `mob_am` FROM `quest_player` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"' AND `char_id` = '"+getcharid(0)+"' AND `mob_id` = '"+.@req1[.@p]+"'",.@m_got;
+			dispbottom "Mob#"+(.@p+1)+": "+strmobinfo(1,.@req1[.@p])+" - "+.@m_got+"/"+.@req2[.@p];
+		} else 
+			dispbottom "Item#"+(.@p+1)+": "+getitemname(.@req1[.@p])+" - "+countitem(.@req1[.@p])+"/"+.@req2[.@p];
+	
 	dispbottom "----- NPC Location: -----";
 	query_sql "SELECT `npc_name` , `npc_map` , `npc_x` , `npc_y` FROM `quest_npc` WHERE `npc_id` = '"+.@n_id[.@l]+"'",.@n_name$,.@n_map$,.@n_x,.@n_y;
 	dispbottom "Name: "+.@n_name$;
@@ -722,7 +711,7 @@ switch(.@s) {
 	for ( set .@p,0; .@p < getarraysize(.@req1); set .@p,.@p + 1) {
 		if(.@q_type[.@q_c] == 1) {
 			// Updating SQL Table for Monster Hunting Quests
-			query_sql "UPDATE `quest_player` SET `mob_am` = `mob_am` + '"+getd("@KilledMob_"+.@req1[.@p])+"' WHERE `npc_id` = '"+strnpcinfo(2)+"' AND `quest_id` = '"+.@q_id[.@q_c]+"' AND `char_id` = '"+getcharid(0)+"'";
+			query_sql "UPDATE `quest_player` SET `mob_am` = `mob_am` + '"+getd("@KilledMob_"+.@req1[.@p])+"' WHERE `npc_id` = '"+strnpcinfo(2)+"' AND `quest_id` = '"+.@q_id[.@q_c]+"' AND `char_id` = '"+getcharid(0)+"' AND `mob_id` = '"+.@req1[.@p]+"'";
 			setd("@KilledMob_"+.@req1[.@p]),0;
 			setd("MobHunt_"+.@req1[.@p]),1;
 			// Selecting the latest value in the database

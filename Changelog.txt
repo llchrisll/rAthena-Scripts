@@ -33,6 +33,14 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/10/07
+= Updated Quest System v1.0 [RE]
+- Fixxed @checkquest command, by showing an wrong quantity for Monster Hunting Quests
+  Thanks to Azeroth for the bug report
+= Updated Dungeon Party System v1.0 [RE]
+- Fixxed an bug with warping to the Start Point
+  Thanks to Azeroth for the bug report
+------------------------------------------------------------
 * 2015/10/04
 = Added new folders and moved current folders to new location:
   > "unreleased/request" has been moved and renamed to "/requests"
