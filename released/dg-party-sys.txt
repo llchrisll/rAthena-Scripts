@@ -5,6 +5,7 @@
 //===== Version ==============================================
 //= 1.0 - Initial Release
 //      - Fixxed an bug with warping to the Start Point - Thanks to Azeroth for the bug report
+//      - Removed "set .pt_max" and replaced it with "MAX_PARTY" in the checks
 //===== Compatible With ======================================
 //= rAthena SQL 11.06.2015 Rev+
 //===== Tested With ==========================================
@@ -121,7 +122,7 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 			mes " ";
 			for ( set .@l,0; .@l < getarraysize(.pty_id); set .@l,.@l + 1) {
 				getpartymember(.pty_id[.@l]);
-				if(getd("$@pty_"+.pty_id[.@l]+"$") == .dungpre$[@d] && $@partymembercount < .pt_max) {
+				if(getd("$@pty_"+.pty_id[.@l]+"$") == .dungpre$[@d] && $@partymembercount < MAX_PARTY) {
 					mes "===================";
 					mes "Party Name: "+getpartyname(.pty_id[.@l]);
 					mes "Leader: "+getpartyleader(.pty_id[.@l]);
@@ -479,9 +480,6 @@ set .n$,"["+strnpcinfo(1)+"]";
 set .debug,0; 
 // ============== Party Settings ================== //
 set .pt_limit,2; // x Parties per Dungeon
-// Maximum x Members per Party
-// (see src/common/mmo.h > #define MAX_PARTY to put it on the same value)
-set .pt_max,12;
 // ============== Dungeon Settings ================== //
 setarray .exp[1],50,100,150; // EXP Rate in % for Difficulty: Easy/Medium/Hard
 // Dungeon Reward > 0 = Off, 1 = On

@@ -33,6 +33,22 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/10/13
+= Updated Dungeon Party System v1.0 [RE]
+- Removed "set .pt_max" and replaced it with "MAX_PARTY" in the checks
+= Updated Quest System v1.0 to v1.1 [RE]
+- Fixed an bug, to go over the required mob quantity
+- Modified the code when an Mob gets killed that the value in the database will be
+  updated immediately
+- Removed the variable "MobHunt_"+<MobID>"
+- Modified the code about "MobHunt_"+<MobID>+"_CT" to increase it's value
+  in case there is another quest with the same required mob (= Total Mob Counter)
+= Modified Dungeon Quest System v1.0 [WIP]
+- Copied the OnInit: from Dungeon Party System
+- Added some new settings
+- Added a few lines as place holder 
+- Added SQL Table for Dungeons
+------------------------------------------------------------
 * 2015/10/07
 = Updated Quest System v1.0 [RE]
 - Fixxed @checkquest command, by showing an wrong quantity for Monster Hunting Quests
