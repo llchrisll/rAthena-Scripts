@@ -1,0 +1,764 @@
+//===== eAthena Script =======================================
+//= Virtual Security Password System
+//===== By ===================================================
+//= llchrisll
+//===== Version & Changelog ==============================================
+//= 1.0 - Script Made
+//= 	  Made some improvements (Function Changes,...)
+//= 	  Added Password Recovery Feature
+//= 1.1 - Fixed a minor Bug about the Password Check
+//      - My fix didn't work so I changed it into a "while()", let's see...
+//= 1.2 - Optimized and Shortend, as well fixed that "Unknown NPC" after
+//		  pressing "Cancel"/"Try again please" to start over again,
+//		  which resulted in that error.
+//=1.2.1- Got an "npc_checknear" error on Login, so .....
+//		- Modifications for Password Recovery Feature
+//      - Added prevention to use "ALT+M" shortcuts and dying via 
+//        Attacks like Mob or PvP Maps after Login until the security password has been put
+//===== Compatible With ======================================
+//= Every eAthena SVN 
+//===== Description ==========================================
+//= This System allows you to put your 2nd Account 
+//  Password via a "Virtual Keyboard" in Menu Style
+//  Possible Characters:
+//  Letters (Array: $@pw_letter)
+//  Numbers (Array: $@pw_numbers)
+//  Specials (Array: $@pw_special) > {,},(,) aren't possible?
+//-------------------------------------------------------------
+//= Password Possibilities:
+//  * Letters only
+//  * Numbers only
+//  * Letters & Numbers
+//  * Letters, Numbers & Special 
+//======================= Comments ===========================
+//=================== Version 1.0 - 1.1 ======================
+//= This "Virtual Security Password" System has been splitted
+//  into 2 NPC's ...:
+//
+//  * VSP_System = VSP System Un/Load AND Login Checks
+//				   - OnVSPSysLoad:		System Start
+//					 - OnInit:			For starting the System if it's enabled.
+//				   - OnVSPSysUnLoad:	System Shutdown
+//				   - OnVSPLogin:		Player Login Checks
+//  * VSP Manager = Visual NPC where you can
+//    change your Password, Security Password and Answer,
+//    just change the Map and Sprite ID if you want.
+//
+// = ... and 3 Functions:
+//	* VSP_Check:	Function for Password Check
+//					Ch_VPW > Label for "Try again" Option
+//  * VSP_Create:	Function for Password Creation
+//					Cr_VPW > Label for "Try again" Option
+//  * VSP_SQA:		Function for "Security Question/Answer"
+//					S_Question > Label for "Try again" Option
+//
+// => These functions are at the bottom of this file!!!!
+//===================== Version 1.2.1 ==========================
+//= I fused the VSP_System with the VSP Manager...:
+//
+//  * VSP Manager = Visual NPC where you can
+//    change your Password, Security Password and Answer,
+//    just change the Map and Sprite ID if you want.
+//  * Also holds now the Un/Load/OnInit Settings from the VSP_System
+//	  These are located before the functions.
+//
+//				   - OnVSPSysLoad:		System Start
+//					 - OnInit:			For starting the System if it's enabled.
+//				   - OnVSPSysUnLoad:	System Shutdown
+//= An extra NPC for the Login Checks.
+//
+//				   - OnVSPLogin:		Player Login Checks - Able to call that via doevent "VSP Manager::OnVSPLogin";
+//					 - OnPCLoginEvent:	Same, but the one above is if you have multiplie OnPCLoginEvents,
+//										to prevent queue usage of events. See 'OnVSPLogin' for more.
+//
+// = ... and 2 Functions:
+//  * VSP_Passw:	Function for Password Check/Creation
+//  * VSP_SQA:		Function for "Security Question/Answer"
+//
+// => These functions are at the bottom of this file!!!!
+//====== TO/WANNA DO List ==========================================
+//= More Character Combination's
+//= Adding IP Check (If your IP has changed, your PW will be needed.
+//  Easy, but lazy too add at the moment. Well would require MySQL...)
+//============================================================
+//?===================================* START Of Script *===================================?//
+//?============================* START of VSP System NPC *============================?//
+prontera,150,180,4	script	VSP Manager	110,{
+
+if(#password$ == "") set #vsp_pw_set,0; // Bug Prevention o,o
+if(getgmlevel() >= 80) {
+	mes .n$;
+	if(#vsp_pw_set) {
+		mes "Wanna see your VSP Details?";
+		if(select("- Nope:- Yes, please") - 1) {
+			next;
+			mes .n$;
+			mes "Your Password is:";
+			mes #password$;
+			mes " ";
+			mes "Security Question:";
+			mes $@sec_quest$[#sec_que];
+			mes "Security Answer:";
+			mes #sec_answer$;
+		}
+		next;
+		mes .n$;
+	}
+	mes "Which Menu do you";
+	mes "want to access?";
+	menu "GM Menu",GM_Menu,"Player Menu",-;
+	next;
+}
+	if($vsp_sys == 0) {
+		mes .n$;
+		mes "This System is currently offline.";
+		close;
+		
+	}
+	mes .n$;
+	mes "Hello, "+strcharinfo(0)+"!";
+	mes "How can I help you?";
+	if(#vsp_pw_set) {
+		switch(select("- Password Change:- Password Recovery:- Nothing, thanks.")) {
+
+			case 1:
+			next;
+			mes .n$;
+			mes "You'll have to repeat every step!!!";
+			if(select("- Let's do it:- Better not") - 1) close;
+			
+			set #old_password$,#password$;
+			L_again2:
+			next;
+			while( callfunc("VSP_Passw","Create") == "Fail") { next; callfunc "VSP_Passw","Create"; }
+			next;
+			mes .n$;
+			mes "The password you have chosen is: " + #password$;
+			next;
+			mes .n$;
+			mes "Is that correct?";
+			menu "Yes",-,"No",L_again2;
+				next;
+				mes .n$;
+				if(#password$ != #old_password$) {
+					mes "Before I can change your password";
+					mes "I need the old one for your own security, but you";
+					mes "can type it now.";
+					input @pw_change$;
+					next;
+					mes .n$;
+					if(@pw_change$ == #old_password$) {
+						mes "Okay, your old password has been confirmed.";
+						mes "Your new Password will be used now.";
+
+					} else {
+						mes "Wrong Password.";
+						mes "The old one will be re-used.";
+						set #password$,#old_password$;
+					}
+					set #old_password$,"";
+					close;
+
+				} else {
+					mes "I'm sorry, but you have chosen the same password again.";
+					goto L_again2;
+				}
+	
+			case 2:
+			next;
+			mes .n$;
+			if(#sec_que > 0) {
+				mes "What do you want to do?";
+				next;
+				if(select("- Retrieve my old Password:- Change Security Question/Answer") - 2) {
+					mes .n$;
+					mes "Please answer to the following Question, which you have filled out after creating your password.";
+					next;
+					mes .n$;
+					mes "What is/was your";
+					mes $@sec_quest$[#sec_que]+"?";
+					input @sec_ans$;
+					next;
+					if(@sec_ans$ == #sec_answer$) {
+						mes .n$;
+						mes "The answer is correct.";
+						mes "Your password is:";
+						mes #password$;
+						close;
+					} else {
+						mes .n$;
+						mes "I'm sorry, but the answer you have put is wrong.";
+						close;
+					}
+				} else {
+					mes .n$;
+					mes "First, I'll have to check your Password.";
+					while( callfunc("VSP_Passw","Check") == "Fail") { next; callfunc "VSP_Passw","Check"; }
+					next;
+				// ======= Finish of the Password Check =========
+					if(@temp_pw$ == #password$) {
+						mes .n$;
+						mes "Thank you for confirming your identity.";
+					} else {
+						mes .n$;
+						mes "The 'clicked' Password isn't valid.";
+						close;
+					}
+					next;
+					while( callfunc("VSP_SQA","Create") == 0) { next; callfunc "VSP_SQA","Create"; }
+					close2;
+					end;
+				}
+			
+			} else {
+				mes "You'll have to put an Security Question and Answer first";
+				mes "before you can recover your password.";
+				callfunc "VSP_SQA","Create";
+				close2;
+				end;
+			}
+			
+			case 3:	
+			next;
+			mes .n$;
+			mes "I see....";
+			mes "Bye....";
+			close;
+		}
+	
+	} else if(!#vsp_pw_set) {
+		next;
+		mes "["+strcharinfo(0)+"]";
+		mes "I wanna create an Password for my Account.";
+	L_again3:
+		while( callfunc("VSP_Passw","Create") == 0) { next; callfunc "VSP_Passw","Create"; }
+		next;
+		mes .n$;
+		mes "The password you have chosen is:";
+		mes @temp_pw$;
+		next;
+		mes .n$;
+		mes "Is that correct?";
+		menu "Yes",-,"No",L_again3;
+			next;
+			mes .n$;
+			mes "Okay, your password has been confirmed.";
+			set #password$,@temp_pw$;
+			set #vsp_pw_set,1;
+			set #pw_type,@pw_m;
+			mes "The only thing left is your Security Question:";
+			while( callfunc("VSP_SQA") == 0) { next; callfunc "VSP_SQA"; }
+			close;
+	}
+
+GM_Menu:
+	next;
+	mes .n$;
+	mes "Hello GM!";
+	mes "How can I help you?";
+	switch(select("- System Status:- Nothing")) {
+		case 1:
+		next;
+		mes .n$;
+		mes "The Status of the System is:";
+		mes ($vsp_sys) ? "^00FF00Online^000000" : "^FF0000Offline^000000";
+		mes "What do yo wanna do?";
+		menu ( ($vsp_sys) ? "Disable" : "Enable")+" it, please",-,"Nothing",L_quit;
+			next;
+			mes .n$;
+			if($vsp_sys) {
+				set $vsp_sys,0;
+				donpcevent "VSP_System::OnVSPSysUnLoad";
+				mes "The VSP System has been disabled.";
+			} else if(!$vsp_sys) {
+				set $vsp_sys,1;
+				donpcevent "VSP_System::OnVSPSysLoad";
+				mes "The VSP System has been enabled.";
+			}
+			close;
+
+			L_quit:
+			close;
+				
+		case 2:
+		close;
+	}
+
+//?=======================* START of VSP System Settings AND Un/Load Checks *============================?//
+OnInit:
+set .n$,"[VSP Manager]";
+OnVSPSysLoad:
+if(!$vsp_sys) end;
+setarray $@pw_letter$[0],"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+						"a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z";
+setarray $@pw_numbers[0],0,1,2,3,4,5,6,7,8,9;
+setarray $@pw_special$[0],"`","´","'","§","%","&","[","]","!","=","?";
+setarray $@sec_quest$[1],"Birthplace","Mother's Maiden Name","First Pet's Name";
+	
+OnVSPSysUnLoad:
+	deletearray $@pw_letter$[0],128;
+	deletearray $@pw_numbers[0],128;
+	deletearray $@pw_special$[0],128;
+	deletearray $@sec_quest$[1],128;
+	end;
+}
+//?====================* END of VSP System Settings AND Un/Load Checks *====================?//
+//?=============================* START of VSP Login Checks *============================?//
+-	script	VSPLogin	-1,{
+end;
+
+OnPCLoginEvent:
+set @n$,getvariableofnpc(.n$,"VSP Manager");
+	
+//=================== System On? ====================
+if($vsp_sys == 0) {
+	end;
+	
+//============ Password has been set + System on? ============
+} else if($vsp_sys == 1 && #vsp_pw_set == 1) {
+	sc_start 112,999999,1; //Berserk State, not able to talk/using commands
+	pcblockmove getcharid(3),1; // Preventing from moving
+	atcommand "@battleignore"; // Preventing the player from dying from attacks
+	
+	mes @n$;
+	mes "Hello, player.";
+	mes "Before you are able to play on the Server";
+	mes "I must confirm your password.";
+	while( callfunc("VSP_Passw","Check") == "Fail") { callfunc "VSP_Passw","Check"; }
+	next;
+// ======= Finish of the Password Check =========
+	if( compare(@temp_pw$,"FFFF") == 1 || compare(@temp_pw$,"ffff" == 1) || compare(@temp_pw$,"1111") == 1 ) callfunc "VSP_SQA","Forgot";
+	if(@temp_pw$ == #password$) {
+		mes @n$;
+		mes "Thank you for confirming your identity.";
+		sc_end 112;
+		pcblockmove getcharid(3),0;
+		atcommand "@battleignore";
+		close;
+	
+	} else 
+		mes @n$;
+		mes "The 'clicked' Password isn't valid.";
+		mes "You will now be kicked.";
+		close2;
+		atcommand "@kick "+strcharinfo(0);
+		end;
+	}
+	
+//================? Logon Messages ?==============
+//======== System temporarily down and Variable Set ========
+} else if($vsp_sys == 0 && #vsp_pw_set == 1) {
+	dispbottom "The VSP System is offline for the moment.";
+	set #vsp_pw_set,2;
+	end;
+
+//======== System back online and Variable Set ========
+} else if($vsp_sys == 1 && #vsp_pw_set == 2) {
+	dispbottom "The VSP System is back online.";
+	set #vsp_pw_set,1;
+	end;
+
+//======== System is on and Password Creation ========
+} else if($vsp_sys == 1 && #vsp_pw_set == 0) {
+	mes @n$;
+	mes "Hello, player.";
+	mes "For your own safety, I would like to ask";
+	mes "you to set an second password for your account.";
+	mes "If you don't follow these steps, you will be kicked.";
+	next;
+	mes @n$;
+	mes "This System has the feature to type your";
+	mes "password via an 'Virtual Keyboard' (Menu Version).";
+L_again:
+	while( callfunc("VSP_Passw","Create") == "Fail") { callfunc "VSP_Passw","Create"; }
+	next;
+	//========== Confirming Password =================
+	mes @n$;
+	mes "The password you have chosen is:";
+	mes @temp_pw$;
+	next;
+	mes @n$;
+	mes "Is that correct?";
+	menu "Yes",-,"No",L_again;
+		next;
+		mes @n$;
+		mes "Okay, your password has been confirmed.";
+		set #password$,@temp_pw$;
+		set #vsp_pw_set,1;
+		set #pw_type,@pw_m;
+		mes "The only thing left is your Security Question:";
+		next;
+		while( callfunc("VSP_SQA","Create") == 0) { next; callfunc "VSP_SQA","Create"; }
+		close;
+}
+//?==============================* END of VSPLogin NPC *=================================?//
+}
+//?===================================* VPS Main Functions *===================================?//
+//=								 - DON'T EDIT ANYTHING BELOW THIS -							   =//
+//=								 - EXCEPT THE TEXT OR IF YOU KNOW -							   =//
+//=								 - 	   WHAT YOU ARE DOING !!!!	  -							   =//
+//?==================================* START of VSP Password *=================================?//
+function	script	VSP_Passw	{
+	set @n$,getvariableofnpc(.n$,"VSP Manager");
+	next;
+	mes @n$;
+	if(getarg(0) == "Check") {
+		set @pw_m,#pw_type;
+		mes "In case you forgot your password, depending on the password type:";
+		mes "- Letters only: Type \"FFFF\" or \"ffff\", for the rest anything.";
+		mes "- Numbers only: Type \"1111\", for the rest anything.";
+		mes "The same applies for the other types.";
+		next;
+	} else if(getarg(0) == "Create") {
+		set #vsp_pw_set,0;
+		set #sec_que,0;
+		set #password$,"";
+		mes "Now tell me the lenght of your password.";
+		mes "But the max lenght is 8 characters.";
+		if(input(#pw_lenght,0,8) != 0) return 0;
+		next;
+		mes @n$;
+		mes "So your password is "+#pw_lenght+" long?";
+		next;
+		mes @n$;
+		mes "Now tell me which characters it has:";
+		if( set(@pw_m,prompt("- Letters only:- Numbers only:- Letters and Numbers:- Letters, Numbers and Special")) == 255) return "Fail";
+	}
+	//next;
+	set @temp_pw$,"";
+	mes @n$;
+// ============ Password Type Check ==============
+	switch(@pw_m) {
+// ======= (#pw_type == 0) =============
+		case 0:
+		mes "An error has occured, please report to the GM Team ASAP.";
+		close;
+
+// ============================== Letters only ==============================
+		case 1:
+		mes "Now click on the letters shown below here.";
+			
+// =========== Menu Creation ===========
+		set @menu_pw$,"";
+		set @pw_counter,0;
+		for(set @omg,0; @omg < getarraysize($@pw_letter$); set @omg,@omg + 1) 
+			set @menu_pw$, @menu_pw$ + "- "+$@pw_letter$[@omg] + ( ($@pw_letter$[@omg+1] == "")?"":":");
+
+		set @menu$, @menu_pw$ + ":- Try again please";
+		set @sel_m,getarraysize($@pw_letter$);
+			
+		while(@pw_counter != #pw_lenght) {
+			
+// ======= Menu Display + Choosing ======	
+			set @vsp_m,prompt(@menu$);
+				
+// ======================== "Cancel" Button or "Try again please"-Option ========
+			if(@vsp_m > @sel_m) {
+				return "Fail";
+				
+			} else {
+				set @pw_c,@menu-1;
+				set @temp_pw$,@temp_pw$ + $@pw_letter$[@pw_c];
+				set @pw_counter,@pw_counter + 1;
+			}
+		}
+			
+// ======= Finish of the Password Input =========
+		break;
+
+// ============================== Numbers only ==============================
+		case 2:
+		mes "Now click on the numbers shown below here.";
+		
+// =========== Menu Creation =================
+		set	@menu_pw$,"";
+		set @pw_counter,0;
+		for(set @omg,0; @omg < getarraysize($@pw_numbers); set @omg,@omg + 1) 
+			set @menu_pw$, @menu_pw$ + "- "+$@pw_numbers$[@omg] + ( ($@pw_numbers[@omg+1] == "")?"":":");
+
+		set @menu$, @menu_pw$ + ":- Try again please";
+		set @sel_m,getarraysize($@pw_numbers);
+		
+		while(@pw_counter != #pw_lenght) {
+			
+// ======= Menu Display + Choosing ======	
+			set @vsp_m,prompt(@menu$);
+			
+// ======================== "Cancel" Button or "Try again please"-Option ========
+			if(@vsp_m > @sel_m) {
+				return "Fail";
+				
+			} else {
+				set @pw_c,@menu-1;
+				set @temp_pw$,@temp_pw$ + $@pw_numbers[@pw_c];
+				set @pw_counter,@pw_counter + 1;	
+			} 
+		}
+			
+// ======= Finish of the Password Input =========
+		break;
+
+// =========== Letters & Numbers ===========
+		case 3:
+		mes "Now click on the characters you want";
+		mes "shown below here.";
+		
+// ============================== Menu Creation ==============================
+		set	@menu_pw$,"";
+		set @pw_counter,0;
+		set @m_choice,1;
+		set @m_choice2,0;
+		for(set @omg,0; @omg < getarraysize($@pw_letter$); set @omg,@omg + 1)
+			set @menu_pw$, @menu_pw$ + "- "+$@pw_letter$[@omg] + ( ($@pw_letter$[@omg+1] == "")?"":":");
+
+		while(@pw_counter != #pw_lenght) {
+
+// ======== Setting Menu Display Options ========
+			if(@m_choice2 == 0) {
+				if(@m_choice == 1) {
+					set @m_option$,"- Number's:";
+					set @sel_m,getarraysize($@pw_letter$);
+					set @m_choice2,1;
+						
+				} else if(@m_choice == 2) {
+					set @m_option$,"- Letter's:";
+					set @sel_m,getarraysize($@pw_numbers);
+					set @m_choice2,1;
+				}
+			}
+			set @menu$, @menu_pw$ + @m_option$ + ":- Try again please";
+				
+// ======= Menu Display + Choosing ======	
+			set @vsp_m,prompt(@menu$);
+				
+// ======================== "Cancel" Button or "Try again please"-Option ========
+			if(@vsp_m > (@sel_m + 1)) {
+				return "Fail";
+					
+			} else if(@vsp_m <= @sel_m) {
+				set @pw_c,@menu-1;
+				if(@m_choice == 1) {
+					set @temp_pw$,@temp_pw$ + $@pw_letter$[@pw_c];
+				} else if(@m_choice == 2) {
+					set @temp_pw$,@temp_pw$ + $@pw_numbers[@pw_c];
+				}
+				set @pw_counter,@pw_counter + 1;
+			} else if(@vsp_m > @sel_m  && (@vsp_m < (@sel_m + 2))) {
+			
+// ======== Setting new Character menu after choosing the corresponding menu option ========
+				if(@m_choice == 1) {
+					set	@menu_pw$,"";
+					for(set @omg,0; @omg < getarraysize($@pw_numbers); set @omg,@omg + 1) 
+						set @menu_pw$, @menu_pw$ + "- "+$@pw_numbers[@omg] + ( ($@pw_numbers[@omg+1] == "")?"":":");
+						
+					set @m_choice,2;
+					set @m_choice2,0;
+					
+				} else if(@m_choice == 2) {
+					set	@menu_pw$,"";
+					for(set @omg,0; @omg < getarraysize($@pw_letter$); set @omg,@omg + 1) 
+						set @menu_pw$, @menu_pw$ + "- "+$@pw_letter$[@omg] + ( ($@pw_letter$[@omg+1] == "")?"":":");
+							
+					set @m_choice,1;
+					set @m_choice2,0;
+				}
+			}
+		}
+			
+// ======= Finish of the Password Input =========
+		break;
+
+// ============================== Letters, Numbers & Specials ==============================
+		case 4:
+		mes "Now click on the characters you want";
+		mes "shown below here.";
+		
+// =========== Menu Creation ===== 
+		set	@menu_pw$,"";
+		set @pw_counter,0;
+		set @m_choice,1;
+		set @m_choice2,0;
+		for(set @omg,0; @omg < getarraysize($@pw_letter$); set @omg,@omg + 1) 
+			set @menu_pw$, @menu_pw$ + "- "+$@pw_letter$[@omg]+ ( ($@pw_letter$[@omg+1] == "")?"":":");
+
+		while(@pw_counter != #pw_lenght) {
+			
+// ======== Setting Menu Display Options ========
+			if(@m_choice2 == 0) {
+				if(@m_choice == 1) {
+					set @m_option$,"- Number's:- Special's:";
+					set @sel_m,getarraysize($@pw_letter$);
+					set @m_choice2,1;
+					
+				} else if(@m_choice == 2) {
+					set @m_option$,"- Letter's:- Special's:";
+					set @sel_m,getarraysize($@pw_numbers);
+					set @m_choice2,1;
+						
+				} else if(@m_choice == 3) {
+					set @m_option$,"- Letter's:- Number's:";
+					set @sel_m,getarraysize($@pw_special$);
+					set @m_choice2,1;
+				}
+			}
+			set @menu$, @menu_pw$ + @m_option$ + ":- Try again please";
+				
+// ======= Menu Display + Choosing ======	
+			set @vsp_m,prompt(@menu$);
+				
+// ======================== "Cancel" Button or "Try again please"-Option ========
+			if(@vsp_m > (@sel_m + 2)) {
+				return "Fail";
+					
+			} else if(@vsp_m <= @sel_m) {	
+				set @pw_c,@menu-1;
+				if(@m_choice == 1) {
+					set @temp_pw$,@temp_pw$ + $@pw_letter$[@pw_c];
+				} else if(@m_choice == 2) {
+					set @temp_pw$,@temp_pw$ + $@pw_numbers[@pw_c];
+				} else if(@m_choice == 3) {
+					set @temp_pw$,@temp_pw$ + $@pw_special$[@pw_c];
+				}
+				set @pw_counter,@pw_counter + 1;
+				
+			} else if(@vsp_m > @sel_m  && (@vsp_m < (@sel_m + 3))) {
+			
+// ======== Setting new Character menu after choosing the corresponding menu option ========
+				if(@m_choice == 1) {
+					if(@vsp_m == (@sel_m + 1)) {
+						set	@menu_pw$,"";
+						for(set @omg,0; @omg < getarraysize($@pw_numbers); set @omg,@omg + 1) 
+							set @menu_pw$, @menu_pw$ + "- "+$@pw_numbers[@omg] + ( ($@pw_numbers[@omg+1] == "")?"":":");
+
+						set @m_choice,2;
+						set @m_choice2,0;
+						
+					} else if(@vsp_m == (@sel_m + 2)) {
+						set	@menu_pw$,"";
+						for(set @omg,0; @omg < getarraysize($@pw_special$); set @omg,@omg + 1) 
+							set @menu_pw$, @menu_pw$ + "- "+$@pw_special$[@omg] + ( ($@pw_special$[@omg+1] == "")?"":":");
+
+						set @m_choice,3;
+						set @m_choice2,0;
+					}
+				} else if(@m_choice == 2) {
+					if(@vsp_m == (@sel_m + 1)) {
+						set	@menu_pw$,"";
+						for(set @omg,0; @omg < getarraysize($@pw_letter$); set @omg,@omg + 1) 
+							set @menu_pw$, @menu_pw$ + "- "+$@pw_letter$[@omg] + ( ($@pw_letter$[@omg+1] == "")?"":":");
+
+						set @m_choice,1;
+						set @m_choice2,0;
+							
+					} else if(@vsp_m == (@sel_m + 2)) {
+						set	@menu_pw$,"";
+						for(set @omg,0; @omg < getarraysize($@pw_special$); set @omg,@omg + 1) 
+							set @menu_pw$, @menu_pw$ + "- "+$@pw_special$[@omg] + ( ($@pw_special$[@omg+1] == "")?"":":");
+
+						set @m_choice,3;
+						set @m_choice2,0;
+					}
+						
+				} else if(@m_choice == 3) {
+					if(@vsp_m == (@sel_m + 1)) {
+						set	@menu_pw$,"";
+						for(set @omg,0; @omg < getarraysize($@pw_letter$); set @omg,@omg + 1) 
+							set @menu_pw$, @menu_pw$ + "- "+$@pw_letter$[@omg] + ( ($@pw_letter$[@omg+1] == "")?"":":");
+
+						set @m_choice,1;
+						set @m_choice2,0;
+							
+					} else if(@vsp_m == (@sel_m + 2)) {
+						set	@menu_pw$,"";
+						for(set @omg,0; @omg < getarraysize($@pw_numbers); set @omg,@omg + 1) 
+							set @menu_pw$, @menu_pw$ + "- "+$@pw_numbers[@omg] + ( ($@pw_numbers[@omg+1] == "")?"":":");
+
+						set @m_choice,2;
+						set @m_choice2,0;
+					}
+				}
+			}
+		}		
+// ======= Finish of the Password Input =========
+		break;
+	}
+if( !#vsp_pw_set && (compare(@temp_pw$,"FFFF") == 1 || compare(@temp_pw$,"ffff" == 1) || compare(@temp_pw$,"1111") == 1) ) {
+	mes @n$;
+	mes "I'm sorry, but this password can't be used, since it holds keywords for the \"Password Forgot\" option.";
+	mes "Please choose something different.";
+	close2;
+	return "Fail";
+	end;
+} else return @temp_pw$;
+
+}
+//?=======================================* END of VSP Password Function *======================================?//
+//?===================================* START of Security Question/Answer *===================================?//
+function	script	VSP_SQA	{
+	next;
+	set @n$,getvariableofnpc(.n$,"VSP Manager");
+	mes @n$;
+	if(getarg(0) == "Forgot") {
+		mes "So you can't remember your password?";
+		mes "Then I would like to ask you to tell me your Security Answer you put.";
+		if(!#sec_que) {
+			mes " ";
+			mes "Hmm... it seems you didn't set it yet.";
+			mes "Please report this bug in the forum.";
+			close;
+		}
+		next;
+		mes @n$;
+		mes "What is/was your";
+		mes $@sec_quest$[#sec_que]+"?";
+		input @sec_ans$;
+		next;
+		if(@sec_ans$ == #sec_answer$) {
+			mes @n$;
+			mes "The answer is correct.";
+			mes "Your password is:";
+			mes #password$;
+			close;
+		} else {
+			mes @n$;
+			mes "I'm sorry, but the answer you have put is wrong.";
+			close2;
+			return 0;
+			end;
+		}
+	} else if(getarg(0) == "Create") {
+		
+		mes "Now I would like you";
+		mes "choose a question below";
+		mes "and type the answer next:";
+		set @sec_menu$,"";
+		for( set @sec,1; @sec < getarraysize($@sec_quest$); set @sec,@sec + 1) 
+			set @sec_menu$,@sec_menu$ + "- " + $@sec_quest$[@sec] + ( ($@sec_quest$[@sec+1] == "")?"":":");
+			
+		if(prompt(@sec_menu$) == 255) {
+			return 0;
+			
+		} else {
+			next;
+			set #sec_que,@menu;
+			input @sec_ans$;
+			mes .n$;
+			mes "Question:";
+			mes $@sec_quest$[#sec_que];
+			mes "Answer:";
+			mes @sec_ans$;
+			mes " ";
+			mes "Is that correct?";
+			if(select("- No, again please:- Yes, continue") == 1) return 0;
+			next;
+			set #sec_answer$,@sec_ans$;
+			mes .n$;
+			mes "Your Security Question";
+			mes "and Answer has been set.";
+		}
+		return 1;
+	}
+}
+//?===============================* END of VSP Security Question/Answer *=================================?//
+//?==================================* END Of VPS Main Functions *===================================?//
+//?=====================================* END Of Script *===================================?//

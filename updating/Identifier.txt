@@ -1,0 +1,52 @@
+//===== eAthena Script =======================================
+//= Identifer
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0
+//===== Compatible With ======================================
+//= Every eAthena SVN 
+//===== Description ==========================================
+//= This NPC identifies all your items against a fee.              
+//===== Comments =============================================
+//= None yet... 
+//===========================================================
+prontera,164,167,3	script	Identifier	100,{
+set .@n$,"[Identifier]";
+set .@cost,5000; // 5k Zeny per Item
+set @count,0;
+
+getinventorylist;
+
+for( set @i,0; @i < @inventorylist_count; set @i,@i + 1) {
+	if(@inventorylist_identify[@i] == 0) {
+		set @count,@count+1;
+	}
+}
+mes .@n$;
+if(@count == 0) {
+	mes "It seems like you don't have any unidentified items.";
+	close;
+}
+mes "You have "+@count+" unidentified Items in your inventory.";
+mes "Identifing those items would cost you "+( set(@pay,@count*.@cost) )+" Zeny.";
+next;
+mes .@n$;
+mes "Do you want to continue?";
+if(select("- Yes:- No") - 1) close;
+if(Zeny < @pay) {
+	mes "I'm sorry, but it seems you don't have enough money.";
+	close;
+}
+//getinventorylist;
+for( set @i,0; @i < @inventorylist_count; set @i,@i + 1) {
+	if(!@inventorylist_identify[@i]) {
+		delitem2 @inventorylist_id[@i],1,0,0,0,0,0,0,0;
+		getitem @inventorylist_id[@i],1;
+	}
+}
+set Zeny,Zeny - @pay;
+mes .@n$;
+mes "Your items has been identified.";
+close;
+}

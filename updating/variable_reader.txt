@@ -1,0 +1,157 @@
+//===== eAthena Script =======================================
+//= Variable/Array Reviewer/Editer
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= This script allows you to review and edit variables and arrays.
+//  But you can't create variables with it.
+//  Also this works only for non-npc related variables/arrays
+//  and you have to know the syntax of 'em or it doesn't help you.
+//===== Comments =============================================
+//= ...
+//============================================================
+-	script	VariableReview	-1,{
+end;
+
+OnInit:
+set .n$,"[Variable Reviewer]";
+// Access Level:
+set .gm,80;
+if(.@re_in) goto OnWhisperGlobal;
+end;
+
+OnWhisperGlobal:
+if(.n$ == "") {
+	set .@re_in,1;
+	goto OnInit;
+}
+if(getgmlevel() < .gm) end;
+set .@v$,"";
+set .@e$,"";
+set .@name$,"";
+mes .n$;
+mes "Hello "+ strcharinfo(0);
+mes "I can help you to find out which values certain variables or arrays has.";
+mes "You only need to know what they are named.";
+mes "This will be settled via menu.";
+mes " ";
+mes "Now tell me the prefix:";
+switch(select("- Char Temporar:- Char Permanent:- Server Temporar:- Server Permanent:- Login Server Wide:- Account Perm:- Nevermind")) {
+
+	case 1:
+	set .@v$,"@";
+	break;
+	
+	case 3:
+	set .@v$,"$@";
+	break;
+	
+	case 4:
+	set .@v$,"$";
+	break;
+	
+	case 5:
+	set .@v$,"$$";
+	break;
+	
+	case 6:
+	set .@v$,"#";
+	break;
+	
+	case 7:
+	close;
+}
+next;
+mes .n$;
+mes "Prefix: "+( (.@v$ != "")?.@v$:"None");
+mes "Now tell me the name:";
+next;
+input .@name$;
+mes .n$;
+mes "Then, is it a String or Integer";
+mes " - String ($ > letters allowed)";
+mes " - Integer (numbers only)";
+next;
+if(select("- String:- Integer") == 1) set .@e$,"$";
+mes .n$;
+mes "Result:";
+mes .@v$+.@name$+.@e$;
+mes "Is that correct?";
+if(select("- Yes:- No") - 1) close;
+next;
+mes .n$;
+mes "Now tell me is it a variable or array?";
+set .@t,select("- Variable:- Array");
+next;
+mes .n$;
+mes "I will now list the content/value.";
+next;
+set .@m$,"";
+mes .n$;
+switch(.@t) {
+	
+	case 1:
+	if(.@e$ == "$") {
+		if(getd(""+.@v$+.@name$+.@e$) == "") {
+			mes "This variable doesn't exist or has not a value.";
+			set .@c,1;
+		} else mes getd(""+.@v$+.@name$+.@e$);
+	
+	} else if(.@e$ == "") {
+		if(getd(""+.@v$+.@name$) == 0) {
+			mes "This variable doesn't exist or has not a value.";
+			set .@c,1;
+		} else mes getd(""+.@v$+.@name$);
+	}
+	break;
+	
+	case 2:
+	if(getarraysize(getd(""+.@v$+.@name$+.@e$)) < 1) {
+		mes "This array doesn't exist or has not a single value.";
+		set .@c,1;
+	} else 
+		for( set .@l,0; .@l < getarraysize(getd(""+.@v$+.@name$+.@e$)); set .@l,.@l + 1) {
+			mes "Index "+.@l+" - "+ ( (.@e$ == "$")?getd(""+.@v$+.@name$+.@e$+"["+.@l+"]"):getd(""+.@v$+.@name$+"["+.@l+"]"));
+			set .@m$,.@m$ +  "- "+.@l+ ( ( .@e$ == "$" && getd(""+.@v$+.@name$+.@e$+"["+(.@l+1)+"]") != "" || .@e$ == "" && getd(""+.@v$+.@name$+"["+(.@l+1)+"]") != 0)?":":"");
+		}
+	break;
+}
+next;
+mes .n$;
+if(.@c) {
+	mes "Since there is nothing you can edit, farewell.";
+	close;
+}
+mes "What now?";
+if(select("- Edit:- Nothing") - 1) close;
+next;
+mes .n$;
+if(.@t == 2) {
+	mes "Choose from the list the entries:";
+	next;
+	set .m,select(.@m$) - 1;
+	mes getd(""+.@v$+.@name$+.@e$+"["+.m+"]");
+	mes " ";
+	mes "Correct?";
+	if(select("- Yes:- No") - 1) close;
+	next;
+	mes .n$;
+}
+mes "What should be the new value?";
+next;
+input ( (.@e$ != "")?.@new$:.@new);
+mes .n$;
+mes "New Value: "+( (.@e$ != "")?.@new$:.@new);
+mes "Proceed?";
+if(select("- Yes:- No") - 1) close;
+next;
+if(.@t == 1) setd(""+.@v$+.@name$+.@e$),( (.@e$ != "")?.@new$:.@new);
+else setd(""+.@v$+.@name$+.@e$+"["+.m+"]"),( (.@e$ != "")?.@new$:.@new);
+mes .n$;
+mes "Edit completed.";
+close;
+}

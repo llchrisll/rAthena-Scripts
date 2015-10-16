@@ -1,0 +1,564 @@
+//===== eAthena Script =======================================
+//= Restaurant
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Made
+//      - Bug Fixxing Process - Failed q.q, damn Effects
+//      - Rewritten the Effect Parts for Menu and Drinks
+//        (It didn't want to work >_>)
+//====== ToDo List ===========================================
+//= 
+//===== Compatible/Created/Tested With =======================
+//= eAthena SQL 14434 Trunk
+//===== Description ==========================================
+//= Well this Script handles an Restaurant script.
+//  You can have 1 Menu with 10 dishes with max level 100. > .m_clvl
+//  The best would be not to go higher than that but depends on you.
+//= How to become a cook and start cooking:
+//  You'll have to make an application first to be able to cook
+//  which requires a fee of ".fee" and you'll start with Level 1.
+//  Each 10th level you can add another dish.
+//  Also you can choose an effect from the list, but you can only add
+//  one per dish.
+//  Also there is a delay of ".delay" before you can create a new menu.
+//  
+//= Format of variables/arrays:
+//= Cook ID > Char ID
+//  "$cook_"+<Cook_ID>+"$": Name
+//  "$cook_"+<Cook_ID>+"_ge": [0] = Cook Level , [1] = Money
+//  "$cook_id" = Cook IDs are saved here
+//  ".menu_"+<Cook_ID>+"_f$": [0] = Dish 1, [1] = Description 1, [2] = Effect ID 1, [3] = Dish 2, etc
+//  ".menu_"+<Cook_ID>+"_ge": Menu Cost 
+//===============================================================
+prontera,165,161,4	script	Restaurant Manager	109,{
+
+mes .n$;
+mes "Hello customer.";
+mes "How may I help you?";
+next;
+switch(select("- Eat and Drink:- Cook Managment:- Nothing")) {
+	case 1:
+	mes .n$;
+	mes "What may I bring you?";
+	next;
+	if(select("- Menu:- Drinks Only") == 2) goto R_Drinks;
+	mes .n$;
+	// Checking if menu exists
+	set .@emp,0;
+	for( set .@c,0; .@c < getarraysize($cook_id); set .@c,.@c + 1) 
+		if( getarraysize(getd(".menu_"+$cook_id[.@c]+"_f$")) > 0) 
+			set .@emp,.@emp + 1;
+
+	if(!.@emp) {
+		mes "There is no menu to be displayed.";
+		close;
+	} else {
+		set @men$,"";
+		for ( set .@m,0; .@m < getarraysize($cook_id); set .@m,.@m + 1) {
+			if(getd(".menu_"+$cook_id[.@m]+"_f$[0]") != "")	set @men$,@men$ + "- "+getd("$cook_"+$cook_id[.@m]+"$[0]")+":";	else continue;
+			set @m,0;
+			while(getd(".menu_"+$cook_id[.@m]+"_f$["+@m+"]") != "") {
+				mes "==== Dish Name ====:";
+				mes getd(".menu_"+$cook_id[.@m]+"_f$["+@m+"]");
+				if(getd(".menu_"+$cook_id[.@m]+"_f$["+(@m+1)+"]") != "None") mes "("+getd(".menu_"+$cook_id[.@m]+"_f$["+(@m+1)+"]")+")";
+				set @ef_e,getd(".menu_"+$cook_id[.@m]+"_ef["+(@m/2)+"]");
+				for ( set @e,1; @e < getarraysize(.effect_id); set @e,@e + 1) {
+					if(.effect_id[@e] == @ef_e) {
+						mes "==== Effect ====:";
+						mes .effect_n$[@e];
+						mes (.effect_va[@e] != 0)?"Bonus: "+.effect_va[@e]:"";
+						break;
+					}
+				}
+				mes "*------------*------------*";
+				set @m,@m+2;
+			}
+			mes "Price: "+getd(".menu_"+$cook_id[.@m]+"_ge[0]")+" Zeny";
+			mes "Cooked by: "+getd("$cook_"+$cook_id[.@m]+"$[0]");
+			mes "==============";
+		}
+		set @men$,@men$ + "- Nothing";
+		next;
+		mes .n$;
+		mes "Now choose the cook's menu you want to eat.";
+		if((prompt(@men$) - getarraysize($cook_id)) > 0) {
+			close;
+		} else {
+			set @e,@menu - 1;
+			next;
+			mes .n$;
+			set @pay,getd(".menu_"+$cook_id[@e]+"_ge[0]");
+			if(Zeny < @pay) {
+				mes "You don't have the required amount of Zeny.";
+				mes "You need "+@pay+" Zeny.";
+				close;
+			}
+
+			set Zeny,Zeny - @pay;	
+			set @ef_u,0;
+			while( @ef_u < getarraysize(getd(".menu_"+$cook_id[@e]+"_f$")) ) {
+				set @ef_e,getd(".menu_"+$cook_id[@e]+"_ef["+(@ef_u/2)+"]");
+				for ( set @c,1; @e < getarraysize(.effect_id); set @c,@c + 1) {
+					if(.effect_id[@c] == @ef_e) {
+						sc_start .effect_id[@c],1800000,.effect_va[@c];
+						if(.effect_ef[@c]) skilleffect .effect_ef[@c],.effect_va[@c];
+						dispbottom "Boost: "+.effect_n$[@c]+" by "+.effect_va[@c] + " for 1800 seconds (30 Mins) has been granted.";
+						break;
+					}
+				}
+				set @ef_u,@ef_u + 2;
+			}
+			set .@temp_rid,getcharid(3);
+			set .@cook_n$,getd("$cook_"+$cook_id[@e]+"$");
+			setd("$cook_"+$cook_id[@e]+"_ge[1]"),getd("$cook_"+$cook_id[@e]+"_ge[1]") + (@pay/.share);
+			detachrid;
+			if(attachrid(getcharid(3,.@cook_n$))) announce "Restaurant Mananger: Balance updated to "+getd("$cook_"+getcharid(0)+"_ge[1]")+" Zeny",3,0x00FF00;
+			detachrid;
+			attachrid(.@temp_rid);
+			mes "Wanna have an drink to it?";
+			next;
+			if(select("- Yes:- No") == 1) goto R_Drinks;
+			mes .n$;
+			mes "Thank you very much.";
+			mes "Enjoy your meal.";
+			close;
+		}
+	}
+	break;
+	
+	R_Drinks:
+	set @drinks$,"";
+	mes .n$;
+	mes "Choose which you want:";
+	mes "Note: Choosing the same effect again, won't do anything.";
+	mes "Just wasting zeny.";
+	for ( set @d,1; @d < getarraysize(.drinks_n$); set @d,@d + 2 ) {
+		set @ef,@d*2+2;
+		set @drinks$,@drinks$ + "- "+.drinks_n$[@d] + " ("+.drinks_va[@ef]+" Zeny)" + ( (.drinks_n$[@d+2] != "")?":":"");
+	}
+	next;
+	switch(select(@drinks$)) {
+	
+		default:
+		set @d_n,@menu*2-1; // Effect Name + Description > .drinks_n$
+		set @d_v,@menu*4-3; // Effect Value (Effect_ID,Value,Duration,Price) > .drinks_va
+		set @d_d,@menu; // Effect Display > .drinks_ef
+		mes "Drink Name: "+.drinks_n$[@d_n];
+		mes "Effect: "+.drinks_n$[@d_n+1];
+		set @dur,.drinks_va[@d_v+2];
+		set @sec,@dur/1000;
+		if(@sec >= 60) set @min,@sec/60;
+		mes "Duration: "+ ( (@min)? @min+" Minutes.":@sec +" Seconds.");
+		mes "Costs: "+set(@cost,.drinks_va[@d_v + 3]);
+		mes "Correct?";
+		if(select("- Yes:- No") - 1) close;
+		if(Zeny < @cost) {
+			next;
+			mes .n$;
+			mes "You don't have enough Zeny.";
+			mes "Please come back as soon as you have";
+			mes "at least "+@cost+" Zeny.";
+			close;
+		}
+		close2;
+//					 Effect, 		Duration,		Value(of Effect)
+		//dispbottom "Debug: Effect initialize.";
+		sc_start .drinks_va[@d_v],.drinks_va[@d_v+2],.drinks_va[@d_v+1];
+		//dispbottom "Debug: Complete - Next is Effect Display.";
+		if(.drinks_ef[@d_d]) skilleffect .drinks_ef[@d_d],.drinks_va[@d_v+1];
+		//dispbottom "Debug: Effect Display Complete - Next Confirm Message";
+		dispbottom "Boost: "+.drinks_n$[@d_n+1]+" for "+ (.drinks_va[@d_v+2]/1000)/60+" seconds has been granted.";
+		//dispbottom "Debug: Zeny Reduce - Process...";
+		set Zeny,Zeny - @cost;
+		//dispbottom "Debug: Zeny Reduce Complete - Next is if cook is available.";
+		if(.@cook_id$ != "") {
+			set .@temp_rid,getcharid(3);
+			set .@bonus,@cost/.share;
+			setd("$cook_"+$cook_id[@e]+"_ge[1]"),getd("$cook_"+$cook_id[@e]+"_ge[1]") + .@bonus;
+			//dispbottom "Debug: Cook Announce initialize...";
+			detachrid;
+			if(attachrid(getcharid(3,.@cook_n$))) announce "Restaurant Mananger: Balance updated to "+getd("$cook_"+getcharid(0)+"_ge[1]")+" Zeny",3,0x00FF00;
+			detachrid;
+		}
+		break;
+	}
+	close;
+	
+	case 2:
+	mes .n$;
+	mes "[===Cook Managment===]";
+	mes "How can I help you?";
+	next;
+	switch(select("- "+ ( (!CookLvl)?"Cook Application":"Status")+":- Menu Managment:- Nothing")) {
+	
+		case 1:
+		mes .n$;
+		if(!CookLvl) {
+			mes "So you want to applicate as an cook?";
+			if(select("- Yes, please:- Nevermind") - 1) close;
+			next;
+			mes .n$;
+			mes "To be able to become a cook,";
+			mes "I'll need a \"small\" fee from you.";
+			mes "Which would be "+.fee+" Zeny.";
+			mes "Still wanna continue?";
+			if(select("- Yes, please:- Nevermind") - 1) close;
+			next;
+			mes .n$;
+			if(Zeny < .fee) {
+				mes "You don't have the required amount of money.";
+				mes "Please come again as soon as you have it.";
+				close;
+			}
+			set Zeny,Zeny - .fee;
+			set CookLvl,1;
+			setd("$cook_"+getcharid(0)+"$"),strcharinfo(0);
+			setarray getd("$cook_"+getcharid(0)+"_ge"),CookLvl,0;
+			setarray $cook_id[getarraysize($cook_id)],getcharid(0);
+			mes "Congratulation!!";
+			mes "You are now an Level 1 Cook.";
+			mes "Happy cooking.";
+			close;
+			
+		} else {
+			mes "[=== Status ===]";
+			mes "Level: "+CookLvl;
+			mes "EXP: "+CookExp;
+			mes "Till next Level: "+ ((CookLvl*.nlvlrate) - CookExp)+" EXP";
+			mes "Balance: "+getd("$cook_"+getcharid(0)+"_ge[1]");
+			next;
+			switch(select("- Withdraw money:- Quit Cooking:- Nothing")) {
+				
+				case 1:
+				mes .n$;
+				if(getd("$cook_"+getcharid(0)+"_ge[1]") == 0) {
+					mes "There is nothing that can be withdrawn.";
+					close;
+				}
+				if( (Zeny + getd("$cook_"+getcharid(0)+"_ge[1]")) >= 1000000000) {
+					mes "You have too much zeny with you.";
+					mes "Please come again as soon as you have more space for it.";
+					close;
+				}
+				set Zeny,Zeny + getd("$cook_"+getcharid(0)+"_ge[1]");
+				setd("$cook_"+getcharid(0)+"_ge[1]"),0;
+				mes "Withdrawal was successfull.";
+				close;
+				
+				case 2:
+				mes .n$;
+				mes "Really wanna quit being a cook?";
+				mes "Your log will be deleted.";
+				if(select("- Continue:- Nevermind") - 1) close;
+				deletearray getd(".menu_"+getcharid(0)+"_f$[0]"),128; // Deleting Menus
+				deletearray getd(".menu_"+getcharid(0)+"_ef[0]"),128; // Deleting Effects
+				set getd("$cook_"+getcharid(0)+"$"),""; // Delete Char Name
+				deletearray getd("$cook_"+getcharid(0)+"_ge[0]"),128; // Delete Cook Lvl + Zeny in array
+				for ( set .@d,0; .@d < getarraysize($cook_id); set .@d,.@d + 1) {
+					if($cook_id[.@d] == getcharid(0)) {
+						deletearray $cook_id[.@d],1; // Delete Char ID
+						break;
+					}
+				}
+				set CookLvl,0;
+				set CookExp,0;
+				next;
+				mes .n$;
+				mes "Your log has been deleted.";
+				mes "I'm sad for loosing such a good cook.";
+				
+				case 3:
+				close;
+			}
+		}
+		break;
+		
+		case 2:
+		mes .n$;
+		if(getarraysize(getd("$cook_"+getcharid(0)+"$")) < 1) {
+			mes "I'm sorry, but you are not a cook yet.";
+			close;
+		}
+		mes "So how can I be of help?";
+		/* // Used for bug fixing :D
+		if(getgmlevel()) {
+			mes "===== 1st Dish Display ======";
+			mes getd(".menu_"+getcharid(0)+"_f$[0]");
+			mes getd(".menu_"+getcharid(0)+"_f$[1]");
+			mes getd(".menu_"+getcharid(0)+"_f$[2]");
+			mes "=============================";
+			switch(select("- Reset All:- Reset Timer:- Reset Lvl:- Nothing")) {
+			
+				case 1:
+				set CookDelay,0;
+				set CookLvl,1;
+				set CookExp,0;
+				break;
+				
+				case 2:
+				set CookDelay,0;
+				break;
+				
+				case 3:
+				set CookLvl,1;
+				set CookExp,0;
+				break;
+			}
+		}
+		*/
+		next;
+		switch(select("- Create a menu:- Delete a menu:- More Information:- Nothing")) {
+		
+			case 1:
+			set @MaxMen,(CookLvl/10) + 1;
+			// Checking if menu exists or max dishes is reached
+			if( (getarraysize(getd(".menu_"+getcharid(0)+"_f$")) / 3) >= @MaxMen) {
+				mes .n$;
+				mes "You have reached the maxium amount of dishes you can cook with your current level.";
+				close;
+			}
+			// Delay
+			if(gettimetick(2) < CookDelay) {
+				mes .n$;
+				mes "I'm sorry, but the heat of your last cooking attempt has not faded yet.";
+				mes "Please wait "+(CookDelay-gettimetick(2))+" Seconds.";
+				close;
+			}
+			set @a,getarraysize(getd(".menu_"+getcharid(0)+"_f$")) / 2;
+			set @b,getarraysize(getd(".menu_"+getcharid(0)+"_f$"));
+			while( @a < @MaxMen) {
+				next;
+				mes .n$;
+				mes "Now put the dish name:";
+				if(input(@d_name$,1,30) != 0) {
+					next;
+					mes .n$;
+					mes "Maximum 30 letters.";
+					continue;
+				}
+				next;
+				mes .n$;
+				mes "Good, now an description:";
+				mes "If you put \"None\" nothing will be displayed.";
+				if(input(@d_desc$,1,20) != 0) {
+					next;
+					mes .n$;
+					mes "Maximum 20 letters.";
+					continue;
+				}
+				next;
+				mes .n$;
+				mes "Now put the effect for it:";
+				mes "Format: Effect Name (Bonus)";
+				set @ef_m$,"";
+				for ( set @m,1; @m < getarraysize(.effect_n$); set @m,@m + 1 ) {
+					set @ef_m$,@ef_m$ + "- "+.effect_n$[@m] + ( (.effect_va[@m] != 0)?" ("+.effect_va[@m]+")":"") + ( (.effect_n$[@m+1] != "")?":":"");
+				}
+				set @ef_c,select(@ef_m$);
+				setarray getd(".menu_"+getcharid(0)+"_f$["+@b+"]"),@d_name$,@d_desc$;
+				setarray getd(".menu_"+getcharid(0)+"_ef["+@a+"]"),.effect_id[@ef_c];
+				//setd(".menu_"+getcharid(0)+"_f$["+@b+"]"),@d_name$;
+				//setd(".menu_"+getcharid(0)+"_f$["+(@b+1)+"]"),@d_desc$;
+				//setd(".menu_"+getcharid(0)+"_f$["+(@b+2)+"]"),.effect_id[@ef_c];
+				set @b,@b+2; // New Dish
+				set @a,@a+1; // Dish total count
+			}
+			next;
+			mes .n$;
+			mes "Re-Check:";
+			for( set @c,0; @c < getarraysize(getd(".menu_"+getcharid(0)+"_f$")); set @c,@c+2) {
+				if(getd(".menu_"+getcharid(0)+"_f$["+@c+"]") != "") { 
+					mes getd(".menu_"+getcharid(0)+"_f$["+@c+"]");
+					mes "("+getd(".menu_"+getcharid(0)+"_f$["+(@c+1)+"]")+")";
+					set @ef_e,@c/2;
+					for ( set @e,1; @e < getarraysize(.effect_id); set @e,@e + 1) {
+						if(.effect_id[@e] == getd(".menu_"+getcharid(0)+"_ef["+(@ef_e)+"]")) {
+							mes "==== Effect ====:";
+							mes .effect_n$[@e];
+							mes (.effect_va[@e] != 0)?"Bonus: "+.effect_va[@e]:"";
+							break;
+						}
+					}
+					mes (getd(".menu_"+getcharid(0)+"_f$["+(@c+3)+"]") != "")?"*------*------*":"===============";
+				}
+			}
+			mes "The price will be "+set(@pri,CookLvl*.price)+" Zeny.";
+			if(select("- Proceed:- Cancel") - 1) {
+				deletearray getd(".menu_"+getcharid(0)+"_f$[0]"),128;
+				close;
+			}
+			next;
+			if(CookLvl < .m_clvl) {
+				set CookExp,CookExp + .exprate;
+				if( CookExp >= (CookLvl*.nlvlrate)) {
+					set CookLvl,CookLvl + 1;
+					set CookExp,0;
+					dispbottom "You have achieved the level "+CookLvl;
+					setd("$cook_"+getcharid(0)+"$[1]"),CookLvl;
+				} else {
+					dispbottom "Cook Exp: "+CookExp+", until next level: "+ ((CookLvl*.nlvlrate) - CookExp)+" EXP.";
+				}
+			}
+			setd(".menu_"+getcharid(0)+"_ge"),@pri;
+			mes .n$;
+			mes "Thanks for creating such a delicious meal.";
+			mes "See ya again till the heat has faded in about " + (.delay/3600) + " hours.";
+			set CookDelay,gettimetick(2) + .delay;
+			close;
+			
+			case 2:
+			mes .n$;
+			// Checking if menu exists
+			if( getarraysize(getd(".menu_"+getcharid(0)+"_f$")) < 2) {
+				mes "There is no menu to delete.";
+				close;
+			}
+			// Looping the menus via name:
+			mes "These are the dishes in your menu:";
+			for( set @lm,0; @lm < getarraysize(getd(".menu_"+getcharid(0)+"_f$")); set @lm,@lm + 2) {
+				mes getd(".menu_"+getcharid(0)+"_f$["+@lm+"]");
+				set @del_m$,@del_m$ + "- "+getd(".menu_"+getcharid(0)+"_f$["+@lm+"]") + ( (getd(".menu_"+getcharid(0)+"_f$["+(@lm+2)+"]") != "")?":":"");
+			}
+			next;
+			mes .n$;
+			mes "Please choose the menu you want to delete.";
+			next;
+			set @sel_del,select(@del_m$)*2-2;
+			mes .n$;
+			mes "You have chosen the menu";
+			mes getd(".menu_"+getcharid(0)+"_f$["+@sel_del+"]");
+			mes "Is that correct?";
+			if(select("- Yes:- No") - 1) close;
+			next;
+			mes .n$;
+			mes "The dish will now be deleted.";
+			deletearray getd(".menu_"+getcharid(0)+"_f$["+@sel_del+"]"),2;
+			deletearray getd(".menu_"+getcharid(0)+"_ef$["+(@sel_del/2)+"]"),1;
+			close;	
+			
+			
+			case 3:
+			mes .n$;
+			mes "How this works:";
+			mes "[=== EXP ===]";
+			mes "You gain for every menu "+.exprate+" EXP, for the next level you need, your current level multiplied by "+.nlvlrate+".";
+			mes "Example: You are level 2 > 2*"+.nlvlrate+" = "+(.nlvlrate*2)+" EXP, which would be "+(.nlvlrate*2)/.exprate +" menus.";
+			mes "The maximum level you can achieve is "+.m_clvl+".";
+			next;
+			mes "[=== Effects ===]";
+			mes "To be it worth eating your menus you can enhance them with special effects.";
+			mes "At the beginning you can add one effect and one dish to your menu.";
+			mes "Each 10th level you can add another dish.";
+			mes "Also you can choose an additional effect on every 5th level.";
+			next;
+			mes "[=== Prices ===]";
+			mes "For each menu your Cook Level*"+.price+".";
+			close;
+			
+			case 4:
+			close;
+		}
+		
+		case 3:
+		close;
+	}
+	
+	case 3:
+	close;
+}
+OnInit:
+set .n$,"[Restaurant Manager]";
+set .m_clvl,100; // Max Cook Level
+set .share,5; // Share of Zeny gained from the sold menus in %
+set .price,10000; // Value multiplied for Menu Price > CookLvl*.price 
+set .exprate,10; // EXP gained each cooking attempt
+set .nlvlrate,100; // Value multiplied for Exp till next lvl > CookLvl*.nlvlrate
+set .fee,100000; // Fee for Cook Application (in Zeny of course :P)
+set .delay,43200; // Cooking Delay to prevent exploit/spam > in Seconds (Default: 43200 = 12 Hours)
+//==================================
+// Effect Settings - Effect ID, Value, Effect Display
+// Effect ID, should be obvious, see db/const.txt > "SC_"
+// Value: Some effecs won't need a value like "Intravision"
+//        Just read the effect display and combinue it with the value set.
+// Efffect Display: ...
+// .m_ef_dis[X]: Effect Animation from Skill DB, [X] = Menu
+//==================================
+// Note: Don't add/remove a single value, do a whole line or it will occur in an error.
+//==================================
+setarray .effect_n$[1],"Intravision", //SC_INTRAVISION > 186
+					"Increase All Stats", //SC_INCALLSTATUS > 187
+					"Increase Str", //SC_INCSTR > 188
+					"Increase Agi", //SC_INCAGI > 189
+					"Increase Vit", //SC_INCVIT > 190
+					"Increase Int", //SC_INCINT > 191
+					"Increase Dex", //SC_INCDEX > 192
+					"Increase Luk", //SC_INCLUK > 193
+					"Increase Hit", //SC_INCHIT > 194
+					"Increase Hit in %", //SC_INCHITRATE > 195
+					"Increase Flee", //SC_INCFLEE > 196
+					"Increase Flee in %", //SC_INCFLEERATE > 197
+					"Increase Max HP in %", //SC_INCMHPRATE > 198
+					"Increase Max SP in %", //SC_INCMSPRATE > 199
+					"Increase ATK in %", //SC_INCATKRATE > 200
+					"Increase MATK in %", //SC_INCMATKRATE > 201
+					"Increase DEF in %", //SC_INCDEFRATE > 202
+					"Increase Base ATK", //SC_BATKFOOD > 211
+					"Increase MATK", //SC_MATKFOOD > 213
+					"Increase Resistance", //SC_SCRESIST > 214
+					"Base Exp Boost in %", //SC_EXPBOOST > 257
+					"Item Drop Boost in %", //SC_ITEMBOOST > 258
+					"Job Exp Boost in %"; //SC_JEXPBOOST > 292
+setarray .effect_id[1],186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,211,213,214,257,258,292;
+setarray .effect_va[1],0,5,10,10,10,10,10,10,100,10,100,10,10,10,10,10,10,200,200,5,50,25,50;
+setarray .effect_ef[1],380,34,34,34,34,34,34,34,45,45,45,45,358,374,355,33,34,34,361,0,0,0;
+//==================================
+// Drinks Settings:
+// .drinks_n$: Display for Name and Effect
+// .drinks_va: effect_id,duration,price;
+// Effect:
+// - sc_start, like the effects from above > .effect_n$
+// Duration: In Milliseconds (Default: 30 Min > 1800 Seconds*1000)
+// Price: Default is 5k
+//.drinks_ef[X]: Effect Animation from Skill DB, [X] = Menu
+//==================================
+// Note: Don't add/remove a single value, do a whole line or it will occur in an error.
+//==================================
+setarray .drinks_n$[1],"Coka Cola","Int + 5%",
+					 "Sprite","Int + 5%",
+					 "Fanta","Int + 5%",
+					 "Red Bull","Improve Concentration Lvl 5",
+					 "Beer","Attack Power + 5%",
+					 "Vine","Defense + 5%",
+					 "Apple Juice","Int + 15",
+					 "Orange Juice","Vit + 15";
+setarray .drinks_va[1],SC_INCMSPRATE,5,1800000,5000,
+						SC_INCMSPRATE,5,1800000,5000,
+						SC_INCMSPRATE,5,1800000,5000,
+						SC_CONCENTRATE,5,1800000,5000,
+						SC_INCATKRATE,5,1800000,5000,
+						SC_INCDEFRATE,5,1800000,5000,
+						SC_INCINT,15,1800000,5000,
+						SC_INCVIT,15,1800000,5000;
+setarray .drinks_ef[1],74,74,74,45,355,33,34,33;
+end;
+
+OnClock0001:
+for (set .@r,0; .@r < getarraysize($cook_id); set .@r,.@r+1) {
+	deletearray getd(".menu_"+$cook_id[.@r]+"_f$[0]"),128;
+	setd(".menu_"+$cook_id[.@r]+"_ge"),0;
+}
+announce "Restaurant Manager: The menus has been deleted.",0;
+end;	
+
+OnPCLoginEvent:
+//dispbottom "Debug: Check if you are an Cook";
+if(getarraysize(getd("$cook_"+getcharid(0)+"$")) < 1) end;
+//dispbottom "Debug: Result: You are an Cook - Continue with Balance Update Announce.";
+announce "Restaurant Mananger: Balance updated to "+getd("$cook_"+getcharid(0)+"$[2]")+" Zeny",3,0x00FF00;
+//dispbottom "Debug: Balance Update Announced ended - Last Step: CookLvl Update.";
+//dispbottom "Debug: Lvl from array: "+getd("$cook_"+getcharid(0)+"$[1]")+" - Your current lvl: "+CookLvl;
+if(getd("$cook_"+getcharid(0)+"$[1]") != ""+CookLvl) setd("$cook_"+getcharid(0)+"$[1]"),""+CookLvl;
+//dispbottom "Debug: Update complete.";
+end;
+}

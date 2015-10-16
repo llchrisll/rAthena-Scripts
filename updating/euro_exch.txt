@@ -1,0 +1,183 @@
+//===== eAthena Script =======================================
+//= Euro Exchanger
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Script Made
+//===== Credits ==============================================
+//- DevilEvil for the Euro Sprites found in the 2nd Generation Collection
+//===== Compatible With ======================================
+//= Every eAthena Version
+//===== Description ==========================================
+//= Allows you to exchange your Zeny into Euros
+//===== Comments =============================================
+//= None yet...
+//============================================================
+prontera.gat,140,175,4	script	Euro Exchanger	869,{
+
+mes .n$;
+mes "Hello and welcome to the Euro Bank.";
+mes "The feature this bank is that you can trade your Zeny against Euros.";
+next;
+mes .n$;
+mes "These are the Values:";
+mes " Euro == Zeny";
+mes " ";
+for( set .@eu,0; .@eu < getarraysize(.euro_zeny); set .@eu,.@eu + 1 ) {
+	mes getitemname(.euro_items[.@eu])+" == "+.euro_zeny[.@eu]+" Zeny";
+}
+next;
+mes .n$;
+mes "What do you like to do?";
+next;
+switch(select("- Trading:- Nothing")) {
+		
+	case 1:
+	mes .n$;
+	mes "Like you saw already, there are 15 different Euros.";
+	mes "Coins: "+getitemname(.euro_items[0])+" till "+getitemname(.euro_items[7])+".";
+	mes "Notes: "+getitemname(.euro_items[8])+" till "+getitemname(.euro_items[14])+".";
+	next;
+	t_again:
+	mes .n$;
+	mes "Now choose the Euro Type you wanna trade.";
+	next;
+	switch(select("- Coins:- Notes")) {
+	
+		case 1:
+		mes .n$;
+		mes "Here are the Values of each Coin:";
+		for( set .@eu,0; .@eu < 8; set .@eu,.@eu + 1 ) {
+			mes getitemname(.euro_items[.@eu])+" == "+.euro_zeny[.@eu]+" Zeny";
+		}
+		mes " ";
+		mes "Now choose the Coin:";
+		set @eu,select("- "+getitemname(.euro_items[0])+":- "+getitemname(.euro_items[1])+":- "+getitemname(.euro_items[2])+":- "+getitemname(.euro_items[3])+":- "+getitemname(.euro_items[4])+":- "+getitemname(.euro_items[5])+":- "+getitemname(.euro_items[6])+":- "+getitemname(.euro_items[7]))-1;
+		break;
+		
+		case 2:
+		mes .n$;
+		mes "Here are the Values of each Note:";
+		for( set .@eu,8; .@eu < 15; set .@eu,.@eu + 1 ) {
+			mes getitemname(.euro_items[.@eu])+" == "+.euro_zeny[.@eu]+" Zeny";
+		}
+		mes " ";
+		mes "Now choose the Note:";
+		set @eu,select("- "+getitemname(.euro_items[8])+":- "+getitemname(.euro_items[9])+":- "+getitemname(.euro_items[10])+":- "+getitemname(.euro_items[11])+":- "+getitemname(.euro_items[12])+":- "+getitemname(.euro_items[13])+":- "+getitemname(.euro_items[14]))+7;
+		break;
+		
+	}
+	
+	next;
+	mes .n$;
+	mes "You choose: "+getitemname(.euro_items[@eu])+".";
+	mes "Do you want to exchange Zeny into Euro or Euro into Zeny?";
+	next;
+	menu "Zeny into Euro",EU_ZeEu,"Euro into Zeny",EU_EuZE;
+		
+		EU_ZeEu:
+		mes .n$;
+		if(Zeny < .euro_zeny[@eu]) goto Z_TooLess;
+		mes "Now type the quanity you want:";
+		mes "Note: The Value is "+.euro_zeny[@eu]+".";
+		mes "By putting '0' you'll have to try again.";
+		next;
+		input @eu_val;
+		mes .n$;
+		if(!@eu_val) {
+			mes "Try again please.";
+			next;
+			goto EU_ZeEu;
+		}
+		mes "The Quantity is: "+@eu_val+".";
+		set @calc,@eu_val*.euro_zeny[@eu];
+		mes "Trading the amount of "+@calc+" Zeny";
+		mes "into "+@eu_val+"x "+getitemname(.euro_items[@eu])+".";
+		mes "Is that correct?";
+		next;
+		if(select("- Yes:- No") == 2) goto EU_ZeEu;
+		mes .n$;
+		if(@calc > Zeny) goto Z_TooLess;
+		if( (countitem(.euro_items[@eu]) + @eu_val) >= 30000) goto E_TooMuch;
+		if(checkweight(.euro_items[@eu],@eu_val) == 0) {
+			mes "I can't give you that much, since it would exceed your weight limit.";
+			mes "Please choose a lower value or remove some items from your inventory.";
+			close;
+		}
+		getitem .euro_items[@eu],@eu_val;
+		set Zeny,Zeny - @calc;
+		mes "The exchange was successfully.";
+		mes "See ya.";
+		close;
+		
+		EU_EuZE:
+		mes .n$;
+		if(countitem(.euro_items[@eu]) < 1) goto E_TooLess;
+		mes "Now type the quanity you want:";
+		mes "Note: The Value is "+.euro_zeny[@eu]+" and";
+		mes "you have "+countitem(.euro_items[@eu])+"x "+getitemname(.euro_items[@eu])+".";
+		mes "By putting '0' or a higher value as you have, you'll have to try again.";
+		next;
+		input @eu_val;
+		mes .n$;
+		if(!@eu_val || @eu_val > countitem(.euro_items[@eu])) {
+			mes "Try again please.";
+			next;
+			goto EU_EuZE;
+		}
+		mes "The Quantity is: "+@eu_val+".";
+		set @calc,@eu_val*.euro_zeny[@eu];
+		mes "Trading the amount of "+@eu_val+"x "+getitemname(.euro_items[@eu]);
+		mes "into "+@calc+" Zeny.";
+		mes "Is that correct?";
+		next;
+		if(select("- Yes:- No") == 2) goto EU_EuZE;
+		mes .n$;
+		if( (Zeny + @calc) >= 2000000000) goto Z_TooMuch;
+		delitem .euro_items[@eu],@eu_val;
+		set Zeny,Zeny + @calc;
+		mes "The exchange was successfully.";
+		mes "See ya.";
+		close;
+		
+	Z_TooLess:
+	mes "You don't have enough Zeny.";
+	close;
+	
+	Z_TooMuch:
+	mes "You have too much Zeny.";
+	close;
+	
+	E_TooLess:
+	mes "You don't have enough "+getitemname(.euro_items[@eu])+"s.";
+	close;
+	
+	E_TooMuch:
+	mes "You have too many "+getitemname(.euro_items[@eu])+"s.";
+	close;
+		
+	case 2:
+	goto EU_Quit;
+	break;
+}
+
+EU_Quit:
+mes .n$;
+mes "Okay, see you again.";
+close;
+
+OnInit:
+//=========== Config ==========//
+set .n$,"[Euro Exchanger]";
+//=========== Item Names as reference ==========//
+// 		Euro Names: "1 Cent","2 Cent","5 Cent","10 Cent","20 Cent","50 Cent","1 Euro","2 Euro", // 7 / Euro Coins
+//					"5 Euro","10 Euro","20 Euro","50 Euro","100 Euro","200 Euro","500 Euro"; // 7 / Euro Notes
+//=========== Item Values ==========//
+setarray .euro_zeny[0],10000,20000,50000,100000,200000,500000,1000000,2000000, // Euro Coins
+					5000000,10000000,20000000,50000000,100000000,200000000,500000000; // Euro Notes
+//=========== Item ID's ==========//
+setarray .euro_items[0],25500,25501,25502,25503,25504,25505,25506,25507,
+						25508,25509,25510,25511,25512,25513,25514;
+//========== Config End ===========//
+end;
+}

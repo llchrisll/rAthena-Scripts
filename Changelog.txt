@@ -33,6 +33,25 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/10/17
+= Updated Dungeon Quest System v1.0 [WIP]
+- Added the code for registering
+- Changed and copied the "DG Party Progress" NPC Duplicate code from Dungeon Party System
+- Added an setting to enable/disable the Mapflags
+- Added `status` row to `dqs_dungeon` and `dqs_list` to enable/disable each Dungeon/ or quest separately
+- Added `char_id` row to `dqs_party` for Solo Players
+- Added `pty_limit` row to `dqs_dungeon` for dynamic Party Limit per Dungeon and removed ".pt_limit" from OnInit
+- Added Repeat Timer and Repeat Counter to the register code
+- Made Reward for MvP Killing seperatly
+- Removed .dg_rew and .mvp_rew and used .dg_pts and .mvp_pts instead it
+- Started adding the code for choosing an Quest
+- Added Algorithms for Information and GM Panel (= Changing OnInit, Dungeon and Quest Settings Ingame)
+= Updated ToDo_List.txt
+= Added some readme.txt files in the folders "updating" and "testing"
+- Place holders ftw :P
+= Changed my NPC Header layout:
+- See Dungeon Quest System v1.0 [WIP] to take a look
+------------------------------------------------------------
 * 2015/10/13
 = Updated Dungeon Party System v1.0 [RE]
 - Removed "set .pt_max" and replaced it with "MAX_PARTY" in the checks

@@ -1,13 +1,25 @@
 //===== rAthena Script =======================================
 //= Dungeon Quest System
-//===== By ===================================================
-//= lllchrislll
-//===== Version ==============================================
+//===== Author ===============================================
+//= llchrisll
+//===== Credits ==============================================
+//= "Ultimate Warper" Author from the eAthena Board.
+//	Since no header was included and I forgot the name of him/her,
+//	I couldn't ask the permission to use an part of the script.
+//	I used the map coordinates.
+//===== Current Version ======================================
+//= 1.0
+//===== GitHub Commit Link ===================================
+//= https://github.com/llchrisll/lllchrislll-scripts/commit/
+//===== Changelog ============================================
+//= "()" contains the Commit ID, if available.
+//= Just add the ID after "commit/" in the link.
+//------------------------------------------------------------
 //= 1.0 - Initial Release
 //===== Compatible With ======================================
-//= rAthena SQL 11.06.2015 Rev+
+//= rAthena SQL 09/26-2015 Rev+
 //===== Tested With ==========================================
-//= rAthena SQL 11.06.2015 Rev
+//= rAthena SQL 09/26-2015 Revision
 //===== Description ==========================================
 //= Additional EXP Bonus (in Percent) based on Dungeon's Difficulty
 //  - Difficulties: Easy, Medium, Hard
@@ -15,7 +27,7 @@
 //= Dungeon Warp Service
 //  - Warp to the Entrance only
 //= Party Settings dynamically changeable
-//  - Quantity of Parties in 1 Dungeon
+//  - Quantity of Parties in each Dungeon
 //= Party Join Feature
 //  - Requesting to join an existing Party, on accept the Leader can decide
 //    to which member the applicant will be warped to
@@ -24,17 +36,12 @@
 //    Base Points*Difficulty of Dungeon
 //  - MvP Dungeon Points (On/Off Function)
 //    Per slain MvP, you gain "x" Points (changeable)
-//    Different kind of Points are: Custom Character Permanent Variable for Exchanger or #CASHPOINTS
+//    Custom Character Permanent Variable for Exchanger 
 //  - Dungeon Points Exchanger
 //= Quests per Dungeons
 //  - Each Dungeon can have an infinite amount of quests
-//===== Credits	==============================================
-//= To the author of the "Ultimate Warper" from the eAthena Board.
-//	Since no header was included and I forgot the name of him/her,
-//	I couldn't ask the permission to use an part of the script.
-//	I used the map coordinates.
-//===== ToDo List ============================================
-//= None
+//===== Comments =============================================
+//= ...
 //============================================================
 /*
 CREATE TABLE IF NOT EXISTS `dqs_list` (
@@ -47,17 +54,18 @@ CREATE TABLE IF NOT EXISTS `dqs_list` (
  `item_am` int(10) unsigned default '0',
  `reward_id` int(10) unsigned default '0',
  `reward_am` int(10) unsigned default '0',
- `limit` tinyint(3) unsigned default '0'
+ `limit` tinyint(3) unsigned default '0',
+ `status` tinyint(3) unsigned default '0'
  ) ENGINE=MyISAM;
  
  CREATE TABLE IF NOT EXISTS `dqs_party` (
  `dg_id` int(10) unsigned,
  `pty_id` int(10) unsigned default '0',
+ `char_id` int(10) unsigned default '0',
  `start` int(10) unsigned default '1'
  `quest_id` int(10) unsigned NOT NULL,
  `mob_id` int(10) unsigned default '0',
- `mob_am` int(12) unsigned default '0',
- `check` tinyint(3) unsigned default '0'
+ `mob_am` int(12) unsigned default '0'
  ) ENGINE=MyISAM;
  
 CREATE TABLE IF NOT EXISTS `dqs_dungeon` (
@@ -65,23 +73,22 @@ CREATE TABLE IF NOT EXISTS `dqs_dungeon` (
  `name` varchar(255) default 'Unknown Dungeon',
  `difficulty` int(10) unsigned NOT NULL default '1',
  `req_level` int(10) unsigned NOT NULL default '1',
+ `pty_limit` int(5) unsigned default '0',
  `floor` tinyint(3) unsigned NOT NULL default '1',
  `map_name` varchar(255) default 'prontera',
  `map_x` varchar(255) unsigned default '0',
  `map_y` varchar(255) unsigned default '0',
  `repeat` int(5) unsigned default '0',
+ `status` tinyint(3) unsigned default '0'
 ) ENGINE=MyISAM;
 */
-prontera,151,185,4	script	Dungeon Party Service	110,{
+prontera,151,185,4	script	Dungeon Quest Service	110,{
 
-
-/*
-Delay & Repeat Limit for Dungeons:
-Variable saved on each Player
-Variable saved on each Player
-*/
-
-switch(select("- Dungeon Menu:- Point Exchanger:- Information:- Nevermind")) {
+mes .n$;
+mes "Hello, "+strcharinfo(0)+"!";
+mes "How can I help you?";
+next;
+switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchanger:- Nothing":"Nothing") )) {
 
 	case 1:
 	mes "Please choose what you want to do below:";
@@ -89,29 +96,234 @@ switch(select("- Dungeon Menu:- Point Exchanger:- Information:- Nevermind")) {
 	
 		// Register for Dungeon
 		case 1:
+		mes .n$;
+		if(getcharid(1) != 0) {
+			mes "You are currently not in a Party, do you want to enter an dungeon by yourself? Or do you rather want to join a party?";
+			if(select("- Join a Party:- Solo") == 1) {
+				// Joining a party
+				next;
+				mes .n$;
+				if(query_sql("SELECT `pty_id` FROM `dqs_party`") == -1) { // No Party registered yet
+					mes "I'm sorry, but there is no party registered yet. Please come back later or make one yourself.";
+					mes "But you require 2 or more members in your party.";
+					close;
+				}
+				set .@join,1;
+				next;
+				mes .n$;
+				mes "Please choose the dungeon first, then the party you want to join.";
+			}
+		} else {
+			if(strcharinfo(0) != getpartyleader(getcharid(1))) {
+				mes .n$;
+				mes "Only the party leader can register your party for an Dungeon";
+				close;
+			}
+			getpartymember(getcharid(1),2);
+			for ( set .@p,0; .@p < $@partymembercount; set .@p,.@p + 1) 
+				if(isloggedin($@partymemberaid[.@p]) == 1)  // Member logged in?
+					set .@ct,.@ct + 1;
+					
+			if(.@ct < 2) {
+				mes .n$;
+				mes "A party requires minimum 2 members online to use the Dungeon Quest Service.";
+				close;
+			}
+		}
+		// =============== Creating Dungeon Menu ===============
+		query_sql "SELECT `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `repeat` , `status` FROM `dqs_dungeon`",.@dg_id,.@name$,.@diff,.@pty_limit,.@req_lvl,.@rep,.@stat;
+		for ( set .@du,0; .@du < getarraysize(.@dg_id); set .@du,.@du + 1) {
+			query_sql "SELECT count( `pty_id` ) FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id[.@du]+"'",.@pty_ct;
+			set .@men_dun$,.@men_dun$ + "- "+.@name$[.@du] + " ("+( (.@status[.@du] == 1)?.@pty_ct+"/"+.@pty_limit:"Entry forbidden")+" (Min.Level - "+.@req_lvl[.@du]+")" + ( (.@name$[@du+1] != "")?":":"");
+			setarray .@pt_count[.@du],.@pty_ct;
+		}	
+		next;
+		mes .n$;
+		mes "Now please choose the dungeon your party wants to go:";
+		set @d,select( .@men_dun$ ) - 1;
+		next;
+		mes .n$;
+		mes "Dungeon: "+.@name$[@d];
+		mes "Difficulty: "+ ( (.@diff[@d] == 1)?"Easy": ( (@diff[.@d] == 2)?"Medium":"Hard") );
+		mes "Minimum Level: "+.@req_lvl[@d];
+		if(.@status[@d] == 0) {
+			mes "Status: Entry forbidden";
+			mes "Please choose a different dungeon.";
+			close;
+		}
+		mes "Existing Parties: "+.@pt_count[@d];
+		mes "Repeat Limit: "+.@rep[@d];
+		if(@join) {
+			next;
+			mes .n$;
+			if(BaseLevel < .@req_lvl[@d]) {
+				mes "I'm sorry, but you don't meet the level requirement, which is "+.@req_lvl[@d]+"!";
+				mes "Please try an other dungeon or level up until you reach that level.";
+				close;
+			}
+			mes "I will now list the available parties:";
+			mes " ";
+			query_sql "SELECT `pty_id` FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id[@d]+"' AND `pty_id` != '0'",.@pty_id;
+			for ( set .@l,0; .@l < getarraysize(.@pty_id); set .@l,.@l + 1) {
+				getpartymember(.@pty_id[.@l]);
+				if($@partymembercount < MAX_PARTY) {
+					mes "===================";
+					mes "Party Name: "+getpartyname(.@pty_id[.@l]);
+					mes "Leader: "+getpartyleader(.@pty_id[.@l]);
+					mes "Current Members: "+$@partymembercount;
+					setarray .@pty_list[getarraysize(.@pty_list)],.@pty_id[.@l];
+					set .@pty_menu$,.@pty_menu$ + "- "+getpartyname(.@pty_id[.@l]) + ( (.@pty_id[.@l+1] != 0)?":":"");
+					mes ( (.pty_id[.@l+1] != 0)?"":"===================");
+				}
+			}
+			if(getarraysize(.@pty_list) < 1) {
+				next;
+				mes .n$;
+				mes "I'm sorry, but there is no party on this map.";
+				close;
+			}
+			mes " ";
+			mes "Please choose, which party you want to send an application at:";
+			set .@p,select(.@pty_menu$) - 1;
+			if(isloggedin(getpartyleader(.@pty_list[.@p],1),getpartyleader(.@pty_list[.@p],2)) == 1) {
+				mes "I will send now an request to the party leader with your Level and Class.";
+				mes "Please wait until the leader will accept or decline your request.";
+				mes "If the leader doesn't respond in any way, please try to PM him/her by yourself.";
+				mes "The leader's name is ["+getpartyleader(.@pty_list[.@p])+"].";
+				close2;
+				set .@req_id,getcharid(0);
+				// Creating Applicant array for the party
+				setarray getd("$@req_"+.@pty_list[.@p]+"_id["+getarraysize(getd("$@req_"+.@pty_list[.@p]+"_id"))+"]"),.@req_id;
+				// Applicant Info
+				setarray getd("$@req_"+.@req_id+"$[0]"),strcharinfo(0),""+BaseLevel+"/"+JobLevel,"Class: "+jobname(Class);
+				detachrid;
+				attachrid(getpartyleader(.@pty_list[.@p],1));
+				announce .n$+": The player ["+getd("$@req_"+.@req_id+"$[0]")+"] with Level "+getd("$@req_"+.@req_id+"$[1]")+", "+getd("$@req_"+.@req_id+"$[2]")+" requests to join your party. You can accept/decline by sending an whisper to me via \"NPC:Party_Join\" and as text \"List\". There you gain additional information.",bc_self;
+				end;
+
+			} else {
+				mes "It seems like that the party leader of "+getpartyname(.@pty_list[@p])+" isn't online.";
+				mes "Please try another party.";
+				close;
+			}
+		}
+		next;
+		mes .n$;
+		if(.@pt_count[@d] >= .pt_limit) {
+			mes "I'm sorry, but this dungeon already reached the maximum of parties it can hold.";
+			mes "Please choose a different one.";
+			close;
+		}
+		// Solo Entry
+		if( (getcharid(1) == 0 && BaseLevel < .@req_lvl[@d]) || (getd("DG_"+.@dg_id[@d]+"_RepeatCT") >= .@rep[@d])) {
+			mes "I'm sorry, but you either didn't reach the required level or reached the repeat limit for this dungeon.";
+			mes "Please choose either a different dungeon or try to level up first.";
+			mes "The minimum level for this dungeon is "+.@req_lvl[@d]+"!";
+			close;
 		
+		// Party Entry
+		} else if(getcharid(1) != 0) {
+			mes "I will now check the levels of your party members. Please wait....";
+			getpartymember(getcharid(1),1);
+			for ( set .@l,0; .@l < $@partymembercount; set .@l,.@l + 1) {
+				// Checking Level of each party member
+				if( (readparam(11,""+strcharinfo(0,$@partymembercid[.@l])) < .@req_lvl[@d]) || (getvar(getd("DG_"+.@dg_id[@d]+"_RepeatCT"),$@partymembercid[.@l]) >= .@rep[@d]) ) 
+					set .@l_ct,.@l_ct + 1;
+				
+				// Reseting Repeat Limit in case the Timer has been reached
+				if(getvar(getd("DG_"+.@dg_id[@d]+"_RepeatTimer"),$@partymembercid[.@l]) <= gettimetick(2)) {
+					setd("DG_"+.@dg_id[@d]+"_RepeatTimer"),0,$@partymembercid[.@l];
+					setd("DG_"+.@dg_id[@d]+"_RepeatCT"),0,$@partymembercid[.@l];
+				}
+			}
+			next;
+			mes .n$;
+			if(.@l_ct > 0) {
+				mes "It seems like "+.@l_ct+" of your members either haven't reached the required level or reached the repeat limit for this dungeon.";
+				mes "Please choose either a different dungeon or try to level up your members.";
+				mes "The minimum level for this dungeon is "+.@req_lvl[@d]+"!";
+				close;
+			}
+		}
+		mes "Well done, you have passed all checks.";
+		if(getcharid(1) == 0) 
+			mes "You will recieve an bonus of "+.exp[.@diff[@d]]+"%."; 
+		else if(getcharid(1) != 0) 
+			mes "Your party will recieve an bonus of "+.exp[.@diff[@d]]+"%."; 
+			
+		mes "But before you can enter an dungeon, you have to accept at least one quest, therefore talk to me again and choose \"Quest Board\"";
+		
+		// Inserting Data in the Database `dqs_party`
+		if(getcharid(1) == 0)
+			query_sql "INSERT INTO `dqs_party` ( `dg_id` , `char_id` , `quest_id` , `start` ) VALUES ( '"+.@dg_id+"' , '"+getcharid(0)+"' , '1' , '1' )";
+		else 
+			query_sql "INSERT INTO `dqs_party` ( `dg_id` , `pty_id` , `quest_id` , `start` ) VALUES ( '"+.@dg_id+"' , '"+getcharid(1)+"' , '1' , '1' )";
 		break;
 		
 		// Quest Board 
 		case 2:
-		// check if player is registered for dungeon
+		mes .n$;
+		if(getcharid(1) == 0) {
+			// Check if player is registered for dungeon
+			query_sql "SELECT `dg_id` FROM `dqs_party` WHERE `char_id` = '"+getcharid(0)+"' AND `quest_id` = '1'",.@dg_id;
+			if(getarraysize(.@dg_id) == 0) {
+				mes "I'm sorry, but you didn't register for an dungeon yet.";
+				mes "Come back, when you have done that first.";
+				close;
+			}
+			query_sql "SELECT DISTINCT `quest_id` , `quest_type` , `limit` FROM `dqs_list` WHERE `dg_id` = '"+.@dg_id+"'",.@q_id,.@q_type,.@limit;
+			for ( set .@q,0; .@q < getarraysize(.@q_id); set .@q,.@q + 1) {
+			}
 		
+		
+		
+		
+		} else if(getcharid(1) != 0) {
+			// Check if party is registered for dungeon
+			query_sql "SELECT `dg_id` FROM `dqs_party` WHERE `pty_id` = '"+getcharid(1)+"' AND `quest_id` = '1'",.@dg_id;
+			if(getarraysize(.@dg_id) == 0) {
+				mes "I'm sorry, but you didn't register your party for an dungeon yet.";
+				mes "Come back, when you have done that first.";
+				close;
+			}
+			
+			
+			
+			
+		}
 		break;
+		
 		// Warp Service 
 		case 3:
 		// check if player is registered for dungeon and has chosen at least one quest
 		
+		mes "I will warp you now to the "+.@name$[@d]+ ( (compare(.@name$[@d],"Dungeon") == 1)?" ":" Dungeon ");
+		mes "I will warp you and your party now to the "+.@name$[@d]+ ( (compare(.@name$[@d],"Dungeon") == 1)?" ":" Dungeon ");
+		// Warping Party ...
+		if(getcharid(1) != 0) 
+			warpparty getd(".pty_"+getcharid(1)+"_st$[0]")+".gat",atoi(getd(".pty_"+getcharid(1)+"_st$[1]")),atoi(getd(".pty_"+getcharid(1)+"_st$[2]")),getcharid(1);
+	
 		break;
 	}
 	break;
 	
-	// Point Exchanger 
+	// Information
 	case 2:
-	
+	/*
+	Solo or Party possible
+	Party Limit per Dungeon
+	EXP Rates
+	Party Join
+	Dungeon Delay
+	Dungeon & MvP Points
+	Quest Board
+	Warp Service	
+	*/
 	break;
 	
-	// Information
+	// Point Exchanger 
 	case 3:
+	if(!dg_rew) break;
 	
 	break;
 	
@@ -121,6 +333,119 @@ switch(select("- Dungeon Menu:- Point Exchanger:- Information:- Nevermind")) {
 }
 close;
 
+
+// GM Control Center
+OnGMAccess:
+mes .n$;
+mes "Hello, "+strcharinfo(0)+"!";
+mes "How can I help you?";
+next;
+switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dungeon Points Management:- Nevermid")) {
+
+	// System Settings = OnInit
+	case 1:
+	
+	
+	break;
+	
+	// Dungeon Management
+	case 2:
+	/*
+	Overview as Text: 
+	- Amount of Dungeons
+	
+	query_sql "SELECT `dg_id`, `name` , count ( `floor` ) FROM `dqs_dungeon` GROUP BY `dq_id` ASC",.@dg_id,.@dg_name$,.@floor;
+	mes "Dungeon ID - Dungeon Name - Floor Quantity";
+	for ( set .@d,0; .@d < getarraysize(.@dg_id); set .@d,.@d + 1)
+		mes .@dg_id[.@d]+" - "+.@dg_name$[.@d]+" - "+.@floor[.@d];
+		
+	switch Menu:
+	> Add Dungeon
+		- Selecting latest Dungeon ID
+		- ...
+	> Edit Dungeon
+	   - Selecting Dungeon
+	   - Edit Options:
+	     + Name
+		 + Difficulty
+		 + Required Level
+		 + Map Settings
+		   * Add Map
+		   * Edit Map
+		   * Delete Map
+		 + Party Limit
+		 + Repeat Limit 
+		 + Change Status
+		   
+	> Remove Dungeon
+	   - Selecting Dungeon
+	   - Removing
+	*/
+	break;
+	
+	// Quest Management 
+	case 3:
+	/*
+	Overview as Text: 
+	- Amount of Quests Total
+	
+	query_sql "SELECT DISTINCT count ( `quest_id` ) FROM `dqs_list`",.@q_total;
+
+	- Amount of Quests each Dungeon:
+	query_sql "SELECT `DISTINCT dg_id`, `name` , count ( `quest_id` ) FROM `dqs_list` GROUP BY `dq_id` ASC",.@dg_id,.@dg_name$,.@@q_ct;
+	mes "Dungeon ID - Dungeon Name - Quest Quantity";
+	for ( set .@q,0; .@q < getarraysize(.@dg_id); set .@q,.@q + 1)
+		mes .@dg_id[.@q]+" - "+.@dg_name$[.@q]+" - "+.@q_ct[.@q];
+	
+	switch Menu:
+	> Add
+		- Selecting latest Quest ID
+		- ...
+	> Edit
+	   - Selecting Quest
+	   - Edit Options:
+	> Remove
+	   - Selecting Quest
+	   - Removing
+	*/
+	break;
+	
+	// Dungeon Points Management
+	case 4:
+	/*
+	switch Menu:
+	> Reward Settings
+		- Dungeon Points
+			+ Base Points (=0:Off,1+:Value gained)
+			+ Dungeon Variable
+		- MvP Points
+			+ Base Points (=0:Off,1+:Value gained)
+			+ MvP Variable
+	> Exchanger Settings
+		- Add
+			+ Choosing Item ID
+			+ Costs per Exchange
+			+ Amount gained per Exchange
+		- Edit
+			+ Selecting Array Index via menu
+			+ Edit Options:
+				* Item ID
+				* Cost
+				* Amount
+		> Remove
+			- Selecting Array Index via menu
+			- Removing
+	*/
+	break;
+	
+	case 5:
+	break;
+}
+close;
+
+}
+
+
 OnInit:
 // =============== NPC Name ===============
 set .n$,"["+strnpcinfo(1)+"]";
@@ -129,19 +454,14 @@ set .n$,"["+strnpcinfo(1)+"]";
 // > 0: Off
 // > 1: On 
 set .debug,0; 
-// ============== Party Settings ================== //
-set .pt_limit,2; // x Parties per Dungeon
-// ============== Quest Settings ================== //
-set .quest_m,1; // Multiple Quests allowed? - 1 = Yes/0 = No
 // ============== Dungeon Settings ================== //
 setarray .exp[1],50,100,150; // EXP Rate in % for Difficulty: Easy/Medium/Hard
 // Base Dungeon Delay * Difficulty 
 set .dg_delay_b,43200; // 12 Hours
-// Dungeon Reward > 0 = Off, 1 = On
-set .dg_rew,1; 
-if(.dg_rew == 1) {
-	set .dg_var$,"DG_Pts";
-	set .dg_pts,10; // Base Dungeon Points, will be multiplied by Difficulty
+// Dungeon Reward > 0 = Off, 1+ = Base Dungeon Quest Points, will be multiplied by Difficulty
+set .dg_pts,10; 
+if(.dg_pts == 1) {
+	set .dg_var$,"DQG_Pts";
 	// Dungeon Points Exchanger:
 	// > Item IDs 
 	setarray .dg_ex[0],512;
@@ -152,21 +472,21 @@ if(.dg_rew == 1) {
 	// Creating exchange menu
 	for ( set .@m,0; .@m < getarraysize(.dg_ex); set .@m,.@m + 1)
 		set .ex_m$,.ex_m$ + "- "+.dg_ex_am[.@m]+"x "+getitemname(.dg_ex[.@m])+" ("+.dg_ex_cost[.@m]+")"+ ( (.dg_ex[.@m+1] != 0)?":":"");
-	// MvP Reward for each MvP > 0 = Off, 1 = Permanent Character Variable, 2 = #CASHPOINTS
-	set .mvp_rew,1;
-	if(.mvp_rew == 1) {
-		set .mvp_var$,"MvP_Pts";
-		set .mvp_pts,1; // Base MvP Points, will also be multiplied by Difficulty
-		// MvP Points Exchanger:
-		// > Item IDs 
-		setarray .mvp_ex[0],512;
-		// > How many items you get per exchange?
-		setarray .mvp_ex_am[0],10;
-		// > How much does one exchange cost?
-		setarray .mvp_ex_cost[0],2;
-		for ( set .@m,0; .@m < getarraysize(.mvp_ex); set .@m,.@m + 1)
-			set .ex_mvp_m$,.ex_mvp_m$ + "- "+.mvp_ex_am[.@m]+"x "+getitemname(.mvp_ex[.@m])+" ("+.mvp_ex_cost[.@m]+")"+ ( (.mvp_ex[.@m+1] != 0)?":":"");
-	}
+	
+}
+// MvP Reward for each MvP > 0 = Off, 1+ = Base MvP Points, will also be multiplied by Difficulty
+set .mvp_pts,1; 
+if(.mvp_pts == 1) {
+	set .mvp_var$,"DMvP_Pts";
+	// MvP Points Exchanger:
+	// > Item IDs 
+	setarray .mvp_ex[0],512;
+	// > How many items you get per exchange?
+	setarray .mvp_ex_am[0],10;
+	// > How much does one exchange cost?
+	setarray .mvp_ex_cost[0],2;
+	for ( set .@m,0; .@m < getarraysize(.mvp_ex); set .@m,.@m + 1)
+		set .ex_mvp_m$,.ex_mvp_m$ + "- "+.mvp_ex_am[.@m]+"x "+getitemname(.mvp_ex[.@m])+" ("+.mvp_ex_cost[.@m]+")"+ ( (.mvp_ex[.@m+1] != 0)?":":"");
 }
 // =============== Dungeon Names ===============
 setarray .dungn$[0],"Cursed Abbey","Aldebaran Dungeon","Abyss Lake","Amatsu Dungeon","Ayothaya Dungeon","Bylan","Clock Tower","Coal Mine","Culvert","Einbech Dungeon","Gefenia","Geffen Dungeon","Glast Heim","Gonyrun Dungeon","Ice Dungeon","Labyrinth","Juperos","Kiel Academy","Lightalzen Bio Lab","Louyang Dungeon","Magma Dungeon","Odin Temple","Orc Dungeon","Payon Dungeon","Pyramid Dungeon","Sphinx Dungeon","Sunken Ship Dungeon","Thanatos Tower","Toy Factory Dungeon","Turtle Dungeon","Thor Volcano Dungeon";
@@ -212,14 +532,78 @@ setarray .thana$[0],"1","1","tha_t01","150","36","tha_t02","150","36","tha_t03",
 setarray .toy$[0],"1","40","xmas_dun01","205","16","xmas_dun02","129","133";
 setarray .turtle$[0],"2","50","tur_dun01","161","34","tur_dun02","148","256","tur_dun03","132","190","tur_dun04","100","192";
 setarray .thor_v$[0],"3","90","thor_v01","21","228","thor_v02","75","205","thor_v03","34","272";
-// Mapflags
-for ( set .@d,0; .@d < getarraysize(.dungn$); set .@d,.@d + 1)
-	for ( set .@p,3; .@p < getarraysize(getd("."+.dungpre$[.@d]+"$")); set .@p,.@p + 4) {
-		setmapflag getd("."+.dungpre$[.@d]+"$["+.@p+"]"),mf_nowarp;
-		setmapflag getd("."+.dungpre$[.@d]+"$["+.@p+"]"),mf_partylock;
-	}
-if(.debug) debugmes "Starting Global Timer for Party Member Sync";
-initnpctimer; // Timer for re-copying Party Member Data
+
+// Use Mapflags?
+// 0 = Disabled
+// 1 = Enabled
+set .dg_mf,1;
+// Put the mapflags here
+setarray .mapflags[0],mf_nowarp,mf_partylock;
+
+if(.dg_mf) {
+	query_sql "SELECT `map_name` FROM `dqs_dungeon`",.@map_name$;
+	for ( set .@m,0; .@m < getarraysize(.@map_name$); set .@m,.@m + 1)
+		for ( set .@mf,0; .@mf < getarraysize(.mapflags); set .@mf,.@mf + 1)
+			setmapflag .@map_name$[.@m],.mapflags[.@mf];
+}
 end;
 }
+// ======================= Inside Dungeon NPC =====================
+-	script	Dungeon Guard#main::DG_Main	110,{
+
+if(!getcharid(1)) end;
+set .@n$,"["+strnpcinfo(1)+"]";
+
+mes .@n$;
+if(getpartyleader(getcharid(1)) != strcharinfo(0)) {
+	mes "Only the party leader can talk to me!";
+	close;
+}
+if(getd("$@pty_"+getcharid(1)+"_m$[0]") == "") {
+	mes "You didn't register your party for the Dungeon Party Service.";
+	close;
+}
+mes .@n$;
+mes "Do you really want to leave the dungeon?";
+if(select("- Yes:- No") - 1) close;
+next;
+mes .@n$;
+mes "You*re party will now be warped to Prontera.";
+close2;
+warpparty "prontera",156,191,getcharid(1);
+end;
+}
+// ======================= Start of Dungeon Exit - NPC Duplicates =====================
+//dungeon_map,x,y,facing	duplicate(DG_Main)	Dungeon Exit#<Dungeon ID>	110
+abbey03,234,216,4	duplicate(DG_Main)	Dungeon Exit#1	110
+abyss_03,98,103,4	duplicate(DG_Main)	Dungeon Exit#2	110
+ama_dun03,120,223,4	duplicate(DG_Main)	Dungeon Exit#3	110
+ayo_dun02,149,246,4	duplicate(DG_Main)	Dungeon Exit#4	110
+iz_dun04,130,222,4	duplicate(DG_Main)	Dungeon Exit#5	110	
+c_tower4,82,138,4	duplicate(DG_Main)	Dungeon Exit#6	110
+alde_dun04,165,268,4	duplicate(DG_Main)	Dungeon Exit#7	110
+mjo_dun03,34,52,4	duplicate(DG_Main)	Dungeon Exit#8	110
+prt_sewb4,34,52,4	duplicate(DG_Main)	Dungeon Exit#9	110
+ein_dun02,25,88,4	duplicate(DG_Main)	Dungeon Exit#10	110
+gefenia04,160,30,4	duplicate(DG_Main)	Dungeon Exit#11	110
+gef_dun03,119,104,4	duplicate(DG_Main)	Dungeon Exit#12	110
+glast_01,191,120,4	duplicate(DG_Main)	Dungeon Exit#13	110
+gon_dun03,99,183,4	duplicate(DG_Main)	Dungeon Exit#14	110
+ice_dun03,149,116,4	duplicate(DG_Main)	Dungeon Exit#15	110
+prt_maze03,177,89,4	duplicate(DG_Main)	Dungeon Exit#16	110
+jupe_core,150,129,4	duplicate(DG_Main)	Dungeon Exit#17	110
+kh_dun02,129,98,4	duplicate(DG_Main)	Dungeon Exit#18	110
+lhz_dun02,150,145,4	duplicate(DG_Main)	Dungeon Exit#19	110
+lou_dun03,170,153,4	duplicate(DG_Main)	Dungeon Exit#20	110
+mag_dun02,43,44,4	duplicate(DG_Main)	Dungeon Exit#21	110
+odin_tem03,278,236,4	duplicate(DG_Main)	Dungeon Exit#22	110
+orcsdun02,77,88,4	duplicate(DG_Main)	Dungeon Exit#23	110
+pay_dun04,120,116,4	duplicate(DG_Main)	Dungeon Exit#24	110
+moc_pryd06,97,59,4	duplicate(DG_Main)	Dungeon Exit#25	110
+in_sphinx5,100,149,4	duplicate(DG_Main)	Dungeon Exit#26	110
+treasure02,101,166,4	duplicate(DG_Main)	Dungeon Exit#27	110
+tha_t12,136,65,4	duplicate(DG_Main)	Dungeon Exit#28	110
+xmas_dun02,134,134,4	duplicate(DG_Main)	Dungeon Exit#29	110
+tur_dun04,92,100,4	duplicate(DG_Main)	Dungeon Exit#30	110
+thor_v03,151,162,4	duplicate(DG_Main)	Dungeon Exit#31	110
 // ======================= End of Script =====================

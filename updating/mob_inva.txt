@@ -1,0 +1,696 @@
+//===== rAthena Script =======================================
+//= Monster Invasion
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Initial Release
+//===== Compatible With ======================================
+//= Every Athena SQL SVN 
+//===== Tested With ==========================================
+//= rAthena 17267 SQL Trunk 
+//===== Description ==========================================
+//= There are 2 Invasion Types:
+//  - Single
+//  - Multiply
+//= Each can be seperatly customized, but can not be switched via ingame.
+//= Changing settings means to restart/reload the server for them to become active
+//= Also there is an "Invasion Rewarder" available after the Invasion,
+//  which can be turned on or off
+//  To change the reward itself, scroll down to the bottom of the file
+//  where the NPC is located. There are extra settings.
+//= See "OnInit:" for the main settings
+//===== Comments =============================================
+//= None yet... 
+//===== ToDo List ============================================
+//= Adding an Custom Shop for the Invasion Points in the Invasion Rewarder
+//===========================================================
+-	script	MobInvaInit	-1,{
+function	DELAY;
+
+OnTimer1000: // Every Second
+stopnpctimer;
+set .s,.s + 1;
+if(.debug) 
+	// Showing Debug every minute only.
+	if(.s%60 == 0) debugmes .n$+": Delay Timer: "+.s+" seconds (Minutes: "+(.s/60)+"), Delay Function returns: "+DELAY(.delay_type,.delay_pos,1)+", Invasion Re-/Starts: "+.time[.delay_pos]+" (in seconds), Force End: "+.inva_fend+" (in seconds)";
+if(.delay == 1 && .s == DELAY(.delay_type,.delay_pos,1) ) 
+	donpcevent strnpcinfo(0)+"::OnInvaInit";
+else if( .s == .inva_fend && .inva_status) 
+	donpcevent strnpcinfo(0)+"::OnInvaForceEnd";
+initnpctimer;
+end;
+
+
+OnClock1300: // 1 p.m.
+if(.delay == 1) // Delay Usage active
+	end;
+	
+OnInvaInit:
+if(.inva_status) end;
+
+if(getvariableofnpc(.rew_type,"Invasion Rewarder") > 0) 
+	disablenpc "Invasion Rewarder";
+
+switch(.inva_type) {
+	
+	// Single Town Invasion
+	case 1:
+	if(!.s_inva_spec) { // No Map Specification > Random
+	
+		if(rand(1,10) <= 5) { // 50% chance to use either a big city or a small one
+			set .t,rand(getarraysize(.map_b$));
+			set .map_use,1; // Use big Maps
+		} else {
+			set .t,rand(getarraysize(.map_s$));
+			set .map_use,2; // Use small Maps
+		}
+	} else {
+		set .map_use,.s_inva_spec;
+		set .t,.s_inva_pos;
+	}
+	if(.map_use == 1) {
+		for ( set .@m,0; .@m < getarraysize(getd(".mob_"+.map_post_b$[.t])); set .@m,.@m + 1) {
+			monster .map_b$[.t],0,0,""+getmonsterinfo(getd(".mob_"+.map_post_b$[.t]+"["+.@m+"]"),0),getd(".mob_"+.map_post_b$[.t]+"["+.@m+"]"),getd(".mam_"+.map_post_b$),strnpcinfo(0)+"::OnMobSingleKilled";
+			set .MobSKilled,.MobSKilled + getd(".mam_"+.map_post_b$);
+		}
+		announce .n$+": The town "+.map_b$[.t]+" is being invaded by "+.MobSKilled+" monsters, please help use to defend it.",0;
+	
+	} else if(.map_use == 2) {
+		for ( set .@m,0; .@m < getarraysize(getd(".mob_"+.map_post_s$[.t])); set .@m,.@m + 1) {
+			monster .map_s$[.t],0,0,""+getmonsterinfo(getd(".mob_"+.map_post_s$[.t]+"["+.@m+"]"),0),getd(".mob_"+.map_post_s$[.t]+"["+.@m+"]"),getd(".mam_"+.map_post_s$),strnpcinfo(0)+"::OnMobSingleKilled";
+			set .MobSKilled,.MobSKilled + getd(".mam_"+.map_post_s$);
+		}
+		announce .n$+": The town "+.map_s$[.t]+" is being invaded by "+.MobSKilled+" monsters, please help use to defend it.",0;
+	}
+	break;
+	
+	// Multiply Town Invasion
+	case 2:
+	if( .inva_spawn == 1) {
+		for ( set .@t,0; .@t < getarraysize(.map_b$); set .@t,.@t + 1) {
+			for ( set .@m,0; .@m < getarraysize(getd(".mob_"+.map_post_b$[.@t])); set .@m,.@m + 1) {
+				monster .map_b$[.@t],0,0,""+getmonsterinfo(getd(".mob_"+.map_post_b$[.@t]+"["+.@m+"]"),0),getd(".mob_"+.map_post_b$[.@t]+"["+.@m+"]"),getd(".mam_"+.map_post_b$[.@t]),strnpcinfo(0)+"::OnMobMultiKilled";
+				setd(".Mob_"+.map_post_b$[.@t]+"_Killed"),getd(".Mob_"+.map_post_b$[.@t]+"_Killed") + getd(".mam_"+.map_post_b$[.@t]);
+			}
+			announce .n$+": The town "+.map_b$[.@t]+" is being invaded by "+getd(".Mob_"+.map_post_b$[.@t]+"_Killed")+" monsters, please help use to defend it.",0;
+		}
+		
+		sleep 500;
+		
+		for ( set .@t,0; .@t < getarraysize(.map_s$); set .@t,.@t + 1) {
+			for ( set .@m,0; .@m < getarraysize(getd(".mob_"+.map_post_s$[.@t])); set .@m,.@m + 1) {
+				monster .map_s$[.@t],0,0,""+getmonsterinfo(getd(".mob_"+.map_post_s$[.@t]+"["+.@m+"]"),0),getd(".mob_"+.map_post_s$[.@t]+"["+.@m+"]"),getd(".mam_"+.map_post_s$[.@t]),strnpcinfo(0)+"::OnMobMultiKilled";
+				setd(".Mob_"+.map_post_s$[.@t]+"_Killed"),getd(".Mob_"+.map_post_s$[.@t]+"_Killed") + getd(".mam_"+.map_post_s$[.@t]);
+			}
+			announce .n$+": The town "+.map_s$[.@t]+" is being invaded by "+getd(".Mob_"+.map_post_s$[.@t]+"_Killed")+" monsters, please help use to defend it.",0;
+		}
+	// * Spawn Option - Specific Maps
+	} else if( .inva_spawn == 2) {
+		
+		set .@map_am,.inva_maps; // Copying Map Quantity
+		
+		if(.debug)
+			debugmes .n$+": Map Quantity - .inva_maps: "+.inva_maps+" > .@map_am";
+		// * Map Size - Big Maps 
+		if( .inva_size == 1) {
+		
+			// - Checking if .map_am exceeds the size of the map array, or is 0
+			if( .@map_am > getarraysize(.map_b$) || .@map_am == 0)
+				set .@map_am,getarraysize(.map_b$);
+				
+			if(.debug) 
+				debugmes .n$+": Map Quantity - Check: .@map_am: "+.@map_am;
+				
+			// * Map Randomness - Yes
+			if( .inva_rand == 1) {
+			
+				if(.debug) 
+					debugmes .n$+": Map Randomness: Yes";
+					
+				while ( .@c < .@map_am ) {
+					if(.debug) 
+						debugmes .n$+": Big Maps - Counter: "+.@c+", Map Index: "+.@t;
+				
+					set .@t,rand(.@map_am);
+					set .@f,0;
+						
+					for ( set .@e,0; .@e < getarraysize(.@t_c); set .@e,.@e + 1) 
+						if((.@t+1) == .@t_c[.@e]) {
+							set .@f,1;
+							break;
+						}
+						
+					if(.@f == 1) continue;
+					
+					if(.debug) {
+						debugmes .n$+": Big Maps - Map Index: "+.@t+", Map Name: "+.map_b$[.@t];
+						debugmes .n$+": Big Maps - Mob Array Size: "+getarraysize(getd(".mob_"+.map_post_b$[.@t]));
+					}
+					
+					for ( set .@m,0; .@m < getarraysize(getd(".mob_"+.map_post_b$[.@t])); set .@m,.@m + 1) {
+						monster .map_b$[.@t],0,0,""+getmonsterinfo(getd(".mob_"+.map_post_b$[.@t]+"["+.@m+"]"),0),getd(".mob_"+.map_post_b$[.@t]+"["+.@m+"]"),getd(".mam_"+.map_post_b$[.@t]),strnpcinfo(0)+"::OnMobMultiKilled";
+						setd(".Mob_"+.map_post_b$[.@t]+"_Killed"),getd(".Mob_"+.map_post_b$[.@t]+"_Killed") + getd(".mam_"+.map_post_b$[.@t]);
+						if(.debug) {
+							debugmes .n$+": Big Maps - Map Index: "+.@t+", Mob Index: "+.@m+", Map Name: "+.map_b$[.@t]+", Mob ID + Name: "+getd(".mob_"+.map_post_b$[.@t]+"["+.@m+"]")+"; "+getmonsterinfo(getd(".mob_"+.map_post_b$[.@t]+"["+.@m+"]"),0);
+							debugmes .n$+": Total Mob Amount - Map Index: "+.@t+": "+getd(".Mob_"+.map_post_b$[.@t]+"_Killed")+", Spawn Amount per Mob: "+getd(".mam_"+.map_post_b$[.@t]);
+						}
+					}
+					announce .n$+": The town "+.map_b$[.@t]+" is being invaded by "+getd(".Mob_"+.map_post_b$[.@t]+"_Killed")+" monsters, please help use to defend it.",0;
+					setarray .@t_c[getarraysize(.@t_c)],(.@t+1); // Copying already use maps.
+					set .@c,.@c + 1;
+				}
+					
+			// * Map Randomness - No
+			} else if( .inva_rand == 0) {
+			
+				if(.debug) 
+					debugmes .n$+": Map Randomness: No";
+				
+				for ( set .@t,0; .@t < .@map_am; set .@t,.@t + 1) {
+					if(.debug) {
+						debugmes .n$+": Big Maps - Map Index: "+.@t+", Map Name: "+.map_b$[.@t];
+						debugmes .n$+": Big Maps - Mob Array Size: "+getarraysize(getd(".mob_"+.map_post_b$[.@t]));
+					}
+					for ( set .@m,0; .@m < getarraysize(getd(".mob_"+.map_post_b$[.@t])); set .@m,.@m + 1) {
+						monster .map_b$[.@t],0,0,""+getmonsterinfo(getd(".mob_"+.map_post_b$[.@t]+"["+.@m+"]"),0),getd(".mob_"+.map_post_b$[.@t]+"["+.@m+"]"),getd(".mam_"+.map_post_b$[.@t]),strnpcinfo(0)+"::OnMobMultiKilled";
+						setd(".Mob_"+.map_post_b$[.@t]+"_Killed"),getd(".Mob_"+.map_post_b$[.@t]+"_Killed") + getd(".mam_"+.map_post_b$[.@t]);
+						if(.debug) {
+							debugmes .n$+": Big Maps - Map Index: "+.@t+", Mob Index: "+.@m+", Map Name: "+.map_b$[.@t]+", Mob ID + Name: "+getd(".mob_"+.map_post_b$[.@t]+"["+.@m+"]")+"; "+getmonsterinfo(getd(".mob_"+.map_post_b$[.@t]+"["+.@m+"]"),0);
+							debugmes .n$+": Total Mob Amount - Map Index: "+.@t+": "+getd(".Mob_"+.map_post_b$[.@t]+"_Killed")+", Spawn Amount per Mob: "+getd(".mam_"+.map_post_b$[.@t]);
+						}
+					}
+					announce .n$+": The town "+.map_b$[.@t]+" is being invaded by "+getd(".Mob_"+.map_post_b$[.@t]+"_Killed")+" monsters, please help use to defend it.",0;
+				}
+			}
+			
+		// * Map Size - Small Maps 
+		} else if( .inva_size == 2) {
+		
+			// - Checking if .map_am exceeds the size of the map array, or is 0
+			if( .@map_am > getarraysize(.map_s$) || .@map_am == 0)
+				set .@map_am,getarraysize(.map_s$);
+			
+			if(.debug) 
+				debugmes .n$+": Map Quantity - Check: .@map_am: "+.@map_am;
+			
+			// * Map Randomness - Yes
+			if( .inva_rand == 1) {
+				while ( .@c < .@map_am ) {
+					
+					set .@t,rand(.@map_am);
+					set .@f,0;
+						
+					for ( set .@e,0; .@e < getarraysize(.@t_c); set .@e,.@e + 1) 
+						if(.@t == .@t_c[.@e]) {
+							set .@f,1;
+							break;
+						}
+						
+					if(.@f == 1) continue;
+					
+					if(.debug) {
+						debugmes .n$+": Small Maps - Map Index: "+.@t+", Map Name: "+.map_s$[.@t];
+						debugmes .n$+": Small Maps - Mob Array Size: "+getarraysize(getd(".mob_"+.map_post_s$[.@t]));
+					}
+					
+					for ( set .@m,0; .@m < getarraysize(getd(".mob_"+.map_post_s$[.@t])); set .@m,.@m + 1) {
+						monster .map_s$[.@t],0,0,""+getmonsterinfo(getd(".mob_"+.map_post_s$[.@t]+"["+.@m+"]"),0),getd(".mob_"+.map_post_s$[.@t]+"["+.@m+"]"),getd(".mam_"+.map_post_s$),strnpcinfo(0)+"::OnMobMultiKilled";
+						setd(".Mob_"+.map_post_s$[.@t]+"_Killed"),getd(".Mob_"+.map_post_s$[.@t]+"_Killed") + getd(".mam_"+.map_post_s$[.@t]);
+						if(.debug) {
+							debugmes .n$+": Small Maps - Map Index: "+.@t+", Mob Index: "+.@m+", Map Name: "+.map_s$[.@t]+", Mob ID + Name: "+getd(".mob_"+.map_post_s$[.@t]+"["+.@m+"]")+"; "+getmonsterinfo(getd(".mob_"+.map_post_s$[.@t]+"["+.@m+"]"),0);
+							debugmes .n$+": Total Mob Amount - Map Index: "+.@t+": "+getd(".Mob_"+.map_post_s$[.@t]+"_Killed")+", Spawn Amount per Mob: "+getd(".mam_"+.map_post_s$[.@t]);
+						}
+					}
+					announce .n$+": The town "+.map_s$[.@t]+" is being invaded by "+getd(".Mob_"+.map_post_s$[.@t]+"_Killed")+" monsters, please help use to defend it.",0;
+					setarray .@t_c[getarraysize(.@t_c)],.@t; // Copying already use maps.
+				}
+					
+			// * Map Randomness - No
+			} else if( .inva_rand == 0) {
+				
+				if(.debug) 
+					debugmes .n$+": Map Randomness: No";
+				
+				for ( set .@t,0; .@t < .map_am; set .@t,.@t + 1) {
+					if(.debug) {
+						debugmes .n$+": Small Maps - Map Index: "+.@t+", Map Name: "+.map_s$[.@t];
+						debugmes .n$+": Small Maps - Mob Array Size: "+getarraysize(getd(".mob_"+.map_post_s$[.@t]));
+					}
+					for ( set .@m,0; .@m < getarraysize(getd(".mob_"+.map_post_s$[.@t])); set .@m,.@m + 1) {
+						monster .map_s$[.@t],0,0,""+getmonsterinfo(getd(".mob_"+.map_post_s$[.@t]+"["+.@m+"]"),0),getd(".mob_"+.map_post_s$[.@t]+"["+.@m+"]"),getd(".mam_"+.map_post_s$[.@t]),strnpcinfo(0)+"::OnMobMultiKilled";
+						setd(".Mob_"+.map_post_s$[.@t]+"_Killed"),getd(".Mob_"+.map_post_s$[.@t]+"_Killed") + getd(".mam_"+.map_post_s$[.@t]);
+						if(.debug) {
+							debugmes .n$+": Small Maps - Map Index: "+.@t+", Mob Index: "+.@m+", Map Name: "+.map_s$[.@t]+", Mob ID + Name: "+getd(".mob_"+.map_post_s$[.@t]+"["+.@m+"]")+"; "+getmonsterinfo(getd(".mob_"+.map_post_s$[.@t]+"["+.@m+"]"),0);
+							debugmes .n$+": Total Mob Amount - Map Index: "+.@t+": "+getd(".Mob_"+.map_post_s$[.@t]+"_Killed")+", Spawn Amount per Mob: "+getd(".mam_"+.map_post_s$[.@t]);
+						}
+					}
+					announce .n$+": The town "+.map_s$[.@t]+" is being invaded by "+getd(".Mob_"+.map_post_s$[.@t]+"_Killed")+" monsters, please help use to defend it.",0;
+				}
+			}
+		}
+	}
+	break;
+	
+}
+set .inva_status,1;
+end;
+
+
+OnMobSingleKilled:
+if(!.inva_status) end; // Shouldn't be possible
+if(getvariableofnpc(.rew_type,"Invasion Rewarder") > 0) 
+	set InvaKill,InvaKill + 1; // Kill Counter for Reward
+set .MobSKilled,.MobSKilled - 1;
+switch(.MobSKilled) {
+	case 0:
+	announce .n$+": Congratulation to ["+strcharinfo(0)+"] who delivered the final blow!!! Nicely Done!!!",0;
+	if(.inva_final) {
+		announce .n$+": You also get an \"Final Kill Reward\", just take a look in the Chat Box. See ya next time *g*",bc_self;
+		dispbottom .n$+": You have been rewarded with:";
+		if(.inva_f_id == 1) {
+			set Zeny,Zeny + .inva_f_am;
+			dispbottom .n$+": "+.inva_f_am+" Zeny.";
+		} else if(.inva_f_id == 2) {
+			set #CASHPOINTS,#CASHPOINTS + .inva_f_am;
+			dispbottom .n$+": "+.inva_f_am+" Cash Points. New Balance is "+#CASHPOINTS+".";
+		} else if(.inva_f_id >= 512) {
+			getitem .inva_f_id,.inva_f_am;
+			dispbottom .n$+": "+.inva_f_am+"x "+getitemname(.inva_f_id)+".";
+		}
+	}
+	sleep 10000;
+	donpcevent strnpcinfo(0)+"::OnInvaEnd";
+	break;
+	
+	case 1:
+	mapannounce strcharinfo(3),.n$+": JUST "+.MobSKilled+" MONSTER is left!!!! FINAL BLOW, GO GO!!!",bc_yellow;
+	break;
+	
+	case 2:
+	case 3:
+	case 4:
+	mapannounce strcharinfo(3),.n$+": Only "+.MobSKilled+" monsters are left!!!! We can do it!!!",bc_yellow;
+	break;
+
+	case 5:
+	mapannounce strcharinfo(3),.n$+": LAST "+.MobSKilled+"!!!! We can do it!!!",bc_yellow;
+	break;
+	
+	default:
+	mapannounce strcharinfo(3),.n$+": "+.MobSKilled+" monsters are left!!!! Good work !!!",bc_yellow;
+	break;
+}
+end;
+
+OnMobMultiKilled:
+if(!.inva_status) end; // Shouldn't be possible
+if(getvariableofnpc(.rew_type,"Invasion Rewarder") > 0)
+	set InvaKill,InvaKill + 1; // Kill Counter for Reward
+set @loc,0;
+for ( set .@l,0; .@l < getarraysize(.map_b$); set .@l,.@l + 1) 
+	if(strcharinfo(3) == .map_b$[.@l]) {
+		set @loc,1;
+		set @map,.@l;
+		break;
+	}
+	
+for ( set .@l,0; .@l < getarraysize(.map_s$); set .@l,.@l + 1) 
+	if(strcharinfo(3) == .map_s$[.@l]) {
+		set @loc,2;
+		set @map,.@l;
+		break;
+	}
+
+OnMMobKilled:
+if(.debug) 
+	debugmes .n$+": 2nd Loc Check: @Loc; "+@loc+", @map: "+@map;
+switch( @loc ) {
+	
+	case 1: 
+	setd(".Mob_"+.map_post_b$[@map]+"_Killed"),getd(".Mob_"+.map_post_b$[@map]+"_Killed") - 1; 
+	debugmes .n$+": Mobs: "+mobcount(.map_b$[@map],strnpcinfo(0)+"::OnMobMultiKilled")+", Variable: "+getd(".Mob_"+.map_post_b$[@map]+"_Killed");
+	if(getd(".Mob_"+.map_post_b$[@map]+"_Killed") > 0) 
+		mapannounce strcharinfo(3),.n$+": The player ["+strcharinfo(0)+"] has killed another monster, "+getd(".Mob_"+.map_post_b$[@map]+"_Killed")+" monsters are left!!!! Good work !!!",0;
+	else {
+		announce .n$+": Every Monster in "+.map_s$[@map]+" has been defeated, thank you guys!!!",0;
+		donpcevent strnpcinfo(0)+"::OnOtherTown";
+	}
+	break;
+	
+	case 2: 
+	setd(".Mob_"+.map_post_s$[@map]+"_Killed"),getd(".Mob_"+.map_post_s$[@map]+"_Killed") - 1; 
+	debugmes .n$+": Mobs: "+mobcount(.map_s$[@map],strnpcinfo(0)+"::OnMobMultiKilled")+", Variable: "+getd(".Mob_"+.map_post_s$[@map]+"_Killed");
+	if(getd(".Mob_"+.map_post_s$[@map]+"_Killed") > 0) 
+		mapannounce strcharinfo(3),.n$+": The player ["+strcharinfo(0)+"] has killed another monster, "+getd(".Mob_"+.map_post_s$[@map]+"_Killed")+" monsters are left!!!! Good work !!!",0;
+	else {
+		announce .n$+": Every Monster in "+.map_s$[@map]+" has been defeated, thank you guys!!!",0;
+		donpcevent strnpcinfo(0)+"::OnOtherTown";
+	}
+	break;
+}
+end;
+
+OnOtherTown:
+for ( set .@t,0; .@t < getarraysize(.map_b$); set .@t,.@t + 1) 
+	if(getd(".Mob_"+.map_post_b$[.@m]+"_Killed") > 0) 
+		set .@mapb_left$,.@mapb_left$ + .map_b$[.@m]+ ( (.map_b$[.@m+1] != "")?", ":"");
+
+for ( set .@t,0; .@t < getarraysize(.map_s$); set .@t,.@t + 1) 
+	if(getd(".Mob_"+.map_post_s$[.@m]+"_Killed") > 0) 
+		set .@maps_left$,.@maps_left$ + .map_s$[.@m]+ ( (.map_s$[.@m+1] != "")?", ":"");
+
+if(.@maps_left$ == "" && .@mapb_left$ == "")
+	donpcevent strnpcinfo(0)+"::OnInvaEnd";
+
+announce .n$+": In the "+ ( (.@mapb_left$ != "")?"big towns "+.@mapb_left$+ ( (.@maps_left$ != "")?" and small towns "+.@maps_left$:""):"small towns "+.@maps_left$)+" are still Monsters, please help use to defeat them!!!",0;
+end;
+
+OnInvaEnd:
+announce .n$+": Thank you guys for your help in defeating the invaders, we will counting on you for the next time as well.",0;
+donpcevent strnpcinfo(0)+"::OnInvaRestart";
+end;
+
+OnInvaForceEnd:
+announce .n$+": NOOOOO!!! The monsters successfully invaded the towns, RETREAT GUARDS!!!",0;
+sleep 10000;
+announce .n$+": Brave Fighters, I thank you for your support, but we failed!!",0;
+sleep 10000;
+announce .n$+": Let's regroup and let's try again, I will inform you when we are ready!!",0;
+
+OnInvaRestart:
+DELAY(.delay_type,.delay_pos,2);
+// Removing Mobs which kinda survived
+if(.inva_type == 1) // Single Town
+	if(.map_use == 1) killmonster .map_b$[.t],strnpcinfo(0)+"::OnMobSingleKilled";
+	else killmonster .map_s$[.t],strnpcinfo(0)+"::OnMobSingleKilled";
+	
+else if(.inva_type == 2) { // Multi Town
+	for ( set .@t,0; .@t < getarraysize(.map_b$); set .@t,.@t + 1) 
+		killmonster .map_b$[.@t],strnpcinfo(0)+"::OnMobMultiKilled";
+		
+	for ( set .@t,0; .@t < getarraysize(.map_s$); set .@t,.@t + 1)
+		killmonster .map_s$[.@t],strnpcinfo(0)+"::OnMobMultiKilled";
+	}
+set .inva_status,0;
+if(.delay == 1) set .s,0; // Reseting Delay Counter
+if(getvariableofnpc(.rew_type,"Invasion Rewarder") > 0) {
+	enablenpc "Invasion Rewarder";
+	announce .n$+": Visit the \"Invasion Rewarder\" to recieve rewards for your kills. But hurry, he will disappear in "+getvariableofnpc(.rew_dis,"Invasion Rewarder")+" minutes.",0;
+	donpcevent strnpcinfo(0)+"::OnRewardDisable";
+}
+end;
+
+// Auto Disable Reward NPC
+OnRewardDisable:
+while( .m < getvariableofnpc(.rew_dis,"Invasion Rewarder") ) {
+	switch(.m) {
+		case 1: announce .n$+": The \"Invasion Rewarder\" will disappear in 4 minutes.",0; break;
+		case 2: announce .n$+": The \"Invasion Rewarder\" will disappear in 3 minutes.",0; break;
+		case 3: announce .n$+": The \"Invasion Rewarder\" will disappear in 2 minutes.",0; break;
+		case 4: announce .n$+": HURRY, the \"Invasion Rewarder\" will disappear in 1 minute.",0; break;
+	}
+	set .m,.m + 1;
+	sleep 60000;
+}	
+announce "Invasion Rewarder: Okay, I'm done here. See ya next time!!!",0;
+set .m,0;
+disablenpc "Invasion Rewarder";
+end;
+
+OnPCLoginEvent:
+if(.inva_status == 0) end;
+announce .n$+": The Monster Invasion Event is currently running, please hurry and help us!!",bc_self;
+sleep2 2000;
+if(.inva_type == 1) 
+	set .@map_left$,( (.map_use == 1) ? .map_b$[.t]:.map_s$[.t]);
+else if(.inva_type == 2) {
+	for ( set .@m,0; .@m < getarraysize(.map_b$); set .@m,.@m + 1) 
+		if(getd(".Mob_"+.map_post_b$[.@m]+"_Killed") > 0) 
+			set .@map_left$,.@map_left$ + .map_b$[.@m]+ ( (.map_b$[.@m+1] != "")?", ":"");
+			
+	for ( set .@m,0; .@m < getarraysize(.map_s$); set .@m,.@m + 1) 
+		if(getd(".Mob_"+.map_post_s$[.@m]+"_Killed") > 0) 
+			set .@map_left$,.@map_left$ +" and "+ .map_s$[.@m]+ ( (.map_s$[.@m+1] != "")?", ":"");
+}
+announce .n$+": We are defending at "+ .@map_left$+"!!!",bc_self;
+end;
+
+OnInit:
+set .n$,"[Ragnarok Guard]";
+// Debug Mode - See Map Server Console for Debug messages
+set .debug,0;
+// ======= Invasion Type =======
+// - 1: Single
+// - 2: Multiply
+set .inva_type,1;
+// ====== Single Invasion Settings =========
+if(.inva_type == 1) {
+	// * Specific Map Usage
+	// - 0 = Random
+	// - 1 = Big Maps
+	// - 2 = Small Maps
+	set .s_inva_spec,1;
+
+	if(.s_inva_spec > 0) {
+		// * Map Index
+		// X = Array Index of the Map Array
+		set .s_inva_pos,0;
+	}
+// ======= Multiply Invasion Settings ========
+} else if(.inva_type == 2) {
+	// * Spawn Option
+	// - 1: All Maps
+	// - 2: Specific Maps
+	set .inva_spawn,2;
+
+	if(.inva_spawn == 2) {
+		// * Map Usage:
+		// - 1: Big Maps
+		// - 2: Small Maps
+		set .inva_size,1;
+		
+		// * Map Amount:
+		// - 0: All Maps from .inva_size above
+		// - 1+: ...
+		// Note: If this value exceeds the size of the map array, 
+		// then it will use all maps of .inva_size.
+		set .inva_maps,0;
+ 
+		if(.inva_maps > 0 && .inva_maps < ( (.inva_size == 1)?getarraysize(.map_b$):getarraysize(.map_s$) ) ) 
+		// * Map Randoming:
+		// - 0: No
+		// - 1: Yes
+		// Note: Map Randoming is only possible when not all maps are wanted
+		// It would be ineffective to make map randoming when there are all maps active :I
+		set .inva_rand,1;
+	}
+}
+// * Invasion on Server Start
+// - 0: No
+// - 1: Yes
+set .inva_statusinit,1;
+// * Invasion Force End
+// - 0: Not used
+// - 1+: ...
+// Note: The Event will automatically end after this value has passed (in seconds)
+set .inva_fend,3600; // 1 Hour
+// =======*======= DELAY SETTINGS =======*=======
+// * Delay Usage
+// - 0: Off - OnClockXXXX will be used
+// - 1: On
+set .delay,1;
+// * Delay Type
+// - 1: Random (Default)
+// - 2: Fixed Delay
+// - 3: Ranged Delay
+set .delay_type,1;
+
+// ---- Fixed Delay ----
+// Array Position in ".time"
+if(.delay_type == 2) 
+	set .delay_pos,0;
+// ---- Ranged Delay ----
+// Array Position for start index
+if(.delay_type == 3) 
+	set .delay_pos,3;
+
+// * Delay Times
+setarray .time[0],
+// In Seconds  -  is equal to  -  Array Position
+		10800, // 3 Hours      -  0
+		14400, // 4 Hours      -  1
+		21600, // 6 Hours      -  2
+		86400, // 1 Day        -  3
+		172800, // 2 Days      -  4	
+		259200; // 3 Days      -  5
+
+// =======*======= MONSTER SETTINGS =======*=======
+// * Mob Quantity Limit depending on the map size
+// - Big Maps
+set .m_limit_b,100;
+// - Small Maps
+set .m_limit_s,30;
+
+// * Maps List
+// - Big Maps 
+setarray .map_b$[0],"prontera","geffen","payon","morocc","aldebaran","alberta";
+// For every map you have to add an postfix in the same order,
+// which has been put in the array for the Maps
+// After this, just set an array with the Mob IDs where the
+// array name contains the postfix you set-up, see the examples
+setarray .map_post_b$[0],"pron","gef","pay","mor","alde","alb";
+// - Small Maps
+setarray .map_s$[0],"izlude";
+setarray .map_post_s$[0],"izl";
+// ======= Monster ID's =======
+// ------ Big Maps ------
+// * Prontera - Mantis, Thief Bug Male, Argos, Side Winder
+setarray .mob_pron[0],1139,1054,1100,1037;
+// * Geffen - Poison Spore, Ghoul, Jakk, High Orc
+setarray .mob_gef[0],1855,1036,1130,1213;
+// * Payon - Zombie, Elder Willow, Munak, Nine Tail, Drainliar
+setarray .mob_pay[0],1015,1033,1026,1180,1111;
+// * Morocc - Requiem, Isis, Mummy, Minorous
+setarray .mob_mor[0],1164,1029,1041,1149;
+// * Aldebaran - Cramp, Penomena, Punk, Orc Archer, Bathory
+setarray .mob_alde[0],1209,1029,1199,1189,1102;
+// * Alberta - Pirate Skeleton, Penomena, Poison Spore, Whisper, Mimic
+setarray .mob_alb[0],1071,1029,1077,1179,1191;
+// ------ Small Maps ------
+// * Izlude - Obeaune, Merman, Swordfish, Strouf
+setarray .mob_izl[0],1044,1264,1069,1065;
+
+// ------ Mob Amount Calculation for Big Maps ------
+for ( set .@c,0; .@c < getarraysize(.map_post_b$); set .@c,.@c + 1) 
+	setd(".mam_"+.map_post_b$[.@c]),( .m_limit_b/getarraysize(getd(".mob_"+.map_post_b$)) );
+	
+// ------ Mob Amount Calculation for Small Maps ------
+for ( set .@c,0; .@c < getarraysize(.map_post_s$); set .@c,.@c + 1)
+	setd(".mam_"+.map_post_s$[.@c]),( .m_limit_s/getarraysize(getd(".mob_"+.map_post_s$)) );
+
+// ======= Final Kill Settings =======
+// * Will the player who gets the final kill be rewarded?
+// Only working during a Single Invasion
+// - 1: Yes
+// - 0: No
+set .inva_final,1;
+
+if(.inva_final == 1) {
+	// * Reward Type:
+	// - 1: Zeny
+	// - 2: Cash Points
+	// - 512+: Item ID (the Value is already the Item ID)
+	set .inva_f_id,1;
+	// * Reward Amount:
+	set .inva_f_am,10000;
+}
+// =======*======= END of SETTINGS =======*=======
+// Even if .delay is 0, its required to start the timer for force ending the event :I
+initnpctimer;
+if(.debug) {
+	debugmes .n$+": .inva_delay: "+.inva_delay;
+	debugmes .n$+": gettimetick(2): "+gettimetick(2);
+}
+if(.delay == 1 && DELAY(.delay_type,.delay_pos,1) < 1) // If the delay value is empty, set it!!
+	DELAY(.delay_type,.delay_pos,2);
+	
+if(.debug) 
+	debugmes .n$+": .inva_delay: "+.inva_delay;
+
+if(.inva_statusinit == 1) // Starting Invasion on Server Start
+	donpcevent strnpcinfo(0)+"::OnInvaInit";
+end;
+
+function	DELAY	{
+// Format: DELAY(.delay_type,.delay_pos,1/2);
+// getarg(0) = Delay Type
+// * 1: Random
+// * 2: Fixed Delay
+// * 3: Ranged Delay
+// getarg(1) = Array Position if getarg(0) == 2 || 3
+// getarg(2): Read/Write
+// * 1: Read
+// * 2: Write
+if(getarg(2) == 1) 
+	return (.inva_delay - gettimetick(2));
+	
+switch(getarg(0)) {
+	case 1:	set .@new_inva,.time[rand(getarraysize(.time))]; break;
+	case 2: set .@new_inva,.time[getarg(1)]; break; 
+	case 3: set .@new_inva,.time[rand(getarg(1),getarraysize(.time) - 1)]; break;
+}
+set .inva_delay,gettimetick(2) + .@new_inva;
+return .@new_inva;	
+}
+
+}
+prontera,150,175,4	script	Invasion Rewarder	110,{
+
+mes .n$;
+mes "Hello, "+strcharinfo(0)+"!";
+mes "So you want to be rewarded from the Mob Invasion Event, huh?";
+mes "Let me take a look at your battle record.";
+next;
+mes .n$;
+if(!InvaKill) {
+	mes "It seems like you didn't participated at all or you got your reward already.";
+	mes "So I can't give you any kind of reward.";
+	mes "Try your best next time.";
+	close;
+}
+mes "You haved killed "+InvaKill+" monsters, good job there.";
+next;
+mes .n$;
+set .@rew_am,InvaKill*.rew_am;
+set .@rew_bonus, ( (.rew_bonus > 0)?(InvaKill*.rew_bonus):.rew_bonus);
+set .@total,.@rew_am + .@rew_bonus;
+
+if(.rew_type == 1) {
+	mes "You have recieved "+.@total+"x "+( (.rew_bonus == 1)?"(Bonus: +"+.@rew_bonus+") ":"") + getitemname(.rew_id)+".";
+	getitem .rew_id,.@total;
+} else if(.rew_type == 2) {
+	mes "You have recieved "+.@total+"x "+( (.rew_bonus == 1)?"(Bonus: +"+.@rew_bonus+") ":"") + .rew_vname$+".";
+	if(.rew_bound == 0) // Character Based
+		setd(""+.rew_var$),getd(""+.rew_var$) + (.rew_am+.rew_bonus);
+	else if(.rew_bound == 1) // Account Based
+		setd("#"+.rew_var$),getd("#"+.rew_var$) + (.rew_am+.rew_bonus);
+}
+set InvaKill,0;
+close;
+
+OnInit:
+set .n$,"["+strnpcinfo(0)+"]";
+// =======*======= REWARD SETTINGS =======*=======
+// * Reward Type:
+// - 0: None
+// - 1: Item
+// - 2: Variable
+// - 3: Cash Points
+set .rew_type,1;
+
+// * Reward Bonus
+// - 0: Off
+// - 1 and higher: On
+// = This bonus will be given to the kill additionally.
+set .rew_bonus,0;
+// ----- Item -----
+if(.rew_type == 1) 
+	set .rew_id,512; // Item ID
+// ----- Variable Name -----
+else if(.rew_type == 2) {
+	set .rew_var$,"InvaPoints";
+	set .rew_vname$,"Invasion Points";
+
+	// Variable Type:
+	// 0: Character Based
+	// 1: Account Based
+	set .rew_bound,0;
+}	
+// ----- Reward Quantity -----
+set .rew_am,10; // Amount per Kill
+// ----- NPC Auto Disable -----
+// After how many minutes will the NPC be disabled again:
+set .rew_dis,5;
+disablenpc strnpcinfo(0);
+end;
+}
