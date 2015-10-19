@@ -46,7 +46,7 @@
 /*
 CREATE TABLE IF NOT EXISTS `dqs_list` (
  `dg_id` int(10) unsigned NOT NULL,
- `quest_id` int(10) unsigned default '1',
+ `quest_id` int(10) unsigned default '2',
  `quest_type` tinyint(3) unsigned default '1',
  `mob_id` int(10) unsigned default '0',
  `mob_am` int(12) unsigned default '0',
@@ -54,8 +54,7 @@ CREATE TABLE IF NOT EXISTS `dqs_list` (
  `item_am` int(10) unsigned default '0',
  `reward_id` int(10) unsigned default '0',
  `reward_am` int(10) unsigned default '0',
- `limit` tinyint(3) unsigned default '0',
- `status` tinyint(3) unsigned default '0'
+ `status` tinyint(3) unsigned default '1'
  ) ENGINE=MyISAM;
  
  CREATE TABLE IF NOT EXISTS `dqs_party` (
@@ -88,13 +87,18 @@ mes .n$;
 mes "Hello, "+strcharinfo(0)+"!";
 mes "How can I help you?";
 next;
-switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchanger:- Nothing":"Nothing") )) {
+switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchanger:- Nothing":"Nothing") )) {
 
 	case 1:
+	mes .n$;
+	if(!$@DQS_Sys) {
+		mes "I'm sorry, but my Dungeon Quest Service is currently offline.";
+	}
 	mes "Please choose what you want to do below:";
-	switch(select("- Register:- Quest Board:- Warp Service")) {
+	next;
+	switch(select("- Register:- Quest Board:- Warp Service:- Complete Dungeon")) {
 	
-		// Register for Dungeon
+		// ============ Register for Dungeon ============ //
 		case 1:
 		mes .n$;
 		if(getcharid(1) != 0) {
@@ -134,7 +138,7 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 		query_sql "SELECT `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `repeat` , `status` FROM `dqs_dungeon`",.@dg_id,.@name$,.@diff,.@pty_limit,.@req_lvl,.@rep,.@stat;
 		for ( set .@du,0; .@du < getarraysize(.@dg_id); set .@du,.@du + 1) {
 			query_sql "SELECT count( `pty_id` ) FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id[.@du]+"'",.@pty_ct;
-			set .@men_dun$,.@men_dun$ + "- "+.@name$[.@du] + " ("+( (.@status[.@du] == 1)?.@pty_ct+"/"+.@pty_limit:"Entry forbidden")+" (Min.Level - "+.@req_lvl[.@du]+")" + ( (.@name$[@du+1] != "")?":":"");
+			set .@men_dun$,.@men_dun$ + "- "+.@name$[.@du] + " ("+( (.@status[.@du] == 1)?.@pty_ct+"/"+.@pty_limit[.@du]:"Entry forbidden")+" (Min.Level - "+.@req_lvl[.@du]+")" + ( (.@name$[@du+1] != "")?":":"");
 			setarray .@pt_count[.@du],.@pty_ct;
 		}	
 		next;
@@ -209,7 +213,7 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 		}
 		next;
 		mes .n$;
-		if(.@pt_count[@d] >= .pt_limit) {
+		if(.@pt_count[@d] >= .@pty_limit[@d]) {
 			mes "I'm sorry, but this dungeon already reached the maximum of parties it can hold.";
 			mes "Please choose a different one.";
 			close;
@@ -225,9 +229,15 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 		} else if(getcharid(1) != 0) {
 			mes "I will now check the levels of your party members. Please wait....";
 			getpartymember(getcharid(1),1);
+			getpartymember(getcharid(1),2);
 			for ( set .@l,0; .@l < $@partymembercount; set .@l,.@l + 1) {
 				// Checking Level of each party member
-				if( (readparam(11,""+strcharinfo(0,$@partymembercid[.@l])) < .@req_lvl[@d]) || (getvar(getd("DG_"+.@dg_id[@d]+"_RepeatCT"),$@partymembercid[.@l]) >= .@rep[@d]) ) 
+				debugmes "Member (AID: "+$@partymemberaid[.@l]+", CID: "+$@partymembercid[.@l]+"):";
+				debugmes "Logged in?: "+isloggedin($@partymemberaid[.@l],$@partymembercid[.@l]);
+				debugmes "BaseLevel: "+readparam(11,""+strcharinfo(0,$@partymembercid[.@l]));
+				debugmes "Repeat Counter: "+getvar(getd("DG_"+.@dg_id[@d]+"_RepeatCT"),$@partymembercid[.@l]);
+				debugmes "Repeat Timer: "+getvar(getd("DG_"+.@dg_id[@d]+"_RepeatTimer"),$@partymembercid[.@l]);
+				if( isloggedin($@partymemberaid[.@l],$@partymembercid[.@l]) == 1 && ( (readparam(11,""+strcharinfo(0,$@partymembercid[.@l])) < .@req_lvl[@d]) || (getvar(getd("DG_"+.@dg_id[@d]+"_RepeatCT"),$@partymembercid[.@l]) >= .@rep[@d]) ) ) 
 					set .@l_ct,.@l_ct + 1;
 				
 				// Reseting Repeat Limit in case the Timer has been reached
@@ -246,63 +256,222 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 			}
 		}
 		mes "Well done, you have passed all checks.";
-		if(getcharid(1) == 0) 
-			mes "You will recieve an bonus of "+.exp[.@diff[@d]]+"%."; 
-		else if(getcharid(1) != 0) 
-			mes "Your party will recieve an bonus of "+.exp[.@diff[@d]]+"%."; 
-			
-		mes "But before you can enter an dungeon, you have to accept at least one quest, therefore talk to me again and choose \"Quest Board\"";
-		
+		mes "You"+ ( (getcharid(1) != 0)?"r party":"")+" will recieve an bonus of "+.exp[.@diff[@d]]+"%."; 
+		mes "But before you can enter an dungeon, you can accept more quests first, therefore talk to me again and choose \"Quest Board\"";
+		close2;
 		// Inserting Data in the Database `dqs_party`
-		if(getcharid(1) == 0)
-			query_sql "INSERT INTO `dqs_party` ( `dg_id` , `char_id` , `quest_id` , `start` ) VALUES ( '"+.@dg_id+"' , '"+getcharid(0)+"' , '1' , '1' )";
-		else 
-			query_sql "INSERT INTO `dqs_party` ( `dg_id` , `pty_id` , `quest_id` , `start` ) VALUES ( '"+.@dg_id+"' , '"+getcharid(1)+"' , '1' , '1' )";
+		query_sql "INSERT INTO `dqs_party` ( `dg_id` , `"+ ( (getcharid(1) == 0)?"char_id":"pty_id")+"` , `quest_id` , `start` ) VALUES ( '"+.@dg_id+"' , '"+ ( (getcharid(1) == 0)?getcharid(0):getcharid(1))+"' , '1' , '1' )";
 		break;
 		
-		// Quest Board 
+		// ============ Quest Board ============ //
 		case 2:
 		mes .n$;
-		if(getcharid(1) == 0) {
-			// Check if player is registered for dungeon
-			query_sql "SELECT `dg_id` FROM `dqs_party` WHERE `char_id` = '"+getcharid(0)+"' AND `quest_id` = '1'",.@dg_id;
-			if(getarraysize(.@dg_id) == 0) {
-				mes "I'm sorry, but you didn't register for an dungeon yet.";
-				mes "Come back, when you have done that first.";
-				close;
-			}
-			query_sql "SELECT DISTINCT `quest_id` , `quest_type` , `limit` FROM `dqs_list` WHERE `dg_id` = '"+.@dg_id+"'",.@q_id,.@q_type,.@limit;
-			for ( set .@q,0; .@q < getarraysize(.@q_id); set .@q,.@q + 1) {
-			}
-		
-		
-		
-		
-		} else if(getcharid(1) != 0) {
-			// Check if party is registered for dungeon
-			query_sql "SELECT `dg_id` FROM `dqs_party` WHERE `pty_id` = '"+getcharid(1)+"' AND `quest_id` = '1'",.@dg_id;
-			if(getarraysize(.@dg_id) == 0) {
-				mes "I'm sorry, but you didn't register your party for an dungeon yet.";
-				mes "Come back, when you have done that first.";
-				close;
-			}
-			
-			
-			
-			
+		// Check if player/party is registered for dungeon
+		if(query_sql("SELECT `dg_id` FROM `dqs_party` WHERE `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' AND `quest_id` = '1'",.@dg_id) == -1) {
+			mes "I'm sorry, but you didn't register"+ ( (getcharid(1) != 0)?" your party":"")+" for an dungeon yet.";
+			mes "Come back, when you have done that first.";
+			close;
 		}
-		break;
-		
-		// Warp Service 
+		mes " --- Dungeon Quest - Information: ---";
+		mes "Type: Default Quest";
+		// Quest Details
+		mes "Condition: Complete the dungeon by talking to the Exit NPC.";
+		query_sql "SELECT `difficulty` FROM `dqs_dungeon` WHERE `dg_id` = '"+.@dg_id+"'",.@diff;
+		mes "Reward: "+.dg_pts*.@diff+"x Dungeon Points";
+		next;
+		mes .n$;
+		query_sql "SELECT DISTINCT `quest_id` , `quest_type` , FROM `dqs_list` WHERE `dg_id` = '"+.@dg_id+"'",.@q_id,.@q_type;
+		if(getarraysize(.@q_id) < 1) {
+			mes "I'm sorry, but I currently don't have any additional quests for you.";
+			mes "But if you are allowed to enter the dungeon until additional quests are available.";
+			close;
+		}
+		for ( set .@q,0; .@q < getarraysize(.@q_id); set .@q,.@q + 1) {
+			set .@que_id,0; // Resetting variable
+			query_sql "SELECT `quest_id` FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '"+.@q_id[.@q]+"' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' LIMIT 1",.@que_id;
+			setarray .@que[.@q],.@que_id;
+			debugmes "Recieving Status of Quest: "+.@que[.@q];
+			set .@q_list$,.@q_list$ + "- #"+.@q_id[.@q]+" ("+ ( (.@q_type[.@q] == 1)?"Monster Hunting":"Item Collecting")+") ["+( (.@que[.@q] != -1)?"^FF0000Running":"^00FFFFNew")+"^000000]" + ( (.@q_id[.@q+1] != 0)?":":"");
+		}
+		mes "Please choose the quest from below you want to accept/abort or look at your progress.";
+		mes "Format:";
+		mes "Quest_ID (Quest Type) [Quest Status]";
+		next;
+		set .@q_c,select(.@q_list$) - 1;
+		mes .n$;
+		mes " --- Quest #"+.@q_id[.@q_c]+" - "+ ( (.@que[.@q_c] != -1)?"Progress":"Information")+": ---";
+		mes "Type: "+( (.@q_type[.@q_c] == 1)?"Monster Hunting":"Item Collecting");
+		// Quest Details
+		if(.@q_type[.@q_c] == 1)
+			query_sql "SELECT `mob_id` , `mob_am` , `reward_id` , `reward_am` FROM `dqs_list` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@req1,.@req2,.@rew_id,.@rew_am;
+		else
+			query_sql "SELECT `item_id` , `item_am` , `reward_id` , `reward_am` FROM `dqs_list` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@req1,.@req2,.@rew_id,.@rew_am;
+		for ( set .@l,0; .@l < getarraysize(.@req1); set .@l,.@l + 1) 
+			mes "- "+.@req2[.@l]+"x "+ ( (.@q_type[.@q_c] == 1)?strmobinfo(1,.@req1[.@l]):getitemname(.@req1[.@l]) );
+		mes "Reward:";
+		mes .@rew_am+"x "+( (.@rew_id == 1)?"Zeny": ( (.@rew_id == 2)?"Cash Points":getitemname(.@rew_id)));
+		mes " ";
+		mes "What do you like to do now?";
+		next;
+		if(.@que[.@q_c] == -1) {
+			select("- Accept:- Nevermind");
+			if(@menu == 2) set .@s,4; else set .@s,@menu;
+		} else
+			set .@s,select("- Abort:- Check Progress/Complete:- Nevermind") + 1;
+
+		switch(.@s) {
+			
+			// Accept Quest 
+			case 1:
+			mes .n$;
+			mes "You have accepted the quest.";
+
+			query_sql "INSERT INTO `dqs_party` ( `dg_id` , `"+ ( (getcharid(1) == 0)?"char_id":"pty_id")+"` , `quest_id` ) VALUES ( '"+.@dg_id+"' , '"+ ( (getcharid(1) == 0)?getcharid(0):getcharid(1))+"' , '"+.@q_id[.@q_c]+"' )";
+			if(.@q_type[.@q_c] == 1) // Monster Hunting
+				for ( set .@a,0; .@a < getarraysize(.@req1); set .@a,.@a + 1) {
+					query_sql "UPDATE `dqs_party` SET `mob_id` = '"+.@req1[.@a]+"' WHERE `dg_id` = '"+.@dg_id+"' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'";
+					
+					// Adding Party Check and setting variable for all of them
+					
+					if(getd("MobHunt_"+.@req1[.@a]+"_CT") == 0)
+						setd("MobHunt_"+.@req1[.@a]+"_CT"),.@req2[.@a];
+					else 
+						setd("MobHunt_"+.@req1[.@a]+"_CT"),getd("MobHunt_"+.@req1[.@a]+"_CT") + .@req2[.@a];
+				} 
+			break;
+			
+			// Abort Quest
+			case 2:
+			mes .n$;
+			mes "Do you really want to abort the quest?";
+			if(select("- Yes:- No") - 1) close;
+			next;
+			mes .@n$;
+			mes "Quest has been aborted.";
+			if(.@q_type[.@q_c] == 1) // Monster Hunting
+			for ( set .@a,0; .@a < getarraysize(.@req1); set .@a,.@a + 1) {
+				query_sql "SELECT `mob_am` FROM `dqs_list` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@req2;
+
+				// Adding Party Check and setting variable for all of them
+
+				if(getd("MobHunt_"+.@req1[.@a]+"_CT") > .@req2)
+					setd("MobHunt_"+.@req1[.@a]+"_CT"),getd("MobHunt_"+.@req1[.@a]+"_CT") - .@req2;
+				else 
+					setd("MobHunt_"+.@req1[.@a]+"_CT"),0;
+			}
+			query_sql "DELETE FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '"+.@q_id[.@q_c]+"' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'";
+			break;
+			
+			// Check Progress
+			case 3:
+			mes .n$;
+			mes "Let's see, if you have completed the target....";
+			if(.@q_type[.@q_c] == 1)
+				query_sql "SELECT `mob_id` , `mob_am` FROM `dqs_list` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@req1,.@req2;
+			else
+				query_sql "SELECT `item_id` , `item_am` FROM `dqs_list` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@req1,.@req2;
+			
+			for ( set .@p,0; .@p < getarraysize(.@req1); set .@p,.@p + 1) {
+				if(.@q_type[.@q_c] == 1)
+					// Selecting the latest value in the database
+					query_sql "SELECT `mob_am` FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '"+.@q_id[.@q_c]+"' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' AND `mob_id` = '"+.@req1[.@p]+"'",.@am;
+				else 
+				
+					// Adding Party Check and setting variable for all of them
+					set .@am,countitem(.@req1[.@p]);
+				
+				if(.@am < .@req2[.@p]) set .@f,.@f + 1;
+			}
+			for ( set .@l,0; .@l < getarraysize(.@req1); set .@l,.@l + 1) 
+				mes "- "+ ( (.@q_type[.@q_c] == 1)?strmobinfo(1,.@req1[.@l]):getitemname(.@req1[.@l]) )+": "+.@am+"/"+.@req2[.@l];
+			mes " ";
+			if(.@f) {
+				mes "You didn't finish "+.@f+" target"+( (.@f == 1)?"":"s")+". Please come back, when you have finished those.";
+				close;
+			}
+			
+			next;
+			mes .n$;
+			query_sql "SELECT `reward_id` , `reward_am` FROM `dqs_list` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@rew_id,.@rew_am;
+			
+			// Adding Party Check and setting variable for all of them
+			
+			switch(.@rew_id) {
+				case 1: set Zeny,Zeny + .@rew_am; break;
+				case 2: set #CASHPOINTS,#CASHPOINTS + .@rew_am; break;
+				default: 
+				if(checkweight(.@rew_id,.@rew_am) == 1) 
+					getitem .@rew_id,.@rew_am; 
+				else {
+					mes "It seems like you can't carry more items, than you already do. You have to remove some weight before you can recieve your reward.";
+					close;
+				}
+				break;
+			}
+			mes "You have completed the quest, here is your reward!!";
+			dispbottom "You have recieved "+.@rew_am+"x "+( (.@rew_id == 1)?"Zeny": ( (.@rew_id == 2)?"Cash Points":getitemname(.@rew_id)));
+			// Deleting Mob ID Variable or removing quest items from inventory
+			for ( set .@r,0; .@r < getarraysize(.@req1); set .@r,.@r + 1) 
+				if(.@q_type[.@q_c] == 1) {
+					// Reseting Mob ID Variable and Mob Counter
+					if(getd("MobHunt_"+.@req1[.@r]+"_CT") > .@req2[.@r])
+						setd("MobHunt_"+.@req1[.@r]+"_CT"),getd("MobHunt_"+.@req1[.@r]+"_CT") - .@req2;
+					else 
+						setd("MobHunt_"+.@req1[.@r]+"_CT"),0;
+				} else
+					delitem .@req1[.@l],.@req2[.@l];
+				
+			query_sql "DELETE FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '"+.@q_id[.@q_c]+"' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'";
+			break;
+		}
+		// ============ Warp Service ============ //
 		case 3:
-		// check if player is registered for dungeon and has chosen at least one quest
-		
-		mes "I will warp you now to the "+.@name$[@d]+ ( (compare(.@name$[@d],"Dungeon") == 1)?" ":" Dungeon ");
-		mes "I will warp you and your party now to the "+.@name$[@d]+ ( (compare(.@name$[@d],"Dungeon") == 1)?" ":" Dungeon ");
+		mes .n$;
+		// Check if player/party is registered for dungeon
+		if(query_sql("SELECT `dg_id` FROM `dqs_party` WHERE `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' AND `quest_id` = '1'",.@dg_id) == -1) {
+			mes "I'm sorry, but you didn't register"+ ( (getcharid(1) != 0)?" your party":"")+" for an dungeon yet.";
+			mes "Come back, when you have done that first.";
+			close;
+		}
+		mes "I will warp you "+ ( (getcharid(1) != 0)?"and your party ":"")+"now to the "+.@name$[@d]+ ( (compare(.@name$[@d],"Dungeon") == 1)?" ":" Dungeon ");
+		close2;
+		query_sql "SELECT `map_name` , `map_x` , `map_y` FROM `dqs_dungeon` WHERE `dg_id` = '"+.@dg_id+"' AND `floor` = '1'",.@map$,.@map_x,.@map_y;
 		// Warping Party ...
 		if(getcharid(1) != 0) 
-			warpparty getd(".pty_"+getcharid(1)+"_st$[0]")+".gat",atoi(getd(".pty_"+getcharid(1)+"_st$[1]")),atoi(getd(".pty_"+getcharid(1)+"_st$[2]")),getcharid(1);
+			warpparty .@map$+".gat",.@map_x,.@map_y,getcharid(1);
+		else
+			warp .@map$+".gat",.@map_x,.@map_y;
 	
+		break;
+		
+		// Complete Dungeon
+		case 4:
+		mes .n$;
+		// Check if player/party is registered for dungeon
+		if(query_sql("SELECT `dg_id` FROM `dqs_party` WHERE `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' AND `quest_id` = '1'",.@dg_id) == -1) {
+			mes "I'm sorry, but you didn't register"+ ( (getcharid(1) != 0)?" your party":"")+" for an dungeon yet.";
+			mes "Come back, when you have done that and actually completed it first.";
+			close;
+		}
+		// Checking if there are still uncompleted quests
+		if(query_sql("SELECT `quest_id` FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id+"' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'",.@q_id) != -1) {
+			mes "You"+ ( (getcharid(1) != 0)?"r party":"")+" still have quests to complete.";
+			close;
+		}
+		// Checking if dungeon was completed
+		query_sql "SELECT `rew_id` FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '1' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'",.@rew_id;
+		if(.@rew_id != 1) {
+			mes "You"+ ( (getcharid(1) != 0)?"r party":"")+" didn't complete the dungeon yet.";
+			mes "Please come back, when it's done.";
+			close;
+		}
+		
+		/*
+		Adding Repeat Counter + Timer when reached
+		Reward
+		Announce Party/Player completed .... Dungeon?
+		Deleting database entried from `dqs_party`
+		*/
 		break;
 	}
 	break;
@@ -323,8 +492,81 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 	
 	// Point Exchanger 
 	case 3:
-	if(!dg_rew) break;
-	
+	if(!.dg_pts) break;
+	mes .n$;
+	mes "Which points do you want to exchange?";
+	mes "Your Dungeon Points: "+getd(""+.dg_var$);
+	mes "Your MvP Points: "+getd(""+.mvp_var$);
+	next;
+	switch(select("- Dungeon Points:- MvP Points")) {
+		
+		case 1:
+		mes .n$;
+		mes "Please choose the item you want your points to exchange to:";
+		mes "Format: Amount x Item (Price per Exchange)";
+		next;
+		set .@b,select(.ex_m$) - 1;
+		mes .n$;
+		mes "You have selected "+.dg_ex_am+"x "+getitemname(.dg_ex[.@b])+".";
+		mes "Is that correct?";
+		if(select("- Yes:- No") - 1) close;
+		next;
+		mes .n$;
+		mes "Now type the how often you want to exchange:";
+		mes "Price per exchange: "+.dg_ex_cost[.@b];
+		mes "Your Dungeon Points: "+getd(""+.dg_var$);
+		// Setting exchange limit based on the current points you have
+		set .@l,(getd(""+.dg_var$)/.dg_ex_cost[.@b]);
+		mes "Maximum possible: "+.@l+", based on your current points.";
+		next;
+		if(input(.@buy,1,.@l) != 0) {
+			mes .n$;
+			mes "It seems like you put either a 0 or more than "+.@l+", which is the maximum you could exchange based on your points.";
+			close;
+		}
+		mes .n$;
+		getitem .dg_ex[.@b],.dg_ex_am[.@b];
+		setd(""+.dg_var$),getd(""+.dg_var$) - (.@buy*.dg_ex_cost[.@b]);
+		mes "Your exchange has been completed.";
+		mes "See you again for the next exchange.";
+		break;
+		
+		case 2:
+		mes .n$;
+		if(!.mvp_rew) {
+			mes "I'm sorry, but this exchange service is not currently available duo the fact MvP Points not being gainable.";
+			mes "Please come back another time.";
+			close;
+		}
+		mes "Please choose the item you want your points to exchange to:";
+		mes "Format: Amount x Item (Price per Exchange)";
+		next;
+		set .@b,select(.ex_mvp_m$) - 1;
+		mes .n$;
+		mes "You have selected "+.mvp_ex_am+"x "+getitemname(.mvp_ex[.@b])+".";
+		mes "Is that correct?";
+		if(select("- Yes:- No") - 1) close;
+		next;
+		mes .n$;
+		mes "Now type the how often you want to exchange:";
+		mes "Price per exchange: "+.mvp_ex_cost[.@b];
+		mes "Your MvP Points: "+getd(""+.mvp_var$);
+		// Setting exchange limit base on the current points you have
+		set .@l,(getd(""+.mvp_var$)/.mvp_ex_cost[.@b]);
+		mes "Maximum possible: "+.@l+", based on your current points.";
+		next;
+		if(input(.@buy,1,.@l) != 0) {
+			mes .n$;
+			mes "It seems like you put either a 0 or more than "+.@l+", which is the maximum you could exchange based on your points.";
+			close;
+		}
+		mes .n$;
+		getitem .mvp_ex[.@b],.mvp_ex_am[.@b];
+		setd(""+.mvp_var$),getd(""+.mvp_var$) - (.@buy*.mvp_ex_cost[.@b]);
+		mes "Your exchange has been completed.";
+		mes "See you again for the next exchange.";
+		break;
+	}
 	break;
 	
 	// Nevermind
@@ -407,6 +649,13 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 	> Remove
 	   - Selecting Quest
 	   - Removing
+	   
+	   
+	Quest ID 1 = Dungeon Quest
+	Quest Type = 3
+	Quest Info = "Complete the dungeon by talking to the Exit NPC."
+	Quest can't be aborted or deleted from the database via ingame menu.
+	Quest Reward = Dungeon Points * Dungeon Difficulty
 	*/
 	break;
 	
@@ -447,20 +696,69 @@ close;
 
 
 OnInit:
+// Dungeon Quest System not loaded yet
+set $@DQS_Sys,0;
 // =============== NPC Name ===============
 set .n$,"["+strnpcinfo(1)+"]";
 // =============== Debug Mode ===============
 // * (Debug Messages in Map Server)
 // > 0: Off
 // > 1: On 
-set .debug,0; 
+set .debug,0;
+set .gm,80; // GM Access Level 
 // ============== Dungeon Settings ================== //
 setarray .exp[1],50,100,150; // EXP Rate in % for Difficulty: Easy/Medium/Hard
-// Base Dungeon Delay * Difficulty 
-set .dg_delay_b,43200; // 12 Hours
+// Server Array Limit
+// > rAthena since commit 6295c77 (Script Engine Upgrade):
+// = 2000000000000 (2 Billion)
+// > Others/Default: 128
+set .array,2000000000000;
+// ==== Dungeon Delay Settings ======
+// * Max Dungeon Limit:
+// (How often an dungeon can be done till the delay below comes active)
+// Note: Don't use 0, that's used in the dungeon managementn
+set .dg_max_limit,1000;
+// * Type:
+// - 1: Hour
+// - 2: Day
+// - 3: Week
+// - 4: Month
+set .dg_del_type,2;
+// * Calculation Values values in seconds
+// Note: This values will be multiplied by Dungeon Difficulty later on.
+switch(.q_del_type) {
+	case 1: set .dg_delay,3600; break;
+	case 2: set .dg_delay,86400; break;
+	case 3: set .dg_delay,604800; break;
+	case 4: set .dg_delay,2592000; break;
+}
+// ===== Quest Settings =====
+// Minimum and Maximum Mob Amount
+set .mob_min,1;
+set .mob_max,10;
+// Maximum Mobs you can hunt at the same time
+set .mob_ct,3;
+// Level Restriction
+set .level,MAX_LEVEL; // 0 = Off / MAX_LEVEL - Server Max Level (src/map/map.h)
+// Minimum and Maximum Item Amount
+set .item_min,1;
+set .item_max,200;
+// Maximum Items you can collect at the same time
+set .item_ct,5;
+// ==== Reward Settings per Quest ====
+// * Maximum Zeny Amount
+set .rew_zeny,10000000; // 10m Zeny
+// * Maximum Cash Points Amount
+set .rew_cash,1000;
+// * Maximum Item Amount
+set .rew_item,10000;
+// * Maximum Item Weight
+// (= Item Weight* Reward Amount)
+set .rew_weight,10000;
+// ========================
 // Dungeon Reward > 0 = Off, 1+ = Base Dungeon Quest Points, will be multiplied by Difficulty
 set .dg_pts,10; 
-if(.dg_pts == 1) {
+if(.dg_pts > 0) {
 	set .dg_var$,"DQG_Pts";
 	// Dungeon Points Exchanger:
 	// > Item IDs 
@@ -476,7 +774,7 @@ if(.dg_pts == 1) {
 }
 // MvP Reward for each MvP > 0 = Off, 1+ = Base MvP Points, will also be multiplied by Difficulty
 set .mvp_pts,1; 
-if(.mvp_pts == 1) {
+if(.mvp_pts > 0) {
 	set .mvp_var$,"DMvP_Pts";
 	// MvP Points Exchanger:
 	// > Item IDs 
@@ -488,6 +786,7 @@ if(.mvp_pts == 1) {
 	for ( set .@m,0; .@m < getarraysize(.mvp_ex); set .@m,.@m + 1)
 		set .ex_mvp_m$,.ex_mvp_m$ + "- "+.mvp_ex_am[.@m]+"x "+getitemname(.mvp_ex[.@m])+" ("+.mvp_ex_cost[.@m]+")"+ ( (.mvp_ex[.@m+1] != 0)?":":"");
 }
+/*
 // =============== Dungeon Names ===============
 setarray .dungn$[0],"Cursed Abbey","Aldebaran Dungeon","Abyss Lake","Amatsu Dungeon","Ayothaya Dungeon","Bylan","Clock Tower","Coal Mine","Culvert","Einbech Dungeon","Gefenia","Geffen Dungeon","Glast Heim","Gonyrun Dungeon","Ice Dungeon","Labyrinth","Juperos","Kiel Academy","Lightalzen Bio Lab","Louyang Dungeon","Magma Dungeon","Odin Temple","Orc Dungeon","Payon Dungeon","Pyramid Dungeon","Sphinx Dungeon","Sunken Ship Dungeon","Thanatos Tower","Toy Factory Dungeon","Turtle Dungeon","Thor Volcano Dungeon";
 // =============== Dungeon Prefixes ===============
@@ -496,11 +795,10 @@ setarray .dungpre$[0],"abbey","alde","abyss","amat","ayot","bylan","c_tow","coal
 // = Format: Difficulty ,Level Requirement, Map Name Level 1, Map X, Map Y,....
 // = Difficulty: 1 = Easy, 2 = Medium, 3 = Hard
 // = Level: 1 = None, 2+ = Requirement
-/*
 query_sql "INSERT INTO `dqs_dungeon` ( `dq_id` , `name` , `difficulty` , `req_level` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` ) VALUES ( '1' , 'Cursed Abbey' , '2' , '60' , '1' , 'abbey01' , '51' , '14' , '3' )";
 query_sql "INSERT INTO `dqs_dungeon` ( `dq_id` , `name` , `difficulty` , `req_level` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` ) VALUES ( '1' , 'Cursed Abbey' , '2' , '60' , '2' , 'abbey02' , '150' , '11' , '3' )";
 query_sql "INSERT INTO `dqs_dungeon` ( `dq_id` , `name` , `difficulty` , `req_level` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` ) VALUES ( '1' , 'Cursed Abbey' , '2' , '60' , '3' , 'abbey03' , '120' , '10' , '3' )";
-*/
+
 setarray .abbey$[0],"1","1","abbey01","51","14","abbey02","150","11","abbey03","120","10";
 setarray .alde$[0],"1","1","alde_dun01","197","25","alde_dun02","262","41","alde_dun03","276","53","alde_dun04","130","130";
 setarray .abyss$[0],"1","1","abyss_01","264","271","abyss_02","275","270","abyss_03","116","27";
@@ -532,7 +830,7 @@ setarray .thana$[0],"1","1","tha_t01","150","36","tha_t02","150","36","tha_t03",
 setarray .toy$[0],"1","40","xmas_dun01","205","16","xmas_dun02","129","133";
 setarray .turtle$[0],"2","50","tur_dun01","161","34","tur_dun02","148","256","tur_dun03","132","190","tur_dun04","100","192";
 setarray .thor_v$[0],"3","90","thor_v01","21","228","thor_v02","75","205","thor_v03","34","272";
-
+*/
 // Use Mapflags?
 // 0 = Disabled
 // 1 = Enabled
@@ -546,6 +844,11 @@ if(.dg_mf) {
 		for ( set .@mf,0; .@mf < getarraysize(.mapflags); set .@mf,.@mf + 1)
 			setmapflag .@map_name$[.@m],.mapflags[.@mf];
 }
+query_sql "SHOW TABLES LIKE 'dqs_list'",$@dqs_tab$;
+if($@dqs_tab$[0] != "") 
+	set $@DQS_Sys,1;
+
+announce .n$+": Dungeon Quest Service: "+ ( ($@DQS_Sys == 1)?"Online":"Offline"),bc_all|bc_yellow;
 end;
 }
 // ======================= Inside Dungeon NPC =====================

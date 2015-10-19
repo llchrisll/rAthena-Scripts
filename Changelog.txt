@@ -33,6 +33,18 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/10/19
+= Updated Dungeon Party System v1.0 [WIP]
+- Removed `limit` from the `dqs_list` database and changed default from `quest_id` to 2
+- Added an check to see if the DQS is online or not
+- Added some debugmes to "Party Entry"
+- Changed some lines with short-ifs to make it shorter
+- Copied and optimized nearly fully the Quest Board
+- Finished the Warp Service part
+- Started to add "Complete Dungeon" code
+- Copied the Exchanger code from Dungeon Party System v1.0
+- Copied a few OnInit: settings from the Quest System
+------------------------------------------------------------
 * 2015/10/17
 = Updated Dungeon Quest System v1.0 [WIP]
 - Added the code for registering
