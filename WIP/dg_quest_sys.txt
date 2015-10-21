@@ -64,7 +64,8 @@ CREATE TABLE IF NOT EXISTS `dqs_list` (
  `start` int(10) unsigned default '1'
  `quest_id` int(10) unsigned NOT NULL,
  `mob_id` int(10) unsigned default '0',
- `mob_am` int(12) unsigned default '0'
+ `mob_am` int(12) unsigned default '0',
+ `req_am` int(12) unsigned default '0'
  ) ENGINE=MyISAM;
  
 CREATE TABLE IF NOT EXISTS `dqs_dungeon` (
@@ -93,6 +94,7 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 	mes .n$;
 	if(!$@DQS_Sys) {
 		mes "I'm sorry, but my Dungeon Quest Service is currently offline.";
+		close;
 	}
 	mes "Please choose what you want to do below:";
 	next;
@@ -328,16 +330,8 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 
 			query_sql "INSERT INTO `dqs_party` ( `dg_id` , `"+ ( (getcharid(1) == 0)?"char_id":"pty_id")+"` , `quest_id` ) VALUES ( '"+.@dg_id+"' , '"+ ( (getcharid(1) == 0)?getcharid(0):getcharid(1))+"' , '"+.@q_id[.@q_c]+"' )";
 			if(.@q_type[.@q_c] == 1) // Monster Hunting
-				for ( set .@a,0; .@a < getarraysize(.@req1); set .@a,.@a + 1) {
-					query_sql "UPDATE `dqs_party` SET `mob_id` = '"+.@req1[.@a]+"' WHERE `dg_id` = '"+.@dg_id+"' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'";
-					
-					// Adding Party Check and setting variable for all of them
-					
-					if(getd("MobHunt_"+.@req1[.@a]+"_CT") == 0)
-						setd("MobHunt_"+.@req1[.@a]+"_CT"),.@req2[.@a];
-					else 
-						setd("MobHunt_"+.@req1[.@a]+"_CT"),getd("MobHunt_"+.@req1[.@a]+"_CT") + .@req2[.@a];
-				} 
+				for ( set .@a,0; .@a < getarraysize(.@req1); set .@a,.@a + 1)
+					query_sql "UPDATE `dqs_party` SET `mob_id` = '"+.@req1[.@a]+"' , `req_am` = '"+.@req2[.@a]+"' WHERE `dg_id` = '"+.@dg_id+"' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'";
 			break;
 			
 			// Abort Quest
@@ -349,16 +343,9 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 			mes .@n$;
 			mes "Quest has been aborted.";
 			if(.@q_type[.@q_c] == 1) // Monster Hunting
-			for ( set .@a,0; .@a < getarraysize(.@req1); set .@a,.@a + 1) {
+			for ( set .@a,0; .@a < getarraysize(.@req1); set .@a,.@a + 1)
 				query_sql "SELECT `mob_am` FROM `dqs_list` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@req2;
-
-				// Adding Party Check and setting variable for all of them
-
-				if(getd("MobHunt_"+.@req1[.@a]+"_CT") > .@req2)
-					setd("MobHunt_"+.@req1[.@a]+"_CT"),getd("MobHunt_"+.@req1[.@a]+"_CT") - .@req2;
-				else 
-					setd("MobHunt_"+.@req1[.@a]+"_CT"),0;
-			}
+			
 			query_sql "DELETE FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '"+.@q_id[.@q_c]+"' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'";
 			break;
 			
@@ -394,36 +381,51 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 			mes .n$;
 			query_sql "SELECT `reward_id` , `reward_am` FROM `dqs_list` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@rew_id,.@rew_am;
 			
-			// Adding Party Check and setting variable for all of them
-			
-			switch(.@rew_id) {
-				case 1: set Zeny,Zeny + .@rew_am; break;
-				case 2: set #CASHPOINTS,#CASHPOINTS + .@rew_am; break;
-				default: 
-				if(checkweight(.@rew_id,.@rew_am) == 1) 
-					getitem .@rew_id,.@rew_am; 
-				else {
-					mes "It seems like you can't carry more items, than you already do. You have to remove some weight before you can recieve your reward.";
-					close;
+			if(getcharid(1) == 0)  {
+				switch(.@rew_id) {
+					case 1: set Zeny,Zeny + .@rew_am; break;
+					case 2: set #CASHPOINTS,#CASHPOINTS + .@rew_am; break;
+					default: 
+					if(checkweight(.@rew_id,.@rew_am) == 1) 
+						getitem .@rew_id,.@rew_am; 
+					else {
+						mes "It seems like you can't carry more items, than you already do. You have to remove some weight before you can recieve your reward.";
+						close;
+					}
+					break;
 				}
-				break;
+			} else {
+					getpartymember(getcharid(1),1);
+					getpartymember(getcharid(1),2);
+					for ( set .@p,0; .@p < $@partymembercount; set .@p,.@p + 1) {
+						if(isloggedin($@partymemberaid[.@p],$@partymembercid[.@p]) == 0) continue;
+						attachrid($@partymemberaid[.@p]);
+					
+						switch(.@rew_id) {
+						case 1: set Zeny,Zeny + .@rew_am; break;
+						case 2: set #CASHPOINTS,#CASHPOINTS + .@rew_am; break;
+						default: 
+						if(checkweight(.@rew_id,.@rew_am) == 1) 
+							getitem .@rew_id,.@rew_am; 
+						else {
+							mes "It seems like you can't carry more items, than you already do. You have to remove some weight before you can recieve your reward.";
+							close;
+						}
+						break;
+					}
+				}
 			}
-			mes "You have completed the quest, here is your reward!!";
-			dispbottom "You have recieved "+.@rew_am+"x "+( (.@rew_id == 1)?"Zeny": ( (.@rew_id == 2)?"Cash Points":getitemname(.@rew_id)));
-			// Deleting Mob ID Variable or removing quest items from inventory
-			for ( set .@r,0; .@r < getarraysize(.@req1); set .@r,.@r + 1) 
-				if(.@q_type[.@q_c] == 1) {
-					// Reseting Mob ID Variable and Mob Counter
-					if(getd("MobHunt_"+.@req1[.@r]+"_CT") > .@req2[.@r])
-						setd("MobHunt_"+.@req1[.@r]+"_CT"),getd("MobHunt_"+.@req1[.@r]+"_CT") - .@req2;
-					else 
-						setd("MobHunt_"+.@req1[.@r]+"_CT"),0;
-				} else
-					delitem .@req1[.@l],.@req2[.@l];
-				
-			query_sql "DELETE FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '"+.@q_id[.@q_c]+"' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'";
-			break;
 		}
+		mes "You have completed the quest, here is your reward!!";
+		dispbottom "You have recieved "+.@rew_am+"x "+( (.@rew_id == 1)?"Zeny": ( (.@rew_id == 2)?"Cash Points":getitemname(.@rew_id)));
+		// Removing quest items from inventory
+		if(.@q_type[.@q_c] == 2)
+			for ( set .@r,0; .@r < getarraysize(.@req1); set .@r,.@r + 1) 
+				delitem .@req1[.@l],.@req2[.@l];
+			
+		query_sql "DELETE FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '"+.@q_id[.@q_c]+"' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'";
+		break;
+
 		// ============ Warp Service ============ //
 		case 3:
 		mes .n$;
@@ -572,7 +574,7 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 	// Nevermind
 	case 4:
 	break;
-}
+	}
 close;
 
 
@@ -691,9 +693,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 	break;
 }
 close;
-
-}
-
 
 OnInit:
 // Dungeon Quest System not loaded yet
@@ -850,7 +849,69 @@ if($@dqs_tab$[0] != "")
 
 announce .n$+": Dungeon Quest Service: "+ ( ($@DQS_Sys == 1)?"Online":"Offline"),bc_all|bc_yellow;
 end;
+
+OnNPCKillEvent:
+if(!$@DQS_Sys) end;
+// Player is in a party
+if(getcharid(1) != 0) {
+	getpartymember(getcharid(1),1);
+	getpartymember(getcharid(1),2);
+	for ( set .@p,0; .@p < $@partymembercount; set .@p,.@p + 1) {
+		if(isloggedin($@partymemberaid[.@p],$@partymembercid[.@p]) == 0) continue;
+		attachrid($@partymemberaid[.@p]);
+		callsub OnQuestMobKill;
+	}
+	end;
 }
+OnQuestMobKill:
+query_sql "SELECT SUM( `req_am` ) , SUM( `mob_am` ) , `dg_id` , `quest_id` FROM `quest_player` WHERE `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' AND `mob_id` = '"+killedrid+"'",.@req_am,.@mob_am,.@dg_id,.@q_id;
+if( (.@mob_am + 1) <= .@req_am)
+	for ( set .@m,0; .@m < getarraysize(.@dg_id); set .@m,.@m + 1) {
+		// Updating SQL Table for Monster Hunting Quests
+		query_sql "UPDATE `quest_player` SET `mob_am` = `mob_am` + 1 WHERE `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' AND `mob_id` = '"+killedrid+"' AND `mob_am` < '"+.@req_am+"' LIMIT 1";
+		query_sql "SELECT `name` FROM `dqs_dungeon` WHERE `dg_id` = '"+.@dg_id[.@m]+"'",.@n_name$,.@n_map$;
+		dispbottom .@name$+": Monster Hunting - "+strmobinfo(1,killedrid)+" : "+(.@mob_am + 1)+"/"+.@req_am,0x00FF00;
+	}
+if(getcharid(1) != 0) return; else end;
+
+// OnLogin List and AtCommand
+OnPCLoginEvent:
+if(!$@DQS_Sys) end;
+query_sql "SELECT DISTINCT `quest_id` , `npc_id` FROM `quest_player` WHERE `char_id` = '"+getcharid(0)+"'",.@q_id,.@n_id;
+set .@n$,"[Quest System]";
+if(getarraysize(.@q_id) < 1) {
+	dispbottom .@n$+": You don't have any active quests.";
+	end;
+}
+dispbottom .@n$+": You have "+getarraysize(.@q_id)+" active Quests.";
+dispbottom .@n$+": I will now list them per NPC with the info about the NPC:";
+	
+// Displaying Quest Progress
+for ( set .@l,0; .@l < getarraysize(.@q_id); set .@l,.@l + 1) {
+	dispbottom "  [* ====== Quest #"+.@q_id[.@l]+" - Progress: ====== *]  ";
+	query_sql "SELECT `quest_type` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@q_type;
+	dispbottom "  >  Type: "+( (.@q_type == 1)?"Monster Hunting":"Item Collecting");
+	if(.@q_type == 1)
+		query_sql "SELECT `mob_id` , `mob_am` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@req1,.@req2;
+	else
+		query_sql "SELECT `item_id` , `item_am` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@req1,.@req2;
+	
+	for ( set .@p,0; .@p < getarraysize(.@req1); set .@p,.@p + 1)
+		if(.@q_type == 1) {
+			query_sql "SELECT `mob_am` FROM `quest_player` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"' AND `char_id` = '"+getcharid(0)+"' AND `mob_id` = '"+.@req1[.@p]+"'",.@m_got;
+			dispbottom "  >  Mob#"+(.@p+1)+": "+strmobinfo(1,.@req1[.@p])+" - "+.@m_got+"/"+.@req2[.@p];
+		} else 
+			dispbottom "  >  Item#"+(.@p+1)+": "+getitemname(.@req1[.@p])+" - "+countitem(.@req1[.@p])+"/"+.@req2[.@p];
+	
+	dispbottom "  [* ======  NPC Location: ====== *]  ";
+	query_sql "SELECT `npc_name` , `npc_map` , `npc_x` , `npc_y` FROM `quest_npc` WHERE `npc_id` = '"+.@n_id[.@l]+"'",.@n_name$,.@n_map$,.@n_x,.@n_y;
+	dispbottom "  >  Name: "+.@n_name$;
+	dispbottom "  >  Map: "+.@n_map$+", X: "+.@n_x+", Y: "+.@n_y;
+}
+end;
+
+}
+
 // ======================= Inside Dungeon NPC =====================
 -	script	Dungeon Guard#main::DG_Main	110,{
 

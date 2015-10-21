@@ -33,8 +33,15 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/10/21
+= Updated Dungeon Quest System v1.0 [WIP]
+- Added `req_am` to the dqs_party database
+  and removed "MobHunt_"+<MobID>+"_CT" variables
+- Added Party Check to Reward Giving and Quest Requirement Check
+- Copied and modified OnNPCKillEvent from Quest System v1.0 [RE]
+------------------------------------------------------------
 * 2015/10/19
-= Updated Dungeon Party System v1.0 [WIP]
+= Updated Dungeon Quest System v1.0 [WIP]
 - Removed `limit` from the `dqs_list` database and changed default from `quest_id` to 2
 - Added an check to see if the DQS is online or not
 - Added some debugmes to "Party Entry"
