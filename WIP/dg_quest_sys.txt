@@ -81,6 +81,14 @@ CREATE TABLE IF NOT EXISTS `dqs_dungeon` (
  `repeat` int(5) unsigned default '0',
  `status` tinyint(3) unsigned default '0'
 ) ENGINE=MyISAM;
+
+CREATE TABLE IF NOT EXISTS `dqs_app` (
+ `pty_id` int(10) unsigned default '0',
+ `app_id` int(10) unsigned default '0',
+ `name` varchar(255) default 'Unknown Player',
+ `level` varchar(255) default '1',
+ `class` int(10) unsigned default '0'
+) ENGINE=MyISAM;
 */
 prontera,151,185,4	script	Dungeon Quest Service	110,{
 
@@ -198,13 +206,16 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 				mes "The leader's name is ["+getpartyleader(.@pty_list[.@p])+"].";
 				close2;
 				set .@req_id,getcharid(0);
+				set .@lvl$,BaseLevel+"/"+JobLevel;
+				set .@cls,Class;
+				set .@name$,strcharinfo(0);
 				// Creating Applicant array for the party
-				setarray getd("$@req_"+.@pty_list[.@p]+"_id["+getarraysize(getd("$@req_"+.@pty_list[.@p]+"_id"))+"]"),.@req_id;
-				// Applicant Info
-				setarray getd("$@req_"+.@req_id+"$[0]"),strcharinfo(0),""+BaseLevel+"/"+JobLevel,"Class: "+jobname(Class);
-				detachrid;
-				attachrid(getpartyleader(.@pty_list[.@p],1));
-				announce .n$+": The player ["+getd("$@req_"+.@req_id+"$[0]")+"] with Level "+getd("$@req_"+.@req_id+"$[1]")+", "+getd("$@req_"+.@req_id+"$[2]")+" requests to join your party. You can accept/decline by sending an whisper to me via \"NPC:Party_Join\" and as text \"List\". There you gain additional information.",bc_self;
+				if(query_sql("SELECT `app_id` FROM `dqs_app` WHERE `pty_id` = '"+.@pty_list[.@p]+"'",.@app_id) == -1) {
+					query_sql "INSERT INTO `dqs_app` ( `pty_id` , `app_id` , `name` , `level` , `class` ) VALUES ( '"+.@pty_list+"' , '"+.@req_id+"' , '"+escape_sql(strcharinfo(0))+"' , '"+BaseLevel+"/"+JobLevel+"' , '"+Class+"' )";
+					detachrid;
+					attachrid(getpartyleader(.@pty_list[.@p],1));
+					announce .n$+": The player ["+.@name$+"] with Level "+.@lvl$+", Class: "+jobname(Class)+" requests to join your party. You can accept/decline by sending an whisper to me via \"NPC:Party_Join\" and as text \"List\". There you gain additional information.",bc_self;
+				}
 				end;
 
 			} else {
@@ -363,9 +374,11 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 					// Selecting the latest value in the database
 					query_sql "SELECT `mob_am` FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '"+.@q_id[.@q_c]+"' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' AND `mob_id` = '"+.@req1[.@p]+"'",.@am;
 				else 
-				
-					// Adding Party Check and setting variable for all of them
-					set .@am,countitem(.@req1[.@p]);
+					if(getcharid(1) != 0) {
+						addrid(1,getcharid(1));
+						set .@am,.@am + countitem(.@req1[.@p]);
+					} else 
+						set .@am,countitem(.@req1[.@p]);
 				
 				if(.@am < .@req2[.@p]) set .@f,.@f + 1;
 			}
@@ -480,16 +493,50 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 	
 	// Information
 	case 2:
-	/*
-	Solo or Party possible
-	Party Limit per Dungeon
-	EXP Rates
-	Party Join
-	Dungeon Delay
-	Dungeon & MvP Points
-	Quest Board
-	Warp Service	
-	*/
+	mes .n$;
+	mes "So you want some information about the Dungeon Quest Service, huh?!";
+	mes "Good, then I will start the main steps first:";
+	next;
+	mes "[ === Register === ]";
+	mes "To use the Dungeon Quest Service, you can have enter either alone or as a party with a minimum of 2 online members.";
+	mes "After you have chosen the dungeon you want to enter, you can accept, if available, additional quests to earn extra rewards.";
+	mes "To do so, just choose \"Quest Board\" in the \"Dungeon Menu\".";
+	mes "I also offer you an Warp Service to the Dungeon Entrances by choosing \"Warp Service\".";
+	mes "But that's not all, I also can warp you to Party Members, which are inside of the Dungeon or to the \"Check Point\", which is usually the beginning of the Dungeon Floor.";
+	mes " ";
+	mes "In the case you don't want to enter alone, but don't have players you can party up with, you can join an existing party, just choose \"Join\" when you want to \"Register\".";
+	mes "I will send therefore to the party leader of the chosen party an info containing of your name, level and class.";
+	mes "He/She can decide then if want to accept your application or not.";
+	next;
+	mes "[ === Dungeons === ]";
+	mes "Each Dungeon has it's own Difficulty, Level Requirement and Repeat Limit.";
+	mes "After every completion the Repeat Limit for that Dungeon will increase and when it has been reached and Repeat Delay becomes active.";
+	next;
+	mes "[ === Difficulty & EXP Bonus ===]";
+	mes "I will now list the EXP Bonus of the various Difficulties:";
+	mes "Easy: "+.exp[1]+"%";
+	mes "Medium: "+.exp[2]+"%";
+	mes "Hard: "+.exp[3]+"%";
+	next;
+	if(.dg_pts > 0) {
+		mes "[ === Dungeon Rewards === ]";
+		mes "Completing an Dungeon also rewards you with special \"Dungeon Points\", which can be exchanged against items.";
+		mes "Choose \"Points Exchanger\" in the first menu for that.";
+		mes "The base points you can gain for each Dungeon is "+.dg_pts+" and will be multiplied by the Dungeons Difficulty:";
+		mes "\"1\" for Easy, by \"2\" for Medium, by \"3\" for Hard.";
+		next;
+	}
+	if(.mvp_pts > 0) {
+		mes "[ === MvP Rewards === ]";
+		mes "Killing MvP's rewards you with special \"MvP Points\", which can be exchanged against items.";
+		mes "Choose \"Points Exchanger\" in the first menu for that.";
+		mes "The base points you can gain for each slain MvP is "+.mvp_pts+" and will be multiplied by the Dungeons Difficulty:";
+		mes "\"1\" for Easy, by \"2\" for Medium, by \"3\" for Hard.";
+		next;
+	}
+	mes .n$;
+	mes "So that's all I can tell you about my service.";
+	mes "See you again.";
 	break;
 	
 	// Point Exchanger 
@@ -794,9 +841,16 @@ setarray .dungpre$[0],"abbey","alde","abyss","amat","ayot","bylan","c_tow","coal
 // = Format: Difficulty ,Level Requirement, Map Name Level 1, Map X, Map Y,....
 // = Difficulty: 1 = Easy, 2 = Medium, 3 = Hard
 // = Level: 1 = None, 2+ = Requirement
+
+// Auto Insert in the database > for myself
+for ( set .@i,0; .@i < getarraysize(.dungn$); set .@i,.@i + 1)
+	for ( set .@d,2; .@d < getarraysize(getd("."+.dungpre$[.@i]+"$")); set .@d,.@d + 3) 
+		query_sql "INSERT INTO `dqs_dungeon` ( `dq_id` , `name` , `difficulty` , `req_level` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` ) VALUES ( '"+(.@i+1)+"' , '"+.dungn$[.@i]+"' , '"+getd("."+.dungpre$[.@i]+"$[0]")+"' , '"+getd("."+.dungpre$[.@i]+"$[1]")+"' , '"+((.@d+1)/3)+"' , '"+getd("."+.dungpre$[.@i]+"$["+.@d+"]")+"' , '"+getd("."+.dungpre$[.@i]+"$["+(.@d+1)+"]")+"' , '"+getd("."+.dungpre$[.@i]+"$["+(.@d+2)+"]")+"' , '3' , '1' )";
+
 query_sql "INSERT INTO `dqs_dungeon` ( `dq_id` , `name` , `difficulty` , `req_level` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` ) VALUES ( '1' , 'Cursed Abbey' , '2' , '60' , '1' , 'abbey01' , '51' , '14' , '3' )";
 query_sql "INSERT INTO `dqs_dungeon` ( `dq_id` , `name` , `difficulty` , `req_level` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` ) VALUES ( '1' , 'Cursed Abbey' , '2' , '60' , '2' , 'abbey02' , '150' , '11' , '3' )";
 query_sql "INSERT INTO `dqs_dungeon` ( `dq_id` , `name` , `difficulty` , `req_level` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` ) VALUES ( '1' , 'Cursed Abbey' , '2' , '60' , '3' , 'abbey03' , '120' , '10' , '3' )";
+
 
 setarray .abbey$[0],"1","1","abbey01","51","14","abbey02","150","11","abbey03","120","10";
 setarray .alde$[0],"1","1","alde_dun01","197","25","alde_dun02","262","41","alde_dun03","276","53","alde_dun04","130","130";
@@ -847,24 +901,36 @@ query_sql "SHOW TABLES LIKE 'dqs_list'",$@dqs_tab$;
 if($@dqs_tab$[0] != "") 
 	set $@DQS_Sys,1;
 
+// Custom atcommand: @dq_quest
+bindatcmd "dq_quest",strnpcinfo(1)+"::OnPCLoginEvent";
 announce .n$+": Dungeon Quest Service: "+ ( ($@DQS_Sys == 1)?"Online":"Offline"),bc_all|bc_yellow;
 end;
 
 OnNPCKillEvent:
 if(!$@DQS_Sys) end;
+if(!@cp)
+	query_sql "SELECT `dg_id` , `start` FROM `dqs_party` WHERE `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'",@dg_id,@cp;
+if(@map$ == "")
+	query_sql "SELECT `difficulty` , `map_name` FROM `dqs_dungeon` WHERE `dg_id` = '"+@dg_id+"' AND `floor` = '"+@cp+"'",.@diff,@map$;
+if(strcharinfo(3) != @map$)
+	if(query_sql("SELECT `floor` FROM `dqs_dungeon` WHERE `dg_id` = '"+@dg_id+"' AND `map_name` = '"+strcharinfo(3)+"'",.@cp) > 0) 
+		query_sql "UPDATE `dqs_dungeon` SET `floor` = '"+.@cp+"' WHERE `dg_id` = '"+@dg_id+"' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'";
+	else 
+		end;
+
 // Player is in a party
-if(getcharid(1) != 0) {
-	getpartymember(getcharid(1),1);
-	getpartymember(getcharid(1),2);
-	for ( set .@p,0; .@p < $@partymembercount; set .@p,.@p + 1) {
-		if(isloggedin($@partymemberaid[.@p],$@partymembercid[.@p]) == 0) continue;
-		attachrid($@partymemberaid[.@p]);
-		callsub OnQuestMobKill;
-	}
-	end;
-}
-OnQuestMobKill:
-query_sql "SELECT SUM( `req_am` ) , SUM( `mob_am` ) , `dg_id` , `quest_id` FROM `quest_player` WHERE `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' AND `mob_id` = '"+killedrid+"'",.@req_am,.@mob_am,.@dg_id,.@q_id;
+if(getcharid(1) != 0)
+	addrid(1,getcharid(1));
+	
+// Reading EXP values from Mob Database
+set .@expr,.exp[.@diff];
+set .@bexp,(getmonsterinfo(killedrid,3)*.@expr)/100;
+set .@jexp,(getmonsterinfo(killedrid,4)*.@expr)/100;
+	
+// Member is alive
+if(readparam(5) < 1) continue;
+
+query_sql "SELECT SUM( `req_am` ) , SUM( `mob_am` ) , `dg_id` , `quest_id` FROM `dqs_party` WHERE `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' AND `mob_id` = '"+killedrid+"'",.@req_am,.@mob_am,.@dg_id,.@q_id;
 if( (.@mob_am + 1) <= .@req_am)
 	for ( set .@m,0; .@m < getarraysize(.@dg_id); set .@m,.@m + 1) {
 		// Updating SQL Table for Monster Hunting Quests
@@ -872,59 +938,169 @@ if( (.@mob_am + 1) <= .@req_am)
 		query_sql "SELECT `name` FROM `dqs_dungeon` WHERE `dg_id` = '"+.@dg_id[.@m]+"'",.@n_name$,.@n_map$;
 		dispbottom .@name$+": Monster Hunting - "+strmobinfo(1,killedrid)+" : "+(.@mob_am + 1)+"/"+.@req_am,0x00FF00;
 	}
-if(getcharid(1) != 0) return; else end;
+getexp .@bexp,.@jexp;
+dispbottom .n$+": Recieved Bonus: "+.@expr+"% - Base EXP: "+.@bexp+"/Job EXP: "+.@jexp,0x00FF00;
+// Killed MvP > rewarding with points if .mvp_pts > 0
+if(getmonsterinfo(killedrid,22) != 0 && .mvp_pts > 0) {
+	setd(""+.mvp_var$),getd(""+.mvp_var$) + (.mvp_pts*.@diff); break;
+	dispbottom .n$+": Recieved MVP Points: "+.@m_res+"x MvP Points.",0x00FF00;
+}
+end;
 
 // OnLogin List and AtCommand
 OnPCLoginEvent:
 if(!$@DQS_Sys) end;
-query_sql "SELECT DISTINCT `quest_id` , `npc_id` FROM `quest_player` WHERE `char_id` = '"+getcharid(0)+"'",.@q_id,.@n_id;
-set .@n$,"[Quest System]";
+query_sql "SELECT DISTINCT `quest_id` , `dg_id` FROM `dqs_party` WHERE `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'",.@q_id,.@dg_id;
+set .@n$,"[Dungeon Quests]";
 if(getarraysize(.@q_id) < 1) {
 	dispbottom .@n$+": You don't have any active quests.";
 	end;
 }
 dispbottom .@n$+": You have "+getarraysize(.@q_id)+" active Quests.";
-dispbottom .@n$+": I will now list them per NPC with the info about the NPC:";
+dispbottom .@n$+": I will now list them per Dungeon:";
 	
 // Displaying Quest Progress
 for ( set .@l,0; .@l < getarraysize(.@q_id); set .@l,.@l + 1) {
+	if(.@q_id[.@l] == 1)  continue;
 	dispbottom "  [* ====== Quest #"+.@q_id[.@l]+" - Progress: ====== *]  ";
-	query_sql "SELECT `quest_type` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@q_type;
+	query_sql "SELECT `quest_type` FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@q_type;
 	dispbottom "  >  Type: "+( (.@q_type == 1)?"Monster Hunting":"Item Collecting");
 	if(.@q_type == 1)
-		query_sql "SELECT `mob_id` , `mob_am` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@req1,.@req2;
+		query_sql "SELECT `mob_id` , `mob_am` FROM `dqs_list` WHERE `dg_id` = '"+.@dg_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@req1,.@req2;
 	else
-		query_sql "SELECT `item_id` , `item_am` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@req1,.@req2;
+		query_sql "SELECT `item_id` , `item_am` FROM `dqs_list` WHERE `dg_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@req1,.@req2;
 	
 	for ( set .@p,0; .@p < getarraysize(.@req1); set .@p,.@p + 1)
 		if(.@q_type == 1) {
-			query_sql "SELECT `mob_am` FROM `quest_player` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"' AND `char_id` = '"+getcharid(0)+"' AND `mob_id` = '"+.@req1[.@p]+"'",.@m_got;
+			query_sql "SELECT `mob_am` FROM `dqs_party` WHERE `dg_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' AND `mob_id` = '"+.@req1[.@p]+"'",.@m_got;
 			dispbottom "  >  Mob#"+(.@p+1)+": "+strmobinfo(1,.@req1[.@p])+" - "+.@m_got+"/"+.@req2[.@p];
 		} else 
 			dispbottom "  >  Item#"+(.@p+1)+": "+getitemname(.@req1[.@p])+" - "+countitem(.@req1[.@p])+"/"+.@req2[.@p];
 	
-	dispbottom "  [* ======  NPC Location: ====== *]  ";
-	query_sql "SELECT `npc_name` , `npc_map` , `npc_x` , `npc_y` FROM `quest_npc` WHERE `npc_id` = '"+.@n_id[.@l]+"'",.@n_name$,.@n_map$,.@n_x,.@n_y;
-	dispbottom "  >  Name: "+.@n_name$;
-	dispbottom "  >  Map: "+.@n_map$+", X: "+.@n_x+", Y: "+.@n_y;
-}
 end;
 
+OnPCLogoutEvent:
+if(!$@DQS_Sys) end;
+if(!getcharid(1)) end; // Not in a party
+// Not registered
+if(query_sql("SELECT `dg_id` FROM `dqs_party` WHERE `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'",@dg_id) == -1)
+	end;
+if(getpartyleader(getcharid(1),1) != getcharid(3)) end; // Attached player is not party leader
+if(.debug) debugmes "Party Leader logged off, changing leader:";
+set .@pty_id,getcharid(1);
+set .@pty_lead,getpartyleader(getcharid(1),1);
+getpartymember(.@pty_id,1);
+getpartymember(.@pty_id,2);
+if(.debug) debugmes "Party ID: "+.@pty_id+", Party Leader Acc ID:"+ .@pty_lead;
+for ( set .@p,0; .@p < $@partymembercount; set .@p,.@p + 1) {
+	// Member is logged in and is not the current Party Leader
+	if(isloggedin($@partymemberaid[.@p],$@partymembercid[.@p]) == 1 && $@partymemberaid[.@p] != .@pty_lead) {
+		if(.debug) debugmes "Changing Leader of party "+.@pty_id+" to "+$@partymembercid[.@p];
+		party_changeleader(.@pty_id,$@partymembercid[.@p]);
+		break;
+	}
+}
+end;
+}
+
+// ======================= Party Join Feature - NPC =====================
+-	script	Party_Join	-,{
+
+OnInit:
+set .n$,getvariableofnpc(.n$,"Dungeon Quest Service");
+end;
+
+OnWhisperGlobal:
+if(!$@DQS_Sys) end;
+if(!getcharid(1)) end; // Not in a party
+if(getmapflag(strcharinfo(3),mf_pvp) == 1 || getmapflag(strcharinfo(3),mf_gvg) == 1) end; // On PvP or GvG Maps = No effect
+if(strcharinfo(0) != getpartyleader(getcharid(1))) end;
+// Not registered
+if(query_sql("SELECT `dg_id` FROM `dqs_party` WHERE `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'",@dg_id) == -1)
+	end;
+
+// List of the requesters
+if(@whispervar0$ == "List" || @whispervar0$ == "list") {
+	if(query_sql("SELECT `app_id` , `name` , `level` , `class` FROM `dqs_app` WHERE `pty_id` = '"+getcharid(1)+"'",.@app_id,.@name$,.@lvl$,.@class) == -1) {
+		dispbottom .n$+": I'm sorry, but there are no applicants to list!",0x00FFFF;
+		end;
+	}
+	dispbottom .n$+": I will now list the requesters, which want to join your party.",0x00FFFF;
+	dispbottom .n$+": Each requester gets an number, like 1.<Name>.",0x00FFFF;
+	dispbottom .n$+": With this number, you have to re-pm me, but instead of \"List\", you have to use \"Join\" or \"Abort\".\"Accept\" or \"Decline\" does also work.",0x00FFFF;
+	dispbottom .n$+": After \"Join\"/\"Accept\" or \"Abort\"/\"Decline\", you have to add \"#<Number of requester>\".",0x00FFFF;
+	dispbottom "===================";
+	dispbottom "- Number: Name, Level:, Class",0xFF2200;
+	for ( set .@r,0; .@r < getarraysize(.@app_id); set .@r,.@r + 1)
+		dispbottom "- "+(.@r+1)+": "+.@name$[.@r]+", "+.@lvl$[.@r]+", "+jobname(.@class[.@r]),0xFF2200;
+	
+	dispbottom "===================";
+	dispbottom .n$+": I will now list here your party members, also with a number, to warp the chosen player to that party member.",0x00FFFF;
+	dispbottom .n$+": To let the player warp to one of your party members add after the number of the player \"#<Number of Member>\".",0x00FFFF;
+	dispbottom .n$+": So it would look something like this: \"Join#1#1\", this would let the 1st requester in the list to the 1st party member, most cases you.",0x00FFFF;
+	dispbottom .n$+": Note: If you use \"Abort\"/\"Decline\" the number of the party member won't take effect, of course.",0x00FFFF;
+	dispbottom "===================";
+	getpartymember(getcharid(1));
+	set @partyct,$@partymembercount;
+	copyarray @partymemb$[0],$@partymembername$[0],@partyct;
+	dispbottom "- Number: Member Name:",0xFF2200;
+	for ( set .@p,0; .@p < @partyct; set .@p,.@p + 1)
+		if(isloggedin(getcharid(3,@partymemb$[.@p]),getcharid(0,@partymemb$[.@p])) == 1) // Member logged in?
+			dispbottom "- "+(.@p+1)+"."+@partymemb$[.@p] + ( (@partymemb$[.@p] == getpartyleader(getcharid(1)))?" (Leader)":""),0xFF2200;
+
+	dispbottom "===================";
+
+// Accepting requesters
+} else if(compare(@whispervar0$,"Accept") == 1 || compare(@whispervar0$,"Join") == 1) {
+	if(@whispervar1$ == "" || @whispervar2$ == "") {
+		dispbottom .n$+": Either you didn't put the requesters number or the number of the party member he should be warped to!";
+		end;
+	}
+	// In case the leader logged of, the "@" variables were deleted
+	if(@partymemb$[atoi(@whispervar2$)-1] == "") {
+		dispbottom .n$+": An bug has occured, in which I couldn't find the list for your party members.";
+		dispbottom .n$+": Possible Bug: You logged off or disconnected. Please repeat the previous step.";
+		end;
+	}
+	query_sql "SELECT `app_id` , `name` , `level` , `class` FROM `dqs_app` WHERE `pty_id` = '"+getcharid(1)+"'",.@app_id,.@name$,.@lvl$,.@class;
+	set .@nr,atoi(@whispervar1$)-1;
+	message .@name$[.@nr],.n$+": Your join request has been accepted, you will be warped to the party member chosen from the leader.";
+	party_addmember(getcharid(1),.@app_id[.@nr]);
+	sleep2 2000;
+	charcommand "#warpto \""+.@name$[.@nr]+"\" "+@partymemb$[atoi(@whispervar2$)-1];
+		
+	// Deleting applicant from application list
+	query_sql "DELETE FROM `dqs_app` WHERE `app_id` = '"+.@app_id[.@nr]+"' AND `pty_id` = '"+getcharid(1)+"'";
+	
+// Declining requesters
+} else if(compare(@whispervar0$,"Decline") == 1 || compare(@whispervar0$,"Abort") == 1) {
+	if(@whispervar1$ == "") {
+		dispbottom .n$+": You didn't put the requesters number!";
+		end;
+	}
+	query_sql "SELECT `app_id` , `name` , `level` , `class` FROM `dqs_app` WHERE `pty_id` = '"+getcharid(1)+"'",.@app_id,.@name$,.@lvl$,.@class;
+	set .@nr,atoi(@whispervar1$)-1;
+	if(isloggedin(getcharid(3,.@name$[.@nr]),.@app_id[.@nr]) != 0)
+		message .@name$[.@nr],.n$+": I'm sorry, but your join request has been declined.";
+	dispbottom .n$+": The applicant ["+.@name$[.@nr]+"] has been deleted from the list.";
+	
+	// Deleting applicant from application list
+	query_sql "DELETE FROM `dqs_app` WHERE `app_id` = '"+.@app_id[.@nr]+"' AND `pty_id` = '"+getcharid(1)+"'";
+
+} else 
+	dispbottom .n$+": I'm not sure, what you wanted from me, but I can't do that.";
+	
+end;
 }
 
 // ======================= Inside Dungeon NPC =====================
 -	script	Dungeon Guard#main::DG_Main	110,{
 
-if(!getcharid(1)) end;
 set .@n$,"["+strnpcinfo(1)+"]";
 
 mes .@n$;
-if(getpartyleader(getcharid(1)) != strcharinfo(0)) {
-	mes "Only the party leader can talk to me!";
-	close;
-}
-if(getd("$@pty_"+getcharid(1)+"_m$[0]") == "") {
-	mes "You didn't register your party for the Dungeon Party Service.";
+if(query_sql("SELECT `dg_id` FROM `dqs_party` WHERE `dg_id` = '"+strnpcinfo(2)+" AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'",.@dg_id) == -1) {
+	mes "You didn't register for the Dungeon Quest Service.";
 	close;
 }
 mes .@n$;
@@ -932,9 +1108,13 @@ mes "Do you really want to leave the dungeon?";
 if(select("- Yes:- No") - 1) close;
 next;
 mes .@n$;
-mes "You*re party will now be warped to Prontera.";
+mes "You"+ ( (getcharid(1) != 0)?"r party":"")+" will now be warped to Prontera.";
+query_sql "UPDATE `dqs_party` SET `rew_id` = '1' WHERE `dg_id` = '"+strnpcinfo(2)+" AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'";
 close2;
-warpparty "prontera",156,191,getcharid(1);
+if(getcharid(1) != 0)
+	warpparty "prontera",156,191,getcharid(1);
+else
+	warp "prontera",156,191,getcharid(1);
 end;
 }
 // ======================= Start of Dungeon Exit - NPC Duplicates =====================

@@ -33,13 +33,26 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/10/24
+= Updated Dungeon Quest System v1.0 [WIP]
+- Added `dqs_app` table for the party join feature;
+- Copied and modified the NPC "Party_Join"
+- Added addrid(1); to Quest Progress and exchanged it at some various places with my party code
+- Added "Information"
+- Added an code for myself to convert the dungeon data into the SQL table
+- Added custom atcommand @dg_quest to display the quest progress
+- Finished OnNPCKillEvent
+- Copied and modified OnPCLogoutEvent from Dungeon Party System
+- Modified the Dungeon Exit Template
+= Renamed ToDO_List to Project_List
+------------------------------------------------------------------------------------------------------------------------
 * 2015/10/21
 = Updated Dungeon Quest System v1.0 [WIP]
 - Added `req_am` to the dqs_party database
   and removed "MobHunt_"+<MobID>+"_CT" variables
 - Added Party Check to Reward Giving and Quest Requirement Check
 - Copied and modified OnNPCKillEvent from Quest System v1.0 [RE]
-------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 * 2015/10/19
 = Updated Dungeon Quest System v1.0 [WIP]
 - Removed `limit` from the `dqs_list` database and changed default from `quest_id` to 2
