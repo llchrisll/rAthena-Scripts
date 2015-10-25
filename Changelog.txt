@@ -33,6 +33,17 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/10/25
+= Updated Dungeon Quest System v1.0 [WIP]
+- Added an code to count the party members by attaching them all at once > addrid
+- Changed the code about Quest Status > Running or New
+- Added an extra menu in Quests Board > Get Reward
+- Modified the code about giving the reward
+- Added more "Information"
+- Renamed the Custom AtCommand to @checkdg
+- Modified the OnNPCKillEvent, cuz of addrid
+- Added an Timer to check for non-existant parties every 15th minute
+------------------------------------------------------------------------------------------------------------------------
 * 2015/10/24
 = Updated Dungeon Quest System v1.0 [WIP]
 - Added `dqs_app` table for the party join feature;
