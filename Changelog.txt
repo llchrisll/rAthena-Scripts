@@ -33,6 +33,18 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/10/27
+= Updated Dungeon Quest System v1.0 [WIP]
+- Added new table for pending rewards > `dqs_pending`
+- Moved "Get Pending Reward" to the "Dungeon Menu"
+- Added checks if the player is an party so only the party leader do stuff
+- Modified code about displaying the status of quests
+- Added the code to display quest details on "Accept" to all party members.
+- Finished the "Complete Dungeon" code
+- Finished GM Panel > System Settings code
+- Started to add GM Panel > Dungeon Management code
+- Added an OnInit: setting for Maximum EXP Rate for the GM Panel
+------------------------------------------------------------------------------------------------------------------------
 * 2015/10/25
 = Updated Dungeon Quest System v1.0 [WIP]
 - Added an code to count the party members by attaching them all at once > addrid

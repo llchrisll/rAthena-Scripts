@@ -86,9 +86,16 @@ CREATE TABLE IF NOT EXISTS `dqs_app` (
  `pty_id` int(10) unsigned default '0',
  `app_id` int(10) unsigned default '0',
  `name` varchar(255) default 'Unknown Player',
- `level` varchar(255) default '1',
+ `level` varchar(255) default '1/1',
  `class` int(10) unsigned default '0'
 ) ENGINE=MyISAM;
+
+CREATE TABLE IF NOT EXISTS `dqs_pending` (
+ `char_id` int(10) unsigned NOT NUIL,
+ `item_id` int(10) unsigned default '501',
+ `item_am` int(10) unsigned default '0'
+) ENGINE=MyISAM;
+
 */
 prontera,151,185,4	script	Dungeon Quest Service	110,{
 
@@ -105,8 +112,9 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 		close;
 	}
 	mes "Please choose what you want to do below:";
+	mes "Note: \"Get Pending Reward\" is available only when you didn't have enough space/weight for the item reward when completing an quest.";
 	next;
-	switch(select("- Register:- Quest Board:- Warp Service:- Complete Dungeon")) {
+	switch(select("- Register:- Quest Board:- Warp Service:- Get Pending Reward:- Complete Dungeon")) {
 	
 		// ============ Register for Dungeon ============ //
 		case 1:
@@ -287,6 +295,10 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 		// ============ Quest Board ============ //
 		case 2:
 		mes .n$;
+		if(getcharid(1) != 0 && strcharinfo(0) != getpartyleader(getcharid(1))) {
+			mes "Only the party leader can accept additional quests for the party from the Dungeon!!!";
+			close;
+		}
 		// Check if player/party is registered for dungeon
 		if(query_sql("SELECT `dg_id` FROM `dqs_party` WHERE `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' AND `quest_id` = '1'",.@dg_id) == -1) {
 			mes "I'm sorry, but you didn't register"+ ( (getcharid(1) != 0)?" your party":"")+" for an dungeon yet.";
@@ -310,11 +322,11 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 		for ( set .@q,0; .@q < getarraysize(.@q_id); set .@q,.@q + 1) {
 			set .@que_id,0; // Resetting variable
 			if(query_sql("SELECT `quest_id` FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '"+.@q_id[.@q]+"' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' LIMIT 1",.@que_id) == -1)
-				setarray .@que$[.@q],"^00FFFFNew";
+				setarray .@que$[.@q],"New";
 			else 
-				setarray .@que$[.@q],"^FF0000Running";
+				setarray .@que$[.@q],"Running";
 			debugmes "Recieving Status of Quest: "+.@que$[.@q];
-			set .@q_list$,.@q_list$ + "- #"+.@q_id[.@q]+" ("+ ( (.@q_type[.@q] == 1)?"Monster Hunting":"Item Collecting")+") ["+.@que$[.@q]+"^000000]" + ( (.@q_id[.@q+1] != 0)?":":"");
+			set .@q_list$,.@q_list$ + "- #"+.@q_id[.@q]+" ("+ ( (.@q_type[.@q] == 1)?"Monster Hunting":"Item Collecting")+") ["+( (compare(.@que$[.@q],"New") == 1)?"^00FFFF":"^FF0000")+.@que$[.@q]+"^000000]" + ( (.@q_id[.@q+1] != 0)?":":"");
 		}
 		mes "Please choose the quest from below you want to accept/abort or look at your progress.";
 		mes "Format:";
@@ -322,7 +334,7 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 		next;
 		set .@q_c,select(.@q_list$) - 1;
 		mes .n$;
-		mes " --- Quest #"+.@q_id[.@q_c]+" - "+ ( (.@que[.@q_c] != -1)?"Progress":"Information")+": ---";
+		mes " --- Quest #"+.@q_id[.@q_c]+" - "+ ( (.@que$[.@q_c] != "New")?"Progress":"Information")+": ---";
 		mes "Type: "+( (.@q_type[.@q_c] == 1)?"Monster Hunting":"Item Collecting");
 		// Quest Details
 		if(.@q_type[.@q_c] == 1)
@@ -335,13 +347,12 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 		mes .@rew_am+"x "+( (.@rew_id == 1)?"Zeny": ( (.@rew_id == 2)?"Cash Points":getitemname(.@rew_id)));
 		mes " ";
 		mes "What do you like to do now?";
-		mes "Note: \"Get Reward\" is available only when you didn't have enough space/weight for the items when completing an quest.";
 		next;
-		if(.@que[.@q_c] == -1) {
+		if(.@que$[.@q_c] == "New") {
 			select("- Accept:- Nevermind");
-			if(@menu == 2) set .@s,5; else set .@s,@menu;
+			if(@menu == 2) set .@s,4; else set .@s,@menu;
 		} else
-			set .@s,select("- Abort:- Progress:- Get Reward:- Nevermind") + 1;
+			set .@s,select("- Abort:- Progress:- Nevermind") + 1;
 
 		switch(.@s) {
 			
@@ -349,11 +360,20 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 			case 1:
 			mes .n$;
 			mes "You have accepted the quest.";
-
 			query_sql "INSERT INTO `dqs_party` ( `dg_id` , `"+ ( (getcharid(1) == 0)?"char_id":"pty_id")+"` , `quest_id` ) VALUES ( '"+.@dg_id+"' , '"+ ( (getcharid(1) == 0)?getcharid(0):getcharid(1))+"' , '"+.@q_id[.@q_c]+"' )";
 			if(.@q_type[.@q_c] == 1) // Monster Hunting
 				for ( set .@a,0; .@a < getarraysize(.@req1); set .@a,.@a + 1)
 					query_sql "UPDATE `dqs_party` SET `mob_id` = '"+.@req1[.@a]+"' , `req_am` = '"+.@req2[.@a]+"' WHERE `dg_id` = '"+.@dg_id+"' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'";
+			
+			// Displaying Quest Details to the Party
+			if(getcharid(1) != 0) {
+				query_sql "SELECT `name` FROM `dqs_dungeon` WHERE `dg_id` = '"+.@dg_id+"'",.@dg_name$;
+				addrid(1,0,getcharid(1));
+				dispbottom "Accepted Quest@"+.@dg_name$+": "+( (.@q_type[.@q_c] == 1)?"Monster Hunting":"Item Collecting")+":";
+				for ( set .@l,0; .@l < getarraysize(.@req1); set .@l,.@l + 1) 
+					dispbottom "- "+.@req2[.@l]+"x "+ ( (.@q_type[.@q_c] == 1)?strmobinfo(1,.@req1[.@l]):getitemname(.@req1[.@l]) );
+				dispbottom "Reward: "+.@rew_am+"x "+( (.@rew_id == 1)?"Zeny": ( (.@rew_id == 2)?"Cash Points":getitemname(.@rew_id)));
+			}
 			break;
 			
 			// Abort Quest
@@ -410,19 +430,8 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 			mes .n$;
 			break;
 			
-			// Get Reward
-			case 4:
-			mes .n$;
-			if(getd("Rew_ID_"+.@q_id[.@q_c]) == 0) close;
-			if(checkweight(getd("Rew_ID_"+.@q_id[.@q_c]),getd("Rew_AM_"+.@q_id[.@q_c])) == 1) 
-				getitem .@rew_id,.@rew_am; 			
-			dispbottom "You have recieved "+.@rew_am+"x "+( (.@rew_id == 1)?"Zeny": ( (.@rew_id == 2)?"Cash Points":getitemname(.@rew_id)));			
-			setd("Rew_ID_"+.@q_id[.@q_c]),0;
-			setd("Rew_AM_"+.@q_id[.@q_c]),0;
-			close;
-			
 			// Nevermind
-			case 5:
+			case 4:
 			close;			
 		}
 		mes "You have completed the quest, here is your reward!!";
@@ -440,18 +449,22 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 				getitem .@rew_id,.@rew_am; 
 			else {
 				mes "It seems like you can't carry more items, than you already do. You have to remove some weight before you can recieve your reward.";
-				mes "Please come back to me, when you have done that.";
-				setd("Rew_ID_"+.@q_id[.@q_c]),.@rew_id;
-				setd("Rew_AM_"+.@q_id[.@q_c]),.@rew_am;
+				mes "Please come back to me, when you have done that and choose \"Get Pending Reward\".";
+				query_sql "INSERT INTO `dqs_pending` ( `char_id` , `item_id` , `item_am` ) VALUES ( '"+getcharid(0)+"' , '"+.@rew_id+"' , '"+.@rew_am+"' )";
 			}
+			break;
 		}
-		if(getd("Rew_ID_"+.@q_id[.@q_c]) != 0)
+		if(query_sql("SELECT `item_id` FROM `dqs_pending` WHERE `char_id` = '"+getcharid(0)+"'",.@i_id) == -1)
 			dispbottom "You have recieved "+.@rew_am+"x "+( (.@rew_id == 1)?"Zeny": ( (.@rew_id == 2)?"Cash Points":getitemname(.@rew_id)));			
 		break;
 
 		// ============ Warp Service ============ //
 		case 3:
 		mes .n$;
+		if(getcharid(1) != 0 && strcharinfo(0) != getpartyleader(getcharid(1))) {
+			mes "Only the party leader can warp your party in the Dungeon!!!";
+			close;
+		}
 		// Check if player/party is registered for dungeon
 		if(query_sql("SELECT `dg_id` FROM `dqs_party` WHERE `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' AND `quest_id` = '1'",.@dg_id) == -1) {
 			mes "I'm sorry, but you didn't register"+ ( (getcharid(1) != 0)?" your party":"")+" for an dungeon yet.";
@@ -469,9 +482,28 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 	
 		break;
 		
-		// Complete Dungeon
+		// ============ Get Pending Reward ============ //
 		case 4:
 		mes .n$;
+		if(query_sql("SELECT `item_id` , `item_am` FROM `dqs_pending` WHERE `char_id` = '"+getcharid(0)+"'",.@i_id,.@i_am) == -1) {
+			mes "You don't have any pending rewards.";
+			close;
+		}
+		for ( set .@i,0; .@i < getarraysize(.@i_id); set .@i,.@i + 1)
+			if(checkweight(.@i_id[.@i],.@i_am[.@i]) == 1) {
+				getitem .@i_id,.@i_am; 			
+				dispbottom "You have recieved "+.@i_am[.@i]+"x "+getitemname(.@i_id[.@i]);			
+			}
+		query_sql "DELETE FROM `dqs_pending` WHERE `char_id` = '"+getcharid(0)+"'";
+		close;
+		
+		// Complete Dungeon
+		case 5:
+		mes .n$;
+		if(getcharid(1) != 0 && strcharinfo(0) != getpartyleader(getcharid(1))) {
+			mes "Only the party leader can finalize the completion of the Dungeon!!!";
+			close;
+		}
 		// Check if player/party is registered for dungeon
 		if(query_sql("SELECT `dg_id` FROM `dqs_party` WHERE `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' AND `quest_id` = '1'",.@dg_id) == -1) {
 			mes "I'm sorry, but you didn't register"+ ( (getcharid(1) != 0)?" your party":"")+" for an dungeon yet.";
@@ -490,13 +522,20 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 			mes "Please come back, when it's done.";
 			close;
 		}
+		query_sql "SELECT `name` , `difficulty` , `repeat` FROM `dqs_dungeon` WHERE `dg_id` = '"+.@dg_id+"'",.@dg_name$,.@diff,.@repeat;
+		query_sql "DELETE FROM `dqs_party` WHERE `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'";
+		if(getcharid(1) != 0) {
+			query_sql "DELETE FROM `dqs_app` WHERE `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'";
+			addrid(1,0,getcharid(1));
+		}
+		mes "For completing the "+( (compare(.@dg_name$,"Dungeon") == 1)?" ":" Dungeon ")+", you will recieve "+(.dg_pts*.@diff)+"x Dungeon Points.";
 		
-		/*
-		Adding Repeat Counter + Timer when reached
-		Reward
-		Announce Party/Player completed .... Dungeon?
-		Deleting database entried from `dqs_party`
-		*/
+		setd("DG_"+.@dg_id+"_RepeatCT"),getd("DG_"+.@dg_id+"_RepeatCT") + 1;
+		// Increasing Repeat Counter, and in case the Limit has been reached > Apply Timer
+		if(getd("DG_"+.@dg_id+"_RepeatCT") >= .@repeat) {
+			setd("DG_"+.@dg_id+"_RepeatTimer"),.dg_delay*.@diff;
+			setd("DG_"+.@dg_id+"_RepeatCT"),0;
+		}	
 		break;
 	}
 	break;
@@ -661,21 +700,413 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 
 	// System Settings = OnInit
 	case 1:
+	mes .n$;
+	mes "What would you like to change?";
+	mes "Note: If available the content of an \"()\" means the current setting!!!";
+	next;
+	switch(select("- Debug Mode ("+( (.debug)?"Online":"Offline")+"):- Dungeon Settings:- Quest Settings:- Nevermind")) {
 	
-	
+		case 1:
+		mes .n$;
+		mes "The Debug Mode is currently "+( (.debug)?"Online":"Offline")+".";
+		mes "Do you want to change it?";
+		if(select("- Yes:- No") - 1) close;
+		next;
+		mes "The Debug Mode has been changed to: "+( (.debug)?"Offline":"Online");
+		set .debug,!.debug;
+		break;
+		
+		// Dungeon Settings
+		case 2:
+		mes .n$;
+		mes "[ == Dungeon Settings == ]";
+		mes "Please choose which setting about the Dungeons you want to change:";
+		while(prompt("- EXP Settings:- Repeat Settings") != 255) {
+			next;
+			switch(@menu) {
+				
+				// EXP Settings
+				case 1:
+				mes .n$;
+				mes "[ == EXP Settings == ]";
+				mes "Please select the Difficulty to change the EXP Rate for it:";
+				mes "Note: You only can change the EXP Rates for each Difficulty.";
+				next;
+				set .@e,select("- Easy ("+.exp[1]+"%):- Medium ("+.exp[2]+"%):- Hard ("+.exp[3]+"%)");
+				mes .n$;
+				mes "[ === Difficulty: "+ ( (.@e == 1)?"Easy":( (.@e == 2)?"Medium":"Hard") )+" === ]";
+				mes "Current Rate: "+.exp[.@e]+"%";
+				mes " ";
+				mes "Please type the new rate:";
+				mes "Note: Lowest: 1%, Maximum: "+.max_exp+"%";
+				next;
+				if(input(.@e_new,1,500) != 0) {
+					mes .n$;
+					mes "Invalid Value, please try again.";
+					continue;
+				}
+				mes .n$;
+				mes "Chosen Value:";
+				mes "> "+.@e_new+"%";
+				mes " ";
+				mes "Is that correct?";
+				if(select("- Yes:- No") - 1) continue;
+				next;
+				mes "The EXP Rate for "+ ( (.@e == 1)?"Easy":( (.@e == 2)?"Medium":"Hard") )+" has been changed successfully.";
+				setarray .exp[.@e],.@e_new;
+				continue;
+				break;
+				
+				// Repeat Settings
+				case 2:
+				mes .n$;
+				mes "[ == Repeat Settings == ]";
+				mes "Please select an option from below:";
+				next;
+				switch(prompt("- Max Repeat Limit ("+.dg_max_limit+"):- Delay Type") != 255) {
+				
+					// Max Repeat Limit
+					case 1:
+					mes .n$;
+					mes "[ == Repeat Limit Setting == ]";
+					mes "Current Maximum Repeat Limit: "+.dg_max_limit;
+					mes " ";
+					mes "Please type the new limit:";
+					mes "Note: Lowest: 1, Maximum: 5000";
+					next;
+					if(input(.@rep_new,1,5000) != 0) {
+						mes .n$;
+						mes "Invalid Value, please try again.";
+						continue;
+					}
+					mes .n$;
+					mes "Chosen Value:";
+					mes "> "+.@rep_new;
+					mes " ";
+					mes "Is that correct?";
+					if(select("- Yes:- No") - 1) continue;
+					next;
+					mes "The Maximum Repeat Limit has been changed successfully.";
+					set .dg_max_limit,.@rep_new;
+					break;
+					
+					// Delay Type
+					case 2:
+					mes .n$;
+					mes "[ == Delay Type Setting ==]";
+					mes "Current Delay Type: "+ ( (.dg_del_type == 1)?"Hour": ( (.dg_del_type == 2)?"Day": ( (.dg_del_type == 3)?"Week":"Month") ) );
+					mes "Note: This delay becomes only active when the Repeat Limit of an Dungeon has been reached and will be multiplied by the Difficulty of the Dungeon.";
+					mes " ";
+					mes "Please choose one of the Delay Types from below by typing the number in front of it:";
+					mes " > 1: Hour";
+					mes " > 2: Day";
+					mes " > 3: Week";
+					mes " > 4: Month";
+					next;
+					if(input(.@del_new,1,4) != 0) {
+						mes .n$;
+						mes "Invalid Type, please try again.";
+						continue;
+					}
+					mes .n$;
+					mes "Chosen Delay type:";
+					mes "> "+( (.@del_new == 1)?"Hour": ( (.@del_new == 2)?"Day": ( (.@del_new == 3)?"Week":"Month") ) );
+					mes " ";
+					mes "Is that correct?";
+					if(select("- Yes:- No") - 1) continue;
+					next;
+					mes "The Delay Type has been changed successfully.";
+					set .dg_del_type,.@del_new;
+					break;
+					
+					// Repeat Settings - Default
+					default:
+					break;
+				}
+				continue;				
+			
+				// Dungeon Settings - Default
+				default:
+				break;
+			} // End of Dungeon Settings switch(@menu)
+		} // End of Dungeon Settings Settings - while(prompt())
+		break;
+		
+		// Quest Settings
+		case 3:
+		mes .n$;
+		mes "[ == Quest Settings ==]";
+		mes "Please choose which setting about the quests you want to change:";
+		while(prompt("- Max Level Requirement ("+.level+"):- Monster Hunting:- Item Collecting:- Max Reward Settings") != 255) {
+			next;
+			switch(@menu) {
+			
+				// Max Level Requirement
+				case 1:
+				mes .n$;
+				mes "[ == Level Requirement == ]";
+				mes "Current Max Level Requirement: "+.level;
+				mes ""
+				mes "Please type the new requirement:";
+				mes "Note: Lowest: 1, Maximum: "+MAX_LEVEL;
+				next;
+				if(input(.@lvl_new,1,MAX_LEVEL) != 0) {
+					mes .n$;
+					mes "Invalid Level, please try again.";
+					continue;
+				}
+				mes .n$;
+				mes "Chosen Level:";
+				mes "> "+.@lvl_new;
+				mes " ";
+				mes "Is that correct?";
+				if(select("- Yes:- No") - 1) continue;
+				next;
+				mes "The Max Level Requirement has been changed successfully.";
+				set .level,.@lvl_new;
+				break;
+				
+				// Monster Hunting
+				case 1:
+				mes .n$;
+				mes "[ == Monster Hunting == ]";
+				mes "Current Settings:";
+				mes " > Minimum Mob Amount: "+.mob_min;
+				mes " > Maximum Mob Amount: "+.mob_max;
+				mes " > Maximum Mob Count: "+.mob_ct;
+				mes " ";
+				mes "Now I ask of you to type the new values in the exact same order:";
+				mes "Note: Min Mob Amount can't be higher than Max Mob Amount and Max Mob Count can't be less than 1.";
+				next;
+				mes .n$;
+				mes "[ == Min Mob Amount == ]";
+				input .@mob_min;
+				mes " > Input: "+.@mob_min;
+				mes "[ == Max Mob Amount == ]";
+				input .@mob_max;
+				mes " > Input: "+.@mob_max;
+				mes "[ == Max Mob Count == ]";
+				input .@mob_ct;
+				mes " > Input: "+.@mob_ct;
+				mes " ";
+				mes "Is that correct?";
+				if(select("- Yes:- No") - 1) continue;
+				next;
+				mes .n$;
+				if(.@mob_min > .@mob_max || .@mob_ct < 1) {
+					mes "It seems like you have put an invalid value.";
+					mes "Please try again.";
+					continue;
+				}
+				mes "The Minimum Mob Amount, Maximum Mob Amount and Maximum Mob Count has been changed successfull.";
+				set .mob_min,.@mob_min;
+				set .mob_max,.@mob_max;
+				set .mob_ct,.@mob_ct;
+				break;
+				
+				// Item Collecting
+				case 2:
+				mes .n$;
+				mes "[ == Item Collecting == ]";
+				mes "Current Settings:";
+				mes " > Minimum Item Amount: "+.item_min;
+				mes " > Maximum Item Amount: "+.item_max;
+				mes " > Maximum Item Count: "+.item_ct;
+				mes " ";
+				mes "Now I ask of you to type the new values in the exact same order:";
+				mes "Note: Min Item Amount can't be higher than Max Item Amount and Max Item Count can't be less than 1.";
+				next;
+				mes .n$;
+				mes "[ == Min Item Amount == ]";
+				input .@item_min;
+				mes " > Input: "+.@item_min;
+				mes "[ == Max Item Amount == ]";
+				input .@item_max;
+				mes " > Input: "+.@item_max;
+				mes "[ == Max Item Count == ]";
+				input .@item_ct;
+				mes " > Input: "+.@item_ct;
+				mes " ";
+				mes "Is that correct?";
+				if(select("- Yes:- No") - 1) continue;
+				next;
+				mes .n$;
+				if(.@item_min > .@item_max || .@item_ct < 1) {
+					mes "It seems like you have put an invalid value.";
+					mes "Please try again.";
+					continue;
+				}
+				mes "The Minimum Item Amount, Maximum Item Amount and Maximum Item Count has been changed successfull.";
+				set .item_min,.@item_min;
+				set .item_max,.@item_max;
+				set .item_ct,.@item_ct;
+				break;
+				
+				// Max Reward Settings
+				case 3:
+				mes .n$;
+				mes "[ == Max Reward Settings == ]";
+				mes "Current Settings:";
+				mes " > Maximum Zeny Amount: "+.rew_zeny;
+				mes " > Maximum Cash Points Amount: "+.rew_cash;
+				mes " > Maximum Item Amount: "+.rew_item;
+				mes " > Maximum Item Weight: "+.rew_weight;
+				mes "   (= Item Weight*Reward Amount)";
+				mes " ";
+				mes "Now I ask of you to type the new values in the exact same order:";
+				next;
+				mes .n$;
+				mes "[ == Max Zeny Amount == ]";
+				input .@rew_zeny;
+				mes " > Input: "+.@rew_zeny;
+				mes "[ == Max Cash Points Amount == ]";
+				input .@rew_cash;
+				mes " > Input: "+.@rew_cash;
+				mes "[ == Max Item Amount == ]";
+				input .@rew_item;
+				mes " > Input: "+.@rew_item;
+				mes "[ == Max Item Weight == ]";
+				input .@rew_weight;
+				mes " > Input: "+.@rew_weight;
+				mes " ";
+				mes "Is that correct?";
+				if(select("- Yes:- No") - 1) continue;
+				next;
+				mes .n$;
+				mes "The Maximum Zeny Amount, Maximum Cash Points Amount, Maximum Item Amount and Maximum Item Weight has been changed successfull.";
+				set .rew_zeny,.@rew_zeny;
+				set .rew_cash,.@rew_cash;
+				set .rew_item,.@rew_item;
+				set .rew_weight,.@rew_weight;
+				break;
+
+				default:
+				break;
+			} // End of Quest Settings  - switch(@menu)
+			continue;
+			
+		} // End of Quest Settings - while(prompt())
+		break;
+		
+		// Nevermind
+		case 4:
+		break;
+	}
 	break;
 	
 	// Dungeon Management
 	case 2:
-	/*
-	Overview as Text: 
-	- Amount of Dungeons
-	
+	mes .n$;
+	mes "[ == Dungeon Management == ]";
+	mes "Here is a list of all the dungeons with the total floor quantity:";
+	mes " ";
 	query_sql "SELECT `dg_id`, `name` , count ( `floor` ) FROM `dqs_dungeon` GROUP BY `dq_id` ASC",.@dg_id,.@dg_name$,.@floor;
 	mes "Dungeon ID - Dungeon Name - Floor Quantity";
 	for ( set .@d,0; .@d < getarraysize(.@dg_id); set .@d,.@d + 1)
 		mes .@dg_id[.@d]+" - "+.@dg_name$[.@d]+" - "+.@floor[.@d];
 		
+	while(prompt("- Add Dungeon:- Edit Dungeon:- Remove Dungeon") != 255) {
+		next;
+		switch(@menu) {
+			
+			// Add Dungeon
+			case 1:
+			mes .n$;
+			mes "[ == Add Dungeon == ]";
+			mes "I will now select the latest or the next free Dungeon ID:";
+			mes "Afterwards you can start adding an dungeon.";
+			next;
+			query_sql "SELECT `dq_id` FROM `dqs_dungeon`",.@dg_id;
+			for ( set .@d,0; .@d < getarraysize(.@dg_id); set .@d,.@d + 1)
+				if(.@dg_id[.@d] != (.@d+1)) break;
+			
+			set .@id,.@d + 1;
+			
+			mes .n$;
+			mes "New Dungeon ID: "+.@id;
+			mes " ";
+			mes "1st Step  - Dungeon Name:";
+			mes "Note: Minimum: 5 letters, Maximum: 20 letters.";
+			next;
+			if(input(.@d_name$,5,20) != 0) {
+				mes .n$;
+				mes "Invalid Name, either too short or too long.";
+				mes "Please try again.";
+				continue;
+			}
+			mes .n$;
+			mes "2nd Step - Difficulty:";
+			mes " > 1 = Easy";
+			mes " > 2 = Medium";
+			mes " > 3 = Hard";
+			mes "Note: Please insert the number, not the word.";
+			next;
+			if(input(.@d_diff,1,3) != 0) {
+				mes .n$;
+				mes "Invalid Difficulty, either less than 1 or higher than 3.";
+				mes "Please try again.";
+				continue;
+			}			
+			mes .n$;
+			mes "3rd Step - Level Requirement:";
+			mes "Note: Minimum: 1, Maximum: "+MAX_LEVEL;
+			next;
+			if(input(.@d_level,1,MAX_LEVEL) != 0) {
+				mes .n$;
+				mes "Invalid Level, either too less or too high.";
+				mes "Please try again.";
+				continue;
+			}
+			mes .n$;
+			mes "4th Step  - Party Limit:";
+			mes "Note: Minimum: 1 party, Maximum: 100 parties.";
+			next;
+			if(input(.@d_plimit,1,100) != 0) {
+				mes .n$;
+				mes "Invalid Limit, either too less or too high.";
+				mes "Please try again.";
+				continue;
+			}
+			mes .n$;
+			mes "5th Step - Floor Amount:";
+			mes "Note: Minimum: 1, Maximum: 100";
+			next;
+			if(input(.@d_fam,1,100) != 0) {
+				mes .n$;
+				mes "Invalid Floor Amount, either too less or too high.";
+				mes "Please try again.";
+				continue;
+			}
+			mes .n$;
+			mes "6th Step - Adding Floors";
+			mes "Note: You better should know the map names and the coordinates for each floor!!!";
+			mes " > I will only check if the coordinates are passable or not.";
+			mes " > One mistake means to repeat the whole \"Adding Floors\" Step!!!";
+			while ( set(.@f,.@f + 1) != .@d_fam) {
+				next;
+				mes .n$;
+				mes "Floor #"+.@f+":";
+				mes " - Map Name:";
+				input(.@f_map$);
+			
+			}
+			
+			
+		}
+	
+	}
+	/*
+	
+	 `floor` tinyint(3) unsigned NOT NULL default '1',
+	 `map_name` varchar(255) default 'prontera',
+	 `map_x` varchar(255) unsigned default '0',
+	 `map_y` varchar(255) unsigned default '0',
+	 `repeat` int(5) unsigned default '0',
+	 `status` tinyint(3) unsigned default '0'
+	
+	
+	
+	
 	switch Menu:
 	> Add Dungeon
 		- Selecting latest Dungeon ID
@@ -724,13 +1155,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 	> Remove
 	   - Selecting Quest
 	   - Removing
-	   
-	   
-	Quest ID 1 = Dungeon Quest
-	Quest Type = 3
-	Quest Info = "Complete the dungeon by talking to the Exit NPC."
-	Quest can't be aborted or deleted from the database via ingame menu.
-	Quest Reward = Dungeon Points * Dungeon Difficulty
 	*/
 	break;
 	
@@ -780,6 +1204,7 @@ set .debug,0;
 set .gm,80; // GM Access Level 
 // ============== Dungeon Settings ================== //
 setarray .exp[1],50,100,150; // EXP Rate in % for Difficulty: Easy/Medium/Hard
+set .max_exp,500; // Max EXP Rate Settings for GM Panel
 // Server Array Limit
 // > rAthena since commit 6295c77 (Script Engine Upgrade):
 // = 2000000000000 (2 Billion)
