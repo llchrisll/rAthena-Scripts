@@ -33,6 +33,16 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/10/28
+= Updated Dungeon Quest System v1.0 [WIP]
+- Exchanged an wrong switch(prompt() with while(prompt()) at line 766
+  and added the need switch for it
+- Added some missing continue;
+- Modified some text
+- Finished Dungeon Management > Adding Dungeon
+- Started to add Dungeon Managment > Edit Dungeon
+- Finished Dungeon Management > Delete Dungeon
+------------------------------------------------------------------------------------------------------------------------
 * 2015/10/27
 = Updated Dungeon Quest System v1.0 [WIP]
 - Added new table for pending rewards > `dqs_pending`

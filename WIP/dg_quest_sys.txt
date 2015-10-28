@@ -763,72 +763,81 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				mes "[ == Repeat Settings == ]";
 				mes "Please select an option from below:";
 				next;
-				switch(prompt("- Max Repeat Limit ("+.dg_max_limit+"):- Delay Type") != 255) {
+				while(prompt("- Max Repeat Limit ("+.dg_max_limit+"):- Delay Type") != 255) {
+					next;
+					switch(@menu) {
+					
+						// Max Repeat Limit
+						case 1:
+						mes .n$;
+						mes "[ == Repeat Limit Setting == ]";
+						mes "Current Maximum Repeat Limit: "+.dg_max_limit;
+						mes " ";
+						mes "Please type the new limit:";
+						mes "Note: Lowest: 1, Maximum: 5000";
+						next;
+						if(input(.@rep_new,1,5000) != 0) {
+							mes .n$;
+							mes "Invalid Value, please try again.";
+							continue;
+						}
+						mes .n$;
+						mes "Chosen Value:";
+						mes "> "+.@rep_new;
+						mes " ";
+						mes "Is that correct?";
+						if(select("- Yes:- No") - 1) continue;
+						next;
+						mes "The Maximum Repeat Limit has been changed successfully.";
+						set .dg_max_limit,.@rep_new;
+						continue;
+						break;
+						
+						// Delay Type
+						case 2:
+						mes .n$;
+						mes "[ == Delay Type Setting ==]";
+						mes "Current Delay Type: "+ ( (.dg_del_type == 1)?"Hour": ( (.dg_del_type == 2)?"Day": ( (.dg_del_type == 3)?"Week":"Month") ) );
+						mes "Note: This delay becomes only active when the Repeat Limit of an Dungeon has been reached and will be multiplied by the Difficulty of the Dungeon.";
+						mes " ";
+						mes "Please choose one of the Delay Types from below by typing the number in front of it:";
+						mes " > 1: Hour";
+						mes " > 2: Day";
+						mes " > 3: Week";
+						mes " > 4: Month";
+						next;
+						if(input(.@del_new,1,4) != 0) {
+							mes .n$;
+							mes "Invalid Type, please try again.";
+							continue;
+						}
+						mes .n$;
+						mes "Chosen Delay type:";
+						mes "> "+( (.@del_new == 1)?"Hour": ( (.@del_new == 2)?"Day": ( (.@del_new == 3)?"Week":"Month") ) );
+						mes " ";
+						mes "Is that correct?";
+						if(select("- Yes:- No") - 1) continue;
+						next;
+						mes "The Delay Type has been changed successfully.";
+						set .dg_del_type,.@del_new;
+						continue;
+						break;
+						
+						// Repeat Settings - Default
+						default:
+						break;
+					} // End of Repeat Settings - switch(@menu)
+					break;
+					
+				} // End of Repeat Settings - while(prompt())
+				continue;
+				break;
 				
-					// Max Repeat Limit
-					case 1:
-					mes .n$;
-					mes "[ == Repeat Limit Setting == ]";
-					mes "Current Maximum Repeat Limit: "+.dg_max_limit;
-					mes " ";
-					mes "Please type the new limit:";
-					mes "Note: Lowest: 1, Maximum: 5000";
-					next;
-					if(input(.@rep_new,1,5000) != 0) {
-						mes .n$;
-						mes "Invalid Value, please try again.";
-						continue;
-					}
-					mes .n$;
-					mes "Chosen Value:";
-					mes "> "+.@rep_new;
-					mes " ";
-					mes "Is that correct?";
-					if(select("- Yes:- No") - 1) continue;
-					next;
-					mes "The Maximum Repeat Limit has been changed successfully.";
-					set .dg_max_limit,.@rep_new;
-					break;
-					
-					// Delay Type
-					case 2:
-					mes .n$;
-					mes "[ == Delay Type Setting ==]";
-					mes "Current Delay Type: "+ ( (.dg_del_type == 1)?"Hour": ( (.dg_del_type == 2)?"Day": ( (.dg_del_type == 3)?"Week":"Month") ) );
-					mes "Note: This delay becomes only active when the Repeat Limit of an Dungeon has been reached and will be multiplied by the Difficulty of the Dungeon.";
-					mes " ";
-					mes "Please choose one of the Delay Types from below by typing the number in front of it:";
-					mes " > 1: Hour";
-					mes " > 2: Day";
-					mes " > 3: Week";
-					mes " > 4: Month";
-					next;
-					if(input(.@del_new,1,4) != 0) {
-						mes .n$;
-						mes "Invalid Type, please try again.";
-						continue;
-					}
-					mes .n$;
-					mes "Chosen Delay type:";
-					mes "> "+( (.@del_new == 1)?"Hour": ( (.@del_new == 2)?"Day": ( (.@del_new == 3)?"Week":"Month") ) );
-					mes " ";
-					mes "Is that correct?";
-					if(select("- Yes:- No") - 1) continue;
-					next;
-					mes "The Delay Type has been changed successfully.";
-					set .dg_del_type,.@del_new;
-					break;
-					
-					// Repeat Settings - Default
-					default:
-					break;
-				}
-				continue;				
-			
 				// Dungeon Settings - Default
 				default:
 				break;
-			} // End of Dungeon Settings switch(@menu)
+			} // End of Dungeon Settings - switch(@menu)
+			break;
 		} // End of Dungeon Settings Settings - while(prompt())
 		break;
 		
@@ -864,6 +873,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				next;
 				mes "The Max Level Requirement has been changed successfully.";
 				set .level,.@lvl_new;
+				continue;
 				break;
 				
 				// Monster Hunting
@@ -902,6 +912,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				set .mob_min,.@mob_min;
 				set .mob_max,.@mob_max;
 				set .mob_ct,.@mob_ct;
+				continue;
 				break;
 				
 				// Item Collecting
@@ -940,6 +951,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				set .item_min,.@item_min;
 				set .item_max,.@item_max;
 				set .item_ct,.@item_ct;
+				continue;
 				break;
 				
 				// Max Reward Settings
@@ -978,12 +990,14 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				set .rew_cash,.@rew_cash;
 				set .rew_item,.@rew_item;
 				set .rew_weight,.@rew_weight;
+				continue;
 				break;
-
+				
+				// Quest Settings - Default
 				default:
 				break;
-			} // End of Quest Settings  - switch(@menu)
-			continue;
+			} // End of Quest Settings - switch(@menu)
+			break;
 			
 		} // End of Quest Settings - while(prompt())
 		break;
@@ -1005,7 +1019,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 	for ( set .@d,0; .@d < getarraysize(.@dg_id); set .@d,.@d + 1)
 		mes .@dg_id[.@d]+" - "+.@dg_name$[.@d]+" - "+.@floor[.@d];
 		
-	while(prompt("- Add Dungeon:- Edit Dungeon:- Remove Dungeon") != 255) {
+	while(prompt("- Add Dungeon:- Edit Dungeon:- Delete Dungeon") != 255) {
 		next;
 		switch(@menu) {
 			
@@ -1063,7 +1077,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			next;
 			if(input(.@d_plimit,1,100) != 0) {
 				mes .n$;
-				mes "Invalid Limit, either too less or too high.";
+				mes "Invalid Party Limit, either too less or too high.";
 				mes "Please try again.";
 				continue;
 			}
@@ -1078,41 +1092,197 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				continue;
 			}
 			mes .n$;
-			mes "6th Step - Adding Floors";
+			mes "7th Step - Repeat Limit";
+			mes "Note: Minimum 1, Maximum "+.dg_max_limit;
+			next;
+			if(input(.@d_repeat,1,.dg_max_limit) != 0) {
+				mes .n$;
+				mes "Invalid Party Limit, either too less or too high.";
+				mes "Please try again.";
+				continue;
+			}
+			mes .n$;
+			mes "8th Step - Status";
+			mes "Note: 1 = Entry allowed, 0 = Entry forbidden / Default is 1";
+			next;
+			if(input(.@d_stat,0,1) != 0)
+				set .@d_stat,1; // Defaulting to "Online"
+			
+			mes .n$;
+			mes "9th Step - Adding Floors";
 			mes "Note: You better should know the map names and the coordinates for each floor!!!";
 			mes " > I will only check if the coordinates are passable or not.";
 			mes " > One mistake means to repeat the whole \"Adding Floors\" Step!!!";
-			while ( set(.@f,.@f + 1) != .@d_fam) {
+			set .@f,1;
+			deletearray .@floor_map$[0],getarraysize(.@floor_map$);
+			deletearray .@floor_x[0],getarraysize(.@floor_x);
+			deletearray .@floor_y[0],getarraysize(.@floor_y);
+			while ( .@f != .@d_fam) {
+				// Reseting Variables
+				set .@f_map$,"";
+				set .@f_x,0;
+				set .@f_y,0;
 				next;
 				mes .n$;
 				mes "Floor #"+.@f+":";
 				mes " - Map Name:";
 				input(.@f_map$);
-			
+				mes " > Input: "+.@f_map$;
+				mes " - X Coordinate:";
+				input(.@f_x);
+				mes " > Input: "+.@f_x;
+				mes " - Y Coordinate:";
+				input(.@f_y);
+				mes " > Input: "+.@f_y;
+				mes " ";
+				mes "Is that correct?";
+				if(select("- Yes:- No") - 1) continue;
+				next;
+				mes .n$;
+				if(checkcell(.@f_map$,.@f_x,.@f_y,cell_chkpass) == 0) {
+					mes "This Coordinates are not passable, please try again.";
+					continue;
+				}
+				mes "Map Data for the Floor #"+.@f+" has been added.";
+				setarray .@floor_map$[getarraysize(.@floor_map$)],.@f_map$;
+				setarray .@floor_y[getarraysize(.@floor_x)],.@f_x;
+				setarray .@floor_x[getarraysize(.@floor_y)],.@f_y;
+				set .@f,.@f + 1;
 			}
-			
-			
-		}
+			next;
+			mes .n$;
+			mes "Congratulation!";
+			mes "You have successfully added the \""+.@d_name$+"\" "+( (compare(.@d_name$,"Dungeon") == 1)?" ":"Dungeon ")+"with the ID "+.@id+" to the database.";
+			for ( set .@a,0; .@a < getarraysize(.@floor_map$); set .@a,.@a + 1)
+				query_sql "INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` ) VALUES ( '"+.@id+"' , '"+.d_name$+"' , '"+.@d_diff+"' , '"+.@d_level+"' , '"+.@d_plimit+"' , '"+(.@a + 1)+"' , '"+.@floor_map$[.@a]+"' , '"+.@floor_x[.@a]+"' , '"+.@floor_y[.@a]+"' , '"+.@d_repeat+"' , '"+.@d_stat+"' )";
+			break;
+		
+			// Edit Dungeon
+			case 2:
+			query_sql "SELECT DISTINCT `dg_id`, `name` FROM `dqs_dungeon` ORDER BY `dq_id` ASC",.@dg_id,.@dg_name$;
+			for ( set .@m,0; .@m < getarraysize(.@dg_id); set .@m,.@m + 1)
+				set .@edit_m$,.@edit_m+"- "+.@dg_name$[.@m]+ ( (.@dg_name$[.@m+1] != "")?":":"");
+			mes .n$;
+			mes "Please select an dungeon from below to edit:";
+			next;
+			set .@dg_edit,select(.@edit_m$) - 1;
+			mes .n$;
+			mes "Chosen Dungeon: "+.@dg_name$[.@dg_edit];
+			mes " ";
+			mes "Is this correct?";
+			if(select("- Yes:- No") - 1) continue;
+			next;
+			mes .n$;
+			mes "Now choose what you want to edit:";
+			next;
+			while(prompt("- Dungeon Name:- Difficulty:- Required Level:- Party Limit:- Floor Settings:- Repeat Limit:- Status") != 255) {
+				next;
+				switch(@menu) {
+				
+					// Dungeon Name
+					case 1:
+					mes .n$;
+					
+					continue;
+					break;
+					
+					// Difficulty
+					case 2:
+					mes .n$;
+					
+					continue;
+					break;
+					
+					// Required Level
+					case 3:
+					mes .n$;
+					
+					continue;
+					break;
+					
+					// Party Limit
+					case 4:
+					mes .n$;
+					
+					continue;
+					break;
+					
+					// Floor Settings
+					case 5:
+					mes .n$;
+					mes "Please choose below what you want to do next:";
+					while(prompt("- Add Floor:- Edit Floor:- Delete Floor") != 255) {
+						next;
+						switch(@menu) {
+						
+							// Add Floor
+							case 1:
+							mes .n$;
+							
+							continue;
+							break;
+							
+							// Edit Floor
+							// > Whole floor
+							case 2:
+							mes .n$;
+							
+							
+							continue;
+							break;
+							
+							// Delete Floor
+							mes .n$;
+							
+							
+							continue;
+							break;
+							
+							// Floor Settings - Default
+							default:
+							break;
+						} // End of Floor Settings - switch(@menu)
+						break;
+					} // End of Floor Settings while(prompt())
+						
+						
+						}
+					
+					
+					
+					
+					}
+					
+					continue;
+					break;
+					
+					
+					// Repeat Limit
+					case 6:
+					mes .n$;
+					
+					continue;
+					break;
+					
+					// Status
+					case 7:
+					mes .n$;
+					
+					continue;
+					break;
 	
-	}
+					// Dungeon Edit Options - Default
+					default:
+					break;
+				} // End of Dungeon Edit Options - switch(@menu)
+				break;
+	
+			
+			} // End of Dungeon Edit Options - while(prompt())
 	/*
+	 `dg_id`,`name`,`difficulty`,`req_level`,`pty_limit`,`floor`,`map_name`,`map_x`,`map_y`,`repeat`,`status`
 	
-	 `floor` tinyint(3) unsigned NOT NULL default '1',
-	 `map_name` varchar(255) default 'prontera',
-	 `map_x` varchar(255) unsigned default '0',
-	 `map_y` varchar(255) unsigned default '0',
-	 `repeat` int(5) unsigned default '0',
-	 `status` tinyint(3) unsigned default '0'
-	
-	
-	
-	
-	switch Menu:
-	> Add Dungeon
-		- Selecting latest Dungeon ID
-		- ...
 	> Edit Dungeon
-	   - Selecting Dungeon
 	   - Edit Options:
 	     + Name
 		 + Difficulty
@@ -1124,11 +1294,35 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 		 + Party Limit
 		 + Repeat Limit 
 		 + Change Status
-		   
-	> Remove Dungeon
-	   - Selecting Dungeon
-	   - Removing
 	*/
+			
+			break;
+			
+			
+			// Delete Dungeon
+			case 3:
+			query_sql "SELECT DISTINCT `dg_id`, `name` FROM `dqs_dungeon` ORDER BY `dq_id` ASC",.@dg_id,.@dg_name$;
+			for ( set .@m,0; .@m < getarraysize(.@dg_id); set .@m,.@m + 1)
+				set .@del_m$,.@del_m+"- "+.@dg_name$[.@m]+ ( (.@dg_name$[.@m+1] != "")?":":"");
+			mes .n$;
+			mes "Please select an dungeon from below to delete:";
+			next;
+			set .@dg_del,select(.@del_m$) - 1;
+			mes .n$;
+			mes "Chosen Dungeon: "+.@dg_name$[.@dg_del];
+			mes " ";
+			mes "Is this correct?";
+			if(select("- Yes:- No") - 1) continue;
+			next;
+			mes .n$;
+			mes "The Dungeon "+..@dg_name$[.@dg_del]+" has been successfully deleted.";
+			query_sql "DELETE FROM `dqs_dungeon` WHERE `dg_id` = '"+.@dg_id[.@dg_del]+"'";
+			break;
+			
+			
+		} // End of Dungeon Management - switch(@menu)
+		continue;
+	}
 	break;
 	
 	// Quest Management 
