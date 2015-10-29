@@ -33,6 +33,11 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/10/29
+= Added Player Shops v1.0 [IC]
+- Added Brainstorming Stuff and some SQL Tables
+- Added some OnInit: settings
+------------------------------------------------------------------------------------------------------------------------
 * 2015/10/28
 = Updated Dungeon Quest System v1.0 [WIP]
 - Exchanged an wrong switch(prompt() with while(prompt()) at line 766

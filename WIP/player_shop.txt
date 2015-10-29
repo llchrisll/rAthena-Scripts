@@ -1,0 +1,111 @@
+//===== rAthena Script =======================================
+//= Ownable Shops
+//===== Author ===============================================
+//= llchrisll
+//===== Credits ==============================================
+//= Soloa for permission to script his project and for the idea.
+//===== Current Version ======================================
+//= 1.0
+//===== GitHub Commit Link ===================================
+//= https://github.com/llchrisll/lllchrislll-scripts/commit/
+//===== Changelog ============================================
+//= "()" contains the Commit ID, if available.
+//= Just add the ID after "commit/" in the link.
+//------------------------------------------------------------
+//= 1.0 - Initial Release
+//===== Compatible With ======================================
+//= rAthena SQL 09/26-2015 Rev+
+//===== Tested With ==========================================
+//= rAthena SQL 09/26-2015 Revision
+//===== Description ==========================================
+//= ...
+//===== Comments =============================================
+//= ...
+//============================================================
+/*
+CREATE TABLE IF NOT EXISTS `shop_owner` (
+ `shop_id` int(10) unsigned NOT NULL,
+ `acc_id` int(10) unsigned NOT NULL,
+ `shop_name` varchar(255) default 'Unknown Shop',
+ `char_name` varchar(255) default 'Unknown Character',
+ `cur_type` tinyint(3) unsigned default '1',
+ `cur_ix` tinyint(3) unsigned default '0',
+ `tax` int(10) unsigned default '0',
+ `balance` int(12) unsigned default '0',
+ PRIMARY KEY ( `shop_id` )
+ ) ENGINE=MyISAM;
+ 
+ CREATE TABLE IF NOT EXISTS `shop_content` (
+ `shop_id` int(10) unsigned NOT NULL,
+ `cont_id` int(10) unsigned NOT NULL,
+ `cont_stock` int(10) unsigned default '1'
+ ) ENGINE=MyISAM;
+ */
+ /*
+ 2. NPC "Shop Spot" - Functions > unique name - ::shop_rent > Duplicates
+ - Shop ID: #1 of "Shop Spot#1::shop_rent"
+ - Check if an owner exists and if it's the attached player
+ - Owner:
+   > Info when an Item Stock is 0.
+   > Change Currency only when Balance is "0"
+   > Check Balance
+     + Recieve Money
+   > Add Item
+   > Edit Item
+     + Increase Stock
+     + Decrease Stock
+	 = Can't change item via editing
+   > Delete Item
+ - Customer:
+   > Display Shop Details:
+     + Owner Info
+	 + Currency
+	 + Tax %
+   > Open Shop
+     + Display Item Stock via dispbottom
+	 + Display Balance
+	 + Opening of the Shop
+	   > if stock of an item is 0, don't list it.
+   > Leave
+  
+OnBought:
+ - Save earned "Currency" in SQL till he retrieves it 
+  
+OnInit:
+ - Currencies:
+   1. Zeny
+   2. Cash Points/Kafra Points
+	 > array = .c_cash_var$ for variable name
+	 > array = .c_cash_disp$ for display name of variable
+   3. Items like Coins and stuff
+   4. Custom Variables
+     > array = .c_var$ for variable name
+	 > array = .c_var_disp$ for display name of variable
+   
+ 
+prontera,156,191,0	script	Shop Rental	100,{
+
+/*
+ 1. NPC "Shop Rental"- Functions:
+ - Renting Shop
+ - Dissolving Shop
+ - Information how it works
+ - Overview how many shops exists with their owner
+ - Maybe GM Panel > functions not clear
+ */
+mes .n$;
+mes "Welcome "+strcharinfo(0)+"!";
+mes ""
+
+OnInit:
+// NPC Name
+set .n$,"["+strnpcinfo(0)+"]";
+// Rental Price Type
+// 1 = Zeny
+// 2 = Cash Points
+// 3 = Item (like Coins)
+set .rent_type,1;
+// Rental Price
+set .rent,5000;
+end;
+}
