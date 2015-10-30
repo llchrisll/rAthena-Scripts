@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS `dqs_list` (
  `item_am` int(10) unsigned default '0',
  `reward_id` int(10) unsigned default '0',
  `reward_am` int(10) unsigned default '0',
- `status` tinyint(3) unsigned default '1'
+ `status` tinyint(3) unsigned default '2'
  ) ENGINE=MyISAM;
  
  CREATE TABLE IF NOT EXISTS `dqs_party` (
@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS `dqs_dungeon` (
  `map_x` varchar(255) unsigned default '0',
  `map_y` varchar(255) unsigned default '0',
  `repeat` int(5) unsigned default '0',
- `status` tinyint(3) unsigned default '0'
+ `status` tinyint(3) unsigned default '2'
 ) ENGINE=MyISAM;
 
 CREATE TABLE IF NOT EXISTS `dqs_app` (
@@ -156,7 +156,7 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 		query_sql "SELECT `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `repeat` , `status` FROM `dqs_dungeon`",.@dg_id,.@name$,.@diff,.@pty_limit,.@req_lvl,.@rep,.@stat;
 		for ( set .@du,0; .@du < getarraysize(.@dg_id); set .@du,.@du + 1) {
 			query_sql "SELECT count( `pty_id` ) FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id[.@du]+"'",.@pty_ct;
-			set .@men_dun$,.@men_dun$ + "- "+.@name$[.@du] + " ("+( (.@status[.@du] == 1)?.@pty_ct+"/"+.@pty_limit[.@du]:"Entry forbidden")+" (Min.Level - "+.@req_lvl[.@du]+")" + ( (.@name$[@du+1] != "")?":":"");
+			set .@men_dun$,.@men_dun$ + "- "+.@name$[.@du] + " ("+( (.@status[.@du] == 2)?.@pty_ct+"/"+.@pty_limit[.@du]:"Entry forbidden")+" (Min.Level - "+.@req_lvl[.@du]+")" + ( (.@name$[@du+1] != "")?":":"");
 			setarray .@pt_count[.@du],.@pty_ct;
 		}	
 		next;
@@ -168,7 +168,7 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 		mes "Dungeon: "+.@name$[@d];
 		mes "Difficulty: "+ ( (.@diff[@d] == 1)?"Easy": ( (@diff[.@d] == 2)?"Medium":"Hard") );
 		mes "Minimum Level: "+.@req_lvl[@d];
-		if(.@status[@d] == 0) {
+		if(.@status[@d] == 1) {
 			mes "Status: Entry forbidden";
 			mes "Please choose a different dungeon.";
 			close;
@@ -249,7 +249,6 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 		// Party Entry
 		} else if(getcharid(1) != 0) {
 			mes "I will now check the levels of your party members. Please wait....";
-			/*
 			getpartymember(getcharid(1),1);
 			getpartymember(getcharid(1),2);
 			for ( set .@l,0; .@l < $@partymembercount; set .@l,.@l + 1) {
@@ -267,13 +266,6 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 					setd("DG_"+.@dg_id[@d]+"_RepeatTimer"),0,$@partymembercid[.@l];
 					setd("DG_"+.@dg_id[@d]+"_RepeatCT"),0,$@partymembercid[.@l];
 				}
-			}
-			*/
-			set .@pty_id,getcharid(1);
-			addrid(1,0,.@pty_id);
-			if(getcharid(1) == .@pty_id)
-				set .@l_ct,.@l_ct + 1;
-			debugmes "Party Member Counter via addrid: "+.@l_ct;
 			
 			next;
 			mes .n$;
@@ -406,7 +398,7 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_pts == 1)?"Points Exchan
 					query_sql "SELECT `mob_am` FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '"+.@q_id[.@q_c]+"' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"' AND `mob_id` = '"+.@req1[.@p]+"'",.@am;
 				else 
 					if(getcharid(1) != 0) {
-						addrid(1,getcharid(1));
+						addrid(1,0,getcharid(1));
 						set .@am,.@am + countitem(.@req1[.@p]);
 					} else 
 						set .@am,countitem(.@req1[.@p]);
@@ -1031,7 +1023,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			mes "Afterwards you can start adding an dungeon.";
 			next;
 			query_sql "SELECT `dq_id` FROM `dqs_dungeon`",.@dg_id;
-			for ( set .@d,0; .@d < getarraysize(.@dg_id); set .@d,.@d + 1)
+			for ( set .@d,0; .@d <= getarraysize(.@dg_id); set .@d,.@d + 1)
 				if(.@dg_id[.@d] != (.@d+1)) break;
 			
 			set .@id,.@d + 1;
@@ -1097,16 +1089,16 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			next;
 			if(input(.@d_repeat,1,.dg_max_limit) != 0) {
 				mes .n$;
-				mes "Invalid Party Limit, either too less or too high.";
+				mes "Invalid Repeat Limit, either too less or too high.";
 				mes "Please try again.";
 				continue;
 			}
 			mes .n$;
 			mes "8th Step - Status";
-			mes "Note: 1 = Entry allowed, 0 = Entry forbidden / Default is 1";
+			mes "Note: 2 = Entry allowed, 1 = Entry forbidden / Default is 2";
 			next;
-			if(input(.@d_stat,0,1) != 0)
-				set .@d_stat,1; // Defaulting to "Online"
+			if(input(.@d_stat,1,2) != 0)
+				set .@d_stat,2; // Defaulting to "Online"
 			
 			mes .n$;
 			mes "9th Step - Adding Floors";
@@ -1154,7 +1146,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			mes "Congratulation!";
 			mes "You have successfully added the \""+.@d_name$+"\" "+( (compare(.@d_name$,"Dungeon") == 1)?" ":"Dungeon ")+"with the ID "+.@id+" to the database.";
 			for ( set .@a,0; .@a < getarraysize(.@floor_map$); set .@a,.@a + 1)
-				query_sql "INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` ) VALUES ( '"+.@id+"' , '"+.d_name$+"' , '"+.@d_diff+"' , '"+.@d_level+"' , '"+.@d_plimit+"' , '"+(.@a + 1)+"' , '"+.@floor_map$[.@a]+"' , '"+.@floor_x[.@a]+"' , '"+.@floor_y[.@a]+"' , '"+.@d_repeat+"' , '"+.@d_stat+"' )";
+				query_sql "INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` ) VALUES ( '"+.@id+"' , '"+.@d_name$+"' , '"+.@d_diff+"' , '"+.@d_level+"' , '"+.@d_plimit+"' , '"+(.@a + 1)+"' , '"+.@floor_map$[.@a]+"' , '"+.@floor_x[.@a]+"' , '"+.@floor_y[.@a]+"' , '"+.@d_repeat+"' , '"+.@d_stat+"' )";
 			break;
 		
 			// Edit Dungeon
@@ -1165,9 +1157,9 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			mes .n$;
 			mes "Please select an dungeon from below to edit:";
 			next;
-			set .@dg_edit,select(.@edit_m$) - 1;
+			set .@ed,select(.@edit_m$) - 1;
 			mes .n$;
-			mes "Chosen Dungeon: "+.@dg_name$[.@dg_edit];
+			mes "Chosen Dungeon: "+.@dg_name$[.@ed];
 			mes " ";
 			mes "Is this correct?";
 			if(select("- Yes:- No") - 1) continue;
@@ -1176,34 +1168,92 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			mes "Now choose what you want to edit:";
 			next;
 			while(prompt("- Dungeon Name:- Difficulty:- Required Level:- Party Limit:- Floor Settings:- Repeat Limit:- Status") != 255) {
+				query_sql "SELECT `name` , `difficulty` , `req_level` , `pty_limit` , `repeat` , `status` FROM `dqs_dungeon` WHERE `dq_id` = '"+.@dg_id[.@ed]+"'",.@ed_name$,.@ed_diff,.@ed_lvl,.@ed_plimit,.@ed_rep,.@ed_stat;
 				next;
 				switch(@menu) {
 				
 					// Dungeon Name
 					case 1:
 					mes .n$;
-					
+					mes "Current Name: "+.@ed_name$;
+					mes " ";
+					mes "Please type the new name:";
+					next;
+					input(.@d_name$);
+					mes .n$;
+					mes "Chosen Name: "+.@d_name$;
+					mes "Is this correct?";
+					if(select("- Yes:- No") - 1) continue;
+					next;
+					mes .n$;
+					mes "The Dungeon Name \""+.@ed_name$+"\" has been successfully changed to \""+.@d_name$+"\".";
+					query_sql "UPDATE `dqs_dungeon` SET `name` = '"+escape_sql(.@d_name$)+"' WHERE `dg_id` = '"+.@dg_id[.@ed]+"'";
 					continue;
 					break;
 					
 					// Difficulty
 					case 2:
 					mes .n$;
-					
+					mes "Current Difficulty: "+.@ed_diff;
+					mes " ";
+					mes " > 1 = Easy";
+					mes " > 2 = Medium";
+					mes " > 3 = Hard";
+					mes "Note: Please insert the number, not the word.";
+					mes "Please type the new difficulty:";
+					next;
+					if(input(.@d_diff,1,3) != 0) {
+						mes .n$;
+						mes "Invalid Difficulty, either less than 1 or higher than 3.";
+						mes "Please try again.";
+						continue;
+					}	
+					mes .n$;
+					mes "Chosen Difficulty: "+.@d_diff;
+					mes "Is this correct?";
+					if(select("- Yes:- No") - 1) continue;
+					next;
+					mes .n$;
+					mes "The Difficulty has been successfully changed to \""+.@d_diff+"\".";
+					query_sql "UPDATE `dqs_dungeon` SET `difficulty` = '"+.@d_diff+"' WHERE `dg_id` = '"+.@dg_id[.@ed]+"'";
 					continue;
 					break;
 					
 					// Required Level
 					case 3:
 					mes .n$;
-					
+					mes "Current Level Requirement: "+.@ed_lvl;
+					mes " ";
+					mes "Please type the new level requirement:";
+					next;
+					input(.@d_lvl);
+					mes .n$;
+					mes "Chosen Level: "+.@d_lvl;
+					mes "Is this correct?";
+					if(select("- Yes:- No") - 1) continue;
+					next;
+					mes .n$;
+					mes "The Level Requirement has been successfully changed to \""+.@d_lvl+"\".";
+					query_sql "UPDATE `dqs_dungeon` SET `req_level` = '"+.@d_lvl+"' WHERE `dg_id` = '"+.@dg_id[.@ed]+"'";
 					continue;
 					break;
 					
 					// Party Limit
 					case 4:
 					mes .n$;
-					
+					mes "Current Party Limit: "+.@ed_plimit;
+					mes " ";
+					mes "Please type the new Party Limit:";
+					next;
+					input(.@d_plimit);
+					mes .n$;
+					mes "Chosen Party Limit: "+.@d_plimit;
+					mes "Is this correct?";
+					if(select("- Yes:- No") - 1) continue;
+					next;
+					mes .n$;
+					mes "The Party Limit has been successfully changed to \""+.@d_plimit+"\".";
+					query_sql "UPDATE `dqs_dungeon` SET `pty_limit` = '"+.@d_plimit+"' WHERE `dg_id` = '"+.@dg_id[.@ed]+"'";
 					continue;
 					break;
 					
@@ -1213,28 +1263,114 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 					mes "Please choose below what you want to do next:";
 					while(prompt("- Add Floor:- Edit Floor:- Delete Floor") != 255) {
 						next;
+						deletearray .@fl_id,getarraysize(.@fl_id);
+						deletearray .@fl_map$[0],getarraysize(.@fl_map$);
+						deletearray .@fl_x[0],getarraysize(.@fl_x);
+						deletearray .@fl_y[0],getarraysize(.@fl_y);
+						query_sql "SELECT `floor` , `map_name` , `map_x` , `map_y` FROM `dqs_dungeon` WHERE `dg_id` = '"+.@dg_id[.@ed]+"'",.@fl_id,.@fl_map$,.@fl_x,.@fl_y;
 						switch(@menu) {
 						
 							// Add Floor
 							case 1:
 							mes .n$;
+							mes "[ == Add Floor == ]";
+							mes "I will now select the latest or the next free Floor ID:";
+							mes "Afterwards you can start adding the floor data.";
+							next;
+							for ( set .@f,0; .@f <= getarraysize(.@fl_id); set .@f,.@f + 1)
+								if(.@fl_id[.@f] != (.@f+1)) break;
 							
+							set .@id,.@f + 1;
+							
+							mes .n$;
+							mes "New Floor ID: "+.@f_id;
+							mes "Now type the map data, one by one.";
+							mes " - Map Name:";
+							input(.@f_map$);
+							mes " > Input: "+.@f_map$;
+							mes " - X Coordinate:";
+							input(.@f_x);
+							mes " > Input: "+.@f_x;
+							mes " - Y Coordinate:";
+							input(.@f_y);
+							mes " > Input: "+.@f_y;
+							mes " ";
+							mes "Is that correct?";
+							if(select("- Yes:- No") - 1) continue;
+							next;
+							mes .n$;
+							if(checkcell(.@f_map$,.@f_x,.@f_y,cell_chkpass) == 0) {
+								mes "This Coordinates are not passable, please try again.";
+								continue;
+							}
+							mes "Map Data for the Floor #"+.@f_id+" has been added.";
+							query_sql "INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` ) VALUES ( '"+.@dg_id[.@ed]+"' , '"+.@ed_name$+"' , '"+.@ed_diff+"' , '"+.@ed_lvl+"' , '"+.@ed_plimit+"' , '"+.@f_id+"' , '"+.@f_map$+"' , '"+.@f_x+"' , '"+.@f_y+"' , '"+.@ed_rep+"' , '"+.@ed_stat+"' )";
 							continue;
 							break;
 							
 							// Edit Floor
-							// > Whole floor
 							case 2:
+							mes "[ == Edit Floor == ]";
+							mes "Please choose the Floor you want to edit:";
+							mes "Afterwards you can start editing the floor data itself:";
+							mes "But all at once.";
+							mes "Format: - Map Name (ID - <Floor ID>)";
+							next;
+							for ( set .@f,0; .@f < getarraysize(.@fl_id); set .@f,.@f + 1)
+								set .@f_editm$,.@f_editm$ + "- "+.@fl_map$[.@f]+" (ID - "+.@fl_id[.@f]+")"+ ( ( .@fl_id[(.@f+1)] != 0)?":":"");
+							
+							set .@f_ed,select(.@f_editm$) - 1;
+							
 							mes .n$;
-							
-							
+							mes "Chosen Floor: "+.@fl_id[.@f_ed];
+							mes " > Map Name: "+.@fl_map$[.@f_ed];
+							mes " > Map X: "+.@fl_x[.@f_ed];
+							mes " > Map Y: "+.@fl_y[.@f_ed];
+							mes " ";
+							mes "Now type the new map data, one by one.";
+							mes " - Map Name:";
+							input(.@f_map$);
+							mes " > Input: "+.@f_map$;
+							mes " - X Coordinate:";
+							input(.@f_x);
+							mes " > Input: "+.@f_x;
+							mes " - Y Coordinate:";
+							input(.@f_y);
+							mes " > Input: "+.@f_y;
+							mes " ";
+							mes "Is that correct?";
+							if(select("- Yes:- No") - 1) continue;
+							next;
+							mes .n$;
+							if(checkcell(.@f_map$,.@f_x,.@f_y,cell_chkpass) == 0) {
+								mes "This Coordinates are not passable, please try again.";
+								continue;
+							}
+							mes "Map Data for the Floor #"+.@fl_id[.@f_ed]+" has been added."; 
+							query_sql "UPDATE `dqs_dungeon` SET `map_name` = '"+.@f_map$+"' , `map_x` = '"+.@f_x+"', `map_y` = '"+.@f_y+"' WHERE `dg_id` = '"+.@dg_id[.@ed]+"' AND `floor` = '"+.@fl_id[.@f_ed]+"'";
 							continue;
 							break;
 							
 							// Delete Floor
+							case 3:
 							mes .n$;
+							mes "[ == Delete Floor == ]";
+							mes "Please choose the Floor you want to delete:";
+							mes "Format: - Map Name (ID - <Floor ID>)";
+							next;
+							for ( set .@f,0; .@f < getarraysize(.@fl_id); set .@f,.@f + 1)
+								set .@f_delm$,.@f_delm$ + "- "+.@fl_map$[.@f]+" (ID - "+.@fl_id[.@f]+")"+ ( ( .@fl_id[(.@f+1)] != 0)?":":"");
 							
+							set .@f_del,select(.@f_delm$) - 1;
 							
+							mes .n$;
+							mes "Chosen Floor: "+.@fl_id[.@f_del];
+							mes " ";
+							if(select("- Yes:- No") - 1) continue;
+							next;
+							mes .n$;
+							mes "The floor with the ID#"+.@fl_id[.@f_del]+" has been deleted.";
+							query_sql "DELETE FROM `dqs_dungeon` WHERE `dg_id` = '"+.@dg_id[.@ed]+"' AND `floor` = '"+.@fl_id[.@f_del]+"'";
 							continue;
 							break;
 							
@@ -1244,30 +1380,52 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 						} // End of Floor Settings - switch(@menu)
 						break;
 					} // End of Floor Settings while(prompt())
-						
-						
-						}
-					
-					
-					
-					
-					}
-					
 					continue;
 					break;
-					
 					
 					// Repeat Limit
 					case 6:
 					mes .n$;
-					
+					mes "Current Repeat Limit: "+.@ed_rep;
+					mes " ";
+					mes "Please type the new repeat limit:";
+					mes "Note: Minimum 1, Maximum "+.dg_max_limit;
+					next;
+					if(input(.@d_rep,1,.dg_max_limit) != 0) {
+						mes .n$;
+						mes "Invalid Repeat Limit, either too less or too high.";
+						mes "Please try again.";
+						continue;
+					}
+					mes .n$;
+					mes "Chosen Repeat Limit: "+.@d_rep;
+					mes "Is this correct?";
+					if(select("- Yes:- No") - 1) continue;
+					next;
+					mes .n$;
+					mes "The Repeat Limit has been successfully changed to \""+.@d_rep+"\".";
+					query_sql "UPDATE `dqs_dungeon` SET `repeat` = '"+.@d_rep+"' WHERE `dg_id` = '"+.@dg_id[.@ed]+"'";
 					continue;
 					break;
 					
 					// Status
 					case 7:
 					mes .n$;
-					
+					mes "Current Status: "+.@ed_stat;
+					mes " ";
+					mes " > 1 = Entry forbidden";
+					mes " > 2 = Entry allowed";
+					mes "Please type the new status:";
+					next;
+					input(.@d_stat);
+					mes .n$;
+					mes "Chosen Status: "+.@d_stat;
+					mes "Is this correct?";
+					if(select("- Yes:- No") - 1) continue;
+					next;
+					mes .n$;
+					mes "The Status has been successfully changed to \""+.@d_stat+"\".";
+					query_sql "UPDATE `dqs_dungeon` SET `status` = '"+.@d_stat+"' WHERE `dg_id` = '"+.@dg_id[.@ed]+"'";
 					continue;
 					break;
 	
@@ -1279,25 +1437,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 	
 			
 			} // End of Dungeon Edit Options - while(prompt())
-	/*
-	 `dg_id`,`name`,`difficulty`,`req_level`,`pty_limit`,`floor`,`map_name`,`map_x`,`map_y`,`repeat`,`status`
-	
-	> Edit Dungeon
-	   - Edit Options:
-	     + Name
-		 + Difficulty
-		 + Required Level
-		 + Map Settings
-		   * Add Map
-		   * Edit Map
-		   * Delete Map
-		 + Party Limit
-		 + Repeat Limit 
-		 + Change Status
-	*/
-			
 			break;
-			
 			
 			// Delete Dungeon
 			case 3:
@@ -1315,11 +1455,10 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			if(select("- Yes:- No") - 1) continue;
 			next;
 			mes .n$;
-			mes "The Dungeon "+..@dg_name$[.@dg_del]+" has been successfully deleted.";
+			mes "The Dungeon "+.@dg_name$[.@dg_del]+" and it's quests has been successfully deleted.";
 			query_sql "DELETE FROM `dqs_dungeon` WHERE `dg_id` = '"+.@dg_id[.@dg_del]+"'";
+			query_sql "DELETE FROM `dqs_list` WHERE `dg_id` = '"+.@dg_id[.@dg_del]+"'";
 			break;
-			
-			
 		} // End of Dungeon Management - switch(@menu)
 		continue;
 	}
@@ -1343,9 +1482,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 	> Add
 		- Selecting latest Quest ID
 		- ...
-	> Edit
-	   - Selecting Quest
-	   - Edit Options:
 	> Remove
 	   - Selecting Quest
 	   - Removing
@@ -1576,7 +1712,7 @@ if( (.@mob_am + 1) <= .@req_am)
 	
 // Player is in a party
 if(getcharid(1) != 0)
-	addrid(1,getcharid(1));
+	addrid(1,0,getcharid(1));
 	
 // Reading EXP values from Mob Database
 set .@expr,.exp[.@diff];

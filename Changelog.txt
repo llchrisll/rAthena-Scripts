@@ -33,6 +33,12 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/10/30
+= Updated Dungeon Quest System v1.0 [WIP]
+- Changed `status` values to value+1, forgot arrays don't accept '0'
+- Finished Dungeon Management
+- Added an query_sql to delete also the respective quests on "Delete Dungeon"
+------------------------------------------------------------------------------------------------------------------------
 * 2015/10/29
 = Added Player Shops v1.0 [IC]
 - Added Brainstorming Stuff and some SQL Tables
