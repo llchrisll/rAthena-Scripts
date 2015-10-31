@@ -33,6 +33,13 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/10/31
+= Updated Dungeon Quest System v1.0 [WIP]
+- Removed check if Dungeon Points are gainable so the Exchanger would be available
+- Added some forgotten query_sql "DELETE" at Dungeon Management > Delete Dungeon
+- Finished Quest Management
+- Finished Exchanger Settings, now Exchanger itself
+------------------------------------------------------------------------------------------------------------------------
 * 2015/10/30
 = Updated Dungeon Quest System v1.0 [WIP]
 - Changed `status` values to value+1, forgot arrays don't accept '0'
