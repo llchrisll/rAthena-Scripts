@@ -1,7 +1,7 @@
 //===== rAthena Script =======================================
 //= Quest System - SQL
 //===== By ===================================================
-//= lllchrislll
+//= llchrisll
 //===== Version ==============================================
 //= 1.0 - Initial Release
 //      - Added OnAtcommand (@checkquest) for Quest Progress Display per request
@@ -364,7 +364,7 @@ switch(select("- Overview:- Quest Management:- "+( ($@q_tab$[0] == "")?"Create":
 			default: 
 			if(.@rew_2 > .rew_item) 
 				set .@f,1;
-			else if(checkweight(.@rew_1,.@rew_2) != 1)
+			else if(.@rew2*getiteminfo(.@rew1,6)) >= .rew_weight)
 				set .@f,2;
 			break;
 		}
@@ -382,20 +382,14 @@ switch(select("- Overview:- Quest Management:- "+( ($@q_tab$[0] == "")?"Create":
 		// Deleting Quests
 		case 2:
 		mes .n$;
-		query_sql "SELECT `quest_id` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@npc_c]+"'",.@q_list;
+		query_sql "SELECT DISTINCT `quest_id` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@npc_c]+"'",.@q_list;
 		if(getarraysize(.@q_list) < 1) {
 			mes "I'm sorry, but you can't remove quests from this NPC, because there are none yet. Please try another one.";
 			close;
 		}
 		mes "Please choose, which Quest you want to remove:";
 		for ( set .@q,0; .@q < getarraysize(.@q_list); set .@q,.@q + 1) {
-			if(.@q > 1)
-				if(.@q_list[.@q] == .@q_list[.@q-1]) {
-				deletearray .@q_list[.@q],1;
-				continue;
-			}
 			set .@r_menu$,.@r_menu$ + "- ID#"+.@q_list[.@q]+ ( (.@q_list[.@q+1] != 0)?":":"");
-		}
 		next;
 		set .@rem,select(.@r_menu$) - 1;
 		mes .n$;
@@ -523,7 +517,7 @@ if(getcharid(1) != 0) {
 	getpartymember(getcharid(1),1);
 	getpartymember(getcharid(1),2);
 	for ( set .@p,0; .@p < $@partymembercount; set .@p,.@p + 1) {
-		if(isloggedin($@partymemberaid[.@p],$@partymembercid[.@p]) == 0) end;
+		if(isloggedin($@partymemberaid[.@p],$@partymembercid[.@p]) == 0) continue;
 		attachrid($@partymemberaid[.@p]);
 		callsub OnQuestMobKill;
 	}
@@ -585,10 +579,10 @@ set .@n$,"["+strnpcinfo(1)+"]";
 
 query_sql "SELECT DISTINCT `quest_id` , `quest_type` , `level` , `limit` FROM `quest_list` WHERE `npc_id` = '"+strnpcinfo(2)+"'",.@q_id,.@q_type,.@q_lvl,.@limit;
 for ( set .@q,0; .@q < getarraysize(.@q_id); set .@q,.@q + 1) {
-	// Resetting variable
-	set .@status,0;
+	set .@que_id,0; // Resetting variable
 	query_sql "SELECT `quest_id` FROM `quest_player` WHERE `npc_id` = '"+strnpcinfo(2)+"' AND `quest_id` = '"+.@q_id[.@q]+"' AND `char_id` = '"+getcharid(0)+"' LIMIT 1",.@que_id;
 	setarray .@que[.@q],.@que_id;
+	debugmes "Recieving Status of Quest: "+.@que[.@q];
 	if(getd("QSys_"+strnpcinfo(2)+"_"+.@q_id[.@q]+"_QDelay") <= gettimetick(2))
 		setd("QSys_"+strnpcinfo(2)+"_"+.@q_id[.@q]+"_QDelay"),0;
 	set .@q_list$,.@q_list$ + "- #"+.@q_id[.@q]+" ("+ ( (.@q_type[.@q] == 1)?"Monster Hunting":"Item Collecting")+") "+( (.@q_lvl[.@q] != 0)?"("+.@q_lvl[.@q]+") ":"") + "["+( (.@que[.@q] > 0)?"^FF0000Running": ( (getd("QSys_"+strnpcinfo(2)+"_"+.@q_id[.@q]+"_QDelay") == 0)?"^00FFFFNew":"^0000FFQuest Delay active") )+"^000000]" + ( (.@q_id[.@q+1] != 0)?":":"");
@@ -604,7 +598,7 @@ mes "Quest_ID (Quest Type) (Level) [Quest Status]";
 next;
 set .@q_c,select(.@q_list$) - 1;
 mes .@n$;
-mes " --- Quest #"+.@q_id[.@q_c]+" - "+ ( (.@que[.@q_c] == 1)?"Progress":"Information")+": ---";
+mes " --- Quest #"+.@q_id[.@q_c]+" - "+ ( (.@que[.@q_c] != -1)?"Progress":"Information")+": ---";
 mes "Type: "+( (.@q_type[.@q_c] == 1)?"Monster Hunting":"Item Collecting");
 
 // Quest Details
@@ -621,7 +615,7 @@ mes "Quest Limit: "+.@limit[.@q_c]+" times";
 mes " ";
 mes "What do you like to do now?";
 next;
-if(.@que[.@q_c] == 0) {
+if(.@que[.@q_c] == -1) {
 	select("- Accept:- Nevermind");
 	if(@menu == 2) set .@s,4; else set .@s,@menu;
 } else
@@ -751,7 +745,7 @@ switch(.@s) {
 			else 
 				setd("MobHunt_"+.@req1[.@r]+"_CT"),0;
 		} else
-			delitem .@req1[.@l],.@req2[.@l];
+			delitem .@req1[.@r],.@req2[.@r];
 		
 	query_sql "DELETE FROM `quest_player` WHERE `npc_id` = '"+strnpcinfo(2)+"' AND `quest_id` = '"+.@q_id[.@q_c]+"' AND `char_id` = '"+getcharid(0)+"'";
 	break;

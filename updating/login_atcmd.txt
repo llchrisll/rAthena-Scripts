@@ -1,105 +1,78 @@
-//===== eAthena Script =======================================
+//===== rAthena Script =======================================
 //= Login Auto-AtCommands
-//===== By ===================================================
+//===== Author ===============================================
 //= llchrisll
-//===== Version ==============================================
-//= 1.0
+//===== Credits ==============================================
+//= ...
+//===== Current Version ======================================
+//= 1.1
+//===== Changelog ============================================
+//= 1.0 - Initial Release
+//= 1.1 - Optimized for rAthena and made dynamically
 //===== Compatible With ======================================
-//= Every eAthena Version
+//= rAthena SQL 09/26-2015 Rev+
+//===== Tested With ==========================================
+//= rAthena SQL 09/26-2015 Revision
 //===== Description ==========================================
 //= This script will be executing AtCommands on Login,
-//= depending on what you have put.
+//  depending on what you have put.
 //===== Comments =============================================
-//= None yet.....
+//= ...
 //============================================================
 prontera,139,173,5	script	Login Settings	57,{
-set .@n$,"[Login Settings]";
 
-mes .@n$;
+mes .n$;
 mes "Hello, "+strcharinfo(0);
 mes "What setting do you want to change?";
-menu "Autoloot ["+( (login_loot)? "^00BB22On^000000" : "^FF2200Off^000000")+"]",auto_loot,
-	 "Main Chat ["+( (login_main)? "^00BB22On^000000" : "^FF2200Off^000000")+"]",main_chat,
-	 "@NoAsk ["+( (login_noask)? "^00BB22On^000000" : "^FF2200Off^000000")+"]",no_ask;
+for ( set .@m,0; .@m < getarraysize(.auto_disp$); set .@m,.@m + 1)
+	set .@l_menu$,.@l_menu$ + "- "+.auto_disp$[.@m]+" ["+( (getd("auto_"+.auto_cmd$[.@m]) == 1)?"^00BB22Online^000000":"^FF2200Offline^000000")+"]"+ ( (.auto_disp$[.@m+1] != "")?":":"");
 
-	auto_loot:
-	next;
-	mes .@n$;
-	mes "Status: "+( (login_loot) ? "^00BB22On^000000" : "^FF2200Off^000000");
-	menu "I want to "+((!login_loot) ? "^00BB22enable^000000" : "^FF2200disable^000000")+" it.",-,"Nothing",L_quit;
+set .@s,select(.@l_menu$) - 1;
+next;
 
-	next;
-	mes .@n$;
-	if(login_loot == 0) {
-		mes "Autoloot is now ^00BB22On^000000.";
-		set login_loot,1;
-		atcommand strcharinfo(0) + "@autoloot";
+mes .n$;
+mes "Status: "+( (getd("auto_"+.auto_cmd$[.@s])) ? "^00BB22On^000000" : "^FF2200Off^000000");
+if(select("- I want to "+((!getd("auto_"+.auto_cmd$[.@s]))?"^00BB22enable^000000":"^FF2200disable^000000")+" it.:- Nothing") - 1) close;
+
+next;
+mes .n$;
+if(getd("auto_"+.auto_cmd$[.@s]) == 0) {
+	if(getd("auto_"+.auto_param[.@s]) == 1) {
+		mes getd("auto_"+.auto_disp$[.@s])+" has extra parameters, which you can input now:";
+		input(.@i$);
+		next;
+		mes .n$;
+		mes "Saved Input: "+.@i$;
+		setd("auto_"+.auto_cmd$[.@s]+"_param$"),.@i$;
 		
-	} else if(login_loot == 1) {
-		mes "Autoloot is now ^FF2200Off^000000.";
-		set login_loot,0;
-		atcommand strcharinfo(0) + "@autoloot off";
 	}
-	close;
-	
-	main_chat:
-	next;
-	mes .@n$;
-	mes "Status: "+( (login_main) ? "^00BB22On^000000" : "^FF2200Off^000000");
-	menu "I want to "+((!login_main) ? "^00BB22enable^000000" : "^FF2200disable^000000")+" it.",-,"Nothing",L_quit;
-
-	next;
-	mes .@n$;
-	if(login_main == 0) {
-		mes "Main Chat is now ^00BB22On^000000.";
-		set login_main,1;
-		atcommand strcharinfo(0) + "@main";
+	mes getd("auto_"+.auto_disp$[.@s])+" is now ^00BB22active^000000.";
+	setd("auto_"+.auto_cmd$[.@s]),1;
+	atcommand strcharinfo(0) + "@"+getd("auto_"+.auto_cmd$[.@s])+" "+ ( (.auto_param[.@l] == 1)?getd("auto_"+.auto_cmd$[.@l]+"_param$"):"");
 		
-	} else if(login_main == 1) {
-		mes "Main Chat is now ^FF2200Off^000000.";
-		set login_main,0;
-		atcommand strcharinfo(0) + "@main off";
-	}
-	close;
-	
-	no_ask:
-	next;
-	mes .@n$;
-	mes "Status: "+( (login_noask) ? "^00BB22On^000000" : "^FF2200Off^000000");
-	menu "I want to "+((!login_noask) ? "^00BB22enable^000000" : "^FF2200disable^000000")+" it.",-,"Nothing",L_quit;
-
-	next;
-	mes .@n$;
-	if(login_noask == 0) {
-		mes "@noask is now ^00BB22On^000000.";
-		set login_noask,1;
-		atcommand strcharinfo(0) + "@noask";
-		
-	} else if(login_noask == 1) {
-		mes "@noask is now ^FF2200Off^000000.";
-		set login_noask,0;
-		atcommand strcharinfo(0) + "@noask off";
-	}
-	close;
-	
-	L_quit:
-	next;
-	mes .@n$;
-	mes "See ya.";
-	close;
+} else if(getd("auto_"+.auto_cmd$[.@s]) == 1) {
+	mes getd("auto_"+.auto_disp$[.@s])+" is now ^FF2200Off^000000.";
+	setd("auto_"+.auto_cmd$[.@s]),0;
+	atcommand strcharinfo(0) + "@"+getd("auto_"+.auto_cmd$[.@s])+" off";
+}
+close;
 
 OnPCLoginEvent:
-if(login_loot == 1)	{
-	atcommand strcharinfo(0) + "@autoloot";
-	dispbottom "Autoloot is now On.";
-}
-if(login_main == 1) {
-	atcommand strcharinfo(0) + "@main";
-	dispbottom "Main Chat is now On.";
-}
-if(login_noask == 1) {
-	atcommand strcharinfo(0) + "@noask";
-	dispbottom "@noask is now On.";
-}
+for ( set .@l,0; .@l < getarraysize(.auto_cmd$); set .@l,.@l + 1) 
+	if(getd("auto_"+.auto_cmd$[.@l]) == 1) {
+		atcommand strcharinfo(0) + "@"+.auto_cmd$[.@l] +" "+ ( (.auto_param[.@l] == 1)?getd("auto_"+.auto_cmd$[.@l]+"_param$"):"");
+		dispbottom "@"+.auto_disp$[.@l]+" is active.";
+	}
+end;
+
+OnInit:
+set .n$,"[Login Settings]";
+// AtCommands itself
+setarray .auto_cmd$[0],"autoloot","main","noask";
+// What to display for the players
+setarray .auto_disp$[0],"AutoLoot","Main","NoAsk";
+// Extra Parameters?
+// 1 = Yes ,0 = No
+setarray .auto_param[0],1,0,0;
 end;
 }

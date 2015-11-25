@@ -9,12 +9,7 @@
 //	I used the map coordinates.
 //===== Current Version ======================================
 //= 1.0
-//===== GitHub Commit Link ===================================
-//= https://github.com/llchrisll/lllchrislll-scripts/commit/
 //===== Changelog ============================================
-//= "()" contains the Commit ID, if available.
-//= Just add the ID after "commit/" in the link.
-//------------------------------------------------------------
 //= 1.0 - Initial Release
 //===== Compatible With ======================================
 //= rAthena SQL 09/26-2015 Rev+
@@ -61,11 +56,12 @@ CREATE TABLE IF NOT EXISTS `dqs_list` (
  `dg_id` int(10) unsigned,
  `pty_id` int(10) unsigned default '0',
  `char_id` int(10) unsigned default '0',
- `start` int(10) unsigned default '1'
+ `start` int(10) unsigned default '1',
  `quest_id` int(10) unsigned NOT NULL,
  `mob_id` int(10) unsigned default '0',
  `mob_am` int(12) unsigned default '0',
- `req_am` int(12) unsigned default '0'
+ `req_am` int(12) unsigned default '0',
+ `complete` tinyint(3) unsigned default '0'
  ) ENGINE=MyISAM;
  
 CREATE TABLE IF NOT EXISTS `dqs_dungeon` (
@@ -76,8 +72,8 @@ CREATE TABLE IF NOT EXISTS `dqs_dungeon` (
  `pty_limit` int(5) unsigned default '0',
  `floor` tinyint(3) unsigned NOT NULL default '1',
  `map_name` varchar(255) default 'prontera',
- `map_x` varchar(255) unsigned default '0',
- `map_y` varchar(255) unsigned default '0',
+ `map_x` int(10) unsigned default '0',
+ `map_y` int(10) unsigned default '0',
  `repeat` int(5) unsigned default '0',
  `status` tinyint(3) unsigned default '2'
 ) ENGINE=MyISAM;
@@ -91,17 +87,18 @@ CREATE TABLE IF NOT EXISTS `dqs_app` (
 ) ENGINE=MyISAM;
 
 CREATE TABLE IF NOT EXISTS `dqs_pending` (
- `char_id` int(10) unsigned NOT NUIL,
+ `char_id` int(10) unsigned NOT NULL,
  `item_id` int(10) unsigned default '501',
  `item_am` int(10) unsigned default '0'
 ) ENGINE=MyISAM;
-
 */
 prontera,151,185,4	script	Dungeon Quest Service	110,{
 
 mes .n$;
 mes "Hello, "+strcharinfo(0)+"!";
 mes "How can I help you?";
+if(getgroupid() >= .gm) 
+	menu "- Player Menu",-,"- Control Center",OnGMAccess;
 next;
 switch(select("- Dungeon Menu:- Information:- Points Exchanger:- Nothing")) {
 
@@ -152,15 +149,19 @@ switch(select("- Dungeon Menu:- Information:- Points Exchanger:- Nothing")) {
 				close;
 			}
 		}
+		next;
+		mes .n$;
 		// =============== Creating Dungeon Menu ===============
-		query_sql "SELECT `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `repeat` , `status` FROM `dqs_dungeon`",.@dg_id,.@name$,.@diff,.@pty_limit,.@req_lvl,.@rep,.@stat;
+		query_sql "SELECT DISTINCT `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `repeat` , `status` FROM `dqs_dungeon`",.@dg_id,.@name$,.@diff,.@pty_limit,.@req_lvl,.@rep,.@stat;
+		if(getarraysize(.@dg_id) < 1) {
+			mes "I'm sorry, but there are no Dungeon yet, please come later.";
+			close;
+		}
 		for ( set .@du,0; .@du < getarraysize(.@dg_id); set .@du,.@du + 1) {
 			query_sql "SELECT count( `pty_id` ) FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id[.@du]+"'",.@pty_ct;
 			set .@men_dun$,.@men_dun$ + "- "+.@name$[.@du] + " ("+( (.@status[.@du] == 2)?.@pty_ct+"/"+.@pty_limit[.@du]:"Entry forbidden")+" (Min.Level - "+.@req_lvl[.@du]+")" + ( (.@name$[@du+1] != "")?":":"");
 			setarray .@pt_count[.@du],.@pty_ct;
 		}	
-		next;
-		mes .n$;
 		mes "Now please choose the dungeon your party wants to go:";
 		set @d,select( .@men_dun$ ) - 1;
 		next;
@@ -266,7 +267,7 @@ switch(select("- Dungeon Menu:- Information:- Points Exchanger:- Nothing")) {
 					setd("DG_"+.@dg_id[@d]+"_RepeatTimer"),0,$@partymembercid[.@l];
 					setd("DG_"+.@dg_id[@d]+"_RepeatCT"),0,$@partymembercid[.@l];
 				}
-			
+			}
 			next;
 			mes .n$;
 			if(.@l_ct > 0) {
@@ -508,8 +509,8 @@ switch(select("- Dungeon Menu:- Information:- Points Exchanger:- Nothing")) {
 			close;
 		}
 		// Checking if dungeon was completed
-		query_sql "SELECT `rew_id` FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '1' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'",.@rew_id;
-		if(.@rew_id != 1) {
+		query_sql "SELECT `complete` FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id+"' AND `quest_id` = '1' AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'",.@done;
+		if(.@done != 1) {
 			mes "You"+ ( (getcharid(1) != 0)?"r party":"")+" didn't complete the dungeon yet.";
 			mes "Please come back, when it's done.";
 			close;
@@ -520,7 +521,8 @@ switch(select("- Dungeon Menu:- Information:- Points Exchanger:- Nothing")) {
 			query_sql "DELETE FROM `dqs_app` WHERE `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'";
 			addrid(1,0,getcharid(1));
 		}
-		mes "For completing the "+( (compare(.@dg_name$,"Dungeon") == 1)?" ":" Dungeon ")+", you will recieve "+(.dg_pts*.@diff)+"x Dungeon Points.";
+		if(.dg_pts > 0)
+			mes "For completing the "+( (compare(.@dg_name$,"Dungeon") == 1)?" ":" Dungeon ")+", you will recieve "+(.dg_pts*.@diff)+"x Dungeon Points.";
 		
 		setd("DG_"+.@dg_id+"_RepeatCT"),getd("DG_"+.@dg_id+"_RepeatCT") + 1;
 		// Increasing Repeat Counter, and in case the Limit has been reached > Apply Timer
@@ -536,7 +538,7 @@ switch(select("- Dungeon Menu:- Information:- Points Exchanger:- Nothing")) {
 	case 2:
 	mes .n$;
 	mes "So you want some information about the Dungeon Quest Service, huh?!";
-	mes "Good, then I will start the main steps first:";
+	mes "Good, then I will start with the main steps first:";
 	next;
 	mes "[ === Register === ]";
 	mes "To use the Dungeon Quest Service, you can have enter either alone or as a party with a minimum of 2 online members.";
@@ -617,11 +619,11 @@ switch(select("- Dungeon Menu:- Information:- Points Exchanger:- Nothing")) {
 		next;
 		// Creating exchange menu
 		for ( set .@m,0; .@m < getarraysize(.dg_ex); set .@m,.@m + 1)
-			set .ex_m$,.ex_m$ + "- "+.dg_ex_am[.@m]+"x "+getitemname(.dg_ex[.@m])+" ("+.dg_ex_cost[.@m]+")"+ ( (.dg_ex[.@m+1] != 0)?":":"");
+			set .@ex_m$,.@ex_m$ + "- "+.dg_ex_am[.@m]+"x "+getitemname(.dg_ex[.@m])+" ("+.dg_ex_cost[.@m]+")"+ ( (.dg_ex[.@m+1] != 0)?":":"");
 		
-		set .@b,select(.ex_m$) - 1;
+		set .@b,select(.@ex_m$) - 1;
 		mes .n$;
-		mes "You have selected "+.dg_ex_am+"x "+getitemname(.dg_ex[.@b])+".";
+		mes "You have selected "+.dg_ex_am[.@b]+"x "+getitemname(.dg_ex[.@b])+".";
 		mes "Is that correct?";
 		if(select("- Yes:- No") - 1) close;
 		next;
@@ -655,9 +657,11 @@ switch(select("- Dungeon Menu:- Information:- Points Exchanger:- Nothing")) {
 		mes "Please choose the item you want your points to exchange to:";
 		mes "Format: Amount x Item (Price per Exchange)";
 		next;
-		set .@b,select(.ex_mvp_m$) - 1;
+		for ( set .@m,0; .@m < getarraysize(.mvp_ex); set .@m,.@m + 1)
+			set .@ex_mvp_m$,.@ex_mvp_m$ + "- "+.mvp_ex_am[.@m]+"x "+getitemname(.mvp_ex[.@m])+" ("+.mvp_ex_cost[.@m]+")"+ ( (.mvp_ex[.@m+1] != 0)?":":"");
+		set .@b,select(.@ex_mvp_m$) - 1;
 		mes .n$;
-		mes "You have selected "+.mvp_ex_am+"x "+getitemname(.mvp_ex[.@b])+".";
+		mes "You have selected "+.mvp_ex_am[.@b]+"x "+getitemname(.mvp_ex[.@b])+".";
 		mes "Is that correct?";
 		if(select("- Yes:- No") - 1) close;
 		next;
@@ -686,15 +690,14 @@ switch(select("- Dungeon Menu:- Information:- Points Exchanger:- Nothing")) {
 	// Nevermind
 	case 4:
 	break;
-	}
+}
 close;
 
 
 // GM Control Center
 OnGMAccess:
-mes .n$;
-mes "Hello, "+strcharinfo(0)+"!";
-mes "How can I help you?";
+mes "Note: Changes in the \"System Settings\" and \"Dungeon Points Management\" will only stay changed until the Server Restarts or \"@reloadscript\" is used.";
+mes "To make the changes stay, you have to change them in the script file itself.";
 next;
 switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dungeon Points Management:- Nevermid")) {
 
@@ -721,9 +724,9 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 		mes .n$;
 		mes "[ == Dungeon Settings == ]";
 		mes "Please choose which setting about the Dungeons you want to change:";
-		while(prompt("- EXP Settings:- Repeat Settings") != 255) {
+		while(@menu != 255) {
 			next;
-			switch(@menu) {
+			switch(prompt("- EXP Settings:- Repeat Settings")) {
 				
 				// EXP Settings
 				case 1:
@@ -763,9 +766,9 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				mes "[ == Repeat Settings == ]";
 				mes "Please select an option from below:";
 				next;
-				while(prompt("- Max Repeat Limit ("+.dg_max_limit+"):- Delay Type") != 255) {
+				while(1) {
 					next;
-					switch(@menu) {
+					switch(prompt("- Max Repeat Limit ("+.dg_max_limit+"):- Delay Type")) {
 					
 						// Max Repeat Limit
 						case 1:
@@ -826,19 +829,19 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 						// Repeat Settings - Default
 						default:
 						break;
-					} // End of Repeat Settings - switch(@menu)
+					} // End of Repeat Settings - switch(prompt())
 					break;
 					
-				} // End of Repeat Settings - while(prompt())
+				} // End of Repeat Settings - while(1)
 				continue;
 				break;
 				
 				// Dungeon Settings - Default
 				default:
 				break;
-			} // End of Dungeon Settings - switch(@menu)
+			} // End of Dungeon Settings - switch(prompt())
 			break;
-		} // End of Dungeon Settings Settings - while(prompt())
+		} // End of Dungeon Settings Settings - while(1)
 		break;
 		
 		// Quest Settings
@@ -846,16 +849,16 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 		mes .n$;
 		mes "[ == Quest Settings ==]";
 		mes "Please choose which setting about the quests you want to change:";
-		while(prompt("- Max Level Requirement ("+.level+"):- Monster Hunting:- Item Collecting:- Max Reward Settings") != 255) {
+		while(1) {
 			next;
-			switch(@menu) {
+			switch(prompt("- Max Level Requirement ("+.level+"):- Monster Hunting:- Item Collecting:- Max Reward Settings")) {
 			
 				// Max Level Requirement
 				case 1:
 				mes .n$;
 				mes "[ == Level Requirement == ]";
 				mes "Current Max Level Requirement: "+.level;
-				mes ""
+				mes " ";
 				mes "Please type the new requirement:";
 				mes "Note: Lowest: 1, Maximum: "+MAX_LEVEL;
 				next;
@@ -877,7 +880,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				break;
 				
 				// Monster Hunting
-				case 1:
+				case 2:
 				mes .n$;
 				mes "[ == Monster Hunting == ]";
 				mes "Current Settings:";
@@ -916,7 +919,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				break;
 				
 				// Item Collecting
-				case 2:
+				case 3:
 				mes .n$;
 				mes "[ == Item Collecting == ]";
 				mes "Current Settings:";
@@ -955,7 +958,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				break;
 				
 				// Max Reward Settings
-				case 3:
+				case 4:
 				mes .n$;
 				mes "[ == Max Reward Settings == ]";
 				mes "Current Settings:";
@@ -996,10 +999,10 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				// Quest Settings - Default
 				default:
 				break;
-			} // End of Quest Settings - switch(@menu)
+			} // End of Quest Settings - switch(prompt())
 			break;
 			
-		} // End of Quest Settings - while(prompt())
+		} // End of Quest Settings - while(1)
 		break;
 		
 		// Nevermind
@@ -1014,14 +1017,14 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 	mes "[ == Dungeon Management == ]";
 	mes "Here is a list of all the dungeons with the total floor quantity:";
 	mes " ";
-	query_sql "SELECT `dg_id`, `name` , count ( `floor` ) FROM `dqs_dungeon` GROUP BY `dq_id` ASC",.@dg_id,.@dg_name$,.@floor;
+	query_sql "SELECT DISTINCT `dg_id` , `name` , count( `floor` ) FROM `dqs_dungeon` GROUP BY `dg_id` ASC",.@dg_id,.@dg_name$,.@floor;
 	mes "Dungeon ID - Dungeon Name - Floor Quantity";
 	for ( set .@d,0; .@d < getarraysize(.@dg_id); set .@d,.@d + 1)
 		mes .@dg_id[.@d]+" - "+.@dg_name$[.@d]+" - "+.@floor[.@d];
 		
-	while(prompt("- Add Dungeon:- Edit Dungeon:- Delete Dungeon") != 255) {
+	while(1) {
 		next;
-		switch(@menu) {
+		switch(prompt("- Add Dungeon:- Edit Dungeon:- Delete Dungeon")) {
 			
 			// Add Dungeon
 			case 1:
@@ -1030,7 +1033,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			mes "I will now select the latest or the next free Dungeon ID:";
 			mes "Afterwards you can start adding an dungeon.";
 			next;
-			query_sql "SELECT `dq_id` FROM `dqs_dungeon`",.@dg_id;
+			query_sql "SELECT `dg_id` FROM `dqs_dungeon`",.@dg_id;
 			for ( set .@d,0; .@d <= getarraysize(.@dg_id); set .@d,.@d + 1)
 				if(.@dg_id[.@d] != (.@d+1)) break;
 			
@@ -1112,7 +1115,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			mes "9th Step - Adding Floors";
 			mes "Note: You better should know the map names and the coordinates for each floor!!!";
 			mes " > I will only check if the coordinates are passable or not.";
-			mes " > One mistake means to repeat the whole \"Adding Floors\" Step!!!";
+			mes " > One mistake means to repeat the floor!!!";
 			set .@f,1;
 			deletearray .@floor_map$[0],getarraysize(.@floor_map$);
 			deletearray .@floor_x[0],getarraysize(.@floor_x);
@@ -1154,12 +1157,12 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			mes "Congratulation!";
 			mes "You have successfully added the \""+.@d_name$+"\" "+( (compare(.@d_name$,"Dungeon") == 1)?" ":"Dungeon ")+"with the ID "+.@id+" to the database.";
 			for ( set .@a,0; .@a < getarraysize(.@floor_map$); set .@a,.@a + 1)
-				query_sql "INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` ) VALUES ( '"+.@id+"' , '"+.@d_name$+"' , '"+.@d_diff+"' , '"+.@d_level+"' , '"+.@d_plimit+"' , '"+(.@a + 1)+"' , '"+.@floor_map$[.@a]+"' , '"+.@floor_x[.@a]+"' , '"+.@floor_y[.@a]+"' , '"+.@d_repeat+"' , '"+.@d_stat+"' )";
+				query_sql "INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` ) VALUES ( '"+.@id+"' , '"+escape_sql(.@d_name$)+"' , '"+.@d_diff+"' , '"+.@d_level+"' , '"+.@d_plimit+"' , '"+(.@a + 1)+"' , '"+.@floor_map$[.@a]+"' , '"+.@floor_x[.@a]+"' , '"+.@floor_y[.@a]+"' , '"+.@d_repeat+"' , '"+.@d_stat+"' )";
 			break;
 		
 			// Edit Dungeon
 			case 2:
-			query_sql "SELECT DISTINCT `dg_id`, `name` FROM `dqs_dungeon` ORDER BY `dq_id` ASC",.@dg_id,.@dg_name$;
+			query_sql "SELECT DISTINCT `dg_id`, `name` FROM `dqs_dungeon` ORDER BY `dg_id` ASC",.@dg_id,.@dg_name$;
 			for ( set .@m,0; .@m < getarraysize(.@dg_id); set .@m,.@m + 1)
 				set .@edit_m$,.@edit_m+"- "+.@dg_name$[.@m]+ ( (.@dg_name$[.@m+1] != "")?":":"");
 			mes .n$;
@@ -1174,11 +1177,10 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			next;
 			mes .n$;
 			mes "Now choose what you want to edit:";
-			next;
-			while(prompt("- Dungeon Name:- Difficulty:- Required Level:- Party Limit:- Floor Settings:- Repeat Limit:- Status") != 255) {
-				query_sql "SELECT `name` , `difficulty` , `req_level` , `pty_limit` , `repeat` , `status` FROM `dqs_dungeon` WHERE `dq_id` = '"+.@dg_id[.@ed]+"'",.@ed_name$,.@ed_diff,.@ed_lvl,.@ed_plimit,.@ed_rep,.@ed_stat;
+			while(1) {
+				query_sql "SELECT `name` , `difficulty` , `req_level` , `pty_limit` , `repeat` , `status` FROM `dqs_dungeon` WHERE `dg_id` = '"+.@dg_id[.@ed]+"'",.@ed_name$,.@ed_diff,.@ed_lvl,.@ed_plimit,.@ed_rep,.@ed_stat;
 				next;
-				switch(@menu) {
+				switch(prompt("- Dungeon Name:- Difficulty:- Required Level:- Party Limit:- Floor Settings:- Repeat Limit:- Status")) {
 				
 					// Dungeon Name
 					case 1:
@@ -1269,14 +1271,14 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 					case 5:
 					mes .n$;
 					mes "Please choose below what you want to do next:";
-					while(prompt("- Add Floor:- Edit Floor:- Delete Floor") != 255) {
+					while(1) {
 						next;
 						deletearray .@fl_id,getarraysize(.@fl_id);
 						deletearray .@fl_map$[0],getarraysize(.@fl_map$);
 						deletearray .@fl_x[0],getarraysize(.@fl_x);
 						deletearray .@fl_y[0],getarraysize(.@fl_y);
 						query_sql "SELECT `floor` , `map_name` , `map_x` , `map_y` FROM `dqs_dungeon` WHERE `dg_id` = '"+.@dg_id[.@ed]+"'",.@fl_id,.@fl_map$,.@fl_x,.@fl_y;
-						switch(@menu) {
+						switch(prompt("- Add Floor:- Edit Floor:- Delete Floor")) {
 						
 							// Add Floor
 							case 1:
@@ -1312,7 +1314,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 								continue;
 							}
 							mes "Map Data for the Floor #"+.@f_id+" has been added.";
-							query_sql "INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` ) VALUES ( '"+.@dg_id[.@ed]+"' , '"+.@ed_name$+"' , '"+.@ed_diff+"' , '"+.@ed_lvl+"' , '"+.@ed_plimit+"' , '"+.@f_id+"' , '"+.@f_map$+"' , '"+.@f_x+"' , '"+.@f_y+"' , '"+.@ed_rep+"' , '"+.@ed_stat+"' )";
+							query_sql "INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` ) VALUES ( '"+.@dg_id[.@ed]+"' , '"+escape_sql(.@ed_name$)+"' , '"+.@ed_diff+"' , '"+.@ed_lvl+"' , '"+.@ed_plimit+"' , '"+.@f_id+"' , '"+.@f_map$+"' , '"+.@f_x+"' , '"+.@f_y+"' , '"+.@ed_rep+"' , '"+.@ed_stat+"' )";
 							continue;
 							break;
 							
@@ -1385,9 +1387,9 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 							// Floor Settings - Default
 							default:
 							break;
-						} // End of Floor Settings - switch(@menu)
+						} // End of Floor Settings - switch(prompt())
 						break;
-					} // End of Floor Settings while(prompt())
+					} // End of Floor Settings while(1)
 					continue;
 					break;
 					
@@ -1440,16 +1442,16 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 					// Dungeon Edit Options - Default
 					default:
 					break;
-				} // End of Dungeon Edit Options - switch(@menu)
+				} // End of Dungeon Edit Options - switch(prompt())
 				break;
 	
 			
-			} // End of Dungeon Edit Options - while(prompt())
+			} // End of Dungeon Edit Options - while(1)
 			break;
 			
 			// Delete Dungeon
 			case 3:
-			query_sql "SELECT DISTINCT `dg_id`, `name` FROM `dqs_dungeon` ORDER BY `dq_id` ASC",.@dg_id,.@dg_name$;
+			query_sql "SELECT DISTINCT `dg_id`, `name` FROM `dqs_dungeon` ORDER BY `dg_id` ASC",.@dg_id,.@dg_name$;
 			for ( set .@m,0; .@m < getarraysize(.@dg_id); set .@m,.@m + 1)
 				set .@del_m$,.@del_m+"- "+.@dg_name$[.@m]+ ( (.@dg_name$[.@m+1] != "")?":":"");
 			mes .n$;
@@ -1470,16 +1472,15 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			// Deleting Delay Variables from the database
 			query_sql "DELETE FROM `global_reg_value` WHERE `str` = 'DG_"+.@dg_id[.@q]+"_RepeatCT'";
 			query_sql "DELETE FROM `global_reg_value` WHERE `str` = 'DG_"+.@dg_id[.@q]+"_RepeatTimer'";
-			continue;
 			break;
 			
-			// Dungeon Management Options - Default
-			default:
+			// Dungeon Management Options - Cancel Button
+			case 255:
 			break;
 			
-		} // End of Dungeon Management - switch(@menu)
+		} // End of Dungeon Management - switch(prompt())
 		break;
-	} // End of Dungeon Management - while(prompt())
+	} // End of Dungeon Management - while(1)
 	break;
 	
 	// Quest Management 
@@ -1487,15 +1488,15 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 	mes .n$;
 	mes "Here is a list of all the available quests ordered by Dungeon:";
 	mes " ";
-	query_sql "SELECT `DISTINCT dg_id`, `name` , count ( `quest_id` ) FROM `dqs_list` GROUP BY `dq_id` ASC",.@dg_id,.@dg_name$,.@@q_ct;
+	query_sql "SELECT DISTINCT `dg_id` , `name` , count( `quest_id` ) FROM `dqs_list` GROUP BY `dg_id` ASC",.@dg_id,.@dg_name$,.@q_ct;
 	mes "Dungeon ID - Dungeon Name - Quest Quantity";
 	for ( set .@q,0; .@q < getarraysize(.@dg_id); set .@q,.@q + 1) {
 		mes .@dg_id[.@q]+" - "+.@dg_name$[.@q]+" - "+.@q_ct[.@q];
-		set .@dg_menu$,.@dg_menu$ + "- "+.@dg_name$[.@q]+ ( (.@dg_name$[.@q] != "")":":"");
+		set .@dg_menu$,.@dg_menu$ + "- "+.@dg_name$[.@q]+ ( (.@dg_name$[.@q+1] != "")?":":"");
 	}
 	next;
 	mes .n$;
-	mes "Pleae select the Dungeon you want to manage the quests:";
+	mes "Please select the Dungeon you want to manage the quests:";
 	next;
 	set .@q,select(.@dg_menu$) - 1;
 	mes .n$;
@@ -1505,11 +1506,11 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 	next;
 	mes .n$;
 	mes "What do you like to do now?";
-	while(prompt("- Add Quests:- Delete Quests") != 255) {
+	while(1) {
 		next;
 		deletearray .@q_req1[0],getarraysize(.@q_req1);
 		deletearray .@q_req2[0],getarraysize(.@q_req2);
-		switch(@menu) {
+		switch(prompt("- Add Quests:- Delete Quests")) {
 		
 			// Add Quests
 			case 1:
@@ -1706,21 +1707,22 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			default:
 			break;
 		
-		} // End of Quest Management - switch(@menu)
-	} // End of Quest Management - while(prompt())
+		} // End of Quest Management - switch(prompt())
+	} // End of Quest Management - while(1)
 	break;
 	
 	// Reward Management
 	case 4:
 	mes .n$;
 	mes "Please choose below what you want to manage:";
-	while(prompt("- Dungeon Points:- MvP Points") != 255) {
+	while(1) {
 		next;
-		switch(@menu) {
+		switch(prompt("- Dungeon Points:- MvP Points")) {
 			
 			// Dungeon Points
 			case 1:
 			mes .n$;
+			mes "[ == Dungeon Points == ]";
 			mes "Please choose below which setting you want to change:";
 			next;
 			switch(select("- Base Points:- Dungeon Points Variable:- Exchanger Settings:- Previous Menu")) {
@@ -1771,44 +1773,177 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				mes .n$;
 				mes "[ == Exchanger Settings]";
 				mes "Please choose what do do:";
-				while(prompt("- Add Item:- Edit Item:- Remove Item") != 255) {
+				while(1) {
 					next;
-					switch(@menu) {
-				/*
-				> Exchanger Settings
-					- Add
-						+ Choosing Item ID and check by getitemname(xxx) != ""
-						+ Costs per Exchange
-						+ Amount gained per Exchange
-					- Edit
-						+ Selecting Array Index via menu
-						+ Edit Options:
-							* Item ID
-							* Cost
-							* Amount
-					> Remove
-						- Selecting Array Index via menu
-						- Removing
-				*/
+					set .@dgx_m$,"";
+					switch(prompt("- Add Item:- Edit Item:- Remove Item")) {
 						
 						// Add Item
 						case 1:
 						mes .n$;
-						
+						if(getarraysize(.dg_ex) == .array) {
+							mes "I'm sorry, but you can't add anymore Items to the Exchanger.";
+							mes "Please delete an item or edit an existing one.";
+							continue;
+						}
+						mes "Please insert now the following in the same order:";
+						mes " > Item ID";
+						mes " > Costs each Exchange";
+						mes " > Gained Amount each Exchange";
+						mes " ";
+						mes "[ == Item ID == ]";
+						input(.@i_id);
+						if(getitemname(.@i_id) == "") {
+							next;
+							mes .n$;
+							mes "Unknown Item, please try another one.";
+							continue;
+						}
+						mes " > Input: "+.@i_id+" ("+getitemname(.@i_id)+")";
+						mes "[ == Costs == ]";
+						input(.@i_cost);
+						mes " > Input: "+.@i_cost;
+						mes "[ == Gained Amount == ]";
+						input(.@i_gain);
+						mes " > Input: "+.@i_gain;
+						mes " ";
+						mes "Is this correct?";
+						if(select("- Yes:- No") - 1) continue;
+						next;
+						mes .n$;
+						mes .@i_gain+"x "+getitemname(.@i_id)+" (ID: "+.@i_id+") with a Cost each Exchange of "+.@i_cost+" has been added successfully to the Dungeon Points Exchanger.";
+						setarray .dg_ex[getarraysize(.dg_ex)],.@i_id;
+						setarray .dg_ex_cost[getarraysize(.dg_ex_cost)],.@i_cost;
+						setarray .dg_ex_am[getarraysize(.dg_ex_am)],.@i_gain;
 						continue;
 						break;
 						
 						// Edit Item
 						case 2:
 						mes .n$;
+						if(getarraysize(.dg_ex) < 1) {
+							mes "I'm sorry, but there are no Items you could edit in the Exchanger.";
+							mes "Please add an item first.";
+							continue;
+						}
+						mes "Please select an Item to edit from below:";
+						next;
+						for ( set .@r,0; .@r < getarraysize(.dg_ex); set .@r,.@r + 1) 
+							set .@dgx_m$,.@dgx_m$ + "- "+getitemname(.dg_ex[.@r])+" (ID - "+.dg_ex[.@r]+")"+ ( (.dg_ex[.@r+1] != 0)?":":"");
+							
+						set .@i_ed,select(.@dgx_m$) - 1;
 						
+						mes .n$;
+						mes "Item: "+getitemname(.dg_ex[.@i_ed])+" (ID: "+.dg_ex[.@i_ed]+")";
+						mes "Cost each Exchange: "+.dg_ex_cost[.@i_ed];
+						mes "Gained Amount: "+.dg_ex_am[.@i_ed];
+						mes " ";
+						mes "Is this correct?";
+						if(select("- Yes:- No") - 1) continue;
+						next;
+						mes .n$;
+						mes "Please choose which value you want to edit:";
+						next;
+						switch(select("- Item ID:- Cost each Exchange:- Gained Amount")) {
+						
+							// Edit Item ID
+							case 1:
+							mes .n$;
+							mes "Current Item ID: "+.dg_ex[.@i_ed];
+							mes " ";
+							mes "Please type the new value:";
+							next;
+							input(.@id_new);
+							mes .n$;
+							if(getitemname(.@id_new) == "" || getitemname(.@id_new) == "null") {
+								mes "Invalid Item ID, please try again.";
+								break;
+							}
+							mes "Chosen ID: "+.@id_new+" > "+getitemname(.@id_new);
+							mes " ";
+							mes "Is this correct?";
+							if(select("- Yes:- No") - 1) break;
+							next;
+							mes .n$;
+							mes "The Item ID has been changed successfully to "+.@id_new;
+							setarray .dg_ex[.@i_ed],.@id_new;
+							break;
+							
+							// Edit Cost each Exchange
+							case 2:
+							mes .n$;
+							mes "Current Cost: "+.dg_ex_cost[.@i_ed];
+							mes " ";
+							mes "Please type the new value:";
+							next;
+							input(.@cost_new);
+							mes .n$;
+							if(.@cost_new < 1) {
+								mes "Invalid Cost, can't be below 1, please try again.";
+								break;
+							}
+							mes "New Value: "+.@cost_new;
+							mes " ";
+							mes "Is this correct?";
+							if(select("- Yes:- No") - 1) break;
+							next;
+							mes .n$;
+							mes "The Cost each Exchange has been changed successfully to "+.@cost_new;
+							setarray .dg_ex_cost[.@i_ed],.@cost_new;
+							break;
+							
+							// Edit Gained Amount each Exchange
+							case 3:
+							mes .n$;
+							mes "Current Amount: "+.dg_ex_am[.@i_ed];
+							mes " ";
+							mes "Please type the new value:";
+							next;
+							input(.@gain_new);
+							mes .n$;
+							if(.@gain_new < 1) {
+								mes "Invalid Amount, can't be below 1, please try again.";
+								break;
+							}
+							mes "New Value: "+.@gain_new;
+							mes " ";
+							mes "Is this correct?";
+							if(select("- Yes:- No") - 1) break;
+							next;
+							mes .n$;
+							mes "The Cost each Exchange has been changed successfully to "+.@gain_new;
+							setarray .dg_ex_am[.@i_ed],.@gain_new;
+							break;
+						}
 						continue;
 						break;
 						
 						// Remove item
 						case 3:
 						mes .n$;
+						if(getarraysize(.dg_ex) < 1) {
+							mes "I'm sorry, but there are no Items you could remove in the Exchanger.";
+							mes "Please add an item first.";
+							continue;
+						}
+						mes "Please select an Item to remove from below:";
+						next;
+						for ( set .@r,0; .@r < getarraysize(.dg_ex); set .@r,.@r + 1) 
+							set .@dgx_m$,.@dgx_m$ + "- "+getitemname(.dg_ex[.@r])+" (ID - "+.dg_ex[.@r]+")"+ ( (.dg_ex[.@r+1] != 0)?":":"");
+							
+						set .@i_rem,select(.@dgx_m$) - 1;
 						
+						mes .n$;
+						mes "Chosen Item: "+getitemname(.dg_ex[.@i_rem])+" (ID: "+.dg_ex[.@i_rem]+")";
+						mes " ";
+						mes "Is this correct?";
+						if(select("- Yes:- No") - 1) continue;
+						next;
+						mes .n$;
+						mes "The Item "+getitemname(.dg_ex[.@i_rem])+" (ID: "+.dg_ex[.@i_rem]+") has been removed successfully from the Dungeon Points Exchanger.";
+						deletearray .dg_ex[.@i_rem],1;
+						deletearray .dg_ex_cost[.@i_rem],1;
+						deletearray .dg_ex_am[.@i_rem],1;
 						continue;
 						break;
 					
@@ -1816,10 +1951,10 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 						default:
 						break;
 						
-					} // End of Exchanger Settings - switch(@menu)
+					} // End of Exchanger Settings - switch(prompt())
 					break;
 					
-				} // End of Exchanger Settings - while(prompt())
+				} // End of Exchanger Settings - while(1)
 				break;
 				
 				// Previous Menu
@@ -1831,6 +1966,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			// MvP Points
 			case 2:
 			mes .n$;
+			mes "[ == MvP Points == ]";
 			mes "Please choose below which setting you want to change:";
 			next;
 			switch(select("- Base Points:- MvP Points Variable:- Exchanger Settings:- Previous Menu")) {
@@ -1881,44 +2017,177 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				mes .n$;
 				mes "[ == Exchanger Settings]";
 				mes "Please choose what do do:";
-				while(prompt("- Add Item:- Edit Item:- Remove Item") != 255) {
+				while(1) {
 					next;
-					switch(@menu) {
-					/*
-					> Exchanger Settings
-						- Add
-							+ Choosing Item ID and check by getitemname(xxx) != ""
-							+ Costs per Exchange
-							+ Amount gained per Exchange
-						- Edit
-							+ Selecting Array Index via menu
-							+ Edit Options:
-								* Item ID
-								* Cost
-								* Amount
-						> Remove
-							- Selecting Array Index via menu
-							- Removing
-					*/
-						
+					set .@dgx_m$,"";
+					switch(prompt("- Add Item:- Edit Item:- Remove Item")) {
+
 						// Add Item
 						case 1:
 						mes .n$;
-						
+						if(getarraysize(.mvp_ex) == .array) {
+							mes "I'm sorry, but you can't add anymore Items to the Exchanger.";
+							mes "Please delete an item or edit an existing one.";
+							continue;
+						}
+						mes "Please insert now the following in the same order:";
+						mes " > Item ID";
+						mes " > Costs each Exchange";
+						mes " > Gained Amount each Exchange";
+						mes " ";
+						mes "[ == Item ID == ]";
+						input(.@i_id);
+						if(getitemname(.@i_id) == "") {
+							next;
+							mes .n$;
+							mes "Unknown Item, please try another one.";
+							continue;
+						}
+						mes " > Input: "+.@i_id+" ("+getitemname(.@i_id)+")";
+						mes "[ == Costs == ]";
+						input(.@i_cost);
+						mes " > Input: "+.@i_cost;
+						mes "[ == Gained Amount == ]";
+						input(.@i_gain);
+						mes " > Input: "+.@i_gain;
+						mes " ";
+						mes "Is this correct?";
+						if(select("- Yes:- No") - 1) continue;
+						next;
+						mes .n$;
+						mes .@i_gain+"x "+getitemname(.@i_id)+" (ID: "+.@i_id+") with a Cost each Exchange of "+.@i_cost+" has been added successfully to the MvP Points Exchanger.";
+						setarray .mvp_ex[getarraysize(.mvp_ex)],.@i_id;
+						setarray .mvp_ex_cost[getarraysize(.mvp_ex_cost)],.@i_cost;
+						setarray .mvp_ex_am[getarraysize(.mvp_ex_am)],.@i_gain;
 						continue;
 						break;
 						
 						// Edit Item
 						case 2:
 						mes .n$;
+						if(getarraysize(.mvp_ex) < 1) {
+							mes "I'm sorry, but there are no Items you could edit in the Exchanger.";
+							mes "Please add an item first.";
+							continue;
+						}
+						mes "Please select an Item to edit from below:";
+						next;
+						set .@dgx_m$,"";
+						for ( set .@r,0; .@r < getarraysize(.mvp_ex); set .@r,.@r + 1) 
+							set .@dgx_m$,.@dgx_m$ + "- "+getitemname(.mvp_ex[.@r])+" (ID - "+.mvp_ex[.@r]+")"+ ( (.mvp_ex[.@r+1] != 0)?":":"");
+							
+						set .@i_ed,select(.@dgx_m$) - 1;
 						
+						mes .n$;
+						mes "Item: "+getitemname(.mvp_ex[.@i_ed])+" (ID: "+.mvp_ex[.@i_ed]+")";
+						mes "Cost each Exchange: "+.mvp_ex_cost[.@i_ed];
+						mes "Gained Amount: "+.mvp_ex_am[.@i_ed];
+						mes " ";
+						mes "Is this correct?";
+						if(select("- Yes:- No") - 1) continue;
+						next;
+						mes .n$;
+						mes "Please choose which value you want to edit:";
+						next;
+						switch(select("- Item ID:- Cost each Exchange:- Gained Amount")) {
+						
+							// Edit Item ID
+							case 1:
+							mes .n$;
+							mes "Current Item ID: "+.mvp_ex[.@i_ed];
+							mes " ";
+							mes "Please type the new value:";
+							next;
+							input(.@id_new);
+							mes .n$;
+							if(getitemname(.@id_new) == "" || getitemname(.@id_new) == "null") {
+								mes "Invalid Item ID, please try again.";
+								break;
+							}
+							mes "Chosen ID: "+.@id_new+" > "+getitemname(.@id_new);
+							mes " ";
+							mes "Is this correct?";
+							if(select("- Yes:- No") - 1) break;
+							next;
+							mes .n$;
+							mes "The Item ID has been changed successfully to "+.@id_new;
+							setarray .mvp_ex[.@i_ed],.@id_new;
+							break;
+							
+							// Edit Cost each Exchange
+							case 2:
+							mes .n$;
+							mes "Current Cost: "+.mvp_ex_cost[.@i_ed];
+							mes " ";
+							mes "Please type the new value:";
+							next;
+							input(.@cost_new);
+							mes .n$;
+							if(.@cost_new < 1) {
+								mes "Invalid Cost, can't be below 1, please try again.";
+								break;
+							}
+							mes "New Value: "+.@cost_new;
+							mes " ";
+							mes "Is this correct?";
+							if(select("- Yes:- No") - 1) break;
+							next;
+							mes .n$;
+							mes "The Cost each Exchange has been changed successfully to "+.@cost_new;
+							setarray .mvp_ex_cost[.@i_ed],.@cost_new;
+							break;
+							
+							// Edit Gained Amount each Exchange
+							case 3:
+							mes .n$;
+							mes "Current Amount: "+.mvp_ex_am[.@i_ed];
+							mes " ";
+							mes "Please type the new value:";
+							next;
+							input(.@gain_new);
+							mes .n$;
+							if(.@gain_new < 1) {
+								mes "Invalid Amount, can't be below 1, please try again.";
+								break;
+							}
+							mes "New Value: "+.@gain_new;
+							mes " ";
+							mes "Is this correct?";
+							if(select("- Yes:- No") - 1) break;
+							next;
+							mes .n$;
+							mes "The Cost each Exchange has been changed successfully to "+.@gain_new;
+							setarray .mvp_ex_am[.@i_ed],.@gain_new;
+							break;
+						}
 						continue;
 						break;
 						
 						// Remove item
 						case 3:
 						mes .n$;
+						if(getarraysize(.mvp_ex) < 1) {
+							mes "I'm sorry, but there are no Items you could remove in the Exchanger.";
+							mes "Please add an item first.";
+							continue;
+						}
+						mes "Please select an Item to remove from below:";
+						next;
+						for ( set .@r,0; .@r < getarraysize(.mvp_ex); set .@r,.@r + 1) 
+							set .@dgx_m$,.@dgx_m$ + "- "+getitemname(.mvp_ex[.@r])+" (ID - "+.mvp_ex[.@r]+")"+ ( (.mvp_ex[.@r+1] != 0)?":":"");
+							
+						set .@i_rem,select(.@dgx_m$) - 1;
 						
+						mes .n$;
+						mes "Chosen Item: "+getitemname(.mvp_ex[.@i_rem])+" (ID: "+.mvp_ex[.@i_rem]+")";
+						mes "Is this correct?";
+						if(select("- Yes:- No") - 1) continue;
+						next;
+						mes .n$;
+						mes "The Item "+getitemname(.mvp_ex[.@i_rem])+" (ID: "+.mvp_ex[.@i_rem]+") has been removed successfully from the MvP Points Exchanger.";
+						deletearray .mvp_ex[.@i_rem],1;
+						deletearray .mvp_ex_cost[.@i_rem],1;
+						deletearray .mvp_ex_am[.@i_rem],1;						
 						continue;
 						break;
 					
@@ -1926,10 +2195,10 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 						default:
 						break;
 						
-					} // End of MvP Exchanger Settings - switch(@menu)
+					} // End of MvP Exchanger Settings - switch(prompt())
 					break;
 					
-				} // End of MvP Exchanger Settings - while(prompt())
+				} // End of MvP Exchanger Settings - while(1)
 				break;
 				
 				// Previous Menu
@@ -1942,9 +2211,9 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			default:
 			break;
 				
-		} // End of Reward Management - switch(@menu)
+		} // End of Reward Management - switch(prompt)
 		break;
-	} // End of Reward Management - while(prompt())
+	} // End of Reward Management - while(1)
 	break;		
 	
 	// Nevermind
@@ -1969,9 +2238,9 @@ setarray .exp[1],50,100,150; // EXP Rate in % for Difficulty: Easy/Medium/Hard
 set .max_exp,500; // Max EXP Rate Settings for GM Panel
 // Server Array Limit
 // > rAthena since commit 6295c77 (Script Engine Upgrade):
-// = 2000000000000 (2 Billion)
+// = 2000000000 (2 Billion)
 // > Others/Default: 128
-set .array,2000000000000;
+set .array,2000000000;
 // ==== Dungeon Delay Settings ======
 // * Max Dungeon Limit:
 // (How often an dungeon can be done till the delay below comes active)
@@ -2040,58 +2309,6 @@ if(.mvp_pts > 0) {
 	// > How much does one exchange cost?
 	setarray .mvp_ex_cost[0],2;
 }
-/*
-// =============== Dungeon Names ===============
-setarray .dungn$[0],"Cursed Abbey","Aldebaran Dungeon","Abyss Lake","Amatsu Dungeon","Ayothaya Dungeon","Bylan","Clock Tower","Coal Mine","Culvert","Einbech Dungeon","Gefenia","Geffen Dungeon","Glast Heim","Gonyrun Dungeon","Ice Dungeon","Labyrinth","Juperos","Kiel Academy","Lightalzen Bio Lab","Louyang Dungeon","Magma Dungeon","Odin Temple","Orc Dungeon","Payon Dungeon","Pyramid Dungeon","Sphinx Dungeon","Sunken Ship Dungeon","Thanatos Tower","Toy Factory Dungeon","Turtle Dungeon","Thor Volcano Dungeon";
-// =============== Dungeon Prefixes ===============
-setarray .dungpre$[0],"abbey","alde","abyss","amat","ayot","bylan","c_tow","coal","culv","einb","gefia","gefd","glas","gonr","iced","maze","jupe","kiel","lhz","louy","magma","odin","orcsd","pay","pyram","sphinx","pirate","thana","toy","turtle","thor_v";
-// =============== Dungeon Data ===============
-// = Format: Difficulty ,Level Requirement, Map Name Level 1, Map X, Map Y,....
-// = Difficulty: 1 = Easy, 2 = Medium, 3 = Hard
-// = Level: 1 = None, 2+ = Requirement
-
-// Auto Insert in the database > for myself
-for ( set .@i,0; .@i < getarraysize(.dungn$); set .@i,.@i + 1)
-	for ( set .@d,2; .@d < getarraysize(getd("."+.dungpre$[.@i]+"$")); set .@d,.@d + 3) 
-		query_sql "INSERT INTO `dqs_dungeon` ( `dq_id` , `name` , `difficulty` , `req_level` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` ) VALUES ( '"+(.@i+1)+"' , '"+.dungn$[.@i]+"' , '"+getd("."+.dungpre$[.@i]+"$[0]")+"' , '"+getd("."+.dungpre$[.@i]+"$[1]")+"' , '"+((.@d+1)/3)+"' , '"+getd("."+.dungpre$[.@i]+"$["+.@d+"]")+"' , '"+getd("."+.dungpre$[.@i]+"$["+(.@d+1)+"]")+"' , '"+getd("."+.dungpre$[.@i]+"$["+(.@d+2)+"]")+"' , '3' , '1' )";
-
-query_sql "INSERT INTO `dqs_dungeon` ( `dq_id` , `name` , `difficulty` , `req_level` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` ) VALUES ( '1' , 'Cursed Abbey' , '2' , '60' , '1' , 'abbey01' , '51' , '14' , '3' )";
-query_sql "INSERT INTO `dqs_dungeon` ( `dq_id` , `name` , `difficulty` , `req_level` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` ) VALUES ( '1' , 'Cursed Abbey' , '2' , '60' , '2' , 'abbey02' , '150' , '11' , '3' )";
-query_sql "INSERT INTO `dqs_dungeon` ( `dq_id` , `name` , `difficulty` , `req_level` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` ) VALUES ( '1' , 'Cursed Abbey' , '2' , '60' , '3' , 'abbey03' , '120' , '10' , '3' )";
-
-
-setarray .abbey$[0],"1","1","abbey01","51","14","abbey02","150","11","abbey03","120","10";
-setarray .alde$[0],"1","1","alde_dun01","197","25","alde_dun02","262","41","alde_dun03","276","53","alde_dun04","130","130";
-setarray .abyss$[0],"1","1","abyss_01","264","271","abyss_02","275","270","abyss_03","116","27";
-setarray .amat$[0],"1","1","ama_dun01","227","10","ama_dun02","32","43","ama_dun03","119","15";
-setarray .ayot$[0],"1","1","ayo_dun01","9","149","ayo_dun02","230","235";
-setarray .bylan$[0],"1","1","iz_dun00","168","168","iz_dun01","41","37","iz_dun02","236","204","iz_dun03","32","63","iz_dun04","26","27";
-setarray .c_tow$[0],"1","1","c_tower1","200","163","c_tower2","268","26","c_tower3","64","148","c_tower4","32","63";
-setarray .coal$[0],"1","1","mjo_dun01","52","17","mjo_dun02","381","343","mjo_dun03","302","261";
-setarray .culv$[0],"1","1","prt_sewb1","132","248","prt_sewb2","19","19;","prt_sewb3","180","169","prt_sewb4","100","92","20";
-setarray .einb$[0],"1","1","ein_dun01","22","18","ein_dun02","292","290";
-setarray .gefia$[0],"1","1","gefenia01","59","167","gefenia02","201","35","gefenia03","264","236","gefenia04","33","270";
-setarray .gefd$[0],"1","1","gef_dun00","104","100","gef_dun01","115","236","gef_dun02","106","132","gef_dun03","203","200";
-setarray .glas$[0],"1","1","gl_church","156","8","gl_chyard","147","15","gl_in01","121","59","gl_cas01","199","29","gl_cas02","104","25","gl_knt01","150","10","gl_knt02","157","287","gl_step","117","124","gl_sew01","258","255","gl_sew01","258","255","gl_sew02","108","291","gl_sew03","171","273","gl_dun01","133","271","gl_dun02","224","274","gl_prison","14","70","gl_prison1","150","14";
-setarray .gonr$[0],"1","1","gon_dun01","143","59","gon_dun02","17","114","gon_dun03","68","9";
-setarray .iced$[0],"1","1","ice_dun01","157","14","ice_dun02","151","155","ice_dun03","149","22","ice_dun04","34","139";
-setarray .maze$[0],"1","1","prt_maze01","176","7","prt_maze02","103","18","prt_maze03","23","8";
-setarray .jupe$[0],"2","65","juperos_01","99","92","juperos_02","34","59","jupe_core","150","285";
-setarray .kiel$[0],"2","1","kh_dun01","28","226","kh_dun02","41","198";
-setarray .lhz$[0],"2","60","lhz_dun01","151","286","lhz_dun02","18","148","lhz_dun03","140","136";
-setarray .louy$[0],"2","50","lou_dun01","218","196","lou_dun02","282","20","lou_dun03","165","37";
-setarray .magma$[0],"2","60","mag_dun01","126","69","mag_dun02","47","32";
-setarray .odin$[0],"3","70","odin_tem01","98","144","odin_tem02","22","181","odin_tem03","121","51";
-setarray .orcsd$[0],"1","1","orcsdun01","32","169","orcsdun02","21","185";
-setarray .pay$[0],"1","1","pay_dun00","22","180","pay_dun01","19","33","pay_dun02","19","63","pay_dun03","155","159","pay_dun04","201","204";
-setarray .pyram$[0],"1","1","moc_pryd01","192","9","moc_pryd02","10","192","moc_pryd03","100","92","moc_pryd04","181","11","moc_pryd05","94","96","moc_pryd06","192","8";
-setarray .sphinx$[0],"1","1","in_sphinx1","192","9","in_sphinx2","149","81","in_sphinx3","210","54","in_sphinx4","10","222","Level 5","in_sphinx5","100","99";
-setarray .pirate$[0],"1","1","treasure01","69","24","treasure02","102","27";
-setarray .thana$[0],"1","1","tha_t01","150","36","tha_t02","150","36","tha_t03","220","158","tha_t04","59","143","tha_t05","62","11","tha_t06","89","221","tha_t07","35","166","tha_t08","93","148","tha_t09","29","107","tha_t10","159","138","tha_t11","19","20","tha_t12","130","52","5";
-setarray .toy$[0],"1","40","xmas_dun01","205","16","xmas_dun02","129","133";
-setarray .turtle$[0],"2","50","tur_dun01","161","34","tur_dun02","148","256","tur_dun03","132","190","tur_dun04","100","192";
-setarray .thor_v$[0],"3","90","thor_v01","21","228","thor_v02","75","205","thor_v03","34","272";
-*/
 // Use Mapflags?
 // 0 = Disabled
 // 1 = Enabled
@@ -2111,9 +2328,12 @@ if($@dqs_tab$[0] != "")
 
 // Custom atcommand: @checkdq
 bindatcmd "checkdg",strnpcinfo(1)+"::OnPCLoginEvent";
+// Custom atcommand: @dqs_gm
+bindatcmd "dqs_gm",strnpcinfo(1)+"::OnGMAccess";
+
 if(.debug) debugmes "Starting Global Timer for Party Member Sync";
 initnpctimer; // Timer for for Party Check
-announce .n$+": Dungeon Quest Service: "+ ( ($@DQS_Sys == 1)?"Online":"Offline"),bc_all|bc_yellow;
+announce "[Server]: Dungeon Quest Service: "+ ( ($@DQS_Sys == 1)?"Online":"Offline"),bc_all|bc_yellow;
 end;
 
 OnNPCKillEvent:
@@ -2147,13 +2367,13 @@ set .@bexp,(getmonsterinfo(killedrid,3)*.@expr)/100;
 set .@jexp,(getmonsterinfo(killedrid,4)*.@expr)/100;
 	
 // Member is alive
-if(readparam(5) < 1) continue;
+if(readparam(5) < 1) end;
 
 getexp .@bexp,.@jexp;
 dispbottom .n$+": Recieved Bonus: "+.@expr+"% - Base EXP: "+.@bexp+"/Job EXP: "+.@jexp,0x00FF00;
 // Killed MvP > rewarding with points if .mvp_pts > 0
 if(getmonsterinfo(killedrid,22) != 0 && .mvp_pts > 0) {
-	setd(""+.mvp_var$),getd(""+.mvp_var$) + (.mvp_pts*.@diff); break;
+	setd(""+.mvp_var$),getd(""+.mvp_var$) + (.mvp_pts*.@diff);
 	dispbottom .n$+": Recieved MVP Points: "+.@m_res+"x MvP Points.",0x00FF00;
 }
 end;
@@ -2187,7 +2407,7 @@ for ( set .@l,0; .@l < getarraysize(.@q_id); set .@l,.@l + 1) {
 			dispbottom "  >  Mob#"+(.@p+1)+": "+strmobinfo(1,.@req1[.@p])+" - "+.@m_got+"/"+.@req2[.@p];
 		} else 
 			dispbottom "  >  Item#"+(.@p+1)+": "+getitemname(.@req1[.@p])+" - "+countitem(.@req1[.@p])+"/"+.@req2[.@p];
-	
+}
 end;
 
 // Every 15th Minute, check if there are non-existent party entries in the database
@@ -2228,7 +2448,6 @@ for ( set .@p,0; .@p < $@partymembercount; set .@p,.@p + 1) {
 }
 end;
 }
-
 // ======================= Party Join Feature - NPC =====================
 -	script	Party_Join	-,{
 
@@ -2318,7 +2537,6 @@ if(@whispervar0$ == "List" || @whispervar0$ == "list") {
 	
 end;
 }
-
 // ======================= Inside Dungeon NPC =====================
 -	script	Dungeon Guard#main::DG_Main	110,{
 
@@ -2335,14 +2553,14 @@ if(select("- Yes:- No") - 1) close;
 next;
 mes .@n$;
 mes "You"+ ( (getcharid(1) != 0)?"r party":"")+" will now be warped to Prontera.";
-query_sql "UPDATE `dqs_party` SET `rew_id` = '1' WHERE `dg_id` = '"+strnpcinfo(2)+" AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'";
+query_sql "UPDATE `dqs_party` SET `complete` = '1' WHERE `dg_id` = '"+strnpcinfo(2)+" AND `"+ ( (getcharid(1) == 0)?"char_id` = '"+getcharid(0):"pty_id` = '"+getcharid(1) )+"'";
 close2;
 if(getcharid(1) != 0)
 	warpparty "prontera",156,191,getcharid(1);
 else
-	warp "prontera",156,191,getcharid(1);
+	warp "prontera",156,191;
 end;
-}
+} 
 // ======================= Start of Dungeon Exit - NPC Duplicates =====================
 //dungeon_map,x,y,facing	duplicate(DG_Main)	Dungeon Exit#<Dungeon ID>	110
 abbey03,234,216,4	duplicate(DG_Main)	Dungeon Exit#1	110

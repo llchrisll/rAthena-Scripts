@@ -33,6 +33,54 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2015/11/25
+= Updated Dungeon Quest System v1.0 [WIP]
+- Added `complete` to the `dqs_party` database
+- Changed varchar(255) at `map_x` and `map_y` in `dqs_dungeon` to int(10)
+- Fixed an typo at `dqs_pending` > NUIL > NULL
+- Added check for GM Control Center
+- Edited the "Creating Dungeon Menu"
+- Added an missing "}" at line 270
+- Edited line 512 and 513 to use `complete`
+- Added an check to check if Dungeon Points are available
+- Exchanged .ex_m$ with .@ex_m$ and added an missing [.@b] after selecting
+- Moved the Creating MvP Exchanger Menu's to the MvP Exchanger itself
+- Switched the while(prompt()) with while(@menu) and switch(@menu) with switch(prompt())
+- Finished the Exchanger Management
+- Fixed an wrong number about the Script Engine Upgrade compatibility
+- Removed my Dungeon Data from the Dungeon Party System since I added the entry into the database
+- Added custom @Command for the GM Control Center > @dqs_gm
+= Updated Player Shops v1.0 [IC]
+- Made some changed in the SQL databases
+- Finished the Rent an Shop menu
+- Added more OnInit settings
+- Added an Automatic Spot Unlock with an each 12 hours check
+- Added the Shop Spot NPC Template and 1 Duplicate and 1 Shop
+= Updated Dungeon Party System v1.0 [RE]
+- Added an check in OnNPCKillEvent to check if there are still 2+ party members online to gain the exp bonus.
+- Moved the "Increase Party Mob Counter" after the Party Member Count check
+= Updated Quest System v1.1 [RE]
+- Edited the check for Weight Limit at Quest Creation
+- Removed another newbie Duplicate check which I was missing at Deleting Quests
+- Modified the handling of the Quest Status in the database
+- Fixed an typo at line 748 with delitem > [.@l] to [.@r] - Thanks to NANORAY for the bug report
+= Modified the following scripts in the updating folder, still untested tho:
+- Broadcast System v1.4 [MOD]:
+  > Used an array for the prices and fixed some bugs in OnWhisperGlobal > forgot to add "end;" at the checks for Zeny and stuff
+- Card Compounder v1.1 [MOD]:
+  > Added variables to define your custom points you want to use
+  > Used .@ variables instead of @
+- Euro Exchanger v1.1 [MOD]:
+  > Removed labels and using while() now
+  > Finding an easy method to auto calculate the values depending on the 1st Euro
+  > Adding an custom command for GM's to change the basic value everytime
+- Login Auto-AtCommand v1.1 [MOD]:
+  > Using an array for the commands and display names for the players
+  > Extra array for parameters like autoloot
+
+= Modified Scripts with the GitHub Commit Header
+- Removed GitHub Commit Link Section from the Header, won't work like I intended
+------------------------------------------------------------------------------------------------------------------------
 * 2015/10/31
 = Updated Dungeon Quest System v1.0 [WIP]
 - Removed check if Dungeon Points are gainable so the Exchanger would be available

@@ -1,7 +1,7 @@
 //===== rAthena Script =======================================
 //= Dungeon Party System
 //===== By ===================================================
-//= lllchrislll
+//= llchrisll
 //===== Version ==============================================
 //= 1.0 - Initial Release
 //      - Fixxed an bug with warping to the Start Point - Thanks to Azeroth for the bug report
@@ -87,7 +87,6 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 				mes "A party requires 2 members minimum to use the Dungeon Party Service.";
 				close;
 			}
-			set .@partyct,$@partymembercount;
 		}
 		set .men_dung$,"";
 		// =============== Creating Dungeon Menu ===============
@@ -165,7 +164,7 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 		}
 		next;
 		mes .n$;
-		if(getd(".@"+.dungpre$[@d]+"_ct") > .pt_limit) {
+		if(getd(".@"+.dungpre$[@d]+"_ct") >= .pt_limit) {
 			mes "I'm sorry, but this dungeon already reached the maximum of parties it can hold.";
 			mes "Please choose a different one.";
 			close;
@@ -444,7 +443,7 @@ switch(select("- Dungeon Menu:- Information:- "+ ( (.dg_rew == 1)?"Points Exchan
 		mes "See you again for the next exchange.";
 		break;
 	}
-	
+	break;
 	
 	case 4:
 	close;
@@ -594,15 +593,10 @@ set .@expr,.exp[atoi(getd("."+.dungpre$[getd(".pty_"+getcharid(1)+"_ix")]+"$[0]"
 set .@bexp,(getmonsterinfo(killedrid,3)*.@expr)/100;
 set .@jexp,(getmonsterinfo(killedrid,4)*.@expr)/100;
 
-// Increasing Party Mob Counter
-if(getd("$@pt_"+getcharid(1)+"_"+strcharinfo(3)+"_mct") < atoi(getd("."+getd("$@pty_"+getcharid(1)+"$")+"$["+( (4*(.@m+1)) - 2)+"]")))
-	setd("$@pt_"+getcharid(1)+"_"+strcharinfo(3)+"_mct"),getd("$@pt_"+getcharid(1)+"_"+strcharinfo(3)+"_mct") + 1;
-
 // Reading party arrays and setting a temporar npc variable for better overview
 for ( set .@p,0; .@p < getarraysize(getd("$@pt_"+getcharid(1)+"_maid")); set .@p,.@p + 1) {
 	set .@c_aid,getd("$@pt_"+getcharid(1)+"_maid["+.@p+"]"); // Current selected Member's Account ID
 	set .@c_cid,getd("$@pt_"+getcharid(1)+"_mcid["+.@p+"]"); // Current selected Member's Character ID
-		
 		
 	// Check if the selected member is still in the same party as before
 	if(getcharid(1,strcharinfo(0,.@c_cid)) != getcharid(1))
@@ -620,7 +614,20 @@ for ( set .@p,0; .@p < getarraysize(getd("$@pt_"+getcharid(1)+"_maid")); set .@p
 		
 		// Member is on the same Map as the one who killed something
 		if(strcharinfo(3,.@c_cid) != strcharinfo(3)) continue;
+		
+		// Counting Members, which have passed these checks
+		set .@p_ct,.@p_ct + 1;
 	}
+	if(.@p_ct < 2) {
+		dispbottom .n$+": It seems like that you are the only one, which is left online in your party, so you won't get any bonus or make any quest progress.";
+		end;
+	}
+	
+	// Increasing Party Mob Counter, only once
+		if(getd("$@pt_"+getcharid(1)+"_"+strcharinfo(3)+"_mct") < atoi(getd("."+getd("$@pty_"+getcharid(1)+"$")+"$["+( (4*(.@m+1)) - 2)+"]")))
+			if(.@p < 1)
+				setd("$@pt_"+getcharid(1)+"_"+strcharinfo(3)+"_mct"),getd("$@pt_"+getcharid(1)+"_"+strcharinfo(3)+"_mct") + 1;
+	
 	if(getd("$@pt_"+getcharid(1)+"_"+strcharinfo(3)+"_mct") < atoi(getd("."+getd("$@pty_"+getcharid(1)+"$")+"$["+( (4*(.@m+1)) - 2)+"]")))
 		dispbottom .n$+": Mobs Killed on "+strcharinfo(3)+": "+getd("$@pt_"+getcharid(1)+"_"+strcharinfo(3)+"_mct") +"/"+getd("."+getd("$@pty_"+getcharid(1)+"$")+"$["+( (4*(.@m+1)) - 2)+"]")+"!",0x00FF00,.@c_cid;
 	else 
