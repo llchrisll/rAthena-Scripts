@@ -6,11 +6,11 @@
 // ====================================================================
 
 Scripts currently in work-in-progress:
-    - Dungeon Quest System v1.0
-		Merged Dungeon Party System with Quest System (SQL)
+	- Rentable Player Shops
 	
 Scripts currently in testing phase:
-	- None
+    - Dungeon Quest System v1.0 [UT]
+		Merged Dungeon Party System with Quest System (SQL)
 
 Scripts currently in update phase:
 	- Broadcaster v1.3 [MOD]
@@ -23,8 +23,8 @@ Scripts currently in update phase:
 	- Monster Invasion v1.0 [MOD]
 	- PvP-GvG-MvP Arena v1.5 [MOD]
 	- Restaurant v1.0 [MOD]
-	- Security System v2.0 [MOD]
 	- Training System v1.0 [MOD]
+	- Security System v2.0 [MOD]
 	- Variable Reader v1.0 [MOD]
 	- Virtual Security Password System v1.2.1 [MOD]
 	- Vote NPC v1.1 [MOD]

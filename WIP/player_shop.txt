@@ -1,5 +1,5 @@
 //===== rAthena Script =======================================
-//= Ownable Shops
+//= Rentable Shops
 //===== Author ===============================================
 //= llchrisll
 //===== Credits ==============================================
@@ -146,7 +146,7 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 		next;
 		mes .n$;
 	} else if(.@cur_type == 4) {
-		mes "Please type the Item ID of the Item you want to use currency:";
+		mes "Please type the Item ID of the Item you want to use as currency:";
 		next;
 		input(.@c_sel);
 		mes .n$;
@@ -173,14 +173,11 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 
 	// Information
 	case 2:
-	
-	
+	mes .n$;
+	mes "[ WIP ]";
 	break;
 	
 	
-//NPC "Shop Spot" - Functions > unique name - ::shop_rent > Duplicates
-// - Shop ID: #1 of "Shop Spot#1::shop_rent"
-
 	// Shop Management
 	case 3:
 	mes .n$;
@@ -188,21 +185,234 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 		mes "You have to rent an shop first, before you can manage one.";
 		close;
 	}
-	
-/*
- - Owner:
-   > Info when an Item Stock is 0.
-   > Change Currency only when Balance is "0"
-   > Check Balance
-     + Recieve Money
-   > Add Item
-   > Edit Item
-     + Increase Stock
-     + Decrease Stock
-	 = Can't change item via editing
-   > Delete Item
-   > Leave
-*/
+	query_sql "SELECT `cont_id` , `cont_price` , `cont_stock` FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"'",.@c_id,.@c_price,.@c_am;
+	mes "Shop Content:";
+	mes "Item Name (Item ID) - Item Stock - Item Price";
+	for ( set .@e,0; .@e < getarraysize(.@c_am); set .@e,.@e + 1) {
+		mes "- "+getitemname(.@c_id[.@e])+" ("+.@c_id[.@e]+") - "+.@c_am[.@e]+"x - "+.@c_price[.@e];
+		if(!.@c_am[.@e]) // Checking if Item Stock is empty and setting .@r variable to +1
+			set .@r,.@r + 1;
+	}
+	mes " ";
+	if(.@r) 
+		mes "Your Shop currently has "+.@r+" Item Stocks emptied, please refill them or change the Item itself.";
+	mes "What do you want to do next?";
+	next;
+	query_sql "SELECT `balance` , `cur_type` , `cur_ix` FROM `shop_owner` WHERE `acc_id` = '"+getcharid(3)+"'",.@bal,.@cur_type,.@cur_ix;
+	switch(select("- Check Balance:- Add Item:- Edit Item:- Delete Item:- Leave")) {
+		
+		// Check Balance
+		case 1:
+		mes .n$;
+		mes "Checking your balance right now.....";
+		mes "Your Balance is "+.@bal+"x "+ ( (.@cur_type == 1)?"Zeny":( (.@cur_type == 2)?.c_cash_disp$[.@cur_ix]: ( (.@cur_type == 3)?.c_char_disp$[.@cur_ix]:getitemname(.@cur_ix) ) ) );
+		if(.@bal) {
+			mes "I will give it to you now.";
+			next;
+			switch(.@cur_type) {
+				case 1: set Zeny,Zeny + .@bal; break;
+				case 2: setd(""+.c_cash_var$[.@cur_ix]),getd(""+.c_cash_var$[.@cur_ix]) + .@bal; break;
+				case 3: setd(""+.c_char_var$[.@cur_ix]),getd(""+.c_char_var$[.@cur_ix]) + .@bal; break;
+				case 4: getitem .@cur_ix,.@bal; break;
+			}
+		}
+		break;
+		
+		// Add Item
+		case 2:
+		mes .n$;
+		mes "Please type the ID of the new Item you want to add to the Shop, afterwards I will check if it's already in the Shop or not.";
+		mes "If it's not, you can add it.";
+		next;
+		input(.@i_new);
+		mes .n$;
+		if(getitemname(.@i_new) == "" || getitemname(.@i_new) == "null") {
+			mes .@i_new+" is not an valid ID.";
+			close;
+		}
+		if(query_sql("SELECT `cont_id` FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"' AND `cont_id` = '"+.@i_new+"'") == -1) {
+			mes "I'm sorry, but the ID given is already in the Shop, please try again.";
+			close;
+		}
+		mes "Now type the amount you want to put in the shop.";
+		mes "Maximum: "+.item_am_max;
+		mes "But remember you need to have the amount in your inventory, since I will put it in the shop.";
+		next;
+		if(input(.@i_am,1,.item_am_max) != 0) {
+			mes .n$;
+			mes "I'm sorry, either you put an amount less than 1 or higher than "+.item_am_max+".";
+			close;
+		}
+		if(.@i_am > countitem(.@i_am)) {
+			mes .n$;
+			mes "I'm sorry, but you don't have enough of the selected Item with you.";
+			close;
+		}
+		mes .n$;
+		mes "Last would be the price per Item:";
+		mes "Currency: "+( (.@cur_type == 1)?"Zeny":( (.@cur_type == 2)?.c_cash_disp$[.@cur_ix]: ( (.@cur_type == 3)?.c_char_disp$[.@cur_ix]:getitemname(.@cur_ix) ) ) );
+		mes "Maximum: "+( (.@cur_type == 1)?.zeny_pr_max:( (.@cur_type == 2 || .@cur_type == 3)?.var_pr_max:item_pr_max ) ) );
+		next;
+		input(.@pr_am);
+		switch(.@cur_type) {
+		
+			case 1: if(.@pr_am < 1 || .@pr_am > .zeny_pr_max) set .@p,1; break;
+			case 2: 
+			case 3: 
+			if(.@pr_am < 1 || .@pr_am > .var_pr_max) set .@p,1;	break;
+			
+			case 4: if(.@pr_am < 1 || .@pr_am > .item_pr_max) set .@p,1; break;
+		}
+		mes .n$;
+		if(.@p) {
+			mes "I'm sorry, either you put an amount less than 1 or too high.";
+			close;
+		}
+		mes "Result:";
+		mes "Item: "+getitemname(.@i_new);
+		mes "Amount: "+.@i_am;
+		mes "Price: "+.@pr_am;
+		mes " ";
+		mes "Is this correct?";
+		if(select("- Yes:- No") - 1) close;
+		next;
+		mes .n$;
+		mes "The Item has been added succesfully.";
+		query_sql "INSERT INTO `shop_content` ( `shop_id` , `cont_id` , `cont_stock` , `cont_price` ) VALUES ( '"+.@sh_id+"' , '"+.@i_new+"' , '"+.@i_am+"' , '"+.@pr_am+"')";
+		switch(.@cur_type) {
+			case 1: set Zeny,Zeny - .@pr_am; break;
+			case 2: setd(""+.c_cash_var$[.@cur_ix]),getd(""+.c_cash_var$[.@cur_ix]) - .@pr_am; break;
+			case 3: setd(""+.c_char_var$[.@cur_ix]),getd(""+.c_char_var$[.@cur_ix]) - .@pr_am; break;
+			case 4: getitem .@cur_ix,.@pr_am; break;
+		}
+		break;
+		
+		// Edit Item
+		case 3:
+		mes .n$;
+		query_sql "SELECT `cont_id` , `cont_price` , `cont_stock` FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"'",.@c_id,.@c_price,.@c_am;
+		if(getarraysize(.@c_id) < 1) {
+			mes "I'm sorry, but there is no Item to edit. Add one first.";
+			close;
+		}
+		mes "Which Item do you want to edit?";
+		mes "Item Name (Price) [Stock]:";
+		next;
+		for( set .@l,0; .@l < getarraysize(.@c_id); set .@l,.@l + 1) 
+			set .@ec_menu$,.@ec_menu$ + "- "+getitemname(.@c_id[.@l])+" ("+.@c_price[.@l]+") ["+.@c_am[.@l]+"]"+ ( (.@c_id[.@l+1] == 0)?"":":");
+			
+		set .@c,select(.@ec_menu$) - 1;
+		
+		mes .n$;
+		mes "Chosen Item:";
+		mes getitemname(.@c_id[.@c]);
+		mes " ";
+		mes "Is this correct?";
+		if(select("- Yes:- No") - 1) close;
+		next;
+		mes .n$;
+		mes "What do you want to edit?";
+		next;
+		switch(select("- Item Price:- Stock Amount:- Leave")) {
+			
+			case 1:
+			mes .n$;
+			mes "Please type the new Price:";
+			mes "Currency: "+( (.@cur_type == 1)?"Zeny":( (.@cur_type == 2)?.c_cash_disp$[.@cur_ix]: ( (.@cur_type == 3)?.c_char_disp$[.@cur_ix]:getitemname(.@cur_ix) ) ) );
+			mes "Maximum: "+( (.@cur_type == 1)?.zeny_pr_max:( (.@cur_type == 2 || .@cur_type == 3)?.var_pr_max:item_pr_max ) ) );
+			next;
+			input(.@pr_new);
+			switch(.@cur_type) {
+			
+				case 1: if(.@pr_new < 1 || .@pr_new > .zeny_pr_max) set .@p,1; break;
+				case 2: 
+				case 3: 
+				if(.@pr_new < 1 || .@pr_new > .var_pr_max) set .@p,1;	break;
+				
+				case 4: if(.@pr_new < 1 || .@pr_new > .item_pr_max) set .@p,1; break;
+			}
+			mes .n$;
+			if(.@p) {
+				mes "I'm sorry, either you put an amount less than 1 or too high.";
+				close;
+			}
+			mes "New Price: "+.@pr_new;
+			mes "Is this correct?";
+			if(select("- Yes:- No") - 1) close;
+			next;
+			mes .n$;
+			mes "Item Price has been changed succesfully.";
+			query_sql "UPDATE `shop_content` SET `cont_price` = '"+.@pr_new+"' WHERE `shop_id` = '"+.@sh_id+"' AND `cont_id` = '"+.@c_id[.@c]+"'";
+			close;
+			
+			case 2:
+			mes .n$;
+			mes "Please type the new Total Stock Amount:";
+			mes "Note: This is not the amount which will be added!";
+			mes "Maximum: "+.item_am_max;
+			mes "But remember you need to have the amount in your inventory, since I will put it in the shop.";
+			next;
+			if(input((.@i_am+.@c_am),1,.item_am_max) != 0) {
+				mes .n$;
+				mes "I'm sorry, either you put an amount less than 1 or the new Stock Amount would be higher than "+.item_am_max+".";
+				close;
+			}
+			if(.@i_am > countitem(.@c_id[.@c])) {
+				mes .n$;
+				mes "I'm sorry, but you don't have enough of the selected Item with you.";
+				close;
+			}
+			mes .n$;
+			mes "New Stock Amount: "+(.@i_am+.@c_am);
+			mes "Is this correct?";
+			if(select("- Yes:- No") - 1) close;
+			next;
+			mes .n$;
+			mes "Item Stock Amount has been changed succesfully.";
+			query_sql "UPDATE `shop_content` SET `cont_stock` = `cont_stock` + '"+.@i_am+"' WHERE `shop_id` = '"+.@sh_id+"' AND `cont_id` = '"+.@c_id[.@c]+"'";
+			delitem .@c_id[.@c],.@i_am;
+			close;			
+			
+			case 3:
+			break;
+		}
+		break;
+		
+		// Delete Item
+		case 4:
+		mes .n$;
+		query_sql "SELECT `cont_id` FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"'",.@c_id;
+		if(getarraysize(.@c_id) < 1) {
+			mes "I'm sorry, but there is no Item to delete. Add one first.";
+			close;
+		}
+		mes "Which Item do you want to delete?";
+		mes "Item Name (Price) [Stock]:";
+		next;
+		for( set .@l,0; .@l < getarraysize(.@c_id); set .@l,.@l + 1) 
+			set .@ec_menu$,.@ec_menu$ + "- "+getitemname(.@c_id[.@l])+" ("+.@c_price[.@l]+") ["+.@c_am[.@l]+"]"+ ( (.@c_id[.@l+1] == 0)?"":":");
+			
+		set .@c,select(.@ec_menu$) - 1;
+		
+		mes .n$;
+		mes "Chosen Item:";
+		mes getitemname(.@c_id[.@c]);
+		mes " ";
+		mes "Is this correct?";
+		if(select("- Yes:- No") - 1) close;
+		next;
+		mes .n$;
+		mes "The Item "+getitemname(.@c_id[.@c])+" has been deleted successfully.";
+		query_sql "DELETE FROM `shop_content` WHERE `cont_id` = '"+.@c_id[.@c]+"' AND `shop_id` = '"+.@sh_id+"'";
+		close;
+		
+		// Leave
+		case 5:
+		break;
+	}
+	mes .n$;
+	mes "Okay, see ya next time.";
+	close;
 }
 
 close;
@@ -222,11 +432,14 @@ if(.rent_type == 3)
 // > Rental Price
 set .rent_pr,5000;
 
+// ======= Maximum Item Amount ======
+set .item_am_max,10000;
+
 // ======= Currency Settings =======
 // Currency Maximum Settings
-set .zeny_max,1000000000; // 1,000,000,000 Zeny
-set .var_max,10000; // Max 10k Variable Points (EACH Variable, not total)
-set .item_max,10000; // Max 10k Item Price
+set .zeny_pr_max,1000000000; // 1,000,000,000 Zeny
+set .var_pr_max,10000; // Max 10k Variable Points (EACH Variable, not total)
+set .item_pr_max,10000; // Max 10k Item Price
 
 // Variable Currency Settings
 // - _var$ = Variable Name
@@ -374,7 +587,7 @@ end;
 }
 
 // Shop Spots - Duplicates
-// > Only the change the coordinates!!!
+// > Only change the coordinates!!!
 prontera,150,150,0	duplicate(shop_rent)	Shop Spot#1	100 // Need ID for Post Board
 
 // Dynamic Shops

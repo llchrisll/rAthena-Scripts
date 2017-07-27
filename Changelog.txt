@@ -2,7 +2,6 @@
 // = Creator: h0und3y3@gmail.com - Houndeye aka llchrisll
 // = Usage: Athena Scripts
 // = User Profile: 
-//   eAthena: http://www.eathena.ws/board/index.php?showuser=245180
 //   rAthena: http://www.rAthena.org/board/user/402-llchrisll
 // ====================================================================
 // ================== Tags Legend (since 2012/02/28) ==================
@@ -19,8 +18,6 @@
 //    * Folder: released
 // = [REQ] > Request = Will not be released officially
 //    * Folder: requests
-// = [BUG] > Bug Fixing, yet untested
-//    * Folder: bug_fixing
 // = [MOD] > Modifications in Progress, yet untested 
 //    * Folder: updating
 // ====================================================================
@@ -33,6 +30,16 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2017/07/27
+= Updated Training System v1.0 [RE]
+- Fixxed an bug with the VIT Training, which prevented the saving of the training.
+= Updated Rentable Shops v1.0 [UT]
+- Finished the Shop Management Part
+- Information part is coming next
+= Updated Dynamic Shop v1.1 [RE]
+- Just corrected the Author to "llchrisll"
+= Updated Project_List.txt
+------------------------------------------------------------------------------------------------------------------------
 * 2015/11/25
 = Updated Dungeon Quest System v1.0 [WIP]
 - Added `complete` to the `dqs_party` database

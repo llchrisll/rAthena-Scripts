@@ -1,7 +1,7 @@
 //===== rAthena Script =======================================
 //= Dynamical Shop 
 //===== By ===================================================
-//= lllchrislll
+//= llchrisll
 //===== Version ==============================================
 //= 1.0 - Script Created
 //		- Nearly forgot the "OnBuyItem" part (Q.Q)

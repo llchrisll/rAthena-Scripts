@@ -782,17 +782,20 @@ initnpctimer;
 end;
 // ======== VIT Training ========
 OnVitMobKill:
-dispbottom .n$+": You have killed an monster, so you failed the training. See you next time.";
-callfunc("DATA_D-M",1,.train_b,.delay_type,1,.delay_time,1);
+set @f,1;
+
 OnVitEnd:
-set @p,0;
+if(@f) {
+	dispbottom .n$+": You have killed an monster, so you failed the training. See you next time.";
+	callfunc("DATA_D-M",1,.train_b,.delay_type,1,.delay_time,1);
+}
 sleep2 1000;
 warp "SavePoint",0,0;
 removemapflag .map$,mf_nobaseexp;
 removemapflag .map$,mf_nojobexp;
 removemapflag .map$,mf_noskill;
 killmonsterall .map$;
-if(@p) goto OnComplete;
+if(!@f) goto OnComplete;
 end;
 
 // ==============================
@@ -2272,7 +2275,7 @@ setarray .int_ans1$[0],"Dumbass Ro","Tao Gunka Card";
 setarray .int_ans2$[0],"Summon Ro","Fabre Card";
 setarray .int_ans3$[0],"Pwnage Ro","Acidus Card";
 setarray .int_ans4$[0],"Holy Ro","Mimic Card";
-setarray .int_right[0],2;
+setarray .int_right[0],2,1;
 // ====== Dex Mastery - Reaction ======
 // =============== Note ====================
 // There are two coordinate usages available:
@@ -2311,7 +2314,6 @@ if(.use_glob) { // Global Coordinates
 	set .wm_cx,0;
 	set .wm_cy,0;
 }
-// Insert the numbers of the weapons, which are forbidden to be trained with.
 // Weapon Types:
 // 1: Daggers
 // 2: One-handed swords
@@ -2334,11 +2336,12 @@ if(.use_glob) { // Global Coordinates
 // 20: Shotguns
 // 21: Grenade launchers
 // 22: Fuuma Shurikens
-setarray .kill_weap[0],0;
 setarray .eq_n$[1],"Dagger","One-Handed Sword","Two-Handed Sword","One-Handed Spear","Two-Handed Spear","One-Handed Axe","Two-Handed Axe","Mace","Unused","Staff","Bow","Knuckle/Fist","Musical Instrument","Whip","Book","Katar","Revolver","Rifle","Gatling Gun","Shotgun","Grenade Launcher","Fuuma Shuriken";
 // Requires to SQL Mode (.train_mode == 1)
 // Sets the SQL Table names for the weapon types
 setarray .sql_wn$[1],"dagger","one-sword","two-sword","one-spear","two-spear","one-axe","two-axe","mace","unused","stave","bow","knuck","music","whip","book","katar","revol","rifle","gatl","shotg","grenade","fuuma";
+// Insert the numbers of the weapons, which are forbidden to be trained with.
+setarray .kill_weap[0],0;
 // Equip Bonus:
 // 0 = Off
 // 1 = On
