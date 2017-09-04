@@ -13,21 +13,8 @@ Scripts currently in testing phase:
 		Merged Dungeon Party System with Quest System (SQL)
 
 Scripts currently in update phase:
-	- Broadcaster v1.3 [MOD]
-	- Card Compouner v1.0 [MOD]
-	- Euro Exchanger v1.0 [MOD]
-	- Identifier v1.0 [MOD]
-	- Last Man Standing v1.0 [MOD]
-	- Login Auto-AtCommands v1.0 [MOD]
-	  > Renamed to login_atcmd.txt from login_settings.txt
-	- Monster Invasion v1.0 [MOD]
-	- PvP-GvG-MvP Arena v1.5 [MOD]
-	- Restaurant v1.0 [MOD]
-	- Training System v1.0 [MOD]
 	- Security System v2.0 [MOD]
-	- Variable Reader v1.0 [MOD]
 	- Virtual Security Password System v1.2.1 [MOD]
-	- Vote NPC v1.1 [MOD]
 	
 Other Stuff:
 	- Changing Author part in all scripts into "llchrisll",

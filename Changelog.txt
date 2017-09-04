@@ -25,11 +25,61 @@
 // *: Date
 // =: Which script has been changed
 // -: Which part of the script
-//   .: More details / *: More details (previous)
+//   >: More details / *: More details (previous)
 // ?: Comment by me
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2017/09/04
+= Updated GitHub
+- Deleted the following files completely because of unnecessarity
+  > released/Identifier.txt
+  > released/dg-party-sys.txt
+  > released/euro_exch.txt
+  > released/for-fun/ch_manager_test.txt
+  > released/for-fun/ch_manager_test_v1-1.txt
+  > released/for-fun/emo_gen.txt
+  > released/login_settings.txt
+  > released/packed_files/Euro Coins Entries.rar
+  > unreleased/snippets/gld_mem_status.txt
+  > unreleased/snippets/lvlcap_stats_reset.txt
+  > unreleased/testing_stuff/class-viewer.txt
+  > unreleased/testing_stuff/loop-testing.txt
+  > unreleased/testing_stuff/multi_sleep-tester.txt
+- Deleted the following files because of unneeded update
+  > updating/Identifier.txt
+  > updating/TrainingSystem.txt
+  > updating/broadcast_system.txt
+  > updating/card_comp.txt
+  > updating/euro_exch.txt
+  > updating/lms_event.txt
+  > updating/login_atcmd.txt
+  > updating/mob_inva.txt
+  > updating/pvp-gvg-mvp.txt
+  > updating/restaurant.txt
+  > updating/variable_reader.txt
+  > updating/vote_npc.txt
+- Moved the following scripts
+  - Folder "Events"
+    > Last Man Standing
+	> Mob Invasion
+  - Folder "GMScripts"
+    > Account Editor
+	> IP Ban NPC
+	> Global NPC Handler
+	> Variable Reviewer
+  - Folder "SQLScripts"
+    > Ingame Board
+	> Quest System
+	> Guild Ranker
+  - Folder "Systems"
+    > Training System
+	> Fame System
+	> Security System
+	> Virtual Pass System
+- Renamed broadcast_system.txt to broadcaster.txt
+= Updated Project_List.txt
+------------------------------------------------------------------------------------------------------------------------
 * 2017/07/27
 = Updated Training System v1.0 [RE]
 - Fixxed an bug with the VIT Training, which prevented the saving of the training.
