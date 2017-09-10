@@ -30,6 +30,10 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2017/09/10
+= Re-Added PvP-GvG-MvP Arena to "updating"
+- Changing the script mostly about the maps and adding a few features
+------------------------------------------------------------------------------------------------------------------------
 * 2017/09/04
 = Updated GitHub
 - Deleted the following files completely because of unnecessarity
