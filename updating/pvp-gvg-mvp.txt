@@ -41,10 +41,10 @@
 //      - Fixxed an Arena Shop bug by using $@arena_pay = 2 (Permanent Price Array) - Thanks to Lelantos for the bug report
 //      - Rewrote the whole check at the Party PvP, also fixxed the check for 
 //        online party member counting > misplaced the variables for "isloggedin" ... - Thanks to Lelantos for the bug report
-//= 1.6 - Reducing the Room Quantity to 1 Map per PvP Type and 3 Maps for GvG
-//        Using the array to choose which map
-//        Added the feature to randomzie the map each Day or an specific map on an specific day per PvP Type
+//= 1.6 - Reduced PvP Rooms by adding Map Rotation Settings; Fixed Maps + Random Map each Day + Specific Map on an specific Day
 //        Removed the Player Limitation except Party PvP
+//        Reduced GvG Maps to 3
+//        Removed the functions getPvPMapUsers and getPartyMapUsers
 //===== Compatible With ======================================
 //= Every rAthena Version [SQL]
 //===== Tested With ==========================================
@@ -61,14 +61,6 @@
 //= GvG: 3 Arenas, the default guild_vs1 - guild_vs3.
 //===== Comments & Credits =============================================
 // = Thanks to Lelantos for the idea of the Custom Bounty Map Feature
-//=========== Item Usage Restrictions =======================
-// Required File: db/pre-re/item_noequip.txt or db/re/item_noequip.txt
-// Entries, insert these lines at the bottom of the file.
-/*
-// Disabled for PvP+GvG - PvP/GvG Arena [llchrisll]
-607,3 // Yggdrasil Berry
-608,3 // Yggdrasil Seed
-*/
 //===== MySQL Entries ========================================
 /*
 // v1.0
@@ -94,13 +86,10 @@ PRIMARY KEY (`char_id`)
 */
 //=============== ToDo List ==========================
 //= Maybe adding a even more detailed class limitation, but just maybe
-//= Adding Map Rotation, either random per Day and/or fixxed on an specific day
-//  .disppvp_rand, .dmpvp_rand, $
 //============================================================
 // ================= Arena Master ================== //
 prontera,142,168,5	script	Arena Master	808,{
 set .@n$,"["+strnpcinfo(1)+"]";
-function getPvPMapUsers;
 
 mes .@n$;
 mes "Hello, "+strcharinfo(0)+"!";
@@ -115,7 +104,7 @@ mes "How can I help you?";
 mes "Ranking Status: "+ ( ($@pvptable)?"Online":"Offline");
 if(!$@pvptable) mes "Duo the ranking system being offline, no ranking will take place.";
 next;
-switch(select("- Go to Arenas:- See Rankings:- Visit Arena Shop:- Need Information:- Nevermind")) {
+switch(select("- Arenas:- Rankings:- Arena Shop:- Information:- Nevermind")) {
 	
 // Arenas
 	case 1:
@@ -130,73 +119,72 @@ switch(select("- Go to Arenas:- See Rankings:- Visit Arena Shop:- Need Informati
 		case 1:
 		mes .@n$;
 		mes "Please choose the PvP Type:";
-		mes "Party PvP is different of course.";
 		mes "In the \"()\" stands, if 3rd Jobs, only 3rd Jobs or All Jobs are allowed to enter.";
 		next;
-		switch($@class_disp) {
+		switch($@class_disp[$@disppvp_map]) {
 			case 0: set .@m_pvpdisp$,"No 3rd Jobs"; break;
 			case 1: set .@m_pvpdisp$,"Only 3rd Jobs"; break;
 			case 2: set .@m_pvpdisp$,"All Jobs"; break;
 		}
-		switch($@class_n) {
+		switch($@class_n[$@npvp_map]) {
 			case 0: set .@m_pvpn$,"No 3rd Jobs"; break;
 			case 1: set .@m_pvpn$,"Only 3rd Jobs"; break;
 			case 2: set .@m_pvpn$,"All Jobs"; break;
 		}
-		switch($@class_dm) {
+		switch($@class_dm[$@dmpvp_map]) {
 			case 0: set .@m_pvpdm$,"No 3rd Jobs"; break;
 			case 1: set .@m_pvpdm$,"Only 3rd Jobs"; break;
 			case 2: set .@m_pvpdm$,"All Jobs"; break;
 		}
-		switch(select("- PvP Dispell ["+getmapusers($@disppvp$)+"] ("+.@m_pvpdisp$+"):- Normal PvP ["+getmapusers($@npvp$)+"] ("+.@m_pvpn$+"):- PvP Deathmatch["+getmapusers($@dmppvp$)+"] ("+.@m_pvpdm$+"):- Party PvP["+getPartyMapUsers(6)+"]")) {
+		switch(select("- PvP Dispell ["+getmapusers($@disppvp$[$@disppvp_map])+"] ("+.@m_pvpdisp$+"):- Normal PvP ["+getmapusers($@npvp$[$@npvp_map])+"] ("+.@m_pvpn$+"):- PvP Deathmatch["+getmapusers($@dmppvp$[$@dmpvp_map])+"] ("+.@m_pvpdm$+"):- Party PvP")) {
 		
 			// PvP Dispell
 			case 1:
 			mes .@n$;
-			if($@class_disp == 0 && eaclass()&EAJL_THIRD) {
+			if($@class_disp[$@disppvp_map] == 0 && eaclass()&EAJL_THIRD) {
 				mes "I'm sorry, but 3rd Classes are not allowed in this PvP Room.";
 				close;
-			} else if($@class_disp == 1 && !(eaclass()&EAJL_THIRD)) {
+			} else if($@class_disp[$@disppvp_map] == 1 && !(eaclass()&EAJL_THIRD)) {
 				mes "I'm sorry, but only 3rd Classes are allowed in this PvP Room.";
 				close;
 			}
 			mes "I'll warp you now to the PvP Room, also remove all your buffs.";
 			close2;
 			unitskilluseid getcharid(3),"SA_DISPELL",5;
-			warp $@disppvp$,0,0;
+			warp $@disppvp$[$@disppvp_map],0,0;
 			end;
 			
 			//PvP Normal
 			case 2:
 			mes .@n$;
-			if($@class_n == 0 && eaclass()&EAJL_THIRD) {
+			if($@class_n[$@npvp_map] == 0 && eaclass()&EAJL_THIRD) {
 				mes "I'm sorry, but 3rd Classes are not allowed in this PvP Room.";
 				close;
-			} else if($@class_n == 1 && !(eaclass()&EAJL_THIRD)) {
+			} else if($@class_n[$@npvp_map] == 1 && !(eaclass()&EAJL_THIRD)) {
 				mes "I'm sorry, but only 3rd Classes are allowed in this PvP Room.";
 				close;
 			}
 			mes "I'll warp you now to the Normal PvP Room.";
 			close2;
-			warp $@npvp$,0,0;
+			warp $@npvp$[$@npvp_map],0,0;
 			end;
 			
 			// PvP DM	
 			case 3:
 			mes .@n$;
-			if($@class_dm == 0 && eaclass()&EAJL_THIRD) {
+			if($@class_dm[$@dmpvp_map] == 0 && eaclass()&EAJL_THIRD) {
 				mes "I'm sorry, but 3rd Classes are not allowed in this PvP Room.";
 				close;
-			} else if($@class_dm == 1 && !(eaclass()&EAJL_THIRD)) {
+			} else if($@class_dm[$@dmpvp_map] == 1 && !(eaclass()&EAJL_THIRD)) {
 				mes "I'm sorry, but only 3rd Classes are allowed in this PvP Room.";
 				close;
 			}
 			mes "I'll warp you now to the PvP Deathmatch Room.";
 			close2;
-			if(getmapusers($@dmpvp$) == 0) 
+			if(getmapusers($@dmpvp$[$@dmpvp_map]) == 0) 
 				set $@first,0;
 			set @dm,1;
-			warp $@dmpvp$,0,0;
+			warp $@dmpvp$[$@dmpvp_map],0,0;
 			end;
 		
 			// Party PvP
@@ -231,18 +219,16 @@ switch(select("- Go to Arenas:- See Rankings:- Visit Arena Shop:- Need Informati
 			mes "Chosen Party vs Party Mode:";
 			mes .@pt+"vs"+.@pt+" Party PvP";
 			mes "Class Restriction:";
-			switch( getd("$@class_p"+.@pt+"["+@map+"]") ) {
+			switch( getd("$@class_p"+.@pt+"["+getd("$@pt"+.@pt+"pvp_map")+"]") ) {
 				case 0: mes "No 3rd Jobs allowed"; break;
 				case 1: mes "Only 3rd Jobs allowed"; break;
 				case 2: mes "All Jobs allowed"; break;
 			}
 			next;
 			mes .@n$;
-			mes "Please choose the room you want to play in:";
-			set @map,select("- Prontera:- Alberta:- Izlude");
-			if(getPartyMapUsers(.@pt,@map) >= (.@pt*.@pt)) {
-				mes "I'm sorry, but this "+.@pt+"vs"+.@pt+" Arena is already full.";
-				mes "Please try another.";
+			if(getmapusers(getd("$@pt"+.@pt+"pvp$["+getd("$@pt"+.@pt+"pvp_map")+"]")) >= (.@pt*.@pt)) {
+				mes "I'm sorry, but the "+.@pt+"vs"+.@pt+" Arena is already full.";
+				mes "Please come back later.";
 				close;
 			}
 			getpartymember(@pty_id,1);
@@ -252,30 +238,20 @@ switch(select("- Go to Arenas:- See Rankings:- Visit Arena Shop:- Need Informati
 			copyarray @ptymemaid[0],$@partymemberaid,@ptymem; // Account ID
 			for ( set .@pm,0; .@pm < @ptymem; set .@pm,.@pm + 1) 
 				if( isloggedin(@ptymemaid[.@pm],@ptymemid[.@pm]) ) 
-					if(getd("$@class_p"+.@pt+"["+@map+"]") == 0 && eaclass()&EAJL_THIRD) {
+					if(getd("$@class_p"+.@pt+"["+getd("$@pt"+.@pt+"pvp_map")+"]") == 0 && eaclass()&EAJL_THIRD) {
 						mes "I'm sorry, but 3rd Classes are not allowed in this PvP Room.";
 						close;
-					} else if(getd("$@class_p"+.@pt+"["+@map+"]") == 1 && !(eaclass()&EAJL_THIRD)) {
+					} else if(getd("$@class_p"+.@pt+"["+getd("$@pt"+.@pt+"pvp_map")+"]") == 1 && !(eaclass()&EAJL_THIRD)) {
 						mes "I'm sorry, but only 3rd Classes are allowed in this PvP Room.";
 						close;
 					}
 			mes "I'll warp your party now.";
 			mes "Good luck.";
 			close2;
-			warpparty getd("$@pt"+.@pt+"pvp$["+@map+"]"),0,0,@pty_id;
+			warpparty getd("$@pt"+.@pt+"pvp$["+getd("$@pt"+.@pt+"pvp_map")+"]"),0,0,@pty_id;
 			end;
 		}
 		break;
-
-function	getPartyMapUsers	{
-	// getarg(0) == Party PvP Type (2vs2,3vs3, etc...) > 2,3, etc...
-	//              if it's a 6 = Total Map Users of the Party PvP Maps
-	// getarg(1) == GvG Room #
-	if(getarg(0) == 6) 
-		return (getmapusers($@pt2pvp$[1]) + getmapusers($@pt2pvp$[2]) + getmapusers($@pt2pvp$[3])) + (getmapusers($@pt3pvp$[1]) + getmapusers($@pt3pvp$[2]) + getmapusers($@pt3pvp$[3])) + (getmapusers($@pt4pvp$[1]) + getmapusers($@pt4pvp$[2]) + getmapusers($@pt4pvp$[3])) + (getmapusers($@pt5pvp$[1]) + getmapusers($@pt5pvp$[2]) + getmapusers($@pt5pvp$[3]));
-	else 
-		return getmapusers(getd("$@pt"+getarg(0)+"pvp$["+getarg(1)+"]"));
-}
 	
 		// GvG
 		case 2:
@@ -285,68 +261,13 @@ function	getPartyMapUsers	{
 			close;
 		}
 		mes "Please choose the room you want to join:";
-		mes "Each arena can hold up to "+$@mgvg+" player(s).";
-		if($@same_gld) {
-			mes "Same Guild Requirement is active:";
-			mes "If guilds already are in this room, you have to be a member of one of them so that you can join.";
-			mes "Also an maximum of "+$@mpgld+" members per guild can be in one room.";
-		}
 		next;
-		set .@rchoi,select("- GvG 1 ["+getmapusers($@gvgr$[0])+"]:- GvG 2 ["+getmapusers($@gvgr$[1])+"]:- GvG 3 ["+getmapusers($@gvgr$[2])+"]:- GvG 4 ["+getmapusers($@gvgr$[3])+"]:- GvG 5 ["+getmapusers($@gvgr$[4])+"]") - 1;
+		set .@rchoi,select("- GvG 1 ["+getmapusers($@gvgr$[0])+"]:- GvG 2 ["+getmapusers($@gvgr$[1])+"]:- GvG 3 ["+getmapusers($@gvgr$[2])+"]") - 1;
 		mes .@n$;
-		if($@same_gld) {
-			set gvgc,@menu;
-			if(getd("$@gvg_"+gvgc+"_gld_1") == 0) {
-				mes "I will warp you now.";
-				close2;
-				warp $@gvgr$[.@rchoi],$@gvg_gld1_x[.@rchoi],$@gvg_gld1_y[.@rchoi];
-				setd("$@gvg_"+gvgc+"_gld_1"),getcharid(2);
-				setd("$@gvg_"+gvgc+"_1_ppl"),getd("$@gvg_"+gvgc+"_1_ppl") + 1;
-				end;
-			} else if(getd("$@gvg_"+gvgc+"_gld_2") == 0) {
-				mes "I will warp you now.";
-				close2;
-				warp $@gvgr$[.@rchoi],$@gvg_gld2_x[.@rchoi],$@gvg_gld2_x[.@rchoi];
-				setd("$@gvg_"+gvgc+"_gld_2"),getcharid(2);
-				setd("$@gvg_"+gvgc+"_2_ppl"),getd("$@gvg_"+gvgc+"_2_ppl") + 1;
-				end;
-			}
-			if(getd("$@gvg_"+gvgc+"_gld_1") == getcharid(2)) {
-				if(getd("$@gvg_"+gvgc+"_1_ppl") >= $@mpgld) {
-					mes "I'm sorry, but your guild's side is already full.";
-					close;
-				}
-				mes "I will warp you now.";
-				close2;
-				set @rand,rand(1,2);
-				warp $@gvgr$[.@rchoi],getd("$@gvg_gld1_x"+@rand+"["+.@rchoi+"]"),getd("$@gvg_gld1_y"+@rand+"["+.@rchoi+"]");
-				setd("$@gvg_"+gvgc+"_1_ppl"),getd("$@gvg_"+gvgc+"_1_ppl") + 1;
-				end;
-			} else if(getd("$@gvg_"+gvgc+"_gld_2") == getcharid(2)) {
-				if(getd("$@gvg_"+gvgc+"_2_ppl") >= $@mpgld) {
-					mes "I'm sorry, but your guild's side is already full.";
-					close;
-				}
-				mes "I will warp you now.";
-				close2;
-				set @rand,rand(1,2);
-				warp $@gvgr$[.@rchoi],getd("$@gvg_gld2_x"+@rand+"["+.@rchoi+"]"),getd("$@gvg_gld2_y"+@rand+"["+.@rchoi+"]");
-				setd("$@gvg_"+gvgc+"_2_ppl"),getd("$@gvg_"+gvgc+"_2_ppl") + 1;
-				end;
-			} else {
-				mes "I'm sorry, but you can't enter this room since it's in use of other guilds already.";
-				close;
-			}
-		} else {
-			if(getmapusers($@gvgr$[.@rchoi]) >= $@mgvg) {
-				mes "I'm sorry, but this Arena is already full.";
-				close;
-			}
-			mes "I will warp you now.";
-			close2;
-			warp $@gvgr$[.@rchoi],0,0;
-			end;
-		}
+		mes "I will warp you now.";
+		close2;
+		warp $@gvgr$[.@rchoi],0,0;
+		end;
 		break;
 		
 	// Nevermind
@@ -507,11 +428,6 @@ function	getPartyMapUsers	{
 		
 		case 1:
 		mes "[=== PvP ===]";
-		mes "Each PvP Type has five rooms, displayed as";
-		mes "Prontera, Alberta, Izlude, Payon and Morroc.";
-		mes "Party PvP has 4 types and each type has also five rooms.";
-		next;
-		mes "[=== PvP ===]";
 		mes "PvP Types:";
 		mes " - Normal";
 		mes " - Dispell";
@@ -524,26 +440,15 @@ function	getPartyMapUsers	{
 		next;
 		mes "[=== PvP ===]";
 		mes "Dispell PvP:";
-		mes " - You'll be dispelled, when";
-		mes "	you entry an room.";
+		mes " - You'll be dispelled, when you enter the room.";
 		mes " ";
 		mes "Deathmatch PvP:";
-		mes " - You'll be auto-resurrect on";
-		mes "   death, except you type @die,";
-		mes "	get comaed or similar, then";
-		mes "   you'll be warped to your savepoint.";
+		mes " - You'll be auto-resurrect on death, except you type @die, get comaed or similar, then you'll be warped to your savepoint.";
 		close;
 		
 		case 2:
 		mes "[=== GvG ===]";
-		mes "Each team has two spawn postions, Team 1 has North and West and Team 2 has East and South,";
-		mes "which will be chosen randomly on room entry.";
-		if($@same_gld)
-			mes "There can be two of the same guild in one room at the same time with maximum "+$@mpgld+" members per guild.";
-		else {
-			mes "There can only be members of different guilds in the same room and the maximum players per guild is "+$@mgvg+".";
-			mes "Also only members of 'em can enter until no one is left of the respective guild.";
-		}
+		mes "In these rooms, you can see what WoE would look like.";
 		close;
 		
 		case 3:
@@ -725,18 +630,11 @@ if($@bty_type) {
 	set $@bty_bon_start,4; //which has achieved an spree of "$@bty_bon_start"
 	set $@bty_bonus_multi,1; // Use Bonus Multiplier depending on the Bounty Type? See seperate sections below
 
-// ====== Clearing Array on Whisper to prevent double entries ========
-	if(.@re_in) {
-		// Resetting Shop
-		npcshopitem "Arena_Shop",512,10;
-		// Deleting Prices
-		deletearray $@arena_ar[0],128; 
-	}
-
 	// Shop Items: PvP useful stuff D:, like Elements, Boxes and Food
 	// These will be used for all shops, but the prices depends on the Bounty Type you have set.
 	setarray $@arena_sh[0],12020,12028,12029,12030,12031,12032,12033,12034,12108,12215,12216,12217,12218,12219,12075,12080,12085,12090,12095,12100,12114,12115,12116,12117,12118,12119,12120,12121,13543,13544,13545,13546,13547,14593;
 	npcshopdelitem "Arena_Shop",512;
+	
 	// Prices:
 	// Two ways of doing so:
 	// - Per formula
@@ -755,8 +653,7 @@ if($@bty_type) {
 	// - High Rate: 100
 	// Note: On Mid Rate and High Rate Servers, it's easy to gain money very fast.
 	// So I added this to only increase the costs in the shop, but not the gain per kill.
-	// Note2: NEVER PUT '0', if you know calculation/mathematic then you should know
-	// what happens if you multiply with '0' :I.
+	// Note2: NEVER PUT '0'!!!
 	set $@arena_multi,50; 
 
 	// =============== Zeny ========== //
@@ -880,20 +777,16 @@ if($@debug) debugmes "Bounty Shop - Currency: " + ( ($@bty_type == 1)?"Zeny": ( 
 // Scroll down till the line with "function	getBounty	{"
 if($@debug) debugmes "Bounty Settings loaded: "+$@bty_type;
 // ============ GvG Settings ============//
-set $@mpgld,20; //Max Guild Members per Guild 
-if($@debug) debugmes "Max Members per Guild loaded: "+$@mpgld;
-set $@same_gld,1; // Same Guild requirement: 1 = On / 0 = Off
-if($@debug) debugmes "Same Guild Requirement loaded: "+$@same_gld;
 setarray $@gvgr$[0],"guild_vs1","guild_vs2","guild_vs3";
 if($@debug) debugmes "Guild Maps loaded: "+$@gvgr$[0];
 // Party Usage
 // 1 = No parties Allowed
 // 2 = Parties allowed
-setarray $@gvg_pty,2,2,2;
+setarray $@gvg_pty[0],2,2,2;
 // ======== Mapflags ======== //
 // If you want to add more mapflags, 
 // add them before the last two, which are for allowing party or not
-setarray $@gvg_mf[0],0, //mf_nomemo
+setarray .gvg_mf[0],0, //mf_nomemo
 					 1, //mf_noteleport
 					 2, //mf_nosave
 					 3, //mf_nobranch
@@ -912,106 +805,93 @@ setarray $@gvg_mf[0],0, //mf_nomemo
 					44, //mf_noexppenalty
 					14, //mf_partylock
 					10; //mf_gvg_noparty
-if($@debug) debugmes "Guild Mapflags loaded: "+getarraysize($@gvg_mf);
-if($@same_gld) { 
-// Guild Map Coordinates - used if $@same_gld is enabled
-// Every Guild has two coordinates to spawn from:
-// Guild 1: gld1_ > x1+y1 = North, x2+y2 = East
-	setarray $@gvg_gld1_x1[0],9,9,12,8,18;
-	setarray $@gvg_gld1_y1[0],50,50,51,49,50;
-	setarray $@gvg_gld1_x2[0],50,50,50,50,49;
-	setarray $@gvg_gld1_y2[0],7,7,13,8,23;
-// Guild 2: gld2_ > x1+y1 = West, x2+y2 = South
-	setarray $@gvg_gld2_x1[0],50,50,49,50,49;
-	setarray $@gvg_gld2_y1[0],91,91,86,91,76;
-	setarray $@gvg_gld2_x2[0],92,92,86,91,79;
-	setarray $@gvg_gld2_y2[0],50,50,51,49,49;
-	if($@debug) debugmes "Guild 1 Map Coordinates 1 loaded: X - "+getarraysize($@gvg_gld1_x1) +" & Y - "+getarraysize($@gvg_gld1_y1);
-	if($@debug) debugmes "Guild 1 Map Coordinates 2 loaded: X - "+getarraysize($@gvg_gld1_x2) +" & Y - "+getarraysize($@gvg_gld1_y2);
-	if($@debug) debugmes "Guild 2 Map Coordinates 1 loaded: X - "+getarraysize($@gvg_gld2_x1) +" & Y - "+getarraysize($@gvg_gld2_y1);
-	if($@debug) debugmes "Guild 2 Map Coordinates 2 loaded: X - "+getarraysize($@gvg_gld2_x2) +" & Y - "+getarraysize($@gvg_gld2_y2);
-}
+if($@debug) debugmes "Guild Mapflags loaded: "+getarraysize(.gvg_mf);
 // ============ PvP Settings ============//
-// ====== PvP Maps ==========//
-setarray $@pvp_maps$[1],"pvp_y_1-1","pvp_y_1-4","pvp_y_1-2","pvp_y_1-3","pvp_y_1-5","pvp_y_2-1","pvp_y_2-4";
-// ===== Map Rotation ====== //
-// 1 = Fixed Map
-// 2 = Random each Day
-// 3 = Each specific Day an specific Map
-set $@pvp_map,1;
-if($@pvp_map == 1) {
-	// Type the Index of $@pvp_maps$ the Map to be used
-	// Be sure not to use double entries!
-	set $@disppvp_map,1;
-	set $@npvp_map,2;
-	set $@dmpvp_map,3;
-	setarray $@ptypvp_map[1],4,5,6;
-	
-} else if($@pvp_map == 2) {
-
-	// Random Map
-	for ( set .@p,1; .@p < getarraysize($@pvp_maps$); set .@p,.@p + 1) {
-	
-		switch(rand(1,4)) {
-			case 1: if(!$@disppvp_map) set $@disppvp_map,.@p; break;
-			case 2: if(!$@npvp_map) set $@npvp_map,.@p; break;
-			case 3: if(!$@dmpvp_map) set $@dmpvp_map,.@p; break;
-			case 4: 
-			if(.@pty < 3) {
-				setarray $@ptypvp_map[.@pty],.@p; 
-				set .@pty,.@pty + 1;
-				break;
-			}
-		}
-	}
-	
-	if(!$disppvp_last) 
-		set $disppvp_last,$@disppvp_map;
-
-	if(!$npvp_last) 
-		set $npvp_last,$@npvp_map;
-	
-	if(!$dmpvp_last) 
-		set $dmpvp_last,$@dmpvp_map;
-	
-	if(!getarraysize($ptypvp_last)) 
-		copyarray $ptypvp_last[1],$@ptypvp_map[1],getarraysize($@ptypvp_map);
-		
-} else {
-	// ===== 3: Specific Day ======== //
-	//     > Chose your time in the same row as the $@pvp_maps$ order
-	//     > Values for the Array:
-	//       MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
-	//       see gettime in script_commands.txt in doc folder
-	// ===== [1]
-	setarray $@disppvp_day[1],MONDAY,THURSDAY,FRIDAY,SATURDAY,TUESDAY,SUNDAY,WEDNESDAY;
-	setarray $@npvp_day[1],TUESDAY,SATURDAY,WEDNESDAY,THURSDAY,MONDAY,FRIDAY,SUNDAY;
-	setarray $@dmpvp_day[1],WEDNESDAY,MONDAY,SUNDAY,TUESDAY,FRIDAY,SATURDAY,THURSDAY;
-	setarray $@ptypvp_day[1],FRIDAY,TUESDAY,SATURDAY,MONDAY,TUESDAY,;
-}
+// = You can use your own Maps as you like, even reduce or put more
+// = These below are the default PvP Maps
+// ====== Dispell PvP ==========//
+setarray $@disppvp$[1],"pvp_y_1-1","pvp_y_1-4","pvp_y_1-2","pvp_y_1-3","pvp_y_1-5";
+if($@debug) debugmes "PvP Dispell Maps loaded: "+(getarraysize($@disppvp$)-1);
+// ================== Normal Maps ================//
+setarray $@npvp$[1],"pvp_y_2-1","pvp_y_2-4","pvp_y_2-2","pvp_y_2-3","pvp_y_2-5";
+if($@debug) debugmes "PvP Normal Maps loaded: "+(getarraysize($@npvp$)-1);
+// ================== Deathmatch Maps ================//
+setarray $@dmpvp$[1],"pvp_y_3-1","pvp_y_3-4","pvp_y_3-2","pvp_y_3-3","pvp_y_3-5";
+if($@debug) debugmes "PvP DM Maps loaded: "+(getarraysize($@dmpvp$)-1);
+// ========= 2vs2 Party PvP ==========//
+setarray $@pt2pvp$[1],"pvp_y_4-1","pvp_y_4-4","pvp_y_4-2","pvp_y_4-3","pvp_y_4-5";
+if($@debug) debugmes "Party PvP 2vs2 Maps loaded: "+$@pt2pvp$[0];
+// ========= 3vs3 Party PvP ==========//
+setarray $@pt3pvp$[1],"pvp_y_5-1","pvp_y_5-4","pvp_y_5-2","pvp_y_5-3","pvp_y_5-5";
+if($@debug) debugmes "Party PvP 3vs3 Maps loaded: "+$@pt3pvp$[0];
+// ========= 4vs4 Party PvP ==========//
+setarray $@pt4pvp$[1],"pvp_y_6-1","pvp_y_6-4","pvp_y_6-2","pvp_y_6-3","pvp_y_6-5";
+if($@debug) debugmes "Party PvP 4vs4 Maps loaded: "+$@pt4pvp$[0];
+// ========= 5vs5 Party PvP ==========//
+setarray $@pt5pvp$[1],"pvp_y_7-1","pvp_y_7-4","pvp_y_7-2","pvp_y_7-3","pvp_y_7-5";
+if($@debug) debugmes "Party PvP 5vs5 Maps loaded: "+$@pt5pvp$[0];
+// ======= Party Usage ==========
+// 1 = No parties Allowed
+// 2 = Parties allowed
+setarray .disp_pty,2,2,2,2,2;
+setarray .normal_pty,2,2,2,2,2;
+setarray .dm_pty,2,2,2,2,2;
 // ============= Class Limitation ========//
-// * Index:
-// [1] = Dispell PvP
-// [2] = Normal PvP
-// [3] = Deathmatch PvP
-// [4] = Party 2vs2 PvP
-// [5] = Party 3vs3 PvP
-// [6] = Party 4vs4 PvP
-// [7] = Party 5vs5 PvP
-//
 // * Values:
 // 0 = No 3rd Job Allowed
 // 1 = Only 3rd Job Allowed
 // 2 = All
 // --------------------------------------
 // * Dispell PvP Rooms
-setarray $@class_limit[1],2,2,2,2,2,2,2;
+setarray $@class_disp[0],2,2,2,2,2;
+// * Normal PvP Rooms
+setarray $@class_n[1],2,2,2,2,2;
+// * Deathmatch PvP Rooms
+setarray $@class_dm[1],2,2,2,2,2;
+// * Party PvP 2vs2 Rooms
+setarray $@class_p2[1],2,2,2,2,2;
+// * Party PvP 3vs3 Rooms
+setarray $@class_p3[1],2,2,2,2,2;
+// * Party PvP 4vs4 Rooms
+setarray $@class_p4[1],2,2,2,2,2;
+// * Party PvP 5vs5 Rooms
+setarray $@class_p5[1],2,2,2,2,2;
 //==============================
-// ====== Normal PvP =========//
+// ===== Map Rotation ====== //
+// 1 = Fixed Map
+// 2 = Random each Day
+// 3 = Each specific Day an specific Map
+set .pvp_map,1;
+if(.pvp_map == 1) {
+	// Type the Index of $@<PvP_Type>pvp$ the Map to be used
+	set $@disppvp_map,2;
+	set $@npvp_map,3;
+	set $@dmpvp_map,1;
+	set $pt2pvp_map,4;
+	set $pt3pvp_map,4;
+	set $pt4pvp_map,4;
+	set $pt5pvp_map,4;
+	
+// ===== 3: Specific Day ======== //
+} else if(.pvp_map == 3) {
+	//     > Chose your time in the same row as the $@pvp_maps$ order
+	//     > Values for the Array:
+	//       MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
+	//       see gettime in script_commands.txt in doc folder
+	// ============================== //
+	setarray $@disppvp_day[1],MONDAY,MONDAY,WEDNESDAY,SATURDAY,TUESDAY,SUNDAY,WEDNESDAY;
+	setarray $@npvp_day[1],TUESDAY,SATURDAY,WEDNESDAY,THURSDAY,MONDAY,FRIDAY,SUNDAY;
+	setarray $@dmpvp_day[1],WEDNESDAY,MONDAY,SUNDAY,TUESDAY,FRIDAY,SATURDAY,THURSDAY;
+	setarray $@pt2pvp_day[1],FRIDAY,TUESDAY,SATURDAY,MONDAY,TUESDAY;
+	setarray $@pt3pvp_day[1],FRIDAY,TUESDAY,SATURDAY,MONDAY,TUESDAY;
+	setarray $@pt4pvp_day[1],FRIDAY,TUESDAY,SATURDAY,MONDAY,TUESDAY;
+	setarray $@pt5pvp_day[1],FRIDAY,TUESDAY,SATURDAY,MONDAY,TUESDAY;
+}
+donpcevent strnpcinfo(1) + "::OnClock0001";
 // ======== Mapflags ======== //
 // If you want to add more mapflags, 
 // add them before the last two, which are for allowing party or not
-setarray $@pvp_mf[0],0, //mf_nomemo
+setarray .pvp_mf[0],0, //mf_nomemo
 					 1, //mf_noteleport
 					 2, //mf_nosave
 					 3, //mf_nobranch
@@ -1028,74 +908,45 @@ setarray $@pvp_mf[0],0, //mf_nomemo
 					44, //mf_noexppenalty
 					14, //mf_partylock
 					 7; //mf_pvp_noparty
-if($@debug) debugmes "PvP Mapflags loaded: "+(getarraysize($@pvp_mf)-1);
-// ======= Auto Mapflag Adding - Dispell PvP ===============//
-for ( set .@m,1; .@m < getarraysize($@disppvp$); set .@m,.@m + 1 ) {
-if($@debug) debugmes "Mapflag set at "+$@disppvp$[.@m] + " initiate...";
-// Use this if you disallows parties
-//	for ( set .@mf,0; .@mf < getarraysize($@pvp_mf); set .@mf,.@mf + 1 ) {
-
-// Use this if you allow parties
-	for ( set .@mf,0; .@mf < (getarraysize($@pvp_mf) - 2); set .@mf,.@mf + 1 ) {
-		setmapflag $@disppvp$[.@m],$@pvp_mf[.@mf];
-		if($@debug) debugmes "Mapflag "+ $@pvp_mf[.@mf] +" set at "+$@disppvp$[.@m] + " complete";
-	}
-}
-if($@debug) debugmes "PvP Dispell Mapflags loaded.";		
-// Normal PvP
-setarray $@npvp$[1],"pvp_y_2-1","pvp_y_2-4","pvp_y_2-2","pvp_y_2-3","pvp_y_2-5";
-if($@debug) debugmes "PvP Normal Maps loaded: "+(getarraysize($@npvp$)-1);
-
-// ======= Auto Mapflag Adding  - Normal PvP ===============//
-for ( set .@m,1; .@m < getarraysize($@npvp$); set .@m,.@m + 1 ) {
-if($@debug) debugmes "Mapflag set at "+$@npvp$[.@m] + " initiate...";
-// Use this if you disallows parties
-//	for ( set .@mf,0; .@mf < getarraysize($@pvp_mf); set .@mf,.@mf + 1 ) {
-
-// Use this if you allow parties
-	for ( set .@mf,0; .@mf < (getarraysize($@pvp_mf) - 2); set .@mf,.@mf + 1 ) {
-		setmapflag $@npvp$[.@m],$@pvp_mf[.@mf];
-		if($@debug) debugmes "Mapflag "+ $@pvp_mf[.@mf] +" set at "+$@npvp$[.@m] + " complete";
-	}
-}
-if($@debug) debugmes "PvP Normal Mapflags loaded.";			
-// ================== Deathmatch Settings + Maps ================
-setarray $@dmpvp$[1],"pvp_y_3-1","pvp_y_3-4","pvp_y_3-2","pvp_y_3-3","pvp_y_3-5";
-if($@debug) debugmes "PvP DM Maps loaded: "+(getarraysize($@dmpvp$)-1);
-// ======= Auto Mapflag Adding  - DM PvP ===============//
-for ( set .@m,1; .@m < getarraysize($@dmpvp$); set .@m,.@m + 1 ) {
-if($@debug) debugmes "Mapflag set at "+$@dmpvp$[.@m] + " initiate...";
-// Use this if you disallows parties
-//	for ( set .@mf,0; .@mf < getarraysize($@pvp_mf); set .@mf,.@mf + 1 ) {
-
-// Use this if you allow parties
-	for ( set .@mf,0; .@mf < (getarraysize($@pvp_mf) - 2); set .@mf,.@mf + 1 ) {
-		setmapflag $@dmpvp$[.@m],$@pvp_mf[.@mf];
-		if($@debug) debugmes "Mapflag "+ $@pvp_mf[.@mf] +" set at "+$@dmpvp$[.@m] + " complete";
-	}
-}
-if($@debug) debugmes "PvP DM Mapflags loaded.";		
-// ================= Party PvP Settings =================
-// ========= 2vs2 Party PvP ==========//
-setarray $@pt2pvp$[1],"pvp_y_4-1","pvp_y_4-4","pvp_y_4-2";
-if($@debug) debugmes "Party PvP 2vs2 Maps loaded: "+$@pt2pvp$[0];
-// 3vs3 Party PvP
-setarray $@pt3pvp$[1],"pvp_y_5-1","pvp_y_5-4","pvp_y_5-2";
-if($@debug) debugmes "Party PvP 3vs3 Maps loaded: "+$@pt3pvp$[0];
-// 4vs4 Party PvP
-setarray $@pt4pvp$[1],"pvp_y_6-1","pvp_y_6-4","pvp_y_6-2";
-if($@debug) debugmes "Party PvP 4vs4 Maps loaded: "+$@pt4pvp$[0];
-// 5vs5 Party PvP
-setarray $@pt5pvp$[1],"pvp_y_7-1","pvp_y_7-4","pvp_y_7-2";
-if($@debug) debugmes "Party PvP 5vs5 Maps loaded: "+$@pt5pvp$[0];
+if($@debug) debugmes "PvP Mapflags loaded: "+(getarraysize(.pvp_mf)-1);
 // ======= Auto Mapflag Adding ===============//
+// ======= Dispell PvP ===============//
+for ( set .@m,1; .@m < getarraysize($@disppvp$); set .@m,.@m + 1 ) {
+	if($@debug) debugmes "Mapflag set at "+$@disppvp$[.@m] + " initiate...";
+	for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
+		if((.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) && .disp_pty[.@m] == 2) continue;
+		setmapflag $@disppvp$[.@m],.pvp_mf[.@mf];
+		if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@disppvp$[.@m] + " complete";
+	}
+}
+if($@debug) debugmes "PvP Dispell Mapflags loaded.";
+// ======= Normal PvP ===============//
+for ( set .@m,1; .@m < getarraysize($@npvp$); set .@m,.@m + 1 ) {
+	if($@debug) debugmes "Mapflag set at "+$@npvp$[.@m] + " initiate...";
+	for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
+		if((.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) && .normal_pty[.@m] == 2) continue;
+		setmapflag $@npvp$[.@m],.pvp_mf[.@mf];
+		if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@npvp$[.@m] + " complete";
+	}
+}
+if($@debug) debugmes "PvP Normal Mapflags loaded.";		
+// ======= Deathmatch PvP ===============//
+for ( set .@m,1; .@m < getarraysize($@dmpvp$); set .@m,.@m + 1 ) {
+	if($@debug) debugmes "Mapflag set at "+$@dmpvp$[.@m] + " initiate...";
+	for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
+		if((.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) && .dm_pty[.@m] == 2) continue;
+		setmapflag $@dmpvp$[.@m],.pvp_mf[.@mf];
+		if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@dmpvp$[.@m] + " complete";
+	}
+}
+if($@debug) debugmes "PvP DM Mapflags loaded.";	
 // ============== Party 2vs2 =================//
 if($@debug) debugmes "Array Reading of Party 2vs2 PvP Maps - configuring";
 for ( set .@m,1; .@m < getarraysize($@pt2pvp$); set .@m,.@m + 1 ) {
 	if($@debug) debugmes "Mapflag set at "+$@pt2pvp$[.@m] + " initiate...";
-	for ( set .@mf,0; .@mf < (getarraysize($@pvp_mf) - 1); set .@mf,.@mf + 1 ) {
-		setmapflag $@pt2pvp$[.@m],$@pvp_mf[.@mf];
-		if($@debug) debugmes "Mapflag "+ $@pvp_mf[.@mf] +" set at "+$@pt2pvp$[.@m] + " complete";
+	for ( set .@mf,0; .@mf < (getarraysize(.pvp_mf) - 1); set .@mf,.@mf + 1 ) {
+		setmapflag $@pt2pvp$[.@m],.pvp_mf[.@mf];
+		if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@pt2pvp$[.@m] + " complete";
 	}
 }
 if($@debug) debugmes "Party 2v2 PvP Mapflags loaded.";
@@ -1103,41 +954,41 @@ if($@debug) debugmes "Party 2v2 PvP Mapflags loaded.";
 if($@debug) debugmes "Array Reading of Party 3vs3 PvP Maps - configuring";
 for ( set .@m,1; .@m < getarraysize($@pt3pvp$); set .@m,.@m + 1 ) {
 	if($@debug) debugmes "Mapflag set at "+$@pt3pvp$[.@m] + " initiate...";
-	for ( set .@mf,0; .@mf < (getarraysize($@pvp_mf) - 1); set .@mf,.@mf + 1 ) {
-		setmapflag $@pt3pvp$[.@m],$@pvp_mf[.@mf];
-		if($@debug) debugmes "Mapflag "+ $@pvp_mf[.@mf] +" set at "+$@pt3pvp$[.@m] + " complete";
+	for ( set .@mf,0; .@mf < (getarraysize(.pvp_mf) - 1); set .@mf,.@mf + 1 ) {
+		setmapflag $@pt3pvp$[.@m],.pvp_mf[.@mf];
+		if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@pt3pvp$[.@m] + " complete";
 	}
 }
 if($@debug) debugmes "Party 3v3 PvP Mapflags loaded.";
 // ============== Party 4vs4 =================//
-	if($@debug) debugmes "Array Reading of Party 4vs4 PvP Maps - configuring";
+if($@debug) debugmes "Array Reading of Party 4vs4 PvP Maps - configuring";
 for ( set .@m,1; .@m < getarraysize($@pt4pvp$); set .@m,.@m + 1 ) {
 	if($@debug) debugmes "Mapflag set at "+$@pt4pvp$[.@m] + " initiate...";
-	for ( set .@mf,0; .@mf < (getarraysize($@pvp_mf) - 1); set .@mf,.@mf + 1 ) {
-		setmapflag $@pt4pvp$[.@m],$@pvp_mf[.@mf];
-		if($@debug) debugmes "Mapflag "+ $@pvp_mf[.@mf] +" set at "+$@pt4pvp$[.@m] + " complete";
+	for ( set .@mf,0; .@mf < (getarraysize(.pvp_mf) - 1); set .@mf,.@mf + 1 ) {
+		setmapflag $@pt4pvp$[.@m],.pvp_mf[.@mf];
+		if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@pt4pvp$[.@m] + " complete";
 	}
 }
 if($@debug) debugmes "Party 4v4 PvP Mapflags loaded.";
 // ============== Party 5vs5 =================//
-	if($@debug) debugmes "Array Reading of Party 5vs5 PvP Maps - configuring";
+if($@debug) debugmes "Array Reading of Party 5vs5 PvP Maps - configuring";
 for ( set .@m,1; .@m < getarraysize($@pt5pvp$); set .@m,.@m + 1 ) {
 	if($@debug) debugmes "Mapflag set at "+$@pt5pvp$[.@m] + " initiate...";
-	for ( set .@mf,0; .@mf < (getarraysize($@pvp_mf) - 1); set .@mf,.@mf + 1 ) {
-		setmapflag $@pt5pvp$[.@m],$@pvp_mf[.@mf];
-		if($@debug) debugmes "Mapflag "+ $@pvp_mf[.@mf] +" set at "+$@pt5pvp$[.@m] + " complete";
+	for ( set .@mf,0; .@mf < (getarraysize(.pvp_mf) - 1); set .@mf,.@mf + 1 ) {
+		setmapflag $@pt5pvp$[.@m],.pvp_mf[.@mf];
+		if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@pt5pvp$[.@m] + " complete";
 	}
 }
 if($@debug) debugmes "Party 5v5 PvP Mapflags loaded.";
 if($@debug) debugmes "Party PvP Mapflags loaded.";
 // ======= GvG ===============//
-for ( set .@m,0; .@m < getarraysize($@gvgr$); set .@m,.@m + 1 ) {
 if($@debug) debugmes "Array Reading of GvG Maps complete";
-if($@debug) debugmes "Mapflag set at "+$@gvgr$[.@m] + " initiate...";
-for ( set .@mf,0; .@mf < getarraysize($@gvg_mf); set .@mf,.@mf + 1 ) {
-		if(($@gvg_mf[.@mf] == 14 || $@gvg_mf[.@mf] == 10) && $@gvgr[.@m] == 1) continue;
-		setmapflag $@gvgr$[.@m],$@gvg_mf[.@mf];
-		if($@debug) debugmes "Mapflag "+ $@gvg_mf[.@mf] +" set at "+$@gvgr$[.@m] + " complete";
+for ( set .@m,0; .@m < getarraysize($@gvgr$); set .@m,.@m + 1 ) {
+	if($@debug) debugmes "Mapflag set at "+$@gvgr$[.@m] + " initiate...";
+	for ( set .@mf,0; .@mf < getarraysize(.gvg_mf); set .@mf,.@mf + 1 ) {
+		if((.gvg_mf[.@mf] == 14 || .gvg_mf[.@mf] == 10) && .gvg_pty[.@m] == 2) continue;
+		setmapflag $@gvgr$[.@m],.gvg_mf[.@mf];
+		if($@debug) debugmes "Mapflag "+ .gvg_mf[.@mf] +" set at "+$@gvgr$[.@m] + " complete";
 	}
 }
 if($@debug) debugmes "Guild Mapflag loading completed";
@@ -1156,8 +1007,30 @@ set $@npc_load,0;
 end;
 
 OnClock0001:
-if($@disppvp_rand == 1) {
+if($@pvp_map < 2) end;
+setarray .@pre$[0],"disp","n","dm","pt2","pt3","pt4","pt5";
+if($@pvp_map == 2) {
+	for ( set .@l,0; .@l < getarraysize(.@pre$); set .@l,.@l + 1) {
+		setd("$@"+.@pre[.@l]+"pvp_map"),rand(1,getarraysize(getd("$@"+.@pre$[.@l]+"pvp$")));
 	
+	if(!getd("$"+.@pre$[.@l]+"pvp_last") || getd("$"+.@pre$[.@l]+"pvp_last") != getd("$@"+.@pre$[.@l]+"pvp_map")) 
+		setd("$"+.@pre$[.@l]+"pvp_last"),getd("$@"+.@pre$[.@l]+"pvp_map");
+	}
+} else if($@pvp_map == 3) {
+	for ( set .@l,0; .@l < getarraysize(.@pre$); set .@l,.@l + 1) {
+		// Saving the previous Map
+		if(getd("$@"+.@pre$[.@l]+"pvp_map"))
+			setd("$"+.@pre$[.@l]+"pvp_last"),getd("$@"+.@pre[.@l]+"pvp_map");
+			
+		for ( set .@t,1; .@t <= getarraysize(getd("$@"+.@pre$[.@l]+"pvp$")); set .@t,.@t + 1) 
+			if(getd("$@"+.@pre$[.@l]+"pvp_day[.@t] == gettime(4)) {
+				setd("$@"+.@pre[.@l]+"pvp_map"),.@t;
+				setd("$"+.@pre[.@l]+"pvp_last"),.@t;
+			}
+
+	}
+}
+end;
 
 OnPCKillEvent:
 if(PVP_BTY_CMAP($@bty_cmap_type,strcharinfo(3)) == 1) end;
@@ -1218,8 +1091,8 @@ if($@bty_type && $@pvptable) {
 		if(!@hunt) {
 			announce "Bounty Hunter: Oh My God!!! Someone stop "+strcharinfo(0)+" please!!! I'll give you a bonus of "+($@bty_bonus*$@bty_bonus_m)+" " + ( ($@bty_type == 1)?"Zeny": ( ($@bty_type == 2)?"Cash Points":"Bounty Points") ) + " on "+ ( (Sex)?"his":"her") +" head!!",0;
 			sleep2 2500;
-			setarray .@pvp_pre$[0],"disp","dm","n","pt2","pt3","pt4","pt5";
-			setarray .@pvp_n$[0],"Dispell","Deathmatch","Normal","Party 2vs2","Party 3vs3","Party 4vs4","Party 5vs5";
+			setarray .@pvp_pre$[0],"disp","n","dm","pt2","pt3","pt4","pt5";
+			setarray .@pvp_n$[0],"Dispell","Normal","Deathmatch","Party 2vs2","Party 3vs3","Party 4vs4","Party 5vs5";
 			for ( set .@l,0; .@l < getarraysize(.@pvp_pre$); set .@l,.@l + 1)
 				for ( set .@m,1; .@m < getarraysize(getd("$@"+.@pvp_pre$[.@l]+"pvp$")); set .@m,.@m + 1)
 					if(strcharinfo(3) == getd("$@"+.@pvp_pre$[.@l]+"pvp$["+.@m+"]")) {
@@ -1255,14 +1128,10 @@ OnPCDieEvent:
 if(PVP_BTY_CMAP(1,strcharinfo(3)) == 1) end;
 // ===== Should affects you only, if you warped to an player via @warpto/@goto or were @recall-ed
 // ==== so you won't recieve a value for @map, which is required for the respawn in DM Maps
-if(!@dm) {
-	for( set @m,1; @m < getarraysize($@dmpvp$); set @m,@m + 1) 
-		if(strcharinfo(3) == $@dmpvp$[@m]) {
-			set @map,@m;
-			set @dm,1;
-			break;
-		}
-}
+if(!@dm) 
+	if(strcharinfo(3) == $@dmpvp$[$@dmpvp_map]) 
+		set @dm,1;
+
 if($@pvptable) {
 	writeStats(0,1);
 	if($@bty_type) writeBounty(@sphr,getcharid(0));
@@ -1270,16 +1139,6 @@ if($@pvptable) {
 set @sphr,0;
 set @killct,0;
 
-if($@same_gld && gvgc > 0) {
-	if(getd("$@gvg_"+gvgc+"_gld_1") == getcharid(2)) {
-		setd("$@gvg_"+gvgc+"_1_ppl"),getd("$@gvg_"+gvgc+"_1_ppl") - 1;
-		if(getd("$@gvg_"+gvgc+"_1_ppl") < 1) setd("$@gvg_"+gvgc+"_gld_1"),0;
-	} else if(getd("$@gvg_"+gvgc+"_gld_2") == getcharid(2)) {
-		setd("$@gvg_"+gvgc+"_2_ppl"),getd("$@gvg_"+gvgc+"_2_ppl") - 1;
-		if(getd("$@gvg_"+gvgc+"_2_ppl") < 1) setd("$@gvg_"+gvgc+"_gld_2"),0;
-	}
-	set gvgc,0;
-}
 if(@dm) {
 	if($@debug) debugmes "KillerRid: "+killerrid+", KilledRid: "+killedrid;
 	sleep2 1300;
@@ -1298,10 +1157,6 @@ end;
 
 OnPCLogOutEvent:
 if(PVP_BTY_CMAP($@bty_cmap_type,strcharinfo(3)) == 1) end;
-if($@same_gld && gvgc > 0) {
-	if(getd("$@gvg_"+gvgc+"_gld_1") == getcharid(2)) setd("$@gvg_"+gvgc+"_1_ppl"),getd("$@gvg_"+gvgc+"_1_ppl") - 1;
-	else if(getd("$@gvg_"+gvgc+"_gld_2") == getcharid(2)) setd("$@gvg_"+gvgc+"_2_ppl"),getd("$@gvg_"+gvgc+"_2_ppl") - 1;
-}
 end;
 
 OnNPCKillEvent:
@@ -1427,10 +1282,4 @@ end;
 		return .@f;
 	}
 // =========== End of Function ==========
-	
-OnWhisperGlobal:
-if(!getgmlevel()) end;
-if(select("- ReLoad:- Nevermind") == 2) close;
-goto OnInit;
-end;
 }

@@ -18,7 +18,7 @@
 //    * Folder: released
 // = [REQ] > Request = Will not be released officially
 //    * Folder: requests
-// = [MOD] > Modifications in Progress, yet untested 
+// = [MOD] > Modifications in Progress
 //    * Folder: updating
 // ====================================================================
 // ================= Line Indicator (since 2013/10/09) ================
@@ -30,6 +30,31 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2017/09/12
+= Updated Dungeon Quest Service v1.0 [WIP]
+- Added Dungeon Data into the SQL Table
+- Added Renewal Restriction
+= Updated PvP-GvG-MvP Arena v1.6 [MOD]
+- Removed the comment auf Item Usage Restriction
+- Reduced PvP Rooms by adding Map Rotation Settings; Fixed Maps + Random Map each Day + Specific Map on an specific Day
+- Removed the functions getPvPMapUsers and getPartyMapUsers
+- Reduced GvG Maps to 3
+- Removed "Same Guild" requirement for GvG Rooms
+- Optimized the OnInit part have a better overview
+- Removed OnWhisperGlobal
+= Updated Rentable Shops v1.0 [WIP]
+- Had to change back to on older version, cause of an mistake from my side
+- Added Information part
+- Added an check if the SQL tables are installed
+- Exchanged the "Type Item ID" with the "Inventory list" way
+- Added `cont_refine` to the SQL Table to save the refine of an equipment
+- Added the feature for GM's to change their values for the currencies
+- Changed the Shop Spot Settings
+- Added custom command for the GMAccess
+- Added Shop Spot duplicates
+- Added different kind of shops, which are called depending on the currency used for the Shop
+- Added an Waiting Room for the Shop Name
+------------------------------------------------------------------------------------------------------------------------
 * 2017/09/10
 = Re-Added PvP-GvG-MvP Arena to "updating"
 - Changing the script mostly about the maps and adding a few features

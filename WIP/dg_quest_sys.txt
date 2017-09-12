@@ -3,10 +3,7 @@
 //===== Author ===============================================
 //= llchrisll
 //===== Credits ==============================================
-//= "Ultimate Warper" Author from the eAthena Board.
-//	Since no header was included and I forgot the name of him/her,
-//	I couldn't ask the permission to use an part of the script.
-//	I used the map coordinates.
+//= rAthena Dev Team for the Warper NPC, used the Map Cooardinates
 //===== Current Version ======================================
 //= 1.0
 //===== Changelog ============================================
@@ -37,6 +34,10 @@
 //  - Each Dungeon can have an infinite amount of quests
 //===== Comments =============================================
 //= ...
+//===== ToDO =============================================
+//= Spliting Glastheim Dungeon into 6 seperate Entries:
+//  Glastheim - Castle, Glastheim - Church, Glastheim - Culvert, Glastheim - Prison, Glastheim - Cave, Glastheim - Chivalry
+//= Adding the possibility to use a different level requirement for each "floor"
 //============================================================
 /*
 CREATE TABLE IF NOT EXISTS `dqs_list` (
@@ -49,7 +50,7 @@ CREATE TABLE IF NOT EXISTS `dqs_list` (
  `item_am` int(10) unsigned default '0',
  `reward_id` int(10) unsigned default '0',
  `reward_am` int(10) unsigned default '0',
- `status` tinyint(3) unsigned default '2'
+ `status` tinyint(3) unsigned default '2',
  ) ENGINE=MyISAM;
  
  CREATE TABLE IF NOT EXISTS `dqs_party` (
@@ -75,7 +76,8 @@ CREATE TABLE IF NOT EXISTS `dqs_dungeon` (
  `map_x` int(10) unsigned default '0',
  `map_y` int(10) unsigned default '0',
  `repeat` int(5) unsigned default '0',
- `status` tinyint(3) unsigned default '2'
+ `status` tinyint(3) unsigned default '2',
+ `renewal` tinyint(3) unsigned default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE IF NOT EXISTS `dqs_app` (
@@ -91,6 +93,165 @@ CREATE TABLE IF NOT EXISTS `dqs_pending` (
  `item_id` int(10) unsigned default '501',
  `item_am` int(10) unsigned default '0'
 ) ENGINE=MyISAM;
+
+ // === Dungeon Data ===
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '1' , 'Abyss Lakes' , '3' , '70' , '3' , '1' , 'abyss_01' , '261' , '272' , '3' , '2' , '1');
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '1' , 'Abyss Lakes' , '3' , '70' , '3' , '2' , 'abyss_02' , '275' , '270' , '3' , '2' , '1');
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '1' , 'Abyss Lakes' , '3' , '70' , '3' , '3' , 'abyss_03' , '116' , '27' , '3' , '2' , '1');
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '2' , 'Amatsu Dungeon' , '2' , '50' , '3' , '1' , 'ama_dun01' , '228' , '11' , '3' , '2' , '1');
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '2' , 'Amatsu Dungeon' , '2' , '50' , '3' , '2' , 'ama_dun02' , '34' , '41' , '3' , '2' , '1');
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '2' , 'Amatsu Dungeon' , '2' , '50' , '3' , '3' , 'ama_dun03' , '119' , '14' , '3' , '2' , '1');
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '3' , 'Anthell' , '1' , '70' , '3' , '1' , 'anthell01' , '35' , '262' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '3' , 'Anthell' , '1' , '70' , '3' , '2' , 'anthell02' , '168' , '170' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '4' , 'Ayothaya Dungeon' , '3' , '60' , '3' , '1' , 'ayo_dun01' , '275' , '19' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '4' , 'Ayothaya Dungeon' , '3' , '60' , '3' , '2' , 'ayo_dun02' , '24' , '26' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '5' , 'Beach Dungeon' , '2' , '65' , '3' , '1' , 'beach_dun' , '266' , '67' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '5' , 'Beach Dungeon' , '2' , '65' , '3' , '2' , 'beach_dun2' , '255' , '244' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '5' , 'Beach Dungeon' , '2' , '65' , '3' , '3' , 'beach_dun3' , '23' , '260' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '6' , 'Bio Labratory' , '3' , '70' , '3' , '1' , 'lhz_dun01' , '150' , '288' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '6' , 'Bio Labratory' , '3' , '70' , '3' , '2' , 'lhz_dun02' , '150' , '18' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '6' , 'Bio Labratory' , '3' , '70' , '3' , '3' , 'lhz_dun03' , '140' , '134' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '6' , 'Bio Labratory' , '3' , '70' , '3' , '4' , 'lhz_dun04' , '244' , '52' , '3' , '2' , '3' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '7' , 'Brasilis Dungeon' , '3' , '70' , '3' , '1' , 'bra_dun01' , '87' , '47' , '3' , '2' , '3' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '7' , 'Brasilis Dungeon' , '3' , '70' , '3' , '2' , 'bra_dun02' , '262' , '262' , '3' , '2' , '3' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '8' , 'Byalan Dungeon' , '2' , '45' , '3' , '1' , 'iz_dun00' , '168' , '168' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '8' , 'Byalan Dungeon' , '2' , '45' , '3' , '2' , 'iz_dun01' , '253' , '252' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '8' , 'Byalan Dungeon' , '2' , '45' , '3' , '3' , 'iz_dun02' , '236' , '204' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '8' , 'Byalan Dungeon' , '2' , '45' , '3' , '4' , 'iz_dun03' , '32' , '63' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '8' , 'Byalan Dungeon' , '2' , '45' , '3' , '5' , 'iz_dun04' , '26' , '27' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '8' , 'Byalan Dungeon' , '2' , '45' , '3' , '6' , 'iz_dun05' , '141' , '187' , '3' , '2' , '3' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '9' , 'Clock Tower' , '2' , '55' , '3' , '1' , 'c_tower1' , '199' , '159' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '9' , 'Clock Tower' , '2' , '55' , '3' , '2' , 'c_tower2' , '148' , '283' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '9' , 'Clock Tower' , '2' , '55' , '3' , '3' , 'c_tower3' , '65' , '147' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '9' , 'Clock Tower' , '2' , '55' , '3' , '4' , 'c_tower4' , '56' , '155' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '10' , 'Aldebaran Dungeon' , '2' , '65' , '3' , '1' , 'alde_dun01' , '297' , '25' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '10' , 'Aldebaran Dungeon' , '2' , '65' , '3' , '2' , 'alde_dun02' , '127' , '169' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '10' , 'Aldebaran Dungeon' , '2' , '65' , '3' , '3' , 'alde_dun03' , '277' , '178' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '10' , 'Aldebaran Dungeon' , '2' , '65' , '3' , '4' , 'alde_dun04' , '268' , '74' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '11' , 'Coal Mines' , '2' , '50' , '3' , '1' , 'mjo_dun01' , '52' , '17' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '11' , 'Coal Mines' , '2' , '50' , '3' , '2' , 'mjo_dun02' , '381' , '343' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '11' , 'Coal Mines' , '2' , '50' , '3' , '3' , 'mjo_dun03' , '302' , '262' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '12' , 'Prontera Culvert' , '1' , '15' , '3' , '1' , 'prt_sewb1' , '131' , '247' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '12' , 'Prontera Culvert' , '1' , '15' , '3' , '2' , 'prt_sewb2' , '19' , '19' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '12' , 'Prontera Culvert' , '1' , '15' , '3' , '3' , 'prt_sewb3' , '180' , '169' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '12' , 'Prontera Culvert' , '1' , '15' , '3' , '4' , 'prt_sewb4' , '100' , '92' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '13' , 'Cursed Abbey' , '3' , '70' , '3' , '1' , 'abbey01' , '51' , '14' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '13' , 'Cursed Abbey' , '3' , '70' , '3' , '2' , 'abbey02' , '150' , '11' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '13' , 'Cursed Abbey' , '3' , '70' , '3' , '3' , 'abbey03' , '120' , '10' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '14' , 'Dewata Dungeon' , '3' , '90' , '3' , '1' , 'dew_dun01' , '285' , '160' , '3' , '2' , '3' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '14' , 'Dewata Dungeon' , '3' , '90' , '3' , '2' , 'dew_dun02' , '299' , '29' , '3' , '2' , '3' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '15' , 'Einbroch Dungeon' , '2' , '55' , '3' , '1' , 'ein_dun01' , '22' , '14' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '15' , 'Einbroch Dungeon' , '2' , '55' , '3' , '2' , 'ein_dun02' , '292' , '290' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '16' , 'Gefenia' , '3' , '70' , '3' , '1' , 'gefenia01' , '40' , '103' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '16' , 'Gefenia' , '3' , '70' , '3' , '2' , 'gefenia02' , '203' , '34' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '16' , 'Gefenia' , '3' , '70' , '3' , '3' , 'gefenia03' , '266' , '168' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '16' , 'Gefenia' , '3' , '70' , '3' , '4' , 'gefenia04' , '130' , '272' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '17' , 'Geffen Dungeon' , '2' , '55' , '3' , '1' , 'gef_dun00' , '104' , '99' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '17' , 'Geffen Dungeon' , '2' , '55' , '3' , '2' , 'gef_dun01' , '115' , '236' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '17' , 'Geffen Dungeon' , '2' , '55' , '3' , '3' , 'gef_dun02' , '106' , '132' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '17' , 'Geffen Dungeon' , '2' , '55' , '3' , '4' , 'gef_dun03' , '203' , '200' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '18' , 'Glastheim Dungeon' , '2' , '60' , '3' , '1' , 'gl_cas01' , '199' , '29' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '18' , 'Glastheim Dungeon' , '2' , '60' , '3' , '2' , 'gl_cas02' , '104' , '25' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '18' , 'Glastheim Dungeon' , '2' , '60' , '3' , '3' , 'gl_knt01' , '150' , '15' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '18' , 'Glastheim Dungeon' , '2' , '60' , '3' , '4' , 'gl_knt02' , '157' , '287' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '18' , 'Glastheim Dungeon' , '2' , '60' , '3' , '5' , 'gl_chyard' , '147' , '15' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '18' , 'Glastheim Dungeon' , '2' , '60' , '3' , '6' , 'gl_sew01' , '258' , '255' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '18' , 'Glastheim Dungeon' , '2' , '60' , '3' , '7' , 'gl_sew02' , '108' , '291' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '18' , 'Glastheim Dungeon' , '2' , '60' , '3' , '8' , 'gl_sew03' , '171' , '283' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '18' , 'Glastheim Dungeon' , '2' , '60' , '3' , '9' , 'gl_sew04' , '68' , '277' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '18' , 'Glastheim Dungeon' , '2' , '60' , '3' , '10' , 'gl_church' , '156' , '7' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '18' , 'Glastheim Dungeon' , '2' , '60' , '3' , '11' , 'gl_step' , '12' , '7' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '18' , 'Glastheim Dungeon' , '2' , '60' , '3' , '12' , 'gl_dun01' , '133' , '271' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '18' , 'Glastheim Dungeon' , '2' , '60' , '3' , '13' , 'gl_dun02' , '224' , '274' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '18' , 'Glastheim Dungeon' , '2' , '60' , '3' , '14' , 'gl_prison' , '14' , '70' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '18' , 'Glastheim Dungeon' , '2' , '60' , '3' , '15' , 'gl_prison1' , '150' , '14' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '19' , 'Gonryun Dungeon' , '2' , '75' , '3' , '1' , 'gon_dun01' , '153' , '53' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '19' , 'Gonryun Dungeon' , '2' , '75' , '3' , '2' , 'gon_dun02' , '28' , '113' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '19' , 'Gonryun Dungeon' , '2' , '75' , '3' , '3' , 'gon_dun03' , '68' , '16' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '20' , 'Hidden Dungeon' , '2' , '55' , '3' , '1' , 'prt_maze01' , '176' , '7' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '20' , 'Hidden Dungeon' , '2' , '55' , '3' , '2' , 'prt_maze02' , '93' , '20' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '20' , 'Hidden Dungeon' , '2' , '55' , '3' , '3' , 'prt_maze03' , '23' , '8' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '21' , 'Ice Dungeon' , '2' , '65' , '3' , '1' , 'ice_dun01' , '157' , '14' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '21' , 'Ice Dungeon' , '2' , '65' , '3' , '2' , 'ice_dun02' , '151' , '155' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '21' , 'Ice Dungeon' , '2' , '65' , '3' , '3' , 'ice_dun03' , '149' , '22' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '21' , 'Ice Dungeon' , '2' , '65' , '3' , '4' , 'ice_dun04' , '33' , '158' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '22' , 'Juperos' , '3' , '75' , '3' , '1' , 'jupe_cave' , '140' , '51' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '22' , 'Juperos' , '3' , '75' , '3' , '2' , 'juperos_01' , '53' , '247' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '22' , 'Juperos' , '3' , '75' , '3' , '3' , 'juperos_02' , '37' , '63' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '22' , 'Juperos' , '3' , '75' , '3' , '4' , 'jupe_core' , '150' , '285' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '23' , 'Kiel Dungeon' , '3' , '75' , '3' , '1' , 'kh_dun01' , '28' , '226' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '23' , 'Kiel Dungeon' , '3' , '75' , '3' , '2' , 'kh_dun02' , '41' , '198' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '24' , 'Louyang Dungeon' , '2' , '60' , '3' , '1' , 'lou_dun01' , '218' , '196' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '24' , 'Louyang Dungeon' , '2' , '60' , '3' , '2' , 'lou_dun02' , '282' , '20' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '24' , 'Louyang Dungeon' , '2' , '60' , '3' , '3' , 'lou_dun03' , '165' , '38' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '25' , 'Magma Dungeon' , '2' , '60' , '3' , '1' , 'mag_dun01' , '126' , '68' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '25' , 'Magma Dungeon' , '2' , '60' , '3' , '2' , 'mag_dun02' , '47' , '30' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '26' , 'Malangdo Dungeon' , '2' , '75' , '3' , '1' , 'mal_dun01' , '33' , '230' , '3' , '2' , '3' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '27' , 'Moscovia Dungeon' , '3' , '80' , '3' , '1' , 'mosk_dun01' , '189' , '48' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '27' , 'Moscovia Dungeon' , '3' , '80' , '3' , '2' , 'mosk_dun02' , '165' , '30' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '27' , 'Moscovia Dungeon' , '3' , '80' , '3' , '3' , 'mosk_dun03' , '32' , '135' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '28' , 'Nidhoggs Dungeon' , '3' , '90' , '3' , '1' , 'nyd_dun01' , '61' , '239' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '28' , 'Nidhoggs Dungeon' , '3' , '90' , '3' , '2' , 'nyd_dun02' , '60' , '271' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '29' , 'Odin Temple' , '3' , '90' , '3' , '1' , 'odin_tem01' , '298' , '167' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '29' , 'Odin Temple' , '3' , '90' , '3' , '2' , 'odin_tem02' , '224' , '149' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '29' , 'Odin Temple' , '3' , '90' , '3' , '3' , 'odin_tem03' , '266' , '280' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '30' , 'Orc Dungeon' , '1' , '45' , '3' , '1' , 'orcsdun01' , '32' , '170' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '30' , 'Orc Dungeon' , '1' , '45' , '3' , '2' , 'orcsdun02' , '21' , '185' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '31' , 'Payon Dungeon' , '2' , '15' , '3' , '1' , 'pay_dun00' , '21' , '183' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '31' , 'Payon Dungeon' , '2' , '15' , '3' , '2' , 'pay_dun01' , '19' , '33' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '31' , 'Payon Dungeon' , '2' , '15' , '3' , '3' , 'pay_dun02' , '19' , '63' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '31' , 'Payon Dungeon' , '2' , '15' , '3' , '4' , 'pay_dun03' , '155' , '159' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '31' , 'Payon Dungeon' , '2' , '15' , '3' , '5' , 'pay_dun04' , '201' , '204' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '32' , 'Pyramid' , '2' , '55' , '3' , '1' , 'moc_pryd01' , '192' , '9' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '32' , 'Pyramid' , '2' , '55' , '3' , '2' , 'moc_pryd02' , '10' , '192' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '32' , 'Pyramid' , '2' , '55' , '3' , '3' , 'moc_pryd03' , '100' , '92' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '32' , 'Pyramid' , '2' , '55' , '3' , '4' , 'moc_pryd04' , '181' , '11' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '32' , 'Pyramid' , '2' , '55' , '3' , '5' , 'moc_pryd05' , '94' , '96' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '32' , 'Pyramid' , '2' , '55' , '3' , '6' , 'moc_pryd06' , '192' , '8' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '32' , 'Pyramid' , '2' , '55' , '3' , '7' , 'moc_prydn1' , '94' , '96' , '3' , '2' , '3' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '32' , 'Pyramid' , '2' , '55' , '3' , '8' , 'moc_prydn2' , '192' , '8' , '3' , '2' , '3' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '33' , 'Rachel Sanctuary' , '3' , '65' , '3' , '1' , 'ra_san01' , '140' , '11' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '33' , 'Rachel Sanctuary' , '3' , '65' , '3' , '2' , 'ra_san02' , '32' , '21' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '33' , 'Rachel Sanctuary' , '3' , '65' , '3' , '3' , 'ra_san03' , '8' , '149' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '33' , 'Rachel Sanctuary' , '3' , '65' , '3' , '4' , 'ra_san04' , '204' , '218' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '33' , 'Rachel Sanctuary' , '3' , '65' , '3' , '5' , 'ra_san05' , '150' , '9' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '34' , 'Scaraba Hole' , '3' , '90' , '3' , '1' , 'dic_dun01' , '364' , '44' , '3' , '2' , '3' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '34' , 'Scaraba Hole' , '3' , '90' , '3' , '2' , 'dic_dun02' , '101' , '141' , '3' , '2' ,'3' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '35' , 'Sphinx' , '2' , '60' , '3' , '1' , 'in_sphinx1' , '288' , '9' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '35' , 'Sphinx' , '2' , '60' , '3' , '2' , 'in_sphinx2' , '149' , '81' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '35' , 'Sphinx' , '2' , '60' , '3' , '3' , 'in_sphinx3' , '210' , '54' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '35' , 'Sphinx' , '2' , '60' , '3' , '4' , 'in_sphinx4' , '10' , '222' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '35' , 'Sphinx' , '2' , '60' , '3' , '5' , 'in_sphinx5' , '100' , '99' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '36' , 'Sunken Ship' , '1' , '40' , '3' , '1' , 'treasure01' , '69' , '24' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '36' , 'Sunken Ship' , '1' , '40' , '3' , '2' , 'treasure02' , '102' , '27' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '37' , 'Thanatos Tower' , '3' , '70' , '3' , '1' , 'tha_t01' , '150' , '39' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '37' , 'Thanatos Tower' , '3' , '70' , '3' , '2' , 'tha_t02' , '150' , '136' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '37' , 'Thanatos Tower' , '3' , '70' , '3' , '3' , 'tha_t03' , '220' , '158' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '37' , 'Thanatos Tower' , '3' , '70' , '3' , '4' , 'tha_t04' , '59' , '143' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '37' , 'Thanatos Tower' , '3' , '70' , '3' , '5' , 'tha_t05' , '62' , '11' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '37' , 'Thanatos Tower' , '3' , '70' , '3' , '6' , 'tha_t06' , '89' , '221' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '37' , 'Thanatos Tower' , '3' , '70' , '3' , '7' , 'tha_t07' , '35' , '166' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '37' , 'Thanatos Tower' , '3' , '70' , '3' , '8' , 'tha_t08' , '93' , '148' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '37' , 'Thanatos Tower' , '3' , '70' , '3' , '9' , 'tha_t09' , '29' , '107' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '37' , 'Thanatos Tower' , '3' , '70' , '3' , '10' , 'tha_t10' , '159' , '138' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '37' , 'Thanatos Tower' , '3' , '70' , '3' , '11' , 'tha_t11' , '19' , '20' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '37' , 'Thanatos Tower' , '3' , '70' , '3' , '12' , 'tha_t12' , '130' , '52' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '38' , 'Thor Volcano' , '3' , '75' , '3' , '1' , 'thor_v01' , '21' , '228' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '38' , 'Thor Volcano' , '3' , '75' , '3' , '2' , 'thor_v02' , '75' , '205' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '38' , 'Thor Volcano' , '3' , '75' , '3' , '3' , 'thor_v03' , '34' , '272' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '39' , 'Toy Factory' , '2' , '45' , '3' , '1' , 'xmas_dun01' , '205' , '15' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '39' , 'Toy Factory' , '2' , '45' , '3' , '2' , 'xmas_dun02' , '129' , '133' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '40' , 'Turtle Dungeon' , '2' , '55' , '3' , '1' , 'tur_dun01' , '154' , '49' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '40' , 'Turtle Dungeon' , '2' , '55' , '3' , '2' , 'tur_dun02' , '148' , '261' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '40' , 'Turtle Dungeon' , '2' , '55' , '3' , '3' , 'tur_dun03' , '132' , '189' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '40' , 'Turtle Dungeon' , '2' , '55' , '3' , '4' , 'tur_dun04' , '100' , '192' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '41' , 'Umbala Dungeon' , '2' , '50' , '3' , '1' , 'um_dun01' , '42' , '31' , '3' , '2' , '2' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '41' , 'Umbala Dungeon' , '2' , '50' , '3' , '2' , 'um_dun02' , '48' , '30' , '3' , '2' , '2' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '41' , 'Umbala Dungeon' , '2' , '50' , '3' , '3' , 'yggdrasil01' , '204' , '78' , '3' , '2' , '1' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '42' , 'Bifrost Tower' , '3' , '90' , '3' , '1' , 'ecl_tdun01' , '57' , '13' , '3' , '2' ,'3' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '42' , 'Bifrost Tower' , '3' , '90' , '3' , '1' , 'ecl_tdun01' , '64' , '88' , '3' , '2' ,'3' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '42' , 'Bifrost Tower' , '3' , '90' , '3' , '1' , 'ecl_tdun01' , '45' , '14' , '3' , '2' ,'3' );
+INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '42' , 'Bifrost Tower' , '3' , '90' , '3' , '1' , 'ecl_tdun01' , '26' , '23' , '3' , '2' ,'3' );
 */
 prontera,151,185,4	script	Dungeon Quest Service	110,{
 
@@ -152,7 +313,7 @@ switch(select("- Dungeon Menu:- Information:- Points Exchanger:- Nothing")) {
 		next;
 		mes .n$;
 		// =============== Creating Dungeon Menu ===============
-		query_sql "SELECT DISTINCT `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `repeat` , `status` FROM `dqs_dungeon`",.@dg_id,.@name$,.@diff,.@pty_limit,.@req_lvl,.@rep,.@stat;
+		query_sql "SELECT DISTINCT `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `repeat` , `status` , `renewal` FROM `dqs_dungeon`",.@dg_id,.@name$,.@diff,.@pty_limit,.@req_lvl,.@rep,.@stat,.@renewal;
 		if(getarraysize(.@dg_id) < 1) {
 			mes "I'm sorry, but there are no Dungeon yet, please come later.";
 			close;
@@ -176,6 +337,18 @@ switch(select("- Dungeon Menu:- Information:- Points Exchanger:- Nothing")) {
 		}
 		mes "Existing Parties: "+.@pt_count[@d];
 		mes "Repeat Limit: "+.@rep[@d];
+		mes "Server Type: "+( (.@renewal[@d] == 1)?"All":( (.@renewal[@d] == 2)?"Pre-Renewal":"Renewal") );
+		if(.@renewal[@d] == 2 && checkre(0)) {
+			next;
+			mes .n$;
+			mes "I'm sorry, but I can't grant you access to this dungeon, because it is not accessable on an Renewal Server.";
+			close;
+		} else if(.@renewal[@d] == 3 && !checkre(0)) {
+			next;
+			mes .n$;
+			mes "I'm sorry, but I can't grant you access to this dungeon, because it is not accessable on an Pre-Renewal Server.";
+			close;
+		}
 		if(@join) {
 			next;
 			mes .n$;
@@ -1106,13 +1279,20 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			}
 			mes .n$;
 			mes "8th Step - Status";
-			mes "Note: 2 = Entry allowed, 1 = Entry forbidden / Default is 2";
+			mes "Note: 2 = Entry allowed, 1 = Entry forbidden";
 			next;
 			if(input(.@d_stat,1,2) != 0)
 				set .@d_stat,2; // Defaulting to "Online"
 			
 			mes .n$;
-			mes "9th Step - Adding Floors";
+			mes "9th Step - Renewal Restriction";
+			mes "Note: 1 = None, 2 = Pre-Renewal only, 3 = Renewal only";
+			next;
+			if(input(.@d_renewal,1,3) != 0) 
+				set .@d_renewal,1; // Defaulting to "None"
+				
+			mes .n$;
+			mes "10th Step - Adding Floors";
 			mes "Note: You better should know the map names and the coordinates for each floor!!!";
 			mes " > I will only check if the coordinates are passable or not.";
 			mes " > One mistake means to repeat the floor!!!";
@@ -1157,7 +1337,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			mes "Congratulation!";
 			mes "You have successfully added the \""+.@d_name$+"\" "+( (compare(.@d_name$,"Dungeon") == 1)?" ":"Dungeon ")+"with the ID "+.@id+" to the database.";
 			for ( set .@a,0; .@a < getarraysize(.@floor_map$); set .@a,.@a + 1)
-				query_sql "INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` ) VALUES ( '"+.@id+"' , '"+escape_sql(.@d_name$)+"' , '"+.@d_diff+"' , '"+.@d_level+"' , '"+.@d_plimit+"' , '"+(.@a + 1)+"' , '"+.@floor_map$[.@a]+"' , '"+.@floor_x[.@a]+"' , '"+.@floor_y[.@a]+"' , '"+.@d_repeat+"' , '"+.@d_stat+"' )";
+				query_sql "INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '"+.@id+"' , '"+escape_sql(.@d_name$)+"' , '"+.@d_diff+"' , '"+.@d_level+"' , '"+.@d_plimit+"' , '"+(.@a + 1)+"' , '"+.@floor_map$[.@a]+"' , '"+.@floor_x[.@a]+"' , '"+.@floor_y[.@a]+"' , '"+.@d_repeat+"' , '"+.@d_stat+"' , '"+.@d_renewal+"' )";
 			break;
 		
 			// Edit Dungeon
@@ -1178,9 +1358,9 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			mes .n$;
 			mes "Now choose what you want to edit:";
 			while(1) {
-				query_sql "SELECT `name` , `difficulty` , `req_level` , `pty_limit` , `repeat` , `status` FROM `dqs_dungeon` WHERE `dg_id` = '"+.@dg_id[.@ed]+"'",.@ed_name$,.@ed_diff,.@ed_lvl,.@ed_plimit,.@ed_rep,.@ed_stat;
+				query_sql "SELECT `name` , `difficulty` , `req_level` , `pty_limit` , `repeat` , `status` , `renewal` FROM `dqs_dungeon` WHERE `dg_id` = '"+.@dg_id[.@ed]+"'",.@ed_name$,.@ed_diff,.@ed_lvl,.@ed_plimit,.@ed_rep,.@ed_stat,.@ed_renewal;
 				next;
-				switch(prompt("- Dungeon Name:- Difficulty:- Required Level:- Party Limit:- Floor Settings:- Repeat Limit:- Status")) {
+				switch(prompt("- Dungeon Name:- Difficulty:- Required Level:- Party Limit:- Floor Settings:- Repeat Limit:- Status:- Renewal")) {
 				
 					// Dungeon Name
 					case 1:
@@ -1314,7 +1494,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 								continue;
 							}
 							mes "Map Data for the Floor #"+.@f_id+" has been added.";
-							query_sql "INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` ) VALUES ( '"+.@dg_id[.@ed]+"' , '"+escape_sql(.@ed_name$)+"' , '"+.@ed_diff+"' , '"+.@ed_lvl+"' , '"+.@ed_plimit+"' , '"+.@f_id+"' , '"+.@f_map$+"' , '"+.@f_x+"' , '"+.@f_y+"' , '"+.@ed_rep+"' , '"+.@ed_stat+"' )";
+							query_sql "INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '"+.@dg_id[.@ed]+"' , '"+escape_sql(.@ed_name$)+"' , '"+.@ed_diff+"' , '"+.@ed_lvl+"' , '"+.@ed_plimit+"' , '"+.@f_id+"' , '"+.@f_map$+"' , '"+.@f_x+"' , '"+.@f_y+"' , '"+.@ed_rep+"' , '"+.@ed_stat+"' )";
 							continue;
 							break;
 							
@@ -1427,7 +1607,11 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 					mes " > 2 = Entry allowed";
 					mes "Please type the new status:";
 					next;
-					input(.@d_stat);
+					if(input(.@d_stat,1,2) != 0) {
+						mes .n$;
+						mes "Invalid Status, please try again.";
+						continue;
+					}
 					mes .n$;
 					mes "Chosen Status: "+.@d_stat;
 					mes "Is this correct?";
@@ -1436,6 +1620,32 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 					mes .n$;
 					mes "The Status has been successfully changed to \""+.@d_stat+"\".";
 					query_sql "UPDATE `dqs_dungeon` SET `status` = '"+.@d_stat+"' WHERE `dg_id` = '"+.@dg_id[.@ed]+"'";
+					continue;
+					break;
+					
+					// Renewal 
+					case 8:
+					mes .n$;
+					mes "Current Renewal Restriction: "+.@ed_renewal;
+					mes " ";
+					mes " > 1 = None";
+					mes " > 2 = Pre-Renewal only";
+					mes " > 3 = Renewal only";
+					mes "Please type the new restriction:";
+					next;
+					if(input(.@d_renewal,1,3) != 0) {
+						mes .n$;
+						mes "Invalid Type, please try again.";
+						continue;
+					}
+					mes .n$;
+					mes "Chosen Restriction: "+.@d_renewal;
+					mes "Is this correct?";
+					if(select("- Yes:- No") - 1) continue;
+					next;
+					mes .n$;
+					mes "The Renewal Restriction has been successfully changed to \""+.@d_renewal+"\".";
+					query_sql "UPDATE `dqs_dungeon` SET `renewal` = '"+.@d_renewal+"' WHERE `dg_id` = '"+.@dg_id[.@ed]+"'";
 					continue;
 					break;
 	
