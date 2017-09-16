@@ -9,7 +9,7 @@
 //===== Changelog ============================================
 //= 1.0 - Initial Release
 //===== Compatible With ======================================
-//= rAthena SQL 09/26-2015 Rev+
+//= rAthena SQL 09/26-2015 Revision and later
 //===== Tested With ==========================================
 //= rAthena SQL 09/26-2015 Revision
 //===== Description ==========================================

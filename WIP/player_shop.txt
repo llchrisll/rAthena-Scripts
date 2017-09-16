@@ -9,13 +9,16 @@
 //===== Changelog ============================================
 //= 1.0 - Initial Release
 //===== Compatible With ======================================
-//= rAthena SQL 09/26-2015 Rev+
+//= rAthena SQL 09/26-2015 Revision and later
 //===== Tested With ==========================================
 //= rAthena SQL 09/26-2015 Revision
 //===== Description ==========================================
 //= ...
-//===== Comments =============================================
-//= ...
+//===== ToDO =============================================
+//= Adding the option to edit the Currency and Shop Name without disolving first
+//= Adding an Timer, which checks if after an week (example) after the stock has been emptied,
+//  nothing happened anymore. Delete the Shop, but not sure how to handle the balance stuff.
+//= Adding an LoginEvent to show what the stock of the shop is
 //============================================================
 /*
 CREATE TABLE IF NOT EXISTS `shop_owner` (
@@ -27,6 +30,7 @@ CREATE TABLE IF NOT EXISTS `shop_owner` (
  `cur_ix` tinyint(3) unsigned default '0',
  `balance` int(12) unsigned default '0',
  `sales` int(12) unsigned default '0',
+ `timer` int(12) unsigned default '0',
  PRIMARY KEY ( `shop_id` )
  ) ENGINE=MyISAM;
  
@@ -34,7 +38,6 @@ CREATE TABLE IF NOT EXISTS `shop_owner` (
  `shop_id` int(10) unsigned NOT NULL,
  `cont_id` int(10) unsigned NOT NULL,
  `cont_price` int(10) unsigned NOT NULL,
- `cont_refine` int(10) unsigned default '0',
  `cont_stock` int(10) unsigned default '1'
  ) ENGINE=MyISAM;
  */
@@ -49,7 +52,7 @@ if(query_sql("SHOW TABLES LIKE 'shop_owner'",.@sh_tbl) == -1) { // Checking if S
 }
 mes "How can I help you?";
 next;
-switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Nevermind")) {
+switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Shop Area:- Nevermind")) {
 
 	case 1:
 	mes .n$;
@@ -63,19 +66,25 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 		next;
 		mes .n$;
 		query_sql "SELECT `cont_id` , `cont_stock` FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"'",.@c_id,.@c_am;
-		for ( set .@c,0; .@c < getarraysize(.@c_id); set .@c,.@c + 1)
+		for ( set .@c,0; .@c < getarraysize(.@c_id); set .@c,.@c + 1) {
+			if(!.@c_am[.@c]) {
+				query_sql "DELETE FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"' AND `cont_id` = '"+.@c_id[.@c]+"'";
+				continue;
+			}
 			if(checkweight(.@c_id[.@c],.@c_am[.@c]) == 1) {
 				getitem .@c_id[.@c],.@c_am[.@c];
-				query_sql "DELETE FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"' AND `cont_id` = '"+.@c_id[.@c]+"' AND `cont_stock` = '"+.@c_am[.@c]+"'";
+				query_sql "DELETE FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"' AND `cont_id` = '"+.@c_id[.@c]+"'";
 			} else
 				set .@i,.@i + 1;
+		}
 		if(.@i) {
 			mes .n$;
 			mes "I'm sorry, but I couldn't give you "+.@i+" items back, since your don't have the required space for.";
 			mes "Please repeat this, as soon you have enough space for more items.";
 			close;
 		}
-		if(query_sql("SELECT `balance` FROM `shop_owner` WHERE `shop_id` = '"+.@sh_id+"'",.@blc) != 0) {
+		query_sql "SELECT `balance` FROM `shop_owner` WHERE `shop_id` = '"+.@sh_id+"'",.@blc;
+		if(.@blc) {
 			mes "You didn't recieve your saved balance yet, please do this first.";
 			close;
 		}
@@ -85,6 +94,8 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 		mes .n$;
 		query_sql "DELETE FROM `shop_owner` WHERE `shop_id` = '"+.@sh_id+"'";
 		query_sql "DELETE FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"'";
+		disablenpc "Shop Spot "+.@sh_id+"#"+.@sh_id;
+		donpcevent "Shop Spot "+.@sh_id+"#"+.@sh_id+"::OnShopReLoad";
 		mes "Your shop has been succesfully dissolved.";
 		mes "If you want to rent an shop again just talk to me when I have a free spot available.";
 		close;
@@ -105,8 +116,8 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 	} else if(.rent_type == 2 && #CASHPOINTS < .rent_pr) {
 		mes "You don't have the required amount of Cash Points";
 		close;
-	} else if(.rent_type >= 512 && countitem(.rent_type) < .rent_pr) {
-		mes "You don't have the required amount of "+getitemname(.rent_type)+".";
+	} else if(.rent_type == 3 && countitem(.rent_item) < .rent_pr) {
+		mes "You don't have the required amount of "+getitemname(.rent_item)+".";
 		close;
 	}
 	for ( set .@s,1; .@s < getarraysize(.@sh_sel); set .@s,.@s + 1) 
@@ -141,7 +152,7 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 			for ( set .@c,0; .@c < getarraysize(.c_char_disp$); set .@c,.@c + 1)
 				set .@c_menu$,.@c_menu$ + "- "+.c_char_disp$[.@c]+ ( (.c_char_disp$[.@c] != "")?":":"");
 			
-		set .@c_sel,select(.@c_menu$);
+		set .@c_sel,select(.@c_menu$) - 1;
 		next;
 		mes .n$;
 		mes "Chosen Points:";
@@ -175,7 +186,7 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 		case 2:	set #CASHPOINTS,#CASHPOINTS - .rent_pr;	break;
 		default: delitem .rent_type,.rent_pr; break;		
 	}
-	donpcevent "Shop Spot "+.@sh_new+"#"+.@sh_new+"::OnShopLoad";
+	donpcevent "Shop Spot "+.@sh_new+"#"+.@sh_new+"::OnShopReLoad";
 	break;
 
 	// Information
@@ -188,7 +199,7 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 	mes "Afterwards I will need the following from you; Shop Name and currency to be used, which are listed below.";
 	mes " ";
 	mes "[ Shop Management ]";
-	mes "You can manage your shop directly at me by checking your balance; adding, editing and deleting an Item from the Shop.";
+	mes "You can manage your shop directly via me by checking your balance; adding, editing and deleting an Item from the Shop.";
 	mes "Exchanging an Item is not possible, you have to delete one first before adding the new one later.";
 	mes "Also if one item already exists in your shop, you can't add it again.";
 	mes " ";
@@ -230,12 +241,12 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 		mes "You have to rent an shop first, before you can manage one.";
 		close;
 	}
-	query_sql "SELECT `cont_id` , `cont_refine` , `cont_price` , `cont_stock` FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"'",.@c_id,.@c_refine,.@c_price,.@c_am;
+	query_sql "SELECT `cont_id` , `cont_price` , `cont_stock` FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"'",.@c_id,.@c_price,.@c_am;
 	if(getarraysize(.@c_id) > 0 ) {
 		mes "Shop Content:";
-		mes "+Refine - Item Name (Item ID) - Item Stock - Item Price";
+		mes "> Item Name (Item ID) - Item Stock - Item Price";
 		for ( set .@e,0; .@e < getarraysize(.@c_am); set .@e,.@e + 1) {
-			mes "> "+( (.@c_refine[.@l] > 0)?"+ "+.@c_refine[.@l]+" ":"") + getitemname(.@c_id[.@e])+" ("+.@c_id[.@e]+") - "+.@c_am[.@e]+"x - "+.@c_price[.@e];
+			mes "> "+ getitemname(.@c_id[.@e])+" ("+.@c_id[.@e]+") - "+.@c_am[.@e]+"x - "+.@c_price[.@e];
 			if(!.@c_am[.@e]) // Checking if Item Stock is empty and setting .@r variable to +1
 				set .@r,.@r + 1;
 		}
@@ -262,6 +273,7 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 				case 3: setd(""+.c_char_var$[.@cur_ix]),getd(""+.c_char_var$[.@cur_ix]) + .@bal; break;
 				case 4: getitem .@cur_ix,.@bal; break;
 			}
+			query_sql "UPDATE `shop_owner` SET `balance` = '0' WHERE `acc_id` = '"+getcharid(3)+"'";
 		}
 		break;
 		
@@ -270,45 +282,40 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 		mes .n$;
 		getinventorylist;
 		for ( set .@l,0; .@l < @inventorylist_count; set .@l,.@l + 1) {
-			if(@inventorylist_equip[.@l] == 1) continue; // Item is equipped
-			if(@inventorylist_attribute[.@l] == 1) continue; // Item is broken
-			if(@inventorylist_card1[.@l] > 0 || @inventorylist_card2[.@l] > 0 || @inventorylist_card3[.@l] > 0 || @inventorylist_card4[.@l] > 0) continue; // Item has a card in Slot 1/2/3/4
-			setarray .@shop_id[getarraysize(.@shop_id)],@inventorylist_id[.@l];
-			setarray .@shop_amount[getarraysize(.@shop_amount)],@inventorylist_amount[.@l];
-			setarray .@shop_refine[getarraysize(.@shop_refine)],@inventorylist_refine[.@l];
-			
-			set .@shop_m$,.@shop_m$ + "> "+@inventorylist_amount[.@l]+"x "+( (@inventorylist_refine[.@l] > 0)?"+ "+@inventorylist_refine[.@l]+" ":"") + getitemname(@inventorylist_id[.@l]) + ( (@inventorylist_id[(.@l+1)] != 0)?":":"");
+			// Item is an equipment, skip it
+			if(getiteminfo(@inventorylist_id[.@l],2) == 4 || getiteminfo(@inventorylist_id[.@l],2) == 5) continue;
+			setarray .@shop_id[.@a],@inventorylist_id[.@l];
+			setarray .@shop_amount[.@a],@inventorylist_amount[.@l];
+			set .@a,.@a + 1;
+
+			set .@shop_m$,.@shop_m$ + "> "+@inventorylist_amount[.@l]+"x "+ getitemname(@inventorylist_id[.@l]) + ( (@inventorylist_id[(.@l+1)] != 0)?":":"");
 		}
 		
-		mes "Please choose the Item you want to add from the list, but remember you can't use Items which are equipped, broken or have cards in it, as well as that I can only put one of the same item in the shop.";
-		mes "Also if you choose an Weapon or Equipment with Refine then I will skip the amount step.";
+		mes "Please choose the Item you want to add from the list, but remember I can't add Equipment to the Shop,";
+		mes "as well as that I can only put one of the same item in the shop.";
 		next;
 		set .@c,select(.@shop_m$) - 1;
 		
-		if(query_sql("SELECT `cont_id` FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"' AND `cont_id` = '"+@inventorylist_id[.@c]+"'",.@i_id) != 0 ) {
+		if(query_sql("SELECT `cont_id` FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"' AND `cont_id` = '"+.@shop_id[.@c]+"'",.@i_id) != 0 ) {
 			mes .n$;
 			mes "I'm sorry, but the ID given is already in the Shop, please try again.";
 			close;
 		}
-		if(getiteminfo(.@shop_id[.@c],2) != 4 && getiteminfo(.@shop_id[.@c],2) != 5) {
+		mes .n$;
+		mes "Now type the amount you want to put in the shop.";
+		mes "Maximum: "+.item_am_max;
+		mes "But remember you need to have the amount in your inventory, since I will put it in the shop.";
+		next;
+		if(input(.@i_am,1,.item_am_max) != 0) {
 			mes .n$;
-			mes "Now type the amount you want to put in the shop.";
-			mes "Maximum: "+.item_am_max;
-			mes "But remember you need to have the amount in your inventory, since I will put it in the shop.";
-			next;
-			if(input(.@i_am,1,.item_am_max) != 0) {
-				mes .n$;
-				mes "I'm sorry, either you put an amount less than 1 or higher than "+.item_am_max+".";
-				close;
-			}
-			if(.@i_am > .@shop_amount[.@c]) {
-				mes .n$;
-				mes "I'm sorry, but you don't have enough of the selected Item with you.";
-				close;
-			}
-		} else 
-			set .@i_am,1;
-
+			mes "I'm sorry, either you put an amount less than 1 or higher than "+.item_am_max+".";
+			close;
+		}
+		if(.@i_am > .@shop_amount[.@c]) {
+			mes .n$;
+			mes "I'm sorry, but you don't have enough of the selected Item with you.";
+			close;
+		}
 		mes .n$;
 		mes "Last would be the price per Item:";
 		mes "Currency: "+( (.@cur_type == 1)?"Zeny":( (.@cur_type == 2)?.c_cash_disp$[.@cur_ix]: ( (.@cur_type == 3)?.c_char_disp$[.@cur_ix]:getitemname(.@cur_ix)) ) );
@@ -330,7 +337,7 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 			close;
 		}
 		mes "Result:";
-		mes "Item: "+( (.@shop_refine[.@c] > 0)?"+ "+.@shop_refine[.@c]+" ":"") + getitemname(.@shop_id[.@c]);
+		mes "Item: "+ getitemname(.@shop_id[.@c]);
 		mes "Amount: "+.@i_am;
 		mes "Price: "+.@pr_am;
 		mes " ";
@@ -339,30 +346,29 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 		next;
 		mes .n$;
 		mes "The Item has been added succesfully.";
-		query_sql "INSERT INTO `shop_content` ( `shop_id` , `cont_id` , `cont_refine` , `cont_stock` , `cont_price` ) VALUES ( '"+.@sh_id+"' , '"+@inventorylist_id[.@c]+"' , '"+@inventorylist_refine[.@c]+"' , '"+.@i_am+"' , '"+.@pr_am+"')";
-		debugmes "delitem2 "+.@shop_id[.@c]+","+.@i_am+",1,"+.@shop_refine[.@c]+",0,0,0,0,0;";
-		delitem2 .@shop_id[.@c],.@i_am,1,.@shop_refine[.@c],0,0,0,0,0;
+		query_sql "INSERT INTO `shop_content` ( `shop_id` , `cont_id` , `cont_stock` , `cont_price` ) VALUES ( '"+.@sh_id+"' , '"+.@shop_id[.@c]+"' , '"+.@i_am+"' , '"+.@pr_am+"')";
+		delitem .@shop_id[.@c],.@i_am;
 		break;
 		
 		// Edit Item
 		case 3:
 		mes .n$;
-		query_sql "SELECT `cont_id` , `cont_price` , `cont_refine` , `cont_stock` FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"'",.@c_id,.@c_price,.@c_refine,.@c_am;
+		query_sql "SELECT `cont_id` , `cont_price` , `cont_stock` FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"'",.@c_id,.@c_price,.@c_am;
 		if(getarraysize(.@c_id) < 1) {
 			mes "I'm sorry, but there is no Item to edit. Add one first.";
 			close;
 		}
 		mes "Which Item do you want to edit?";
-		mes "+Refine Item Name (Price) [Stock]:";
+		mes "Item Name (Price) [Stock]:";
 		next;
 		for( set .@l,0; .@l < getarraysize(.@c_id); set .@l,.@l + 1) 
-			set .@ec_menu$,.@ec_menu$ + "- "+( (.@c_refine[.@l] > 0)?"+"+.@c_refine[.@l]+" ":"") + getitemname(.@c_id[.@l])+" ("+.@c_price[.@l]+") ["+.@c_am[.@l]+"]"+ ( (.@c_id[.@l+1] == 0)?"":":");
+			set .@ec_menu$,.@ec_menu$ + "- "+ getitemname(.@c_id[.@l])+" ("+.@c_price[.@l]+") ["+.@c_am[.@l]+"]"+ ( (.@c_id[.@l+1] == 0)?"":":");
 			
 		set .@c,select(.@ec_menu$) - 1;
 		
 		mes .n$;
 		mes "Chosen Item:";
-		mes ( (.@c_refine[.@c] > 0)?"+"+.@c_refine[.@c]+" ":"") + getitemname(.@c_id[.@c]);
+		mes getitemname(.@c_id[.@c]);
 		mes " ";
 		mes "Is this correct?";
 		if(select("- Yes:- No") - 1) close;
@@ -376,7 +382,7 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 			mes .n$;
 			mes "Please type the new Price:";
 			mes "Currency: "+( (.@cur_type == 1)?"Zeny":( (.@cur_type == 2)?.c_cash_disp$[.@cur_ix]: ( (.@cur_type == 3)?.c_char_disp$[.@cur_ix]:getitemname(.@cur_ix) ) ) );
-			mes "Maximum: "+( (.@cur_type == 1)?.zeny_pr_max:( (.@cur_type == 2 || .@cur_type == 3)?.var_pr_max:item_pr_max ) );
+			mes "Maximum: "+( (.@cur_type == 1)?.zeny_pr_max+" Zeny":( (.@cur_type == 2)?.var_pr_max+" "+.c_cash_disp$[.@cur_ix]: ( (.@cur_type == 3)?.c_char_disp$[.@cur_ix]+" "+.var_pr_max:item_pr_max ) ) );
 			next;
 			input(.@pr_new);
 			switch(.@cur_type) {
@@ -399,7 +405,7 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 			next;
 			mes .n$;
 			mes "Item Price has been changed succesfully.";
-			query_sql "UPDATE `shop_content` SET `cont_price` = '"+.@pr_new+"' WHERE `shop_id` = '"+.@sh_id+"' AND `cont_id` = '"+.@c_id[.@c]+"' AND `cont_stock` = '"+.@c_am[.@c]+"' AND `cont_refine` = '"+.@c_refine[.@c]+"' AND `cont_price` = '"+.@c_price[.@c]+"'";
+			query_sql "UPDATE `shop_content` SET `cont_price` = '"+.@pr_new+"' WHERE `shop_id` = '"+.@sh_id+"' AND `cont_id` = '"+.@c_id[.@c]+"' AND `cont_stock` = '"+.@c_am[.@c]+"' AND `cont_price` = '"+.@c_price[.@c]+"'";
 			close;
 			
 			case 2:
@@ -409,7 +415,8 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 			mes "Maximum: "+.item_am_max;
 			mes "But remember you need to have the amount in your inventory, since I will put it in the shop.";
 			next;
-			if(input((.@i_am+.@c_am),1,.item_am_max) != 0) {
+			input(.@i_am);
+			if((.@i_am+.@c_am[.@c]) < 1 || (.@i_am+.@c_am[.@c]) > .item_am_max) {
 				mes .n$;
 				mes "I'm sorry, either you put an amount less than 1 or the new Stock Amount would be higher than "+.item_am_max+".";
 				close;
@@ -426,7 +433,7 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 			next;
 			mes .n$;
 			mes "Item Stock Amount has been changed succesfully.";
-			query_sql "UPDATE `shop_content` SET `cont_stock` = `cont_stock` + '"+.@i_am+"' WHERE `shop_id` = '"+.@sh_id+"' AND `cont_id` = '"+.@c_id[.@c]+"' AND `cont_stock` = '"+.@c_am[.@c]+"' AND `cont_refine` = '"+.@c_refine[.@c]+"' AND `cont_price` = '"+.@c_price[.@c]+"'";
+			query_sql "UPDATE `shop_content` SET `cont_stock` = `cont_stock` + '"+.@i_am+"' WHERE `shop_id` = '"+.@sh_id+"' AND `cont_id` = '"+.@c_id[.@c]+"' AND `cont_stock` = '"+.@c_am[.@c]+"' AND `cont_price` = '"+.@c_price[.@c]+"'";
 			delitem .@c_id[.@c],.@i_am;
 			close;			
 			
@@ -438,7 +445,7 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 		// Delete Item
 		case 4:
 		mes .n$;
-		query_sql "SELECT `cont_id` , `cont_price` , `cont_refine` , `cont_stock` FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"'",.@c_id,.@c_price,.@c_refine,.@c_am;
+		query_sql "SELECT `cont_id` , `cont_price` , `cont_stock` FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"'",.@c_id,.@c_price,.@c_am;
 		if(getarraysize(.@c_id) < 1) {
 			mes "I'm sorry, but there is no Item to delete. Add one first.";
 			close;
@@ -447,33 +454,43 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Never
 		mes "Item Name (Price) [Stock]:";
 		next;
 		for( set .@l,0; .@l < getarraysize(.@c_id); set .@l,.@l + 1) 
-			set .@ec_menu$,.@ec_menu$ + "- "+( (.@c_refine[.@l] > 0)?"+"+.@c_refine[.@l]+" ":"") + getitemname(.@c_id[.@l])+" ("+.@c_price[.@l]+") ["+.@c_am[.@l]+"]"+ ( (.@c_id[.@l+1] == 0)?"":":");
+			set .@ec_menu$,.@ec_menu$ + "- "+ getitemname(.@c_id[.@l])+" ("+.@c_price[.@l]+") ["+.@c_am[.@l]+"]"+ ( (.@c_id[.@l+1] == 0)?"":":");
 			
 		set .@c,select(.@ec_menu$) - 1;
 		
 		mes .n$;
 		mes "Chosen Item:";
-		mes ( (.@c_refine[.@c] > 0)?"+"+.@c_refine[.@c]+" ":"") + getitemname(.@c_id[.@c]);
+		mes getitemname(.@c_id[.@c]);
 		mes " ";
 		mes "Is this correct?";
 		if(select("- Yes:- No") - 1) close;
 		next;
 		mes .n$;
 		mes "The Item "+getitemname(.@c_id[.@c])+" has been deleted successfully.";
-		query_sql "DELETE FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"' AND `cont_id` = '"+.@c_id[.@c]+"' AND `cont_stock` = '"+.@c_am[.@c]+"' AND `cont_refine` = '"+.@c_refine[.@c]+"' AND `cont_price` = '"+.@c_price[.@c]+"'";
-		getitem2 .@c_id[.@c],.@c_am,1,.@c_refine[.@c],0,0,0,0,0;
-		break;;
+		query_sql "DELETE FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"' AND `cont_id` = '"+.@c_id[.@c]+"' AND `cont_stock` = '"+.@c_am[.@c]+"' AND `cont_price` = '"+.@c_price[.@c]+"'";
+		getitem .@c_id[.@c],.@c_am[.@c];
+		break;
 		
 		// Leave
 		case 5:
 		break;
 	}
-	next;
+	break;
+	
+	case 4:
 	mes .n$;
-	mes "Okay, see ya next time.";
-	close;
+	mes "Do you want to be warped to the Shop Area?";
+	if(select("- Yes:- No") - 1) break;
+	close2;
+	warp .shop_map$,.shop_x,.shop_y;
+	end;
+	
+	case 5:
+	break;
 }
-
+next;
+mes .n$;
+mes "Okay, see ya next time.";
 close;
 
 OnGMAccess:
@@ -487,8 +504,12 @@ mes " 3 = Custom Points";
 mes " Note: For 2 and 3 a list will be displayed after choosing.";
 mes " 4 = Items";
 mes " ";
-input(.@cur_type);
 next;
+if(input(.@cur_type,1,4) != 0) {
+	mes .n$;
+	mes "Invalid Currency";
+	close;
+}
 mes .n$;
 if(.@cur_type == 2 || .@cur_type == 3) {
 	mes "Please choose which points you want to use:";
@@ -499,11 +520,12 @@ if(.@cur_type == 2 || .@cur_type == 3) {
 		for ( set .@c,0; .@c < getarraysize(.c_char_disp$); set .@c,.@c + 1)
 			set .@c_menu$,.@c_menu$ + "- "+.c_char_disp$[.@c]+ ( (.c_char_disp$[.@c] != "")?":":"");
 		
-	set .@c_sel,select(.@c_menu$);
+	set .@c_sel,select(.@c_menu$) - 1;
 	next;
 	mes .n$;
 	mes "Chosen Points:";
 	mes ( (.@cur_type == 2)?.c_cash_disp$[.@c_sel]:.c_char_disp$[.@c_sel]);
+	mes "Your current Balance: "+( (.@cur_type == 2)?getd(""+.c_cash_var$[.@c_sel]):getd(""+.c_char_var$[.@c_sel]) );
 	mes " ";
 	mes "Is this correct?";
 	if(select("- Yes:- No") - 1) close;
@@ -518,6 +540,7 @@ if(.@cur_type == 2 || .@cur_type == 3) {
 		close;
 	}
 	mes "Chosen Item: "+getitemname(.@c_sel);
+	mes "You have "+countitem(.@c_sel)+"x "+getitemname(.@c_sel);
 	mes " ";
 	mes "Is this correct?";
 	if(select("- Yes:- No") - 1) close;
@@ -529,13 +552,13 @@ mes "Maximum: "+( (.@cur_type == 1)?.zeny_pr_max:( (.@cur_type == 2 || .@cur_typ
 input(.@cur_am);
 switch(.@cur_type) {
 	
-	case 1: if(.@pr_new < 1 || .@pr_new > .zeny_pr_max) set .@p,1; break;
+	case 1: if(.@cur_am < 1 || .@cur_am > .zeny_pr_max) set .@p,1; break;
 	case 2: 
 	case 3: 
-	if(.@pr_new < 1 || .@pr_new > .var_pr_max) set .@p,1;	break;
-		
-	case 4: if(.@pr_new < 1 || .@pr_new > .item_pr_max) set .@p,1; break;
+	if(.@cur_am < 1 || .@cur_am > .var_pr_max) set .@p,1;	break;
+	case 4: if(.@cur_am < 1 || .@cur_am > .item_pr_max) set .@p,1; break;
 }
+next;
 mes .n$;
 if(.@p) {
 	mes "I'm sorry, either you put an amount less than 1 or too high.";
@@ -543,10 +566,10 @@ if(.@p) {
 }
 mes "You have succesfully increased the chosen currency.";
 switch(.@cur_type) {
-	case 1: set Zeny,Zeny + @cur_am; break;
-	case 2: setd(""+getvariableofnpc(.c_cash_var$[.@c_sel],"Shop Rental")),getd(""+getvariableofnpc(.c_cash_var$[.@c_sel],"Shop Rental")) + @cur_am; break;
-	case 3: setd(""+getvariableofnpc(.c_char_var$[.@c_sel],"Shop Rental")),getd(""+getvariableofnpc(.c_char_var$[.@c_sel],"Shop Rental")) + @cur_am; break;
-	case 4: getitem .@c_sel,@cur_am; break;
+	case 1: set Zeny,Zeny + .@cur_am; break;
+	case 2: setd(""+getvariableofnpc(.c_cash_var$[.@c_sel],"Shop Rental")),getd(""+getvariableofnpc(.c_cash_var$[.@c_sel],"Shop Rental")) + .@cur_am; break;
+	case 3: setd(""+getvariableofnpc(.c_char_var$[.@c_sel],"Shop Rental")),getd(""+getvariableofnpc(.c_char_var$[.@c_sel],"Shop Rental")) + .@cur_am; break;
+	case 4: getitem .@c_sel,.@cur_am; break;
 }
 close;
 
@@ -555,17 +578,22 @@ set $@Sh_Sys,0;
 set .n$,"["+strnpcinfo(0)+"]";
 if(query_sql("SHOW TABLES LIKE 'shop_owner'",.@sh_tbl) == -1) // Checking if SQL Tables are installed
 	end;
+// ======= Shop Area =======
+// Used to be warped to the Shop Area
+set .shop_map$,"prontera";
+set .shop_x,237;
+set .shop_y,71;
 // ======= Rental Settings =======
-//  > Rental Price Type
+// > Rental Price Type
 // 1 = Zeny
 // 2 = Cash Points
 // 3 = Item (like Coins)
-set .rent_type,1;
+set .rent_type,2;
 // > Item ID for Type 3 (Item)
 if(.rent_type == 3)
 	set .rent_item,512; // Item ID
 // > Rental Price
-set .rent_pr,5000;
+set .rent_pr,5;
 
 // ======= Maximum Item Amount ======
 set .item_am_max,10000;
@@ -599,8 +627,14 @@ setarray .c_char_disp$[0],"Event Points 1","Event Points 2","Event Points 3","Pv
 set .sh_sales,100;
 // Total Shop Spots
 set .sh_sp_total,20;
-// Custom atcommand: @oshop_gm
-bindatcmd "oshop_gm",strnpcinfo(1)+"::OnGMAccess";
+// ======= Shop Deletion Timer =====
+// Values in seconds:
+// > 1 Day = 86400
+// > 1 Week = 604800
+// > 1 Month = 2592000
+set .timer_ct,300;
+// Custom atcommand: @pshop_gm
+bindatcmd "pshop_gm",strnpcinfo(1)+"::OnGMAccess",99,99;
 set $@Sh_Sys,1;
 
 while(set(.@s,.@s + 1) <= .sh_sp_total) {
@@ -609,7 +643,25 @@ while(set(.@s,.@s + 1) <= .sh_sp_total) {
 }
 
 // Every 12 hours > Automatic Spot unlocking
+// And checking for empty Shops by checking the timer
 OnClock0000:
+query_sql "SELECT `shop_id` , `timer` FROM `shop_owner`",.@sh_id,.@timer;
+for ( set .@s,0; .@s < getarraysize(.@sh_id); set .@s,.@s + 1) {
+	query_sql "SELECT `cont_id` , `cont_stock` FROM `shop_content` WHERE `shop_id` = '"+.@sh_id[.@s]+"'",.@c_id,.@c_am;
+	for ( set .@c,0; .@c < getarraysize(.@c_am); set .@c,.@c + 1) 
+		if(!.@c_am[.@c]) set .@e,.@e + 1;
+	
+	debugmes ".@e = "+.@e+", getarraysize(.@c_id): "+getarraysize(.@c_id);
+	if(.@e == getarraysize(.@c_id))
+		if(!.@timer[.@s])
+			query_sql "UPDATE `shop_owner` SET `timer` = '"+gettimetick(2) + .time_ct+"' WHERE `shop_id` = '"+.@sh_id[.@s]+"'";
+		else if(gettimetick(2) >= .@timer[.@s]) {
+			query_sql "DELETE FROM `shop_content` WHERE `shop_id` = '"+.@sh_id[.@s]+"'";
+			query_sql "DELETE FROM `shop_owner` WHERE `shop_id` = '"+.@sh_id[.@s]+"'";
+		} else if(.@e != getarraysize(.@c_id))
+			query_sql "UPDATE `shop_owner` SET `timer` = '0' WHERE `shop_id` = '"+.@sh_id[.@s]+"'";
+}
+
 OnClock1200:
 set .@s,0;
 if(!$@Sh_Sys) end;
@@ -630,22 +682,64 @@ else {
 	}
 }
 end;
+
+OnPCLoginEvent:
+query_sql "SELECT `shop_id` , `timer` FROM `shop_owner` WHERE `acc_id` = '"+getcharid(3)+"'",.@sh_id,.@timer;
+if(!.@sh_id) end;
+query_sql "SELECT `cont_id` , `cont_stock` FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"'",.@c_id,.@c_am;
+if(!getarraysize(.@c_am)) {
+	if(!.@timer)
+		query_sql "UPDATE `shop_owner` SET `timer` = '"+gettimetick(2) + .time_ct+"' WHERE `acc_id` = '"+getcharid(3)+"'";
+	else if(gettimetick(2) >= .@timer) {
+		dispbottom .n$+": Your Shop is getting deleted now.";
+		query_sql "SELECT `balance` , `cur_type` , `cur_ix` FROM `shop_owner` WHERE `acc_id` = '"+getcharid(3)+"'",.@bal,.@cur_type,.@cur_ix;
+		if(.@bal) {
+			dispbottom .n$+": Your Balance is getting transfered: "+.@bal+"x "+ ( (.@cur_type == 1)?"Zeny":( (.@cur_type == 2)?.c_cash_disp$[.@cur_ix]: ( (.@cur_type == 3)?.c_char_disp$[.@cur_ix]:getitemname(.@cur_ix) ) ) );
+			next;
+			switch(.@cur_type) {
+				case 1: set Zeny,Zeny + .@bal; break;
+				case 2: setd(""+.c_cash_var$[.@cur_ix]),getd(""+.c_cash_var$[.@cur_ix]) + .@bal; break;
+				case 3: setd(""+.c_char_var$[.@cur_ix]),getd(""+.c_char_var$[.@cur_ix]) + .@bal; break;
+				case 4: getitem .@cur_ix,.@bal; break;
+			}
+		}
+		query_sql "DELETE FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"'";
+		query_sql "DELETE FROM `shop_owner` WHERE `acc_id` = '"+getcharid(3)+"'";
+		end;
+	}
+	set .@time_cur,gettimetick(2);
+	dispbottom .n$+": Your Shop Stock is currently empty, you have "+(.@timer-.@time_cur)/1000%24+" Hours, "+(.@timer-.@time_cur)/1000%24%60+" Minutes and "+(.@timer-.@time_cur)/1000%24%60%60+" Seconds left until your shop gets removed.";
+	end;
+}
+if(.@timer) 
+	query_sql "UPDATE `shop_owner` SET `timer` = '0' WHERE `acc_id` = '"+getcharid(3)+"'";
+	
+for ( set .@l,0; .@l < getarraysize(.@c_id); set .@l,.@l + 1)
+	dispbottom "> "+.@c_am[.@l]+"x "+getitemname(.@c_id[.@l]);
+end;
 }
 // Shop Spot Template
 -	script	Shop Spot 0#0::shop_rent	-1,{
 
-mes "[Shop Spot#"+strnpcinfo(2)+"]";
-query_sql "SELECT `shop_name` , `char_name` , `cur_type` , `cur_ix` FROM `shop_owner` WHERE `shop_id` = '"+strnpcinfo(2)+"'",.@sh_n$,.@sh_char$,@cur_type,@cur_ix;
-if(.@sh_n$[0] == "") {
+query_sql "SELECT `char_name` , `cur_type` , `cur_ix` FROM `shop_owner` WHERE `shop_id` = '"+strnpcinfo(2)+"'",.@sh_char$,@cur_type,@cur_ix;
+if(.sh_n$[0] == "") {
+	mes "[Shop Spot#"+strnpcinfo(2)+"]";
 	mes "This is currently a free shop spot.";
 	mes "You can rent an spot for your own personal shop.";
 	close;
 }
-mes "[ === "+.@sh_n$+" === ]";
+mes "[ === "+.sh_n$+" === ]";
 mes "Owner: "+.@sh_char$;
 mes "Currency: "+ ( (@cur_type == 1)?"Zeny":( (@cur_type == 2)?getvariableofnpc(.c_cash_disp$[@cur_ix],"Shop Rental"): ( (@cur_type == 3)?getvariableofnpc(.c_char_disp$[@cur_ix],"Shop Rental"):getitemname(@cur_ix) ) ) );
-query_sql "SELECT `cont_id` , `cont_price` , `cont_refine` , `cont_stock` FROM `shop_content` WHERE `shop_id` = '"+strnpcinfo(2)+"'",@cont_id,@cont_pr,@cont_refine,@cont_am;
-if(!getarraysize(@cont_id)) {
+mes "Your Balance:";
+switch(@cur_type) { // Preventing buildin_countitem error from using short-ifs
+	case 1: mes Zeny+"x Zeny"; break;
+	case 2: mes getd(""+getvariableofnpc(.c_cash_var$[@cur_ix],"Shop Rental"))+"x "+getvariableofnpc(.c_cash_disp$[@cur_ix],"Shop Rental"); break;
+	case 3: mes getd(""+getvariableofnpc(.c_char_var$[@cur_ix],"Shop Rental"))+"x "+getvariableofnpc(.c_char_disp$[@cur_ix],"Shop Rental"); break;
+	case 4: mes countitem(@cur_ix)+"x "+getitemname(@cur_ix); break;
+}
+query_sql "SELECT `cont_id` , `cont_price` , `cont_stock` FROM `shop_content` WHERE `shop_id` = '"+strnpcinfo(2)+"'",@cont_id,@cont_pr,@cont_am;
+if(!getarraysize(@cont_id) || !getarraysize(@cont_am)) {
 	mes " ";
 	mes "But currently there are no items in stock yet.";
 	mes "Please come back later.";
@@ -653,41 +747,25 @@ if(!getarraysize(@cont_id)) {
 }
 next;
 if(select("- Open Shop:- Leave") - 1) close;
-mes .n$;
+mes "[ === "+.sh_n$+" === ]";
 mes "I will display in your \"Chat Box\" the correct item list.";
 close2;
 set @cost,0;
 set @total,0;
 deletearray @bought_nameid[0],128;
 deletearray @bought_quantity[0],128;
-dispbottom .@n$+": Your Balance: "+ ( (@cur_type == 1)?Zeny+"x Zeny":(@cur_type == 2)?getd(""+getvariableofnpc(.c_cash_var$[@cur_ix],"Shop Rental"))+"x "+getvariableofnpc(.c_cash_disp$[@cur_ix],"Shop Rental"): ( (@cur_type == 3)?getd(""+getvariableofnpc(.c_char_var$[@cur_ix],"Shop Rental"))+"x "+getvariableofnpc(.c_char_disp$[@cur_ix],"Shop Rental"):countitem(@cur_ix)+"x "+getitemname(@cur_ix) ) );
-dispbottom "[ === "+.@sh_n$+" - Stock === ]";
+// Reseting the shop
+npcshopitem "PlayerShop",512,1,1;
+npcshopdelitem "PlayerShop",512;
 
-switch(@cur_type) {
-	// Determining which kind of Shop should be "called"
-	case 1: set @ShopType$,"GeneralShop"; break;
-	case 2: set @ShopType$,"CashShop"; break;
-	case 3: set @ShopType$,"EventPointShop"+@cur_ix; break;
-	case 4: set @ShopType$,"GeneralShop"; break;
-}
-
-if(@cont_am[0]) {
-	if(@ShopType$ == "GeneralShop")
-		npcshopitem @ShopType$,@cont_id[0],@cont_pr[0],@cont_am[0];
-	else
-		npcshopitem @ShopType$,@cont_id[0],@cont_pr[0];
-	dispbottom " > "+@cont_am[0]+"x "+( (@cont_refine[0] > 0)?"+ "+@cont_refine[0]+" ":"") + getitemname(@cont_id[0])+" = "+@cont_pr[0]+" each";
-}
-for ( set .@b,1; .@b <= getarraysize(@cont_id); set .@b,.@b + 1) {
+dispbottom "[ === "+@sh_n$+" - Stock === ]";
+for ( set .@b,0; .@b <= getarraysize(@cont_id); set .@b,.@b + 1) {
 	if(!@cont_am[.@b]) continue;
-	if(@ShopType$ == "GeneralShop")
-		npcshopadditem @ShopType$,@cont_id[.@b],@cont_pr[.@b],@cont_am[.@b];
-	else
-		npcshopadditem @ShopType$,@cont_id[.@b],@cont_pr[.@b];
-	dispbottom " > "+@cont_am[.@b]+"x "+( (@cont_refine[.@b] > 0)?"+ "+@cont_refine[.@b]+" ":"") + getitemname(@cont_id[.@b])+" = "+@cont_pr[.@b]+" each";
+	npcshopadditem "PlayerShop",@cont_id[.@b],@cont_pr[.@b],@cont_am[.@b];
+	dispbottom " > "+@cont_am[.@b]+"x " + getitemname(@cont_id[.@b])+" = "+@cont_pr[.@b]+" each";
 }
-callshop @ShopType$,1;
-npcshopattach @ShopType$;
+callshop "PlayerShop",1;
+npcshopattach "PlayerShop";
 end;
 
 OnBuyItem:
@@ -695,48 +773,62 @@ for ( set .@b,0; .@b < getarraysize(@bought_nameid); set .@b,.@b + 1) {
 	for ( set .@l,0; .@l < getarraysize(@cont_id); set .@l,.@l + 1) {
 		if(@bought_nameid[.@b] == @cont_id[.@l]) {
 			if(@bought_quantity[.@b] > @cont_am[.@l]) {
-				dispbottom .@sh_n$+": I'm sorry, but I don't have the wanted quantity of the item \""+getitemname(@cont_id[.@l])+"\".";
+				dispbottom .sh_n$+": I'm sorry, but I don't have the wanted quantity of the item \""+getitemname(@cont_id[.@l])+"\".";
 				end;
 			}
 			if(checkweight(@cont_id[.@l],@bought_quantity[.@b]) == 1) {
 				set @cost,@cont_pr[.@l]*@bought_quantity[.@b];
 				set @total,@total+@cost;
 			} else {
-				dispbottom .@sh_n$+": You would be overweight, please remove some items or buy less.";
+				dispbottom .sh_n$+": You would be overweight, please remove some items or buy less.";
 				end;
 			}
 		}
 	}
 }
 switch(@cur_type) {
-	case 1: if(@total > Zeny) { dispbottom .@n$+": You don't have enough Zeny."; set .@f,1; } break;
-	case 2: if(@total > getd(""+getvariableofnpc(.c_cash_var$[@cur_ix],"Shop Rental")) ) { dispbottom .@n$+": You don't have enough "+getvariableofnpc(.c_cash_disp$[@cur_ix],"Shop Rental")+"."; set .@f,1; } break;
-	case 3: if(@total > getd(""+getvariableofnpc(.c_char_var$[@cur_ix],"Shop Rental")) ) { dispbottom .@n$+": You don't have enough "+getvariableofnpc(.c_char_disp$[@cur_ix],"Shop Rental")+"."; set .@f,1; } break;
-	case 4: if(@total > countitem(@cur_ix)) { dispbottom .@n$+": You don't have enough "+getitemname(@cur_ix)+"."; set .@f,1; } break;
-}
-if(.@f) {
-	dispbottom .@sh_n$+": You need a total of "+@total+"!";
-	end;
-}
-
-switch(@cur_type) {
-	case 1: set Zeny,Zeny - @total; break;
-	case 2: setd(""+getvariableofnpc(.c_cash_var$[@cur_ix],"Shop Rental")),getd(""+getvariableofnpc(.c_cash_var$[@cur_ix],"Shop Rental")) - @total; break;
-	case 3: setd(""+getvariableofnpc(.c_char_var$[@cur_ix],"Shop Rental")),getd(""+getvariableofnpc(.c_char_var$[@cur_ix],"Shop Rental")) - @total; break;
-	case 4: delitem @cur_ix,@total; break;
+	case 1:
+	if(@total > Zeny) { 
+		dispbottom .sh_n$+": You don't have enough Zeny, you need "+@total+"!";
+		end;
+	}
+	set Zeny,Zeny - @total;
+	dispbottom .sh_n$+": You have paied "+@total+"x Zeny";
+	break;
+	
+	case 2:
+	if(@total > getd(""+getvariableofnpc(.c_cash_var$[@cur_ix],"Shop Rental")) ) {
+		dispbottom .sh_n$+": You don't have enough "+getvariableofnpc(.c_cash_disp$[@cur_ix],"Shop Rental")+", you need "+@total+"!";
+		end; 
+	}
+	setd(""+getvariableofnpc(.c_cash_var$[@cur_ix],"Shop Rental")),getd(""+getvariableofnpc(.c_cash_var$[@cur_ix],"Shop Rental")) - @total;
+	dispbottom .sh_n$+": You have paied "+@total+"x "+getvariableofnpc(.c_cash_disp$[@cur_ix],"Shop Rental");
+	break;
+	
+	case 3:
+	if(@total > getd(""+getvariableofnpc(.c_char_var$[@cur_ix],"Shop Rental")) ) {
+		dispbottom .sh_n$+": You don't have enough "+getvariableofnpc(.c_char_disp$[@cur_ix],"Shop Rental")+", you need "+@total+"!";
+		end;
+	}
+	setd(""+getvariableofnpc(.c_char_var$[@cur_ix],"Shop Rental")),getd(""+getvariableofnpc(.c_char_var$[@cur_ix],"Shop Rental")) - @total;
+	dispbottom .sh_n$+": You have paied "+@total+"x "+getvariableofnpc(.c_char_disp$[@cur_ix],"Shop Rental");
+	break;
+	
+	case 4:
+	if(@total > countitem(@cur_ix)) {
+		dispbottom .sh_$+": You don't have enough "+getitemname(@cur_ix)+", you need "+@total+"!";
+		end;
+	}
+	delitem @cur_ix,@total;
+	dispbottom .sh_n$+": You have paied "+@total+"x "+getitemname(@cur_ix);
+	break;
 }
 for ( set .@s,0; .@s < getarraysize(@bought_nameid); set .@s,.@s + 1) {
-	// Checking if bought Item is an equipment
-	if(getiteminfo(@bought_nameid[.@s],2) == 4 || getiteminfo(@bought_nameid[.@s],2) == 5)
-		getitem2 @cont_id[.@r],@bought_quantity[.@s],1,@cont_refine[.@r],0,0,0,0,0;
-	else 
-		getitem @bought_nameid[.@s],@bought_quantity[.@s];
-		
+	getitem @bought_nameid[.@s],@bought_quantity[.@s];
 	query_sql "UPDATE `shop_content` SET `cont_stock` = `cont_stock` - '"+@bought_quantity[.@s]+"' WHERE `shop_id` = '"+strnpcinfo(2)+"' AND `cont_id` = '"+@bought_nameid[.@s]+"'";
-	dispbottom .@sh_n$+": You have succesfully purchased "+@bought_quantity[.@s]+"x "+getitemname(@bought_nameid[.@s])+".";
+	dispbottom .sh_n$+": You have succesfully purchased "+@bought_quantity[.@s]+"x "+getitemname(@bought_nameid[.@s])+".";
 	query_sql "UPDATE `shop_owner` SET `sales` = `sales` + '"+@bought_quantity[.@s]+"' WHERE `shop_id` = '"+strnpcinfo(2)+"'";
 }
-dispbottom .@sh_n$+": You have paied "+@total+"x "+ ( (@cur_type == 1)?"Zeny":( (@cur_type == 2)?getvariableofnpc(.c_cash_disp$[@cur_ix],"Shop Rental"): ( (@cur_type == 3)?getvariableofnpc(.c_char_disp$[@cur_ix],"Shop Rental"):getitemname(@cur_ix) ) ) );
 query_sql "UPDATE `shop_owner` SET `balance` = `balance` + '"+@total+"' WHERE `shop_id` = '"+strnpcinfo(2)+"'";
 end;
 
@@ -745,6 +837,7 @@ if(.Enable == 0) {
 	enablenpc strnpcinfo(0);
 	set .Enable,1;
 }
+OnShopReLoad:
 if(getwaitingroomstate(3) == 0)
 	delwaitingroom;
 query_sql "SELECT `shop_name` FROM `shop_owner` WHERE `shop_id` = '"+strnpcinfo(2)+"'",.sh_n$;
@@ -776,16 +869,5 @@ prontera,244,68,0	duplicate(shop_rent)	Shop Spot 18#18	837
 prontera,244,66,0	duplicate(shop_rent)	Shop Spot 19#19	837 
 prontera,244,64,0	duplicate(shop_rent)	Shop Spot 20#20	837 
 
-// Shops
-// General Store
--	marketshop	GeneralShop	-1,512:-1:1
-// Point Shops
-// = You can edit the Variable Names to your need, so that they match the content of ".c_char_var$"
-// = You also may add more shops, but that needs a bit more modification
--	pointshop	EventPointShop1	-1,EventPoints1,512:-1
--	pointshop	EventPointShop2	-1,EventPoints2,512:-1
--	pointshop	EventPointShop3	-1,EventPoints3,512:-1
--	pointshop	PvPShop	-1,PvPPoints,512:-1
--	pointshop	WoEShop	-1,WoEPoints,512:-1
-// Cash Shop
--	cashshop	CashShop	-1,512:-1
+// Shop
+-	marketshop	PlayerShop	-1,512:-1:1

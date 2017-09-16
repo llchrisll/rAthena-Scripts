@@ -30,6 +30,23 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2017/09/16
+= Added Fame System v1.3 [MOD] to "updating"
+- Added the feature to add more classes by adding the "BaseJob" value to .classes array
+- Removed in the FAME_FUNC the "Recreate Shop after Edit" part
+= Updated Dungeon Quest Service v1.0 [WIP]
+- Just a small Header change
+= Updated PvP-GvG-MvP Arena v1.6 [MOD]
+- Same as above
+= Updated Player Shops v1.0 [WIP]
+- Added an Timer, which checks for empty shops and after some time deletes them.
+- Fixed some bugs with Recieving your balance
+- Removed `cont_refine` from the SQL Table; Can't sell equipment anymore
+- Fixed bugs at "Add Item" in Shop management regarding the arrays
+- Added an Warp to the Shop Area, extra variables are given
+- Added an LoginEvent to show the Shop Stock
+- Removed the multiple shops, didn't work as intented
+------------------------------------------------------------------------------------------------------------------------
 * 2017/09/12
 = Updated Dungeon Quest Service v1.0 [WIP]
 - Added Dungeon Data into the SQL Table

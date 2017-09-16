@@ -46,9 +46,9 @@
 //        Reduced GvG Maps to 3
 //        Removed the functions getPvPMapUsers and getPartyMapUsers
 //===== Compatible With ======================================
-//= Every rAthena Version [SQL]
+//= rAthena SQL 09/26-2015 Revision and later
 //===== Tested With ==========================================
-//= rAthena 17267 SQL Trunk 
+//= rAthena SQL 09/26-2015 Revision
 //===== Description ==========================================
 //= PvP / GvG Arenas with ranking ladder & MvP Ranker.
 //= PvP Types:
@@ -1023,11 +1023,10 @@ if($@pvp_map == 2) {
 			setd("$"+.@pre$[.@l]+"pvp_last"),getd("$@"+.@pre[.@l]+"pvp_map");
 			
 		for ( set .@t,1; .@t <= getarraysize(getd("$@"+.@pre$[.@l]+"pvp$")); set .@t,.@t + 1) 
-			if(getd("$@"+.@pre$[.@l]+"pvp_day[.@t] == gettime(4)) {
+			if(getd("$@"+.@pre$[.@l]+"pvp_day[.@t]") == gettime(4)) {
 				setd("$@"+.@pre[.@l]+"pvp_map"),.@t;
 				setd("$"+.@pre[.@l]+"pvp_last"),.@t;
 			}
-
 	}
 }
 end;
