@@ -30,6 +30,20 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2017/09/21
+= Updated Fame System v1.3 [MOD]
+- Added an GM Option to see their Class Values
+- Text optimizations
+- Fixed ranking
+- Commented my debug messages
+- Added an extra check at OnNPCKillEvent for an active Fame Quest
+- Fixed some missing changes for the .classes array
+- Changed the SQL check for the ranking to use `class` instead of `fame`, preventing double entries because `fame` can become '0' after all
+= Updated Dungeon Quest Service v1.0 [WIP]
+- Finally fixxed those "Unknown NPC" errors and dynamic menus
+- Fixxed an bug in the Quest Management
+= Updated Project_List.txt
+------------------------------------------------------------------------------------------------------------------------
 * 2017/09/16
 = Added Fame System v1.3 [MOD] to "updating"
 - Added the feature to add more classes by adding the "BaseJob" value to .classes array

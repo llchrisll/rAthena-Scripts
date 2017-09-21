@@ -872,7 +872,7 @@ OnGMAccess:
 mes "Note: Changes in the \"System Settings\" and \"Dungeon Points Management\" will only stay changed until the Server Restarts or \"@reloadscript\" is used.";
 mes "To make the changes stay, you have to change them in the script file itself.";
 next;
-switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dungeon Points Management:- Nevermid")) {
+switch(select("- System Settings:- Dungeon Management:- Quest Management:- Reward Management:- Nevermid")) {
 
 	// System Settings = OnInit
 	case 1:
@@ -880,7 +880,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 	mes "What would you like to change?";
 	mes "Note: If available the content of an \"()\" means the current setting!!!";
 	next;
-	switch(select("- Debug Mode ("+( (.debug)?"Online":"Offline")+"):- Dungeon Settings:- Quest Settings:- Nevermind")) {
+	switch(select("- Debug Mode ("+( (.debug)?"Actived":"Deactivated")+"):- Dungeon Settings:- Quest Settings:- Nevermind")) {
 	
 		case 1:
 		mes .n$;
@@ -894,10 +894,10 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 		
 		// Dungeon Settings
 		case 2:
-		mes .n$;
-		mes "[ == Dungeon Settings == ]";
-		mes "Please choose which setting about the Dungeons you want to change:";
-		while(@menu != 255) {
+		while(1) {
+			mes .n$;
+			mes "[ == Dungeon Settings == ]";
+			mes "Please choose which setting about the Dungeons you want to change:";
 			next;
 			switch(prompt("- EXP Settings:- Repeat Settings")) {
 				
@@ -931,17 +931,15 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				mes "The EXP Rate for "+ ( (.@e == 1)?"Easy":( (.@e == 2)?"Medium":"Hard") )+" has been changed successfully.";
 				setarray .exp[.@e],.@e_new;
 				continue;
-				break;
 				
 				// Repeat Settings
 				case 2:
-				mes .n$;
-				mes "[ == Repeat Settings == ]";
-				mes "Please select an option from below:";
-				next;
 				while(1) {
+					mes .n$;
+					mes "[ == Repeat Settings == ]";
+					mes "Please select an option from below:";
 					next;
-					switch(prompt("- Max Repeat Limit ("+.dg_max_limit+"):- Delay Type")) {
+					switch(prompt("- Max Repeat Limit ("+.dg_max_limit+"):- Delay Type:- Previous Menu")) {
 					
 						// Max Repeat Limit
 						case 1:
@@ -967,7 +965,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 						mes "The Maximum Repeat Limit has been changed successfully.";
 						set .dg_max_limit,.@rep_new;
 						continue;
-						break;
 						
 						// Delay Type
 						case 2:
@@ -997,9 +994,8 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 						mes "The Delay Type has been changed successfully.";
 						set .dg_del_type,.@del_new;
 						continue;
-						break;
 						
-						// Repeat Settings - Default
+						// Repeat Settings - Previous Menu
 						default:
 						break;
 					} // End of Repeat Settings - switch(prompt())
@@ -1007,22 +1003,22 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 					
 				} // End of Repeat Settings - while(1)
 				continue;
-				break;
 				
-				// Dungeon Settings - Default
+				// Dungeon Settings - Cancel
 				default:
 				break;
+			
 			} // End of Dungeon Settings - switch(prompt())
 			break;
-		} // End of Dungeon Settings Settings - while(1)
+		} // End of Dungeon Settings - while(1)
 		break;
 		
 		// Quest Settings
 		case 3:
-		mes .n$;
-		mes "[ == Quest Settings ==]";
-		mes "Please choose which setting about the quests you want to change:";
 		while(1) {
+			mes .n$;
+			mes "[ == Quest Settings ==]";
+			mes "Please choose which setting about the quests you want to change:";
 			next;
 			switch(prompt("- Max Level Requirement ("+.level+"):- Monster Hunting:- Item Collecting:- Max Reward Settings")) {
 			
@@ -1050,7 +1046,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				mes "The Max Level Requirement has been changed successfully.";
 				set .level,.@lvl_new;
 				continue;
-				break;
 				
 				// Monster Hunting
 				case 2:
@@ -1089,7 +1084,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				set .mob_max,.@mob_max;
 				set .mob_ct,.@mob_ct;
 				continue;
-				break;
 				
 				// Item Collecting
 				case 3:
@@ -1128,7 +1122,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				set .item_max,.@item_max;
 				set .item_ct,.@item_ct;
 				continue;
-				break;
 				
 				// Max Reward Settings
 				case 4:
@@ -1167,7 +1160,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				set .rew_item,.@rew_item;
 				set .rew_weight,.@rew_weight;
 				continue;
-				break;
 				
 				// Quest Settings - Default
 				default:
@@ -1195,7 +1187,10 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 	for ( set .@d,0; .@d < getarraysize(.@dg_id); set .@d,.@d + 1)
 		mes .@dg_id[.@d]+" - "+.@dg_name$[.@d]+" - "+.@floor[.@d];
 		
+	next;
 	while(1) {
+		mes .n$;
+		mes "What do you want to do?";
 		next;
 		switch(prompt("- Add Dungeon:- Edit Dungeon:- Delete Dungeon")) {
 			
@@ -1338,7 +1333,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			mes "You have successfully added the \""+.@d_name$+"\" "+( (compare(.@d_name$,"Dungeon") == 1)?" ":"Dungeon ")+"with the ID "+.@id+" to the database.";
 			for ( set .@a,0; .@a < getarraysize(.@floor_map$); set .@a,.@a + 1)
 				query_sql "INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '"+.@id+"' , '"+escape_sql(.@d_name$)+"' , '"+.@d_diff+"' , '"+.@d_level+"' , '"+.@d_plimit+"' , '"+(.@a + 1)+"' , '"+.@floor_map$[.@a]+"' , '"+.@floor_x[.@a]+"' , '"+.@floor_y[.@a]+"' , '"+.@d_repeat+"' , '"+.@d_stat+"' , '"+.@d_renewal+"' )";
-			break;
+			continue;
 		
 			// Edit Dungeon
 			case 2:
@@ -1355,11 +1350,11 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			mes "Is this correct?";
 			if(select("- Yes:- No") - 1) continue;
 			next;
-			mes .n$;
-			mes "Now choose what you want to edit:";
 			while(1) {
-				query_sql "SELECT `name` , `difficulty` , `req_level` , `pty_limit` , `repeat` , `status` , `renewal` FROM `dqs_dungeon` WHERE `dg_id` = '"+.@dg_id[.@ed]+"'",.@ed_name$,.@ed_diff,.@ed_lvl,.@ed_plimit,.@ed_rep,.@ed_stat,.@ed_renewal;
+				mes .n$;
+				mes "Now choose what you want to edit:";
 				next;
+				query_sql "SELECT `name` , `difficulty` , `req_level` , `pty_limit` , `repeat` , `status` , `renewal` FROM `dqs_dungeon` WHERE `dg_id` = '"+.@dg_id[.@ed]+"'",.@ed_name$,.@ed_diff,.@ed_lvl,.@ed_plimit,.@ed_rep,.@ed_stat,.@ed_renewal;
 				switch(prompt("- Dungeon Name:- Difficulty:- Required Level:- Party Limit:- Floor Settings:- Repeat Limit:- Status:- Renewal")) {
 				
 					// Dungeon Name
@@ -1379,7 +1374,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 					mes "The Dungeon Name \""+.@ed_name$+"\" has been successfully changed to \""+.@d_name$+"\".";
 					query_sql "UPDATE `dqs_dungeon` SET `name` = '"+escape_sql(.@d_name$)+"' WHERE `dg_id` = '"+.@dg_id[.@ed]+"'";
 					continue;
-					break;
 					
 					// Difficulty
 					case 2:
@@ -1407,7 +1401,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 					mes "The Difficulty has been successfully changed to \""+.@d_diff+"\".";
 					query_sql "UPDATE `dqs_dungeon` SET `difficulty` = '"+.@d_diff+"' WHERE `dg_id` = '"+.@dg_id[.@ed]+"'";
 					continue;
-					break;
 					
 					// Required Level
 					case 3:
@@ -1426,7 +1419,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 					mes "The Level Requirement has been successfully changed to \""+.@d_lvl+"\".";
 					query_sql "UPDATE `dqs_dungeon` SET `req_level` = '"+.@d_lvl+"' WHERE `dg_id` = '"+.@dg_id[.@ed]+"'";
 					continue;
-					break;
 					
 					// Party Limit
 					case 4:
@@ -1445,13 +1437,12 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 					mes "The Party Limit has been successfully changed to \""+.@d_plimit+"\".";
 					query_sql "UPDATE `dqs_dungeon` SET `pty_limit` = '"+.@d_plimit+"' WHERE `dg_id` = '"+.@dg_id[.@ed]+"'";
 					continue;
-					break;
 					
 					// Floor Settings
 					case 5:
-					mes .n$;
-					mes "Please choose below what you want to do next:";
 					while(1) {
+						mes .n$;
+						mes "Please choose below what you want to do next:";
 						next;
 						deletearray .@fl_id,getarraysize(.@fl_id);
 						deletearray .@fl_map$[0],getarraysize(.@fl_map$);
@@ -1496,7 +1487,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 							mes "Map Data for the Floor #"+.@f_id+" has been added.";
 							query_sql "INSERT INTO `dqs_dungeon` ( `dg_id` , `name` , `difficulty` , `req_level` , `pty_limit` , `floor` , `map_name` , `map_x` , `map_y` , `repeat` , `status` , `renewal` ) VALUES ( '"+.@dg_id[.@ed]+"' , '"+escape_sql(.@ed_name$)+"' , '"+.@ed_diff+"' , '"+.@ed_lvl+"' , '"+.@ed_plimit+"' , '"+.@f_id+"' , '"+.@f_map$+"' , '"+.@f_x+"' , '"+.@f_y+"' , '"+.@ed_rep+"' , '"+.@ed_stat+"' )";
 							continue;
-							break;
 							
 							// Edit Floor
 							case 2:
@@ -1539,7 +1529,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 							mes "Map Data for the Floor #"+.@fl_id[.@f_ed]+" has been added."; 
 							query_sql "UPDATE `dqs_dungeon` SET `map_name` = '"+.@f_map$+"' , `map_x` = '"+.@f_x+"', `map_y` = '"+.@f_y+"' WHERE `dg_id` = '"+.@dg_id[.@ed]+"' AND `floor` = '"+.@fl_id[.@f_ed]+"'";
 							continue;
-							break;
 							
 							// Delete Floor
 							case 3:
@@ -1562,7 +1551,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 							mes "The floor with the ID#"+.@fl_id[.@f_del]+" has been deleted.";
 							query_sql "DELETE FROM `dqs_dungeon` WHERE `dg_id` = '"+.@dg_id[.@ed]+"' AND `floor` = '"+.@fl_id[.@f_del]+"'";
 							continue;
-							break;
 							
 							// Floor Settings - Default
 							default:
@@ -1571,7 +1559,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 						break;
 					} // End of Floor Settings while(1)
 					continue;
-					break;
 					
 					// Repeat Limit
 					case 6:
@@ -1596,7 +1583,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 					mes "The Repeat Limit has been successfully changed to \""+.@d_rep+"\".";
 					query_sql "UPDATE `dqs_dungeon` SET `repeat` = '"+.@d_rep+"' WHERE `dg_id` = '"+.@dg_id[.@ed]+"'";
 					continue;
-					break;
 					
 					// Status
 					case 7:
@@ -1621,7 +1607,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 					mes "The Status has been successfully changed to \""+.@d_stat+"\".";
 					query_sql "UPDATE `dqs_dungeon` SET `status` = '"+.@d_stat+"' WHERE `dg_id` = '"+.@dg_id[.@ed]+"'";
 					continue;
-					break;
 					
 					// Renewal 
 					case 8:
@@ -1647,17 +1632,15 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 					mes "The Renewal Restriction has been successfully changed to \""+.@d_renewal+"\".";
 					query_sql "UPDATE `dqs_dungeon` SET `renewal` = '"+.@d_renewal+"' WHERE `dg_id` = '"+.@dg_id[.@ed]+"'";
 					continue;
-					break;
 	
 					// Dungeon Edit Options - Default
 					default:
 					break;
 				} // End of Dungeon Edit Options - switch(prompt())
 				break;
-	
-			
+				
 			} // End of Dungeon Edit Options - while(1)
-			break;
+			continue;
 			
 			// Delete Dungeon
 			case 3:
@@ -1682,10 +1665,10 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			// Deleting Delay Variables from the database
 			query_sql "DELETE FROM `global_reg_value` WHERE `str` = 'DG_"+.@dg_id[.@q]+"_RepeatCT'";
 			query_sql "DELETE FROM `global_reg_value` WHERE `str` = 'DG_"+.@dg_id[.@q]+"_RepeatTimer'";
-			break;
+			continue;
 			
 			// Dungeon Management Options - Cancel Button
-			case 255:
+			default:
 			break;
 			
 		} // End of Dungeon Management - switch(prompt())
@@ -1698,11 +1681,12 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 	mes .n$;
 	mes "Here is a list of all the available quests ordered by Dungeon:";
 	mes " ";
-	query_sql "SELECT DISTINCT `dg_id` , `name` , count( `quest_id` ) FROM `dqs_list` GROUP BY `dg_id` ASC",.@dg_id,.@dg_name$,.@q_ct;
+	query_sql "SELECT DISTINCT `dg_id` , `name` FROM `dqs_dungeon` GROUP BY `dg_id` ASC",.@dg_id,.@dg_name$;
 	mes "Dungeon ID - Dungeon Name - Quest Quantity";
 	for ( set .@q,0; .@q < getarraysize(.@dg_id); set .@q,.@q + 1) {
-		mes .@dg_id[.@q]+" - "+.@dg_name$[.@q]+" - "+.@q_ct[.@q];
-		set .@dg_menu$,.@dg_menu$ + "- "+.@dg_name$[.@q]+ ( (.@dg_name$[.@q+1] != "")?":":"");
+		query_sql "SELECT DISTINCT count( `quest_id` ) FROM `dqs_list` WHERE `dg_id` = '"+.@dg_id[.@q]+"'",.@q_ct;
+		mes .@dg_id[.@q]+" - "+.@dg_name$[.@q]+" - "+.@q_ct;
+		set .@dg_menu$,.@dg_menu$ + "- "+.@dg_name$[.@q]+ ( (.@dg_id[.@q+1] != 0)?":":"");
 	}
 	next;
 	mes .n$;
@@ -1714,9 +1698,9 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 	mes "Is this correct?";
 	if(select("- Yes:- No") - 1) close;
 	next;
-	mes .n$;
-	mes "What do you like to do now?";
 	while(1) {
+		mes .n$;
+		mes "What do you like to do now?";
 		next;
 		deletearray .@q_req1[0],getarraysize(.@q_req1);
 		deletearray .@q_req2[0],getarraysize(.@q_req2);
@@ -1727,7 +1711,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			mes .n$;
 			if(query_sql("SELECT DISTINCT`quest_id` FROM `dqs_list` WHERE `dg_id` = '"+.@dg_id[.@q]+"'",.@q_list) >= .array) {
 				mes "I'm sorry, but you can't add anymore quests to this Dungeon, please try another one.";
-				close;
+				continue;
 			}
 			for ( set .@q,0; .@q <= getarraysize(.@q_id); set .@q,.@q + 1)
 				if(.@q_id[.@d] != (.@q+1)) break;
@@ -1750,7 +1734,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 					next;
 					mes .n$;
 					mes "Invalid Amount, please try again.";
-					close;
+					continue;
 				}
 				next;
 				mes .n$;
@@ -1796,7 +1780,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 					next;
 					mes .n$;
 					mes "Invalid Amount, please try again.";
-					close;
+					continue;
 				}
 				next;
 				mes .n$;
@@ -1887,7 +1871,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 					query_sql "INSERT INTO `dqs_list` ( `dg_id` , `quest_id` , `quest_type` , `item_id` , `item_am` , `reward_id` , `reward_am` ) VALUES ( '"+.@dg_id[.@q]+"', '"+.@id+"' , '"+.@type+"' , '"+.@q_req1[.@r]+"' , '"+.@q_req2[.@r]+"' , '"+.@rew_1+"' , '"+.@rew_2+"')";
 			mes "The Quest ID#"+.@id+" has been added successfully.";
 			continue;
-			break;
 			
 			// Deleting Quests
 			case 2:
@@ -1895,7 +1878,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			query_sql "SELECT DISTINCT `quest_id` FROM `dqs_list` WHERE `dg_id` = '"+.@dg_id[.@q]+"'",.@q_list;
 			if(getarraysize(.@q_list) < 1) {
 				mes "I'm sorry, but you can't remove quests from this Dungeon, because there are none yet. Please try another one.";
-				close;
+				continue;
 			}
 			mes "Please choose, which Quest you want to remove:";
 			for ( set .@q,0; .@q < getarraysize(.@q_list); set .@q,.@q + 1) 
@@ -1904,28 +1887,28 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 			set .@rem,select(.@r_menu$) - 1;
 			mes .n$;
 			mes "Do you really want to remove the Quest with the ID '"+.@q_list[.@rem]+"'?";
-			if(select("- Yes:- No") - 1) close;
+			if(select("- Yes:- No") - 1) continue;
 			next;
 			mes .n$;
 			mes "The Quest with the ID '"+.@q_list[.@rem]+"' has been removed successfully.";
 			query_sql "DELETE FROM `dqs_list` WHERE `dg_id` = '"+.@dg_id[.@q]+"' AND `quest_id` = '"+.@q_list[.@rem]+"'";
 			query_sql "DELETE FROM `dqs_party` WHERE `dg_id` = '"+.@dg_id[.@q]+"' AND `quest_id` = '"+.@q_list[.@rem]+"'";
 			continue;
-			break;
 			
 			// Quest Management Options - Default
 			default:
 			break;
 		
 		} // End of Quest Management - switch(prompt())
+		break;
 	} // End of Quest Management - while(1)
 	break;
 	
 	// Reward Management
 	case 4:
-	mes .n$;
-	mes "Please choose below what you want to manage:";
 	while(1) {
+		mes .n$;
+		mes "Please choose below what you want to manage:";
 		next;
 		switch(prompt("- Dungeon Points:- MvP Points")) {
 			
@@ -1956,8 +1939,8 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				mes .n$;
 				mes " The Base Points has been successfully changed to "+.@rew_pts;
 				set .dg_pts,.@rew_pts;
-				break;
-					
+				continue;
+
 				// Dungeon Points Variable
 				case 2:
 				mes .n$;
@@ -1976,17 +1959,17 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				mes .n$;
 				mes " The Variable Name has been successfully changed to "+.@rew_var$;
 				set .dg_var$,.@rew_var$;
-				break;
-					
+				continue;
+
 				// Exchanger Settings
 				case 3:
-				mes .n$;
-				mes "[ == Exchanger Settings]";
-				mes "Please choose what do do:";
 				while(1) {
+					mes .n$;
+					mes "[ == Exchanger Settings]";
+					mes "Please choose what do do:";
 					next;
 					set .@dgx_m$,"";
-					switch(prompt("- Add Item:- Edit Item:- Remove Item")) {
+					switch(prompt("- Add Item:- Edit Item:- Remove Item:- Back to Reward Management")) {
 						
 						// Add Item
 						case 1:
@@ -2026,7 +2009,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 						setarray .dg_ex_cost[getarraysize(.dg_ex_cost)],.@i_cost;
 						setarray .dg_ex_am[getarraysize(.dg_ex_am)],.@i_gain;
 						continue;
-						break;
 						
 						// Edit Item
 						case 2:
@@ -2054,7 +2036,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 						mes .n$;
 						mes "Please choose which value you want to edit:";
 						next;
-						switch(select("- Item ID:- Cost each Exchange:- Gained Amount")) {
+						switch(prompt("- Item ID:- Cost each Exchange:- Gained Amount")) {
 						
 							// Edit Item ID
 							case 1:
@@ -2067,17 +2049,17 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 							mes .n$;
 							if(getitemname(.@id_new) == "" || getitemname(.@id_new) == "null") {
 								mes "Invalid Item ID, please try again.";
-								break;
+								continue;
 							}
 							mes "Chosen ID: "+.@id_new+" > "+getitemname(.@id_new);
 							mes " ";
 							mes "Is this correct?";
-							if(select("- Yes:- No") - 1) break;
+							if(select("- Yes:- No") - 1) continue;
 							next;
 							mes .n$;
 							mes "The Item ID has been changed successfully to "+.@id_new;
 							setarray .dg_ex[.@i_ed],.@id_new;
-							break;
+							continue;
 							
 							// Edit Cost each Exchange
 							case 2:
@@ -2090,17 +2072,17 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 							mes .n$;
 							if(.@cost_new < 1) {
 								mes "Invalid Cost, can't be below 1, please try again.";
-								break;
+								continue;
 							}
 							mes "New Value: "+.@cost_new;
 							mes " ";
 							mes "Is this correct?";
-							if(select("- Yes:- No") - 1) break;
+							if(select("- Yes:- No") - 1) continue;
 							next;
 							mes .n$;
 							mes "The Cost each Exchange has been changed successfully to "+.@cost_new;
 							setarray .dg_ex_cost[.@i_ed],.@cost_new;
-							break;
+							continue;
 							
 							// Edit Gained Amount each Exchange
 							case 3:
@@ -2113,20 +2095,23 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 							mes .n$;
 							if(.@gain_new < 1) {
 								mes "Invalid Amount, can't be below 1, please try again.";
-								break;
+								continue;
 							}
 							mes "New Value: "+.@gain_new;
 							mes " ";
 							mes "Is this correct?";
-							if(select("- Yes:- No") - 1) break;
+							if(select("- Yes:- No") - 1) continue;
 							next;
 							mes .n$;
 							mes "The Cost each Exchange has been changed successfully to "+.@gain_new;
 							setarray .dg_ex_am[.@i_ed],.@gain_new;
+							continue;
+							
+							// Cancel Button
+							default:
 							break;
 						}
 						continue;
-						break;
 						
 						// Remove item
 						case 3:
@@ -2155,9 +2140,8 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 						deletearray .dg_ex_cost[.@i_rem],1;
 						deletearray .dg_ex_am[.@i_rem],1;
 						continue;
-						break;
-					
-						// Exchanger Settings Options - Default
+						
+						// Back to Reward Management Menu
 						default:
 						break;
 						
@@ -2165,14 +2149,14 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 					break;
 					
 				} // End of Exchanger Settings - while(1)
-				break;
+				continue;
 				
 				// Previous Menu
-				case 4:
+				default:
 				break;
 			}
 			continue;
-				
+
 			// MvP Points
 			case 2:
 			mes .n$;
@@ -2200,7 +2184,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				mes .n$;
 				mes " The Base Points has been successfully changed to "+.@rew_pts;
 				set .mvp_pts,.@rew_pts;
-				break;
+				continue;
 				
 				// Dungeon Points Variable
 				case 2:
@@ -2218,19 +2202,19 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 				if(select("- Yes:- No") - 1) continue;
 				next;
 				mes .n$;
-				mes " The Variable Name has been successfully changed to "+.@rew_var$;
+				mes "The Variable Name has been successfully changed to "+.@rew_var$;
 				set .mvp_var$,.@rew_var$;
-				break;
+				continue;
 				
 				// Exchanger Settings
 				case 3:
-				mes .n$;
-				mes "[ == Exchanger Settings]";
-				mes "Please choose what do do:";
 				while(1) {
+					mes .n$;
+					mes "[ == Exchanger Settings]";
+					mes "Please choose what do do:";
 					next;
 					set .@dgx_m$,"";
-					switch(prompt("- Add Item:- Edit Item:- Remove Item")) {
+					switch(prompt("- Add Item:- Edit Item:- Remove Item:- Back to Reward Management")) {
 
 						// Add Item
 						case 1:
@@ -2270,7 +2254,6 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 						setarray .mvp_ex_cost[getarraysize(.mvp_ex_cost)],.@i_cost;
 						setarray .mvp_ex_am[getarraysize(.mvp_ex_am)],.@i_gain;
 						continue;
-						break;
 						
 						// Edit Item
 						case 2:
@@ -2299,7 +2282,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 						mes .n$;
 						mes "Please choose which value you want to edit:";
 						next;
-						switch(select("- Item ID:- Cost each Exchange:- Gained Amount")) {
+						switch(prompt("- Item ID:- Cost each Exchange:- Gained Amount")) {
 						
 							// Edit Item ID
 							case 1:
@@ -2312,17 +2295,17 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 							mes .n$;
 							if(getitemname(.@id_new) == "" || getitemname(.@id_new) == "null") {
 								mes "Invalid Item ID, please try again.";
-								break;
+								continue;
 							}
 							mes "Chosen ID: "+.@id_new+" > "+getitemname(.@id_new);
 							mes " ";
 							mes "Is this correct?";
-							if(select("- Yes:- No") - 1) break;
+							if(select("- Yes:- No") - 1) continue;
 							next;
 							mes .n$;
 							mes "The Item ID has been changed successfully to "+.@id_new;
 							setarray .mvp_ex[.@i_ed],.@id_new;
-							break;
+							continue;
 							
 							// Edit Cost each Exchange
 							case 2:
@@ -2335,17 +2318,17 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 							mes .n$;
 							if(.@cost_new < 1) {
 								mes "Invalid Cost, can't be below 1, please try again.";
-								break;
+								continue;
 							}
 							mes "New Value: "+.@cost_new;
 							mes " ";
 							mes "Is this correct?";
-							if(select("- Yes:- No") - 1) break;
+							if(select("- Yes:- No") - 1) continue;
 							next;
 							mes .n$;
 							mes "The Cost each Exchange has been changed successfully to "+.@cost_new;
 							setarray .mvp_ex_cost[.@i_ed],.@cost_new;
-							break;
+							continue;
 							
 							// Edit Gained Amount each Exchange
 							case 3:
@@ -2358,20 +2341,23 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 							mes .n$;
 							if(.@gain_new < 1) {
 								mes "Invalid Amount, can't be below 1, please try again.";
-								break;
+								continue;
 							}
 							mes "New Value: "+.@gain_new;
 							mes " ";
 							mes "Is this correct?";
-							if(select("- Yes:- No") - 1) break;
+							if(select("- Yes:- No") - 1) continue;
 							next;
 							mes .n$;
 							mes "The Cost each Exchange has been changed successfully to "+.@gain_new;
 							setarray .mvp_ex_am[.@i_ed],.@gain_new;
+							continue;
+							
+							// Cancel Button
+							default:
 							break;
 						}
 						continue;
-						break;
 						
 						// Remove item
 						case 3:
@@ -2399,29 +2385,26 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 						deletearray .mvp_ex_cost[.@i_rem],1;
 						deletearray .mvp_ex_am[.@i_rem],1;						
 						continue;
-						break;
-					
-						// MvP Exchanger Settings Options - Default
+						
+						// Back to Reward Management Menu
 						default:
 						break;
 						
 					} // End of MvP Exchanger Settings - switch(prompt())
 					break;
-					
 				} // End of MvP Exchanger Settings - while(1)
-				break;
+				continue;
 				
 				// Previous Menu
-				case 4:
+				default:
 				break;
-			}
+			} // End of MvP Exchanger Menu - switch(prompt())
 			continue;
-				
-			// Reward Settings Options - Default
+			
+			// Cancel Button
 			default:
 			break;
-				
-		} // End of Reward Management - switch(prompt)
+		} // End of Reward Management - switch(prompt())
 		break;
 	} // End of Reward Management - while(1)
 	break;		
@@ -2430,7 +2413,7 @@ switch(select("- System Settings:- Dungeon Management:- Quest Management:- Dunge
 	case 5:
 	break;
 }
-close;
+end;
 
 OnInit:
 // Dungeon Quest System not loaded yet
