@@ -385,35 +385,24 @@ switch(select("- Arenas:- Rankings:- Arena Shop:- Information:- Nevermind")) {
 	switch($@bty_type) {
 
 		case 1:
-		if(Zeny >= @total) {
-			for ( set @b,0; @b < getarraysize(@bought_nameid); set @b,@b + 1) 
-				getitem @bought_nameid[@b],@bought_quantity[@b];
-				
-			set Zeny,Zeny - @total;
-
-		} else dispbottom "You don't have enough Zeny.";
+		if(Zeny >= @total) set Zeny,Zeny - @total;
+		else dispbottom "You don't have enough Zeny.";
 		break;
 		
 		case 2: 
-		if(#CASHPOINTS >= @total) {
-			for ( set @b,0; @b < getarraysize(@bought_nameid); set @b,@b + 1) 
-				getitem @bought_nameid[@b],@bought_quantity[@b];
-
-			set #CASHPOINTS,#CASHPOINTS - @total;
-
-		} else dispbottom "You don't have enough Cash Points, currently "+#CASHPOINTS;
+		if(#CASHPOINTS >= @total) set #CASHPOINTS,#CASHPOINTS - @total;
+		else dispbottom "You don't have enough Cash Points, currently "+#CASHPOINTS;
 		break;
 		
 		case 3:
-		if(@pts >= @total) {
-			for ( set @b,0; @b < getarraysize(@bought_nameid); set @b,@b + 1) 
-				getitem @bought_nameid[@b],@bought_quantity[@b];
-
-			query_sql "UPDATE `arena_master` SET `bounty_pts` = `bounty_pts` - "+@total+" WHERE `char_id` = '"+getcharid(0)+"'";
-
-		} else dispbottom "You don't have enough Bounty Points, currently "+@pts;
+		if(@pts >= @total) query_sql "UPDATE `arena_master` SET `bounty_pts` = `bounty_pts` - "+@total+" WHERE `char_id` = '"+getcharid(0)+"'";
+		else dispbottom "You don't have enough Bounty Points, currently "+@pts;
 		break;
 	}
+	
+	for ( set @b,0; @b < getarraysize(@bought_nameid); set @b,@b + 1) 
+		getitem @bought_nameid[@b],@bought_quantity[@b];
+
 	set @total,0;
 	deletearray @bought_nameid[0],128;
 	deletearray @bought_quantity[0],128;
@@ -592,6 +581,7 @@ waitingroom "NPC Loading Timer: "+(getvariableofnpc(.time,"PvPGvGMain")/1000)+" 
 sleep 5000;
 delwaitingroom;
 announce "PvP/GvG Arena is now opened.",0;
+waitingroom "PvP/GvG Arena: Open",0;
 end;
 }
 // =============== Bounty Shop =========== //
@@ -604,6 +594,7 @@ OnInit:
 freeloop(1);
 // =============== Ranking Check & Debug Messages ================//
 set $@npc_load,1;
+//set $@debug,1;
 initnpctimer;
 donpcevent "Arena Master::OnStatus";
 if($@debug) debugmes "====== Arena Master - Debug initiate... ========";
@@ -806,6 +797,16 @@ setarray .gvg_mf[0],0, //mf_nomemo
 					14, //mf_partylock
 					10; //mf_gvg_noparty
 if($@debug) debugmes "Guild Mapflags loaded: "+getarraysize(.gvg_mf);
+if($@debug) debugmes "Array Reading of GvG Maps complete";
+for ( set .@m,0; .@m < getarraysize($@gvgr$); set .@m,.@m + 1 ) {
+	if($@debug) debugmes "Mapflag set at "+$@gvgr$[.@m] + " initiate...";
+	for ( set .@mf,0; .@mf < getarraysize(.gvg_mf); set .@mf,.@mf + 1 ) {
+		if((.gvg_mf[.@mf] == 14 || .gvg_mf[.@mf] == 10) && .gvg_pty[.@m] == 2) continue;
+		setmapflag $@gvgr$[.@m],.gvg_mf[.@mf];
+		if($@debug) debugmes "Mapflag "+ .gvg_mf[.@mf] +" set at "+$@gvgr$[.@m] + " complete";
+	}
+}
+if($@debug) debugmes "Guild Mapflag loading completed";
 // ============ PvP Settings ============//
 // = You can use your own Maps as you like, even reduce or put more
 // = These below are the default PvP Maps
@@ -820,16 +821,16 @@ setarray $@dmpvp$[1],"pvp_y_3-1","pvp_y_3-4","pvp_y_3-2","pvp_y_3-3","pvp_y_3-5"
 if($@debug) debugmes "PvP DM Maps loaded: "+(getarraysize($@dmpvp$)-1);
 // ========= 2vs2 Party PvP ==========//
 setarray $@pt2pvp$[1],"pvp_y_4-1","pvp_y_4-4","pvp_y_4-2","pvp_y_4-3","pvp_y_4-5";
-if($@debug) debugmes "Party PvP 2vs2 Maps loaded: "+$@pt2pvp$[0];
+if($@debug) debugmes "Party PvP 2vs2 Maps loaded: "+(getarraysize($@pt2pvp$)-1);
 // ========= 3vs3 Party PvP ==========//
 setarray $@pt3pvp$[1],"pvp_y_5-1","pvp_y_5-4","pvp_y_5-2","pvp_y_5-3","pvp_y_5-5";
-if($@debug) debugmes "Party PvP 3vs3 Maps loaded: "+$@pt3pvp$[0];
+if($@debug) debugmes "Party PvP 3vs3 Maps loaded: "+(getarraysize($@pt3pvp$)-1);
 // ========= 4vs4 Party PvP ==========//
 setarray $@pt4pvp$[1],"pvp_y_6-1","pvp_y_6-4","pvp_y_6-2","pvp_y_6-3","pvp_y_6-5";
-if($@debug) debugmes "Party PvP 4vs4 Maps loaded: "+$@pt4pvp$[0];
+if($@debug) debugmes "Party PvP 4vs4 Maps loaded: "+(getarraysize($@pt4pvp$)-1);
 // ========= 5vs5 Party PvP ==========//
 setarray $@pt5pvp$[1],"pvp_y_7-1","pvp_y_7-4","pvp_y_7-2","pvp_y_7-3","pvp_y_7-5";
-if($@debug) debugmes "Party PvP 5vs5 Maps loaded: "+$@pt5pvp$[0];
+if($@debug) debugmes "Party PvP 5vs5 Maps loaded: "+(getarraysize($@pt5pvp$)-1);
 // ======= Party Usage ==========
 // 1 = No parties Allowed
 // 2 = Parties allowed
@@ -879,15 +880,14 @@ if(.pvp_map == 1) {
 	//       MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
 	//       see gettime in script_commands.txt in doc folder
 	// ============================== //
-	setarray $@disppvp_day[1],MONDAY,MONDAY,WEDNESDAY,SATURDAY,TUESDAY,SUNDAY,WEDNESDAY;
-	setarray $@npvp_day[1],TUESDAY,SATURDAY,WEDNESDAY,THURSDAY,MONDAY,FRIDAY,SUNDAY;
-	setarray $@dmpvp_day[1],WEDNESDAY,MONDAY,SUNDAY,TUESDAY,FRIDAY,SATURDAY,THURSDAY;
+	setarray $@disppvp_day[1],MONDAY,MONDAY,WEDNESDAY,SATURDAY,TUESDAY;
+	setarray $@npvp_day[1],TUESDAY,SATURDAY,WEDNESDAY,THURSDAY,MONDAY;
+	setarray $@dmpvp_day[1],WEDNESDAY,MONDAY,SUNDAY,TUESDAY,FRIDAY;
 	setarray $@pt2pvp_day[1],FRIDAY,TUESDAY,SATURDAY,MONDAY,TUESDAY;
 	setarray $@pt3pvp_day[1],FRIDAY,TUESDAY,SATURDAY,MONDAY,TUESDAY;
 	setarray $@pt4pvp_day[1],FRIDAY,TUESDAY,SATURDAY,MONDAY,TUESDAY;
 	setarray $@pt5pvp_day[1],FRIDAY,TUESDAY,SATURDAY,MONDAY,TUESDAY;
 }
-donpcevent strnpcinfo(1) + "::OnClock0001";
 // ======== Mapflags ======== //
 // If you want to add more mapflags, 
 // add them before the last two, which are for allowing party or not
@@ -909,89 +909,6 @@ setarray .pvp_mf[0],0, //mf_nomemo
 					14, //mf_partylock
 					 7; //mf_pvp_noparty
 if($@debug) debugmes "PvP Mapflags loaded: "+(getarraysize(.pvp_mf)-1);
-// ======= Auto Mapflag Adding ===============//
-// ======= Dispell PvP ===============//
-for ( set .@m,1; .@m < getarraysize($@disppvp$); set .@m,.@m + 1 ) {
-	if($@debug) debugmes "Mapflag set at "+$@disppvp$[.@m] + " initiate...";
-	for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
-		if((.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) && .disp_pty[.@m] == 2) continue;
-		setmapflag $@disppvp$[.@m],.pvp_mf[.@mf];
-		if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@disppvp$[.@m] + " complete";
-	}
-}
-if($@debug) debugmes "PvP Dispell Mapflags loaded.";
-// ======= Normal PvP ===============//
-for ( set .@m,1; .@m < getarraysize($@npvp$); set .@m,.@m + 1 ) {
-	if($@debug) debugmes "Mapflag set at "+$@npvp$[.@m] + " initiate...";
-	for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
-		if((.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) && .normal_pty[.@m] == 2) continue;
-		setmapflag $@npvp$[.@m],.pvp_mf[.@mf];
-		if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@npvp$[.@m] + " complete";
-	}
-}
-if($@debug) debugmes "PvP Normal Mapflags loaded.";		
-// ======= Deathmatch PvP ===============//
-for ( set .@m,1; .@m < getarraysize($@dmpvp$); set .@m,.@m + 1 ) {
-	if($@debug) debugmes "Mapflag set at "+$@dmpvp$[.@m] + " initiate...";
-	for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
-		if((.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) && .dm_pty[.@m] == 2) continue;
-		setmapflag $@dmpvp$[.@m],.pvp_mf[.@mf];
-		if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@dmpvp$[.@m] + " complete";
-	}
-}
-if($@debug) debugmes "PvP DM Mapflags loaded.";	
-// ============== Party 2vs2 =================//
-if($@debug) debugmes "Array Reading of Party 2vs2 PvP Maps - configuring";
-for ( set .@m,1; .@m < getarraysize($@pt2pvp$); set .@m,.@m + 1 ) {
-	if($@debug) debugmes "Mapflag set at "+$@pt2pvp$[.@m] + " initiate...";
-	for ( set .@mf,0; .@mf < (getarraysize(.pvp_mf) - 1); set .@mf,.@mf + 1 ) {
-		setmapflag $@pt2pvp$[.@m],.pvp_mf[.@mf];
-		if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@pt2pvp$[.@m] + " complete";
-	}
-}
-if($@debug) debugmes "Party 2v2 PvP Mapflags loaded.";
-// ============== Party 3vs3 =================//
-if($@debug) debugmes "Array Reading of Party 3vs3 PvP Maps - configuring";
-for ( set .@m,1; .@m < getarraysize($@pt3pvp$); set .@m,.@m + 1 ) {
-	if($@debug) debugmes "Mapflag set at "+$@pt3pvp$[.@m] + " initiate...";
-	for ( set .@mf,0; .@mf < (getarraysize(.pvp_mf) - 1); set .@mf,.@mf + 1 ) {
-		setmapflag $@pt3pvp$[.@m],.pvp_mf[.@mf];
-		if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@pt3pvp$[.@m] + " complete";
-	}
-}
-if($@debug) debugmes "Party 3v3 PvP Mapflags loaded.";
-// ============== Party 4vs4 =================//
-if($@debug) debugmes "Array Reading of Party 4vs4 PvP Maps - configuring";
-for ( set .@m,1; .@m < getarraysize($@pt4pvp$); set .@m,.@m + 1 ) {
-	if($@debug) debugmes "Mapflag set at "+$@pt4pvp$[.@m] + " initiate...";
-	for ( set .@mf,0; .@mf < (getarraysize(.pvp_mf) - 1); set .@mf,.@mf + 1 ) {
-		setmapflag $@pt4pvp$[.@m],.pvp_mf[.@mf];
-		if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@pt4pvp$[.@m] + " complete";
-	}
-}
-if($@debug) debugmes "Party 4v4 PvP Mapflags loaded.";
-// ============== Party 5vs5 =================//
-if($@debug) debugmes "Array Reading of Party 5vs5 PvP Maps - configuring";
-for ( set .@m,1; .@m < getarraysize($@pt5pvp$); set .@m,.@m + 1 ) {
-	if($@debug) debugmes "Mapflag set at "+$@pt5pvp$[.@m] + " initiate...";
-	for ( set .@mf,0; .@mf < (getarraysize(.pvp_mf) - 1); set .@mf,.@mf + 1 ) {
-		setmapflag $@pt5pvp$[.@m],.pvp_mf[.@mf];
-		if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@pt5pvp$[.@m] + " complete";
-	}
-}
-if($@debug) debugmes "Party 5v5 PvP Mapflags loaded.";
-if($@debug) debugmes "Party PvP Mapflags loaded.";
-// ======= GvG ===============//
-if($@debug) debugmes "Array Reading of GvG Maps complete";
-for ( set .@m,0; .@m < getarraysize($@gvgr$); set .@m,.@m + 1 ) {
-	if($@debug) debugmes "Mapflag set at "+$@gvgr$[.@m] + " initiate...";
-	for ( set .@mf,0; .@mf < getarraysize(.gvg_mf); set .@mf,.@mf + 1 ) {
-		if((.gvg_mf[.@mf] == 14 || .gvg_mf[.@mf] == 10) && .gvg_pty[.@m] == 2) continue;
-		setmapflag $@gvgr$[.@m],.gvg_mf[.@mf];
-		if($@debug) debugmes "Mapflag "+ .gvg_mf[.@mf] +" set at "+$@gvgr$[.@m] + " complete";
-	}
-}
-if($@debug) debugmes "Guild Mapflag loading completed";
 function writeStats;
 if($@debug) debugmes "Write Stats Function loaded.";
 function getBounty;
@@ -1001,17 +918,18 @@ function PVP_BTY_CMAP;
 if($@debug) debugmes "Custom Bounty Map Function loaded.";
 stopnpctimer;
 set .time,getnpctimer(0);
-if($@debug) debugmes "Loading Time: "+.time/1000+" seconds.";
+if($@debug) debugmes "Loading Time: "+.time+" seconds.";
 freeloop(0);
 set $@npc_load,0;
-end;
 
 OnClock0001:
-if($@pvp_map < 2) end;
 setarray .@pre$[0],"disp","n","dm","pt2","pt3","pt4","pt5";
 if($@pvp_map == 2) {
+	if($@debug) debugmes "Random Map Rotation:";
 	for ( set .@l,0; .@l < getarraysize(.@pre$); set .@l,.@l + 1) {
+		if($@debug) debugmes ".@pre$ = "+.@pre$[.@l];
 		setd("$@"+.@pre[.@l]+"pvp_map"),rand(1,getarraysize(getd("$@"+.@pre$[.@l]+"pvp$")));
+		if($@debug) debugmes "$@"+.@pre$[.@l]+"pvp_map = "+getd("$@"+.@pre[.@l]+"pvp_map");
 	
 	if(!getd("$"+.@pre$[.@l]+"pvp_last") || getd("$"+.@pre$[.@l]+"pvp_last") != getd("$@"+.@pre$[.@l]+"pvp_map")) 
 		setd("$"+.@pre$[.@l]+"pvp_last"),getd("$@"+.@pre$[.@l]+"pvp_map");
@@ -1029,6 +947,65 @@ if($@pvp_map == 2) {
 			}
 	}
 }
+end;
+// ======= Auto Mapflag Adding ===============//
+// ======= Dispell PvP ===============//
+if($@debug) debugmes "Mapflag set at "+$@disppvp$[$@disppvp_map] + " initiate...";
+for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
+	if((.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) && .disp_pty[.@m] == 2) continue;
+	setmapflag $@disppvp$[$@disppvp_map],.pvp_mf[.@mf];
+	if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@disppvp$[$@disppvp_map] + " complete";
+}
+if($@debug) debugmes "PvP Dispell Mapflags loaded.";
+// ======= Normal PvP ===============//
+if($@debug) debugmes "Mapflag set at "+$@npvp$[$@npvp_map] + " initiate...";
+for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
+	if((.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) && .normal_pty[.@m] == 2) continue;
+	setmapflag $@npvp$[$@npvp_map],.pvp_mf[.@mf];
+	if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@npvp$[$@npvp_map] + " complete";
+}
+if($@debug) debugmes "PvP Normal Mapflags loaded.";		
+// ======= Deathmatch PvP ===============//
+if($@debug) debugmes "Mapflag set at "+$@dmpvp$[$@dmpvp_map] + " initiate...";
+for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
+	if((.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) && .dm_pty[.@m] == 2) continue;
+	setmapflag $@dmpvp$[$@dmpvp_map],.pvp_mf[.@mf];
+	if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@dmpvp$[$@dmpvp_map] + " complete";
+}
+if($@debug) debugmes "PvP DM Mapflags loaded.";	
+// ============== Party 2vs2 =================//
+if($@debug) debugmes "Mapflag set at "+$@pt2pvp$[$@pt2pvp_map] + " initiate...";
+for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
+	if(.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) continue;
+	setmapflag $@pt2pvp$[$@pt2pvp_map],.pvp_mf[.@mf];
+	if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@pt2pvp$[$@pt2pvp_map] + " complete";
+}
+if($@debug) debugmes "Party 2v2 PvP Mapflags loaded.";
+// ============== Party 3vs3 =================//
+if($@debug) debugmes "Mapflag set at "+$@pt3pvp$[$@pt3pvp_map] + " initiate...";
+for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
+	if(.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) continue;
+	setmapflag $@pt3pvp$[$@pt3pvp_map],.pvp_mf[.@mf];
+	if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@pt3pvp$[$@pt3pvp_map] + " complete";
+}
+if($@debug) debugmes "Party 3v3 PvP Mapflags loaded.";
+// ============== Party 4vs4 =================//
+if($@debug) debugmes "Mapflag set at "+$@pt4pvp$[$@pt4pvp_map] + " initiate...";
+for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
+	if(.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) continue;
+	setmapflag $@pt4pvp$[$@pt4pvp_map],.pvp_mf[.@mf];
+	if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@pt4pvp$[$@pt4pvp_map] + " complete";
+}
+if($@debug) debugmes "Party 4v4 PvP Mapflags loaded.";
+// ============== Party 5vs5 =================//
+if($@debug) debugmes "Mapflag set at "+$@pt5pvp$[$@pt5pvp_map] + " initiate...";
+for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
+	if(.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) continue;
+	setmapflag $@pt5pvp$[$@pt5pvp_map],.pvp_mf[.@mf];
+	if($@debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@pt5pvp$[$@pt5pvp_map] + " complete";
+}
+if($@debug) debugmes "Party 5v5 PvP Mapflags loaded.";
+if($@debug) debugmes "PvP Mapflags loaded.";
 end;
 
 OnPCKillEvent:
@@ -1154,10 +1131,6 @@ OnMultiSpan:
 set @mkillct,0;
 end;
 
-OnPCLogOutEvent:
-if(PVP_BTY_CMAP($@bty_cmap_type,strcharinfo(3)) == 1) end;
-end;
-
 OnNPCKillEvent:
 if(!$@pvptable) end;
 if(getmonsterinfo(killedrid,MOB_MVPEXP) > 0) { // Update to rAthena: getmonsterinfo supports now an check for MVP Exp
@@ -1246,20 +1219,20 @@ end;
 				if(getarg(1) != getd("$@"+.@pvp_pre$[.@l]+"pvp$["+.@m+"]"))
 					set .@f,1;
 				else 
-					return 0;
+					set .@f,0;
 				
 		for ( set .@m,0; .@m < getarraysize($@gvgr$); set .@m,.@m + 1)
 				if(getarg(1) != $@gvgr$[.@m])
 					set .@f,1;
 				else 
-					return 0;
+					set .@f,0;
 		
 		// Mapflag
 		if(getarg(0) == 1)
 			if(getmapflag(getarg(1),mf_pvp) == 0 && getmapflag(getarg(1),mf_gvg) == 0) 
 				set .@f,1;
 			else 
-				return 0;
+				set .@f,0;
 
 		// Custom Maps
 		else if(getarg(0) == 2) {
@@ -1268,7 +1241,7 @@ end;
 				if(compare(getarg(1),$@bty_cmaps$[0]) == 0)
 					set .@f,1;
 				else 
-					return 0;
+					set .@f,0;
 
 			// Array	
 			else if(getarraysize($@bty_cmaps$) > 1)
@@ -1276,7 +1249,7 @@ end;
 					if(compare(getarg(1),$@bty_cmaps$[.@m]) == 0)
 						set .@f,1;
 					else 
-						return 0;
+						set .@f,0;
 		}
 		return .@f;
 	}

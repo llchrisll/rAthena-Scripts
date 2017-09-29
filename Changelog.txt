@@ -30,6 +30,27 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2017/09/29
+= Updated PvP-GvG-MvP Arena v1.6 [MOD]
+- Shortened the Currency Checks in the Shop
+- Fixed an typo in the debug messages 
+- Moved the Auto Mapflag Adding to OnClock0001:
+- Removed PCLogoutEvent, not sure anymore what I wanted with it
+= Updated Dungeon Quest Service v1.0 [WIP]
+- Renamed `dqs_list` to `dqs_quest`
+- Added `map´ to `dqs_party`
+- Removed Beach Dungeon and Umbala Dungeon from the Data
+- Split Pyramid Dungeon into 2, Basement and normal Pyramid
+- Redone the Dungeon Menu Creation, added Floor Selection, Renewal Check, Floor based Level Check
+- Edited addrid() to use 2 instead of 1
+- Added seperate variables for Mob Quests and insert data at logout or at the exit npc to lessen the queries
+- Modified the check for quest progress by spliting into 2 seperate checks for party and solo
+- Added an bonus to the Dungeon Points by using the Floor # and add it to the difficulty
+- Some minor changes everywhere
+- Major change at the PCKillEvent and Dungeon Guard NPC's
+- Added for each floor an NPC in most dungeons
+= Merged Fame System v1.3 [MOD] with Fame System v1.2 [RE]
+------------------------------------------------------------------------------------------------------------------------
 * 2017/09/21
 = Updated Fame System v1.3 [MOD]
 - Added an GM Option to see their Class Values
