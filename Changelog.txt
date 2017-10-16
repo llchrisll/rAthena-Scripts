@@ -30,6 +30,21 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2017/10/16
+= Updated Dungeon Quest Service v1.0 [WIP]
+- Made the Points Exchanger into an Shop
+- Added some info the quests in the Header
+- Edited the Quest display, to use an name instead of the ID
+- Added EXP Reward for Quests, Percent or Flat Amount
+- Added an requirement to exit an floor, so you can't run through an dungeon not killing anything
+- Fixed the Repeat Timer before an bug appears :P
+- Added Quest Pagination, see .pg_entries
+- Changed the displaying of new as well as running quests
+- Changed the Arrays for the Mob Quests to use different for party and solo
+- Exchanged #CASHPOINTS reward with an dynamic setting, see .dg_var
+- Added an option at Quest Adding to use either an specific Item ID or an Pre-Defined one, see. rew_itemid
+- Removed floor adding in the Add Dungeon, don't want to repeat the whole process for an single mistake, right?
+------------------------------------------------------------------------------------------------------------------------
 * 2017/09/29
 = Updated PvP-GvG-MvP Arena v1.6 [MOD]
 - Shortened the Currency Checks in the Shop
