@@ -1,5 +1,5 @@
 //===== rAthena Script =======================================
-//= Rentable Shops
+//= Personal Shops
 //===== Author ===============================================
 //= llchrisll
 //===== Credits ==============================================
@@ -15,10 +15,7 @@
 //===== Description ==========================================
 //= ...
 //===== ToDO =============================================
-//= Adding the option to edit the Currency and Shop Name without disolving first
-//= Adding an Timer, which checks if after an week (example) after the stock has been emptied,
-//  nothing happened anymore. Delete the Shop, but not sure how to handle the balance stuff.
-//= Adding an LoginEvent to show what the stock of the shop is
+//= Testing
 //============================================================
 /*
 CREATE TABLE IF NOT EXISTS `shop_owner` (
@@ -131,7 +128,8 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Shop 
 	mes .n$;
 	mes "Shop Name:";
 	input(.@sh_n$);
-	mes "> Input: "+.@sh_n$;
+	mes "\""+.@sh_n$+"\"";
+	mes " ";
 	mes "Currency:";
 	mes "- Use the number in front!!";
 	mes " 1 = Zeny";
@@ -139,8 +137,11 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Shop 
 	mes " 3 = Custom Points";
 	mes " Note: For 2 and 3 a list will be displayed after choosing.";
 	mes " 4 = Items";
-	mes " ";
-	input(.@cur_type);
+	if(input(.@cur_type,1,4) != 0) {
+		mes .n$;
+		mes "Invalid Currency, try again.";
+		close;
+	}
 	next;
 	mes .n$;
 	if(.@cur_type == 2 || .@cur_type == 3) {
@@ -195,7 +196,7 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Shop 
 	mes "Here are some informations about the Rentable Shops:";
 	mes " ";
 	mes "[ Rental Prices ]";
-	mes "To be able to rent an spot for your own personal Shop, you need to pay an rental fee of "+.rent_pr+"x "+( (.rent_type == 1)?"Zeny":( (.rent_type == 2)?"Cash Points":getitemname(.rent_type)) )+".";
+	mes "To be able to get an spot for your own personal Shop, you need to pay an rental fee of "+.rent_pr+"x "+( (.rent_type == 1)?"Zeny":( (.rent_type == 2)?"Cash Points":getitemname(.rent_type)) )+".";
 	mes "Afterwards I will need the following from you; Shop Name and currency to be used, which are listed below.";
 	mes " ";
 	mes "[ Shop Management ]";
@@ -226,11 +227,11 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Shop 
 	if(.sh_sales) {
 		query_sql "SELECT SUM( `sales` ) FROM `shop_owner`",.@sales;
 		mes "But to keep the market clean, there "+( (.@sales/.sh_sales < 1)?"is":"are" )+" currently "+( (.@sales/.sh_sales < 1)?"1":(.@sales/.sh_sales) )+" Shop Spots available.";
-		mes "Every "+.sh_sales+" item sold (each Item is counted) an new Spot opens, which be checked every 12 hours.";
+		mes "Every "+.sh_sales+" item sold (each Item is counted) an new Spot opens, which will be checked every 12 hours.";
 	} else 
 		mes "Which are all available, if not taken already.";
 	mes " ";
-	mes "This should be everything, if you want to ask again about it, I'll gladly tell you again.";
+	mes "This should be everything, if you want to ask again about something, I'll gladly help you out.";
 	break;
 	
 	// Shop Management
@@ -256,8 +257,8 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Shop 
 	}
 	mes "What do you want to do next?";
 	next;
-	query_sql "SELECT `balance` , `cur_type` , `cur_ix` FROM `shop_owner` WHERE `acc_id` = '"+getcharid(3)+"'",.@bal,.@cur_type,.@cur_ix;
-	switch(select("- Check Balance:- Add Item:- Edit Item:- Delete Item:- Leave")) {
+	query_sql "SELECT `shop_name` , `balance` , `cur_type` , `cur_ix` FROM `shop_owner` WHERE `acc_id` = '"+getcharid(3)+"'",.@sh_n$,.@bal,.@cur_type,.@cur_ix;
+	switch(select("- Check Balance:- Change Shop Name:- Change Currency:- Add Item:- Edit Item:- Delete Item:- Leave")) {
 		
 		// Check Balance
 		case 1:
@@ -277,8 +278,84 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Shop 
 		}
 		break;
 		
-		// Add Item
+		// Change Shop Name
 		case 2:
+		mes .n$;
+		mes "Current Shop Name: \""+.@sh_n$+"\"";
+		mes " ";
+		mes "Please type the new Shop Name:";
+		next;
+		input(.@sh_nnew$);
+		if(.@sh_nnew$ == .@sh_n$) {
+			mes .n$;
+			mes "It is the same, why bother trying to change it?";
+			close;
+		}
+		mes .n$;
+		mes "The Name of your shop has been changed successfully.";
+		query_sql "UPDATE `shop_owner` SET `shop_name` = '"+.@sh_nnew$+"' WHERE `acc_id` = '"+getcharid(3)+"'";
+		donpcevent "Shop Spot "+.@sh_id+"#"+.@sh_id+"::OnShopReLoad";
+		break;
+		
+		// Change Currency
+		case 3:
+		mes .n$;
+		mes "Current Currency: "+( (.@cur_type == 1)?"Zeny":( (.@cur_type == 2)?.c_cash_disp$[.@cur_ix]: ( (.@cur_type == 3)?.c_char_disp$[.@cur_ix]:getitemname(.@cur_ix) ) ) );
+		mes " ";
+		mes "- Use the number in front!!";
+		mes " 1 = Zeny";
+		mes " 2 = Cash Points or Kafra Points";
+		mes " 3 = Custom Points";
+		mes " Note: For 2 and 3 a list will be displayed after choosing.";
+		mes " 4 = Items";
+		next;
+		if(input(.@cur_type,1,4) != 0) {
+			mes .n$;
+			mes "Invalid Currency, try again.";
+			close;
+		}
+		mes .n$;
+		if(.@cur_type == 2 || .@cur_type == 3) {
+			mes "Please choose which points you want to use:";
+			if(.@cur_type == 2) 
+				for ( set .@c,0; .@c < getarraysize(.c_cash_disp$); set .@c,.@c + 1)
+					set .@c_menu$,.@c_menu$ + "- "+.c_cash_disp$[.@c]+ ( (.c_cash_disp$[.@c] != "")?":":"");
+			else if(.@cur_type == 3)
+				for ( set .@c,0; .@c < getarraysize(.c_char_disp$); set .@c,.@c + 1)
+					set .@c_menu$,.@c_menu$ + "- "+.c_char_disp$[.@c]+ ( (.c_char_disp$[.@c] != "")?":":"");
+				
+			set .@c_sel,select(.@c_menu$) - 1;
+			next;
+			mes .n$;
+			mes "Chosen Points:";
+			mes ( (.@cur_type == 2)?.c_cash_disp$[.@c_sel]:.c_char_disp$[.@c_sel]);
+			mes " ";
+			mes "Is this correct?";
+			if(select("- Yes:- No") - 1) close;
+			next;
+			mes .n$;
+		} else if(.@cur_type == 4) {
+			mes "Please type the Item ID of the Item you want to use as currency:";
+			next;
+			input(.@c_sel);
+			mes .n$;
+			if(getitemname(.@c_sel) == "" || getitemname(.@c_sel) == "null") {
+				mes "I'm sorry, but you have put an invalid Item ID.";
+				close;
+			}
+			mes "Chosen Item: "+getitemname(.@c_sel);
+			mes " ";
+			mes "Is this correct?";
+			if(select("- Yes:- No") - 1) close;
+			next;
+			mes .n$;
+		}
+		mes "The Currency for your shop has been changed successfully.";
+		query_sql "UPDATE `shop_owner` SET `cur_type` = '"+.@cur_type+"' , `cur_ix` = '"+.@c_sel+"' WHERE `acc_id` = '"+getcharid(3)+"'";
+		break;
+		
+		// Add Item
+		case 4:
 		mes .n$;
 		getinventorylist;
 		for ( set .@l,0; .@l < @inventorylist_count; set .@l,.@l + 1) {
@@ -351,7 +428,7 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Shop 
 		break;
 		
 		// Edit Item
-		case 3:
+		case 5:
 		mes .n$;
 		query_sql "SELECT `cont_id` , `cont_price` , `cont_stock` FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"'",.@c_id,.@c_price,.@c_am;
 		if(getarraysize(.@c_id) < 1) {
@@ -443,7 +520,7 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Shop 
 		break;
 		
 		// Delete Item
-		case 4:
+		case 6:
 		mes .n$;
 		query_sql "SELECT `cont_id` , `cont_price` , `cont_stock` FROM `shop_content` WHERE `shop_id` = '"+.@sh_id+"'",.@c_id,.@c_price,.@c_am;
 		if(getarraysize(.@c_id) < 1) {
@@ -472,7 +549,7 @@ switch(select("- Renting/Dissolving Shop:- Information:- Shop Management:- Shop 
 		break;
 		
 		// Leave
-		case 5:
+		case 7:
 		break;
 	}
 	break;
@@ -632,7 +709,7 @@ set .sh_sp_total,20;
 // > 1 Day = 86400
 // > 1 Week = 604800
 // > 1 Month = 2592000
-set .timer_ct,300;
+set .time_ct,300;
 // Custom atcommand: @pshop_gm
 bindatcmd "pshop_gm",strnpcinfo(1)+"::OnGMAccess",99,99;
 set $@Sh_Sys,1;
@@ -708,7 +785,7 @@ if(!getarraysize(.@c_am)) {
 		end;
 	}
 	set .@time_cur,gettimetick(2);
-	dispbottom .n$+": Your Shop Stock is currently empty, you have "+(.@timer-.@time_cur)/1000%24+" Hours, "+(.@timer-.@time_cur)/1000%24%60+" Minutes and "+(.@timer-.@time_cur)/1000%24%60%60+" Seconds left until your shop gets removed.";
+	dispbottom .n$+": Your Shop Stock is currently empty, you have "+(.@time_cur-.@timer)/24+" Hours, "+(.@time_cur-.@timer)/24/60+" Minutes and "+(.@time_cur-.@timer)/24/60/60+" Seconds left until your shop gets removed.";
 	end;
 }
 if(.@timer) 
@@ -747,22 +824,19 @@ if(!getarraysize(@cont_id) || !getarraysize(@cont_am)) {
 }
 next;
 if(select("- Open Shop:- Leave") - 1) close;
-mes "[ === "+.sh_n$+" === ]";
-mes "I will display in your \"Chat Box\" the correct item list.";
 close2;
 set @cost,0;
 set @total,0;
 deletearray @bought_nameid[0],128;
 deletearray @bought_quantity[0],128;
+
 // Reseting the shop
 npcshopitem "PlayerShop",512,1,1;
 npcshopdelitem "PlayerShop",512;
 
-dispbottom "[ === "+@sh_n$+" - Stock === ]";
 for ( set .@b,0; .@b <= getarraysize(@cont_id); set .@b,.@b + 1) {
 	if(!@cont_am[.@b]) continue;
 	npcshopadditem "PlayerShop",@cont_id[.@b],@cont_pr[.@b],@cont_am[.@b];
-	dispbottom " > "+@cont_am[.@b]+"x " + getitemname(@cont_id[.@b])+" = "+@cont_pr[.@b]+" each";
 }
 callshop "PlayerShop",1;
 npcshopattach "PlayerShop";
@@ -838,8 +912,7 @@ if(.Enable == 0) {
 	set .Enable,1;
 }
 OnShopReLoad:
-if(getwaitingroomstate(3) == 0)
-	delwaitingroom;
+delwaitingroom;
 query_sql "SELECT `shop_name` FROM `shop_owner` WHERE `shop_id` = '"+strnpcinfo(2)+"'",.sh_n$;
 waitingroom (.sh_n$ != "")?.sh_n$:"Empty Spot",0;
 end;

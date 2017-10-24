@@ -30,6 +30,42 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2017/10/25
+= Updated Dungeon Quest Service v1.0 [WIP]
+- Exchanged Quest Pagination with an function
+- Added 2 functions: F_GetMobData & F_Pages
+- Added the feature to edit Quests: Add/Edit/Remove Targets, Change Rewards, Move Quest
+- Added new config option for Floor Selection: .dg_floor
+- Fixed Quest ID Look up
+- Removed Party Join Feature
+- Added to Dungeon Menu to check for missing floor data
+- Removed check for Party Leader in Warp Service
+- Removed warpparty command in Warp Service
+- Added an re-save for @diff in OnNPCKillEvent before addrid
+- Fixed an add floor bug before it happens
+- Added dqs_shop for the Points Shop for easier handling
+- Moved SQL Entries into an extra file > dq_quest_sys.sql
+- Fixxed some bugs and made some text optimizations
+- Added an check in NPCKillEvent to check if there is an Mob Quest active
+- Removed Server Array Limit setting
+- Added SQL Syncronization for the @checkdg command
+= Updated Player Shops v1.0 [WIP]
+- Added an option to edit Currency & Shop Name without disolving
+- Added an LoginEvent to show the Shop's Stock
+- Added an timer, which checks if after some time and the stock of an shop is empty, to delete it.
+= Reformated my GitHub:
+- Merged SQLScripts & GMScripts to Utility
+- Renamed Events to Entertainment
+- Moved following files into Utility:
+  > Broadcaster
+  > Card Compounder
+  > Dynamic Shop
+  > Vote NPC
+- Moved following file into Entertainment:
+  > PvP-GvG-MvP Arena
+- Added new folder Extra (extra files, like .sql)
+- Added Pagination & Mob per Map and getmobdrops Functions to Extra
+------------------------------------------------------------------------------------------------------------------------
 * 2017/10/16
 = Updated Dungeon Quest Service v1.0 [WIP]
 - Made the Points Exchanger into an Shop
