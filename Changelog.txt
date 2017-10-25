@@ -10,10 +10,6 @@
 //    * Folder: WIP
 // = [WIP] > Work-In-Progress
 //    * Folder: WIP
-// = [UT] > Untested = Finished Scripts, currently testing
-//    * Folder: testing
-// = [TE] > Tested, but unreleased
-//    * Folder: unreleased
 // = [RE] > Released
 //    * Folder: released
 // = [REQ] > Request = Will not be released officially
@@ -30,6 +26,37 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2017/10/25
+= Deleted the following files, keeping backup:
+- Alchemist Master (unreleased/alchemist_master.txt)
+- Guild Shop + WoE Killing (requests/gld_shop_woe.txt)
+- PvP Casher (unreleased/pvp_casher.txt)
+- Soul Linker (unreleased/soul_linker.txt)
+- WoE Info (unreleased/woe_info.txt)
+= Deleted the following files completely:
+- Requests Folder: 
+  > Simple 3rd Job Changer + Baby Version
+  > Faction Login
+  > Item Trader
+  > Rebirth Reseter
+  > Reset Master
+  > Valkyrie Helm Trader
+- Unreleased Folder:
+  > Auto Item
+  > TCG Trader
+  > Weekly Bonus
+  > Custom Bank Script
+  > Class Changer
+  > Class Changer with 3rd Classes
+  > Class Limited PvP
+  > Custom Item Drop
+  > Simple PvP Deathmatch
+  > MvP Summoner
+  > Display Time NPC
+  > Weekly SQL Wipe
+= Updated Tag Legend
+------------------------------------------------------------------------------------------------------------------------
+- Deleted the testing and unreleased folders
 * 2017/10/25
 = Updated Dungeon Quest Service v1.0 [WIP]
 - Exchanged Quest Pagination with an function
