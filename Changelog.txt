@@ -26,6 +26,15 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2017/10/26
+= Updated Dungeon Quest Service v1.0 [WIP]
+- Changed the way how party members will be checked
+- Removed unnecessary variables
+- Moved the Quest Display for Party members in the Warp Service
+- Added an check in OnNPCKillEvent to see if party members are on the same map for EXP
+- Removed the checks in Item Quests for party members, the party leader needs the items.
+- Fixed some bugs
+------------------------------------------------------------------------------------------------------------------------
 * 2017/10/25
 = Deleted the following files, keeping backup:
 - Alchemist Master (unreleased/alchemist_master.txt)
