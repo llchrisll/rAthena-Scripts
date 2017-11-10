@@ -19,27 +19,28 @@
 // ====================================================================
 // ================= Line Indicator (since 2013/10/09) ================
 // *: Date
-// =: Which script has been changed
+// << == |*| Script Name vX.X - @Update to vX.X/Added/Release/Removed/Request |*| == >>: Which script has been changed
 // -: Which part of the script
 //   >: More details / *: More details (previous)
 // ?: Comment by me
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
-* 2ß17/11/10
-= Updated most Scripts:
+* 2017/11/10
+<< == |*| Most Scripts - @Update |*| == >>
 - "Tested with" 
 - "Script Made" into "Initial Version"
 - Script Optimization depending on Script, see below which was updated
-  > Exchanged @ with .@ or . variables
-  > Added OnInit 
+  > Exchanged @ with .@ or . variables and others
+  > Added OnInit
   > Cleaner Algorithm
-= Updated Ingame CP v1.2 to v1.3 [RE]
+<< == |*| Ingame CP v1.2 [RE] - @Update to v1.3 |*| == >>
 - Script Optimization
 - Exchanged Edit Gender for Account to Character specific
 - Added .char_gender to set delay for change gender per Character
 - Fixxed Reuest Equip, which didn't work of getarg(0)
-= Renamed PvP-GvG-MvP Arena to Arena Master (pvp-gvg-mvp.txt to arena_master.txt) and Updated to v1.6:
+<< == |*| PvP-GvG-MvP Arena v1.5 [RE] - @Update to v1.6 |*| == >>
+- Renamed PvP-GvG-MvP Arena to Arena Master (pvp-gvg-mvp.txt to arena_master.txt)
 - Reduced PvP Rooms by adding Map Rotation Settings; Fixed Maps + Random Map each Day + Specific Map on an specific Day
 - Removed the Player Limitation except Party PvP
 - Reduced GvG Maps to 3
@@ -50,14 +51,14 @@
 - Exchanged #CASHPOINTS Reward with Custom Variable Support, you can decide now
 - Modified the Arena Shop Multiplier by using an array to decide it for each Item seperatly
 - Moved the Arena Shop Config to the Arena Master NPC and made $@arena_ to .arena_ or .@arena_ variables
-= Updated Fame System v1.3 [RE]
+<< == |*| Fame System v1.3 [RE] - @Update |*| == >>
 - Exchanged the first menu "if(set(.@m,select(" with an switch
 - Exchanged FamePoints_<Class> with FamePoints
-= Updated Security System v2.0 to v2.1 [RE]
+<< == |*| Security System v2.0 [RE] - @Update to v2.1 |*| == >>
 - Script Optimization
 - Removed Server Mode Selection - only SQL now
 - Added Prevention of dying and skipping password input
-= Updated Virtual Security Password System v1.2.1 to v1.3 [RE]
+<< == |*| Virtual Security Password System v1.2.1 [RE] - @Update to v1.3 |*| == >>
 - Merged every function into 1 > VSP_FUNC
 - Changed the Layout of the Function
 - Changed the OnPCLoginEvent
@@ -67,30 +68,32 @@
   when the player didn't create/check the password successfully
 - Added an IP Check
 - Removed unnecessary comments
-= Updated InGame Forum v1.1 [RE]
+<< == |*| InGame Forum v1.1 [RE] - @Update |*| == >>
 - Script Optimization
 - Removed Chat Room
-= Updated IP Ban NPC v1.0 to v1.1 [RE]
+<< == |*| IP Ban NPC v1.0 [RE] - @Update to v1.1 |*| == >>
 - Script Optimization
-= Updated Broadcaster v1.3 [RE]
+<< == |*| Broadcaster v1.3 [RE] - @Update |*| == >>
 - Script Optimization
-= Updated Card Compounder v1.0 to v1.1 [RE]
+<< == |*| Card Compounder v1.0 [RE] - @Update to v1.1 |*| == >>
 - Script Optimization
 - Added config for custom Variable
-= Updated Dynamic Shop v1.1 [RE]
+<< == |*| Dynamic Shop v1.0 [RE] - @Update |*| == >>
 - Added extra config for maximum items in the shop
 - Changed function ShopStuff
-= Updated GM Activity Log v1.0 to v1.1 [RE]
+<< == |*| GM Activity Log v1.0 [RE] - @Update to v1.1 |*| == >>
 - Forgot to change it back to correct version before previous commit
 - Script Optimization
-= Updated Vote NPC v1.1 to v1.2 [RE]
+<< == |*| Vote NPC v1.1 [RE] - @Update to v1.2 |*| == >>
 - Script Optimization
 - Changed the way of the GM Menu
-= Updated Freebie NPC v1.0 [REQ]
+<< == |*| Freebie NPC v1.0 [REQ] - @Update |*| == >>
 - Small modification
-= Updated Gold Room Battle v1.0 to v1.1 [REQ]
+<< == |*| Gold Room Battle v1.1 [REQ] - @Update to v1.1 |*| == >>
 - Fixed bugs and tested
 - Exchanged "atcommand @cleanmap" with script command "cleanmap;"
+<< == |*| Headers - @Added |*| == >>
+- Small file for myself, how the Commit /Changelog/NPC Headers look like
 ------------------------------------------------------------------------------------------------------------------------
 * 2017/10/26
 = Updated Dungeon Quest Service v1.0 [WIP]
