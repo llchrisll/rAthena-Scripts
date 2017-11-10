@@ -12,10 +12,8 @@
 //      - Used @unloadnpcfile atcommand to unload the whole file
 //      - Removed info and example about extra NPC for the "OnScript..."
 //        Events > not needed anymore
-//===== Compatible With ======================================
-//= Every rAthena Version with @unloadnpcfile
-//===== Tested With ==========================================
-//= rAthena SQL 11.06.2015 - Updated Revision
+//===== Tested With =========================================
+//= rAthena SQL 07/16-2017 Revision
 //===== Description ==========================================
 //= This script allows you to handle your NPC loadings,
 //  like unloading an NPC when he isn't needed like an Event.
@@ -42,6 +40,7 @@ if(.@hand_debug) announce "Debug: Main Path "+.glob_path$+" loaded - Main NPC Pa
 set .glob_path_main$,"";
 if(.@hand_debug) announce "Debug: Main NPC Path "+.glob_path_main$+" loaded - Categories initialize...",bc_self;
 // ===== Categories: (Paths) =========//
+// You can either exchange the subdirs with your own or make your own, but remember to set the required variables like below
 setarray .path_other$[0],"Main","cities/","merchants/","mobs/","warps/","quests/";
 // $npc_ Extensions
 setarray .path_ext$[0],"main","c","s","m","w","q"; // For the NPC management via getd($npc_"+.path_ext$[x]...
@@ -133,9 +132,8 @@ end;
 // =============================================================== //
 /*
 // ========= Global NPC Handler - Config ==========
-// Exchange the NPC 1, etc, with the NPC Names you have in this script,
-// but not the NPC in which these lines below are
-setarray .npc$[0],"NPC 1";
+// Put here every NPC you have in this script, but not this one
+setarray .npc$[0],"";
 // Put here the event, if available, which should be loaded on Script Loading
 setarray .init_npc$[0],""; // In most cases, "OnInit:"
 // In which variable is it this NPC saved in the NPC Handler?

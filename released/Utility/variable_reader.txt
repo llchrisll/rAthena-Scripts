@@ -1,11 +1,11 @@
-//===== eAthena Script =======================================
+//===== rAthena Script =======================================
 //= Variable/Array Reviewer/Editer
 //===== By ===================================================
 //= llchrisll
 //===== Version ==============================================
 //= 1.0
-//===== Compatible With ======================================
-//= Every eAthena Version
+//===== Tested With =========================================
+//= rAthena SQL 07/16-2017 Revision
 //===== Description ==========================================
 //= This script allows you to review and edit variables and arrays.
 //  But you can't create variables with it.
@@ -21,18 +21,10 @@ OnInit:
 set .n$,"[Variable Reviewer]";
 // Access Level:
 set .gm,80;
-if(.@re_in) goto OnWhisperGlobal;
 end;
 
 OnWhisperGlobal:
-if(.n$ == "") {
-	set .@re_in,1;
-	goto OnInit;
-}
 if(getgmlevel() < .gm) end;
-set .@v$,"";
-set .@e$,"";
-set .@name$,"";
 mes .n$;
 mes "Hello "+ strcharinfo(0);
 mes "I can help you to find out which values certain variables or arrays has.";
@@ -40,6 +32,7 @@ mes "You only need to know what they are named.";
 mes "This will be settled via menu.";
 mes " ";
 mes "Now tell me the prefix:";
+next;
 switch(select("- Char Temporar:- Char Permanent:- Server Temporar:- Server Permanent:- Login Server Wide:- Account Perm:- Nevermind")) {
 
 	case 1:
@@ -99,13 +92,13 @@ switch(.@t) {
 		if(getd(""+.@v$+.@name$+.@e$) == "") {
 			mes "This variable doesn't exist or has not a value.";
 			set .@c,1;
-		} else mes getd(""+.@v$+.@name$+.@e$);
+		} else mes "+.@v$+.@name$+.@e$+": getd(""+.@v$+.@name$+.@e$);
 	
 	} else if(.@e$ == "") {
 		if(getd(""+.@v$+.@name$) == 0) {
 			mes "This variable doesn't exist or has not a value.";
 			set .@c,1;
-		} else mes getd(""+.@v$+.@name$);
+		} else mes "+.@v$+.@name$+": "+getd(""+.@v$+.@name$);
 	}
 	break;
 	
@@ -115,8 +108,8 @@ switch(.@t) {
 		set .@c,1;
 	} else 
 		for( set .@l,0; .@l < getarraysize(getd(""+.@v$+.@name$+.@e$)); set .@l,.@l + 1) {
-			mes "Index "+.@l+" - "+ ( (.@e$ == "$")?getd(""+.@v$+.@name$+.@e$+"["+.@l+"]"):getd(""+.@v$+.@name$+"["+.@l+"]"));
-			set .@m$,.@m$ +  "- "+.@l+ ( ( .@e$ == "$" && getd(""+.@v$+.@name$+.@e$+"["+(.@l+1)+"]") != "" || .@e$ == "" && getd(""+.@v$+.@name$+"["+(.@l+1)+"]") != 0)?":":"");
+			mes "- "+.@v$+.@name$+.@e$+"["+.@l+"]: "+ ( (.@e$ == "$")?getd(""+.@v$+.@name$+.@e$+"["+.@l+"]"):getd(""+.@v$+.@name$+"["+.@l+"]"));
+			set .@r$,.@r$ +  "- "+.@l+ ( ( .@e$ == "$" && getd(""+.@v$+.@name$+.@e$+"["+(.@l+1)+"]") != "" || .@e$ == "" && getd(""+.@v$+.@name$+"["+(.@l+1)+"]") != 0)?":":"");
 		}
 	break;
 }
@@ -133,8 +126,8 @@ mes .n$;
 if(.@t == 2) {
 	mes "Choose from the list the entries:";
 	next;
-	set .m,select(.@m$) - 1;
-	mes getd(""+.@v$+.@name$+.@e$+"["+.m+"]");
+	set .@m,select(.@r$) - 1;
+	mes getd(""+.@v$+.@name$+.@e$+"["+.@m+"]");
 	mes " ";
 	mes "Correct?";
 	if(select("- Yes:- No") - 1) close;
@@ -150,7 +143,7 @@ mes "Proceed?";
 if(select("- Yes:- No") - 1) close;
 next;
 if(.@t == 1) setd(""+.@v$+.@name$+.@e$),( (.@e$ != "")?.@new$:.@new);
-else setd(""+.@v$+.@name$+.@e$+"["+.m+"]"),( (.@e$ != "")?.@new$:.@new);
+else setd(""+.@v$+.@name$+.@e$+"["+.@m+"]"),( (.@e$ != "")?.@new$:.@new);
 mes .n$;
 mes "Edit completed.";
 close;

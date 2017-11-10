@@ -5,13 +5,14 @@
 //===== Credits ==============================================
 //= pAnZaA, GodLesZ,Jonne and other- Thanks guys for your help^^.
 //===== Version ==============================================
-//= 1.0 - Script Created
+//= 1.0 - Initial Version
 //= 1.1 - Whisper Feature improved
 //= 1.2 - Small change
 //= 1.3 - Fixxed Problem about location > # instead of the : after Global/Map
 //        Thanks to junjun7981 for the bugreport
-//===== Tested on ======================================
-//= rAthena 17690 SVN Trunk
+//      - Script Optimization
+//===== Tested With =========================================
+//= rAthena SQL 07/16-2017 Revision
 //===== Description ==========================================
 //= Broadcasting via PM possible
 //  How to do it explains the NPC In-Game
@@ -19,16 +20,16 @@
 //= None yet...
 //============================================================
 
-prontera.gat,164,168,3	script	Chat System	857,{
+prontera.gat,164,168,4	script	Broadcaster	857,{
 
-mes "[Broadcaster]";
+mes .n$;
 mes "Hello "+strcharinfo(0);
 mes "If you want to broadcast some messages,";
 mes "type ^ff0000NPC:Broadcaster^000000 in the";
 mes "Whisper Box, then type ^ff0000Global#<Text>^000000, or ^ff0000Map#<Text>^000000";
 mes "in the Text Box.";
 next;
-mes "[Broadcaster]";
+mes .n$;
 mes "Example:";
 mes "[WhisperBox] NPC:Broadcaster";
 mes "[TextBox] Global#Hi Guys!";
@@ -39,15 +40,13 @@ mes "If I had put 'Map' instead of 'Global'";
 mes "the message would be announced to the";
 mes "current Map your on.";
 next;
-mes "[Broadcaster]";
-mes "A Global Broadcast costs "+getvariableofnpc(.global_price,"Broadcaster")+" Zeny.";
-mes "A Map Broadcast costs "+getvariableofnpc(.map_price,"Broadcaster")+" Zeny.";
+mes .n$;
+mes "A Global Broadcast costs "+.global_price+" Zeny.";
+mes "A Map Broadcast costs "+.map_price+" Zeny.";
 close;
-}
-
--	script	Broadcaster	-1,{
 
 OnInit:
+set .n$,"[Broadcaster]";
 set .map_price,75000;
 set .global_price,150000;
 end;
