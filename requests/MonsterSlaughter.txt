@@ -1,11 +1,11 @@
-//===== eAthena Script =======================================
+//===== rAthena Script =======================================
 //= Monster Slaughter
 //===== By ===================================================
 //= llchrisll
 //===== Version ==============================================
 //= 1.0
-//===== Compatible With ======================================
-//= Every eAthena Version
+//===== Tested With =========================================
+//= rAthena SQL 07/16-2017 Revision
 //===== Description ==========================================
 //= Opens an warp portal every "OnMinuteXX" minute where lots of
 //  mobs will await the players. The portal will stay opened for 10 mins.
@@ -16,9 +16,7 @@
 //= The mob ids are saved in the array ".mob"
 //  The quantity is saved in the array ".am"
 //===== Comments =============================================
-//= Request (via rAthena PM)
-//	by PapaZola (http://rathena.org/board/user/682-papazola/)
-//	in the rAthena Board (http://www.rathena.org)
+//= Request by PapaZola (http://rathena.org/board/user/682-papazola/)
 //============================================================
 -	script	MonsterSlaughter	-1,{
 end;
@@ -41,12 +39,13 @@ announce "The event, Monster Slaughter will begin now. If you want to join pleas
 sleep 5000;
 announce "This portal will stay 10 minutes.",bc_all;
 sleep 5000;
-enablenpc "sl_warp";
+enablenpc "#sl_warp";
 setmapflag .map$,mf_noskill;
 setmapflag .map$,mf_nowarp;
 setmapflag .map$,mf_nowarpto;
 setmapflag .map$,mf_noteleport;
 setmapflag .map$,mf_noreturn;
+setmapflag .map$,mf_nodrop; // Don't drop anything else
 for ( set .@i,0; .@i < getarraysize(.mob); set .@i,.@i + 1) {
 	if( strmobinfo(1,.mob[.@i]) != "null" || strmobinfo(1,.mob[.@i]) != "" || .am[.@i] != 0) {
 		monster .map$,0,0,strmobinfo(1,.mob[.@i]),.mob[.@i],.am[.@i],strnpcinfo(0)+"::OnSlaughtered";
@@ -66,6 +65,7 @@ if(.mobs == 0) { // No mob left
 	removemapflag .map$,mf_nowarpto;
 	removemapflag .map$,mf_noteleport;
 	removemapflag .map$,mf_noreturn;
+	removemapflag .map$,mf_nodrop;
 	mapannounce .map$,"All monsters have been killed, you will now be warped back to prontera.",bc_all;
 	announce .map$,"The event, Monster Slaughter has ended.",bc_all;
 	sleep 5000;
@@ -74,7 +74,7 @@ if(.mobs == 0) { // No mob left
 end;
 
 }
-prontera,155,165,0	script	sl_warp	45,5,5,{
+prontera,155,165,0	script	#sl_warp	45,5,5,{
 warp getvariableofnpc(.map$,"MonsterSlaughter"),0,0;
 end;
 

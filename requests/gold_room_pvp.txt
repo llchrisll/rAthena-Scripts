@@ -1,21 +1,22 @@
-//===== eAthena Script =======================================
+//===== rAthena Script =======================================
 //= Gold Room Battle
 //===== By ===================================================
 //= llchrisll
 //===== Version ==============================================
-//= 1.0
-//===== Compatible With ======================================
-//= Every eAthena Version
+//= 1.0 - Initial Version
+//= 1.1 - Fixed bugs and tested
+//        Exchanged "atcommand @cleanmap" with script command "cleanmap"
+//===== Tested With =========================================
+//= rAthena SQL 07/16-2017 Revision
 //===== Description ==========================================
 //= A battle over an gold room, which occures on every ".delay" days.
 //  Players can visit their gold room for ".dur" minutes, there is no delay restriction.
 //  See 'OnInit' for config.
 //===== Comments =============================================
-//= Request (http://rathena.org/board/topic/59504-list-of-my-script-request/)
-//	by Paulinds (Link to Requester)
-//	in the rAthena Board (http://www.rathena.org)
+//= Request by Paulinds
+//  http://rathena.org/board/topic/59504-list-of-my-script-request/
 //============================================================
-prontera,159,180,0	script	Gold Room Battle	100,{
+prontera,164,172,4	script	Gold Room Battle	100,{
 
 mes .n$;
 mes "Hello,"+ strcharinfo(0)+".";
@@ -26,26 +27,27 @@ mes "Do you need information about the access to the Gold Room or about the Gold
 if(.timer == .delay) mes "Or do you want to participate?";
 mes "The next battle will be in "+ (.delay-.timer) +" day(s).";
 next;
-switch(select("- "+( ($gold_acc)?( ($gold_acc == getcharid(3))?"Warp to Gold Room":"Ownership"):( (.GRB_Room == 1)?"Battle!!!":"Room Closed")+":- Information:- Nevermind")) {
+switch(select("- "+( ($gold_acc == getcharid(3))?"Warp to Gold Room":"Ownership")+":- "+( (.GRB_Room == 1)?"Battle!!!":"Room Closed")+":- Information:- Nevermind") ) {
 	
 	case 1:
 	mes .n$;
 	if($gold_acc && ($gold_acc == getcharid(3)) ) {
-			mes "Do you want to enter the Gold Room?";
-			mes "^FF0000Note: You'll be automatically warped back to your Save Point after "+.dur+" minutes.^000000";
-			if(select("- Yes:- No") - 1) close;
-			next;
-			mes .n$;
-			mes "Okay, here we go.";
-			close2;
-			warp .gold$,.gold_x,.gold_y;
-			sleep2( .dur*60*1000 ); // Minutes*60 > Seconds*1000 = Milliseconds required for sleep2
-			doevent strnpcinfo(0)+"::OnDone";
-			end;
-		} else {
-			mes "The current owner is ^00FF00"+$gold_n$+"^000000.";
-			close;
-		}
+		mes "Do you want to enter the Gold Room?";
+		mes "^FF0000Note: You'll be automatically warped back to your Save Point after "+.dur+" minutes.^000000";
+		if(select("- Yes:- No") - 1) close;
+		next;
+		mes .n$;
+		mes "Okay, here we go.";
+		close2;
+		warp .gold$,.gold_x,.gold_y;
+		sleep2( .dur*60*1000 ); // Minutes*60 > Seconds*1000 = Milliseconds required for sleep2
+		doevent strnpcinfo(0)+"::OnDone";
+	} else if($gold_acc != getcharid(3))
+		mes "The current owner is ^00FF00"+$gold_n$+"^000000.";
+	break;
+	
+	case 2:
+	mes .n$;
 	if(!.GRB_Room) {
 		mes "I'm sorry, but the battle isn't open yet.";
 		close;
@@ -64,24 +66,25 @@ switch(select("- "+( ($gold_acc)?( ($gold_acc == getcharid(3))?"Warp to Gold Roo
 	set @gold,1;
 	sleep2 2000;
 	if(getmapusers(.pvp$) == .limit) doevent strnpcinfo(0)+"::OnBattleStart";
-	end;
+	break;
 	
-	case 2:
+	case 3:
 	mes .n$;
 	mes "[ === Battle === ]";
 	mes "The Gold Room Battle is, like the name says, an pvp-type event where the last one to survive will be rewarded with access to his/her own Gold Room until the next battle.";
 	mes "The whole event has a max duration of "+.min+" minutes.";
-	mes "There can up to "+.limit+" players join to battle in the 3 minutes registration time.";
-	mes "The delay until the next battle is "+.delay +" days.";
+	mes "There can up to "+.limit+" players to battle with an registration time of 3 minutes.";
+	mes "The next battle is in "+.delay +" days after the last one.";
 	mes " ";
 	mes "[ === Gold Room === ]";
 	mes "The winner of an battle can visit his/her gold room in this "+.delay+" days for "+.dur+" minutes and always.";
 	mes "That means there are no restrictions in usage.";
-	close;
+	break;
 	
-	case 3:
-	close;
+	case 4:
+	break;
 }
+end;
 
 GM_M:
 next;
@@ -92,13 +95,13 @@ next;
 if(.GRB_Eve) doevent strnpcinfo(0)+"::OnDisable"; 
 else doevent strnpcinfo(0)+"::OnPrepare";
 mes .n$;
-mes "The event has turned "+ ( (.GRB_Eve)?"off":"on");
+mes "The event has turned "+ ( (.GRB_Eve)?"off":"on")+".";
 close;
 
 OnPCLogoutEvent:
 if(getcharid(3) != $gold_acc) end;
 OnDone:
-atcommand "@cleanmap";
+cleanmap .gold$,88,111,168,191;
 warp "SavePoint",0,0;
 end;
 
@@ -112,7 +115,7 @@ while(getmapusers(.gold$) != 0) {
 	makeitem 969,1,.gold$,rand(88,111),rand(168,191);
 	sleep2 1000;
 }		
-atcommand "@cleanmap";
+cleanmap .gold$,88,111,168,191;
 end;
 
 OnPrepare:
@@ -157,7 +160,7 @@ Ontimer180000: // 3 Minutes
 OnBattleStart:
 stopnpctimer;
 set .GRB_Room,0;
-announce .n$+": Registration closed, let's see how many has registered....",bc_all;
+announce .n$+": Registration closed, let's see how many have registered....",bc_all;
 sleep 10000;
 if(getmapusers(.pvp$) < 2) {
 	announce .n$+": It seems like there are not enough players to start the battle.",bc_all;
