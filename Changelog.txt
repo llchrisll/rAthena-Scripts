@@ -26,6 +26,72 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2ß17/11/10
+= Updated most Scripts:
+- "Tested with" 
+- "Script Made" into "Initial Version"
+- Script Optimization depending on Script, see below which was updated
+  > Exchanged @ with .@ or . variables
+  > Added OnInit 
+  > Cleaner Algorithm
+= Updated Ingame CP v1.2 to v1.3 [RE]
+- Script Optimization
+- Exchanged Edit Gender for Account to Character specific
+- Added .char_gender to set delay for change gender per Character
+- Fixxed Reuest Equip, which didn't work of getarg(0)
+= Renamed PvP-GvG-MvP Arena to Arena Master (pvp-gvg-mvp.txt to arena_master.txt) and Updated to v1.6:
+- Reduced PvP Rooms by adding Map Rotation Settings; Fixed Maps + Random Map each Day + Specific Map on an specific Day
+- Removed the Player Limitation except Party PvP
+- Reduced GvG Maps to 3
+- Removed the functions getPvPMapUsers and getPartyMapUsers
+- Added an announcer on Room Entry
+- Added in Party PvP an display how many parties are in which room before joining
+- Fixed minor bugs
+- Exchanged #CASHPOINTS Reward with Custom Variable Support, you can decide now
+- Modified the Arena Shop Multiplier by using an array to decide it for each Item seperatly
+- Moved the Arena Shop Config to the Arena Master NPC and made $@arena_ to .arena_ or .@arena_ variables
+= Updated Fame System v1.3 [RE]
+- Exchanged the first menu "if(set(.@m,select(" with an switch
+- Exchanged FamePoints_<Class> with FamePoints
+= Updated Security System v2.0 to v2.1 [RE]
+- Script Optimization
+- Removed Server Mode Selection - only SQL now
+- Added Prevention of dying and skipping password input
+= Updated Virtual Security Password System v1.2.1 to v1.3 [RE]
+- Merged every function into 1 > VSP_FUNC
+- Changed the Layout of the Function
+- Changed the OnPCLoginEvent
+- Removed the option choose the Password type
+- Replaced prompt() with select() duo the Unknown PC by using "Cancel"
+- Added an automatic kick "addtimer" after 1 minute
+  when the player didn't create/check the password successfully
+- Added an IP Check
+- Removed unnecessary comments
+= Updated InGame Forum v1.1 [RE]
+- Script Optimization
+- Removed Chat Room
+= Updated IP Ban NPC v1.0 to v1.1 [RE]
+- Script Optimization
+= Updated Broadcaster v1.3 [RE]
+- Script Optimization
+= Updated Card Compounder v1.0 to v1.1 [RE]
+- Script Optimization
+- Added config for custom Variable
+= Updated Dynamic Shop v1.1 [RE]
+- Added extra config for maximum items in the shop
+- Changed function ShopStuff
+= Updated GM Activity Log v1.0 to v1.1 [RE]
+- Forgot to change it back to correct version before previous commit
+- Script Optimization
+= Updated Vote NPC v1.1 to v1.2 [RE]
+- Script Optimization
+- Changed the way of the GM Menu
+= Updated Freebie NPC v1.0 [REQ]
+- Small modification
+= Updated Gold Room Battle v1.0 to v1.1 [REQ]
+- Fixed bugs and tested
+- Exchanged "atcommand @cleanmap" with script command "cleanmap;"
+------------------------------------------------------------------------------------------------------------------------
 * 2017/10/26
 = Updated Dungeon Quest Service v1.0 [WIP]
 - Changed the way how party members will be checked
@@ -64,8 +130,8 @@
   > Display Time NPC
   > Weekly SQL Wipe
 = Updated Tag Legend
-------------------------------------------------------------------------------------------------------------------------
 - Deleted the testing and unreleased folders
+------------------------------------------------------------------------------------------------------------------------
 * 2017/10/25
 = Updated Dungeon Quest Service v1.0 [WIP]
 - Exchanged Quest Pagination with an function
