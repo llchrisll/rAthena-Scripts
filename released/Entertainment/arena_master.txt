@@ -1,0 +1,1393 @@
+//===== rAthena Script =======================================
+//= Arena Master
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Initial Version
+//		  Added Multi Kill & SoundEffects
+//		  Added Bounty & Promotion Feature
+//		  Fully tested & Rewritten most of the code
+//		  - Since it didn't wanted to work like I wanted
+//		  - Couldn't test the Party PvP option though.
+//		  Added a bonus at the bounty feature
+//		  - If an player gains a "$@bty_bon_start" spree, "$@bty_bonus"
+//			will be given to the player, who kill him/her.
+//= 1.1 - Fixxed an Bounty bug - Thanks to raijin91
+//          = Also the bounty bonus wasn't added, kinda forgot that it seems
+//      - Changed the First Blood part
+//      - Changed the Chat blocking part
+//      - Shorted the sphree part a bit, still testing it.
+//      - Added an Cost Multiplier for the shop to adjust the prices for Mid Rate and higher Servers.
+//      - Added another function to get the map users in each room and each pvp.
+//= 1.2 - Compatible with rAthena
+//      - Fixed some bugs
+//= 1.3 - Made the Sphree Announcer dynamically
+//      - Made modification regarding the sphree ranking, removed doPromote; function
+//      - Shorted the ranking display choices
+//= 1.4 - Moved writeStats; into the kill part, bug with Logout prevented from saving in ranking
+//      - Fixed an bug with "First Blood" announcer
+//      - Updated the MvP Ranker to rAthena, @getmonsterinfo has an check for MvP EXP now
+//        - Removed limitation to MvP Arena, against every MvP useable now
+//      - Fixxed Ranking bug, didn't save Kills and stuff correctly.
+//      - Added an addtional Player Counter for each PvP Room
+//      - Added Class Limitation regarding 3rd Jobs
+//      - Fixxed an bug with Auto-Resurrect on Deathmatch Maps
+//      - Fixxed another Ranking bug, didn't display correctly
+//= 1.5 - Added Custom Bounty Map Feature, see line around '861'
+//      - Added to the Bounty Hunter an Locater, which locates the player...
+//      - Fixxed an bug about the Bounty Hunter, forgot to reset the @hunt variable
+//      - Removed First Blood completely
+//      - Removed Chat Block part completely + OnPCMapLoadEvent
+//      - Fixxed an Arena Shop bug by using $@arena_pay = 2 (Permanent Price Array) - Thanks to Lelantos for the bug report
+//      - Rewrote the whole check at the Party PvP, also fixxed the check for 
+//        online party member counting > misplaced the variables for "isloggedin" ... - Thanks to Lelantos for the bug report
+//= 1.6 - Reduced PvP Rooms by adding Map Rotation Settings; Fixed Maps + Random Map each Day + Specific Map on an specific Day
+//      - Removed the Player Limitation except Party PvP
+//      - Reduced GvG Maps to 3
+//      - Removed the functions getPvPMapUsers and getPartyMapUsers
+//      - Added an announcer on Room Entry
+//      - Added in Party PvP an display how many parties are in which room before joining
+//      - Fixed minor bugs
+//      - Exchanged #CASHPOINTS Reward with Custom Variable Support, you can decide now
+//		- Modified the Arena Shop Multiplier by using an array to decide it for each Item seperatly
+//      - Moved the Arena Shop Config to the Arena Master NPC and made $@arena_ to .arena_ or .@arena_ variables
+//===== Tested With =========================================
+//= rAthena SQL 07/16-2017 Revision
+//===== Description ==========================================
+//= PvP / GvG Arenas with ranking ladder & MvP Ranker.
+//= PvP Types:
+//  - Normal
+//  - Dispell: You'll be dispelled on Room entry.
+//  - Deathmatch: You'll be auto resurrect when you die.
+//    If you type @die, get comaed and similar, you'll be warped to your save point.
+//  - Party PvP: 2vs2, 3vs3, 4vs4, 5vs5
+//  -----------------------------------------------
+//= GvG: 3 Arenas, the default guild_vs1 - guild_vs3.
+//===== Comments & Credits =============================================
+// = Thanks to Lelantos for the idea of the Custom Bounty Map Feature
+//===== MySQL Entries ========================================
+/*
+// v1.0
+DROP TABLE IF EXISTS `arena_master`;
+CREATE TABLE `arena_master` (
+  `char_id` int(10) unsigned NOT NULL, 
+  `kills` smallint(5) unsigned DEFAULT '0', 
+  `death` smallint(5) unsigned DEFAULT '0', 
+  `hscore` smallint(5) unsigned DEFAULT '0', 
+  `bounty` smallint(5) unsigned DEFAULT '0',
+  `bounty_pts` smallint(5) unsigned DEFAULT '0',
+  `killer` smallint(5) unsigned DEFAULT '0', 
+  `domi` smallint(5) unsigned DEFAULT '0', 
+  `mega` smallint(5) unsigned DEFAULT '0', 
+  `unstopp` smallint(5) unsigned DEFAULT '0', 
+  `wicked` smallint(5) unsigned DEFAULT '0', 
+  `monster` smallint(5) unsigned DEFAULT '0', 
+  `godlike` smallint(5) unsigned DEFAULT '0', 
+  `holys` smallint(5) unsigned DEFAULT '0', 
+  `mvp` smallint(5) unsigned DEFAULT '0',
+PRIMARY KEY (`char_id`)
+) ENGINE=MyISAM;
+*/
+//=============== ToDo List ==========================
+//= Maybe adding a even more detailed class limitation, but just maybe
+//============================================================
+// ================= Arena Master ================== //
+prontera,164,163,5	script	Arena Master	808,{
+
+mes .n$;
+mes "Hello, "+strcharinfo(0)+"!";
+if(getgmlevel() > 79) 
+	if(select("- GM Menu:- Player Menu") == 1) 
+		goto GM_Menu;
+if($@pvpgvg_load == 1) {
+	mes "I'm sorry, but the Arena and it's features are not available yet. Try again in a few minutes please.";
+	close;
+}
+mes "How can I help you?";
+mes "Ranking Status: "+ ( ($@pvptable)?"Enabled":"Disabled");
+next;
+switch(select("- Arenas:- Rankings:- Arena Shop:- Information:- Nevermind")) {
+	
+// Arenas
+	case 1:
+	set @sphr,0;
+	set @bty,0;
+	set @killct,0;
+	mes .n$;
+	mes "In which arena do you want to fight?";
+	next;
+	switch(select("- PvP:- GvG:- Nevermind")) {
+// PvP
+		case 1:
+		mes .n$;
+		mes "Please choose the PvP Type:";
+		mes "In the \"()\" stands, if 3rd Jobs, only 3rd Jobs or All Jobs are allowed to enter.";
+		next;
+		switch($@class_disp[$disppvp_map]) {
+			case 0: set .@m_pvpdisp$,"No 3rd Jobs"; break;
+			case 1: set .@m_pvpdisp$,"Only 3rd Jobs"; break;
+			case 2: set .@m_pvpdisp$,"All Jobs"; break;
+		}
+		switch($@class_n[$npvp_map]) {
+			case 0: set .@m_pvpn$,"No 3rd Jobs"; break;
+			case 1: set .@m_pvpn$,"Only 3rd Jobs"; break;
+			case 2: set .@m_pvpn$,"All Jobs"; break;
+		}
+		switch($@class_dm[$dmpvp_map]) {
+			case 0: set .@m_pvpdm$,"No 3rd Jobs"; break;
+			case 1: set .@m_pvpdm$,"Only 3rd Jobs"; break;
+			case 2: set .@m_pvpdm$,"All Jobs"; break;
+		}
+		switch(select("- PvP Dispell ["+getmapusers($@disppvp$[$disppvp_map])+"] ("+.@m_pvpdisp$+"):- Normal PvP ["+getmapusers($@npvp$[$npvp_map])+"] ("+.@m_pvpn$+"):- PvP Deathmatch["+getmapusers($@dmpvp$[$dmpvp_map])+"] ("+.@m_pvpdm$+"):- Party PvP")) {
+		
+			// PvP Dispell
+			case 1:
+			mes .n$;
+			if($@class_disp[$disppvp_map] == 0 && eaclass()&EAJL_THIRD) {
+				mes "I'm sorry, but 3rd Classes are not allowed in this PvP Room.";
+				close;
+			} else if($@class_disp[$disppvp_map] == 1 && !(eaclass()&EAJL_THIRD)) {
+				mes "I'm sorry, but only 3rd Classes are allowed in this PvP Room.";
+				close;
+			}
+			mes "I'll warp you now to the PvP Room, also remove all your buffs.";
+			close2;
+			sc_end SC_ALL; // Remove every kind of buff
+			warp $@disppvp$[$disppvp_map],0,0;
+			announce "["+strcharinfo(0)+"] has entered the PvP Dispell Arena!",0;
+			end;
+			
+			//PvP Normal
+			case 2:
+			mes .n$;
+			if($@class_n[$npvp_map] == 0 && eaclass()&EAJL_THIRD) {
+				mes "I'm sorry, but 3rd Classes are not allowed in this PvP Room.";
+				close;
+			} else if($@class_n[$npvp_map] == 1 && !(eaclass()&EAJL_THIRD)) {
+				mes "I'm sorry, but only 3rd Classes are allowed in this PvP Room.";
+				close;
+			}
+			mes "I'll warp you now to the Normal PvP Room.";
+			close2;
+			warp $@npvp$[$npvp_map],0,0;
+			announce "["+strcharinfo(0)+"] has entered the Normal PvP Arena",0;
+			end;
+			
+			// PvP DM	
+			case 3:
+			mes .n$;
+			if($@class_dm[$dmpvp_map] == 0 && eaclass()&EAJL_THIRD) {
+				mes "I'm sorry, but 3rd Classes are not allowed in this PvP Room.";
+				close;
+			} else if($@class_dm[$dmpvp_map] == 1 && !(eaclass()&EAJL_THIRD)) {
+				mes "I'm sorry, but only 3rd Classes are allowed in this PvP Room.";
+				close;
+			}
+			mes "I'll warp you now to the PvP Deathmatch Room.";
+			close2;
+			set @dm,1;
+			warp $dmpvp$[$dmpvp_map],0,0;
+			announce "["+strcharinfo(0)+"] has entered the PvP Deathmatch Arena!",0;
+			end;
+		
+			// Party PvP
+			case 4:
+			mes .n$;
+			if(!getcharid(1)) {
+				mes "I'm sorry, but you are not in a party.";
+				mes "Please come back as soon you have found one.";
+				close;
+			}
+			if(getpartyleader(getcharid(1)) != strcharinfo(0)) {
+				mes "I'm sorry, but only your leader can register your party.";
+				close;
+			}
+			mes "Parties in Rooms:";
+			mes "2vs2: "+getmapusers($@pt2pvp$[$pt2pvp_map])/2;
+			mes "3vs3: "+getmapusers($@pt3pvp$[$pt3pvp_map])/3;
+			mes "4vs4: "+getmapusers($@pt4pvp$[$pt4pvp_map])/4;
+			mes "5vs5: "+getmapusers($@pt5pvp$[$pt5pvp_map])/5;
+			next;
+			mes .n$;
+			set @pty_id,getcharid(1);
+			getpartymember(@pty_id,1);
+			getpartymember(@pty_id,2);
+			set @ptymem,$@partymembercount;
+			copyarray @ptymemid[0],$@partymembercid,@ptymem; // Char ID
+			copyarray @ptymemaid[0],$@partymemberaid,@ptymem; // Account ID
+			set .@pt_ct,0;
+			for ( set .@pm,0; .@pm < @ptymem; set .@pm,.@pm + 1) 
+				if( isloggedin(@ptymemaid[.@pm],@ptymemid[.@pm]) == 1) 
+					set .@pt_ct,.@pt_ct + 1;
+
+			if(.@pt_ct < 2) {
+				mes "It seems like you don't the required members for the Party vs Party Mode.";
+				mes "You need at least two players, which have to be online, to be able to participate.";
+				close;
+			}
+			set .@pt,.@pt_ct;
+			mes "Chosen Party vs Party Mode:";
+			mes .@pt+"vs"+.@pt+" Party PvP";
+			mes "Class Restriction:";
+			switch( getd("$@class_p"+.@pt+"["+getd("$pt"+.@pt+"pvp_map")+"]") ) {
+				case 0: mes "No 3rd Jobs allowed"; break;
+				case 1: mes "Only 3rd Jobs allowed"; break;
+				case 2: mes "All Jobs allowed"; break;
+			}
+			next;
+			mes .n$;
+			if(getmapusers(getd("$@pt"+.@pt+"pvp$["+getd("$pt"+.@pt+"pvp_map")+"]")) >= (.@pt+.@pt)) {
+				mes "I'm sorry, but the "+.@pt+"vs"+.@pt+" Arena is already full.";
+				mes "Please come back later.";
+				close;
+			}
+			getpartymember(@pty_id,1);
+			getpartymember(@pty_id,2);
+			set @ptymem,$@partymembercount;
+			copyarray @ptymemid[0],$@partymembercid,@ptymem; // Char ID
+			copyarray @ptymemaid[0],$@partymemberaid,@ptymem; // Account ID
+			for ( set .@pm,0; .@pm < @ptymem; set .@pm,.@pm + 1) 
+				if(isloggedin(@ptymemaid[.@pm],@ptymemid[.@pm]) == 1)
+					if(getd("$@class_p"+.@pt+"["+getd("$pt"+.@pt+"pvp_map")+"]") == 0 && eaclass()&EAJL_THIRD) {
+						mes "I'm sorry, but 3rd Classes are not allowed in this PvP Room.";
+						close;
+					} else if(getd("$@class_p"+.@pt+"["+getd("$pt"+.@pt+"pvp_map")+"]") == 1 && !(eaclass()&EAJL_THIRD)) {
+						mes "I'm sorry, but only 3rd Classes are allowed in this PvP Room.";
+						close;
+					}
+			mes "I'll warp your party now.";
+			mes "Good luck.";
+			close2;
+			warpparty getd("$@pt"+.@pt+"pvp$["+getd("$pt"+.@pt+"pvp_map")+"]"),0,0,@pty_id;
+			announce "The Party ["+getpartyname(getcharid(1))+"] has entered the "+.@pt+"vs"+.@pt+" Party PvP Arena!",0;
+			end;
+		}
+		break;
+	
+		// GvG
+		case 2:
+		mes .n$;
+		if(!getcharid(2)) {
+			mes "I'm sorry, but you are not in a guild.";
+			close;
+		}
+		mes "Please choose the room you want to join:";
+		next;
+		set .@rchoi,select("- GvG 1 ["+getmapusers($@gvgr$[0])+"]:- GvG 2 ["+getmapusers($@gvgr$[1])+"]:- GvG 3 ["+getmapusers($@gvgr$[2])+"]") - 1;
+		mes .n$;
+		mes "I will warp you now.";
+		close2;
+		warp $@gvgr$[.@rchoi],0,0;
+		end;
+		break;
+		
+	// Nevermind
+		case 3:
+		goto R_Bye;
+		break;
+	}
+
+// Ranking
+	case 2:
+	mes .n$;
+	if(!$@pvptable) {
+		mes "I'm sorry, the ranking system is offline and thus I can't show you any ranking.";
+		close;
+	}
+	mes "Which ranking do you wanna see?";
+	next;
+	
+	set .@rank,select("- Kills:- Deaths:- High Scores:- Killing Sphree:- Dominating:- Mega Kill:- Unstoppable:- Wicked Sick:- Monster Kill:- GodLike:- Holy Sh1t:- MvP");
+	if(.@rank > 3 && .@rank < 12) // PvP Sphree Rankers
+		set .@listr$,$@sphree_rank$[.@rank-4];
+	else if(.@rank == 12) // MvP Hunters
+		set .@listr$,"mvp";
+	else { // PvP General K/D/High Score Rankers
+		setarray .@db_rank$[0],"kills","death","hscore";
+		set .@listr$,.@db_rank$[.@rank-1];
+	}
+	mes .n$;
+	mes "Which list do you want to see?";
+	next;
+	set .@limit,select("- Top 5:- Top 10:- Top 15:- Top 20:- Top 25:- Top 30:- Nevermind") * 5;
+	if(.@limit == 35) 
+		goto R_Bye;
+		
+	mes .n$;
+	mes "Ranking:";
+	switch(.@rank) {
+
+		case 1:	mes set(.@rankn$,"Top "+.@limit+" Killers");	set .@rankt$,"Kills";	break;
+		case 2:	mes set(.@rankn$,"Top "+.@limit+" Victims");	set .@rankt$,"Deaths";	break;
+		case 3:	mes set(.@rankn$,"Top "+.@limit+" High Scores");	set .@rankt$,"High Score";	break;
+		case 12: mes set(.@rankn$,"Top "+.@limit+" MvP Hunters");	set .@rankt$,"MvP Kills";	break;
+		default:	mes set(.@rankn$,"Top "+.@limit+" "+$@sphree_names$[@rank-4]+" Rankers");	set .@rankt$,$@sphree_names$[.@rank-4]+"s";	break;
+	}
+	mes "Correct?";
+	next;
+	if(select("- Yes:- No") == 2) goto R_Bye;
+	mes .n$;
+	mes "I will now list the ranking in your Chat Box.";
+	close2;
+	dispbottom "======= "+.@rankn$+" ===========";
+	dispbottom "Player Name:    "+.@rankt$;
+	if(query_sql("SELECT `char_id` , `"+.@listr$+"` FROM `arena_master` WHERE `"+.@listr$+"` > 0 ORDER BY `"+.@listr$+"` DESC LIMIT "+.@limit,.@ch_id,.@sh_r) == 0) {
+		dispbottom "No Player found.";
+		end;
+	}
+	for( set .@r,0; .@r < getarraysize(.@sh_r); set .@r,.@r + 1) {
+		query_sql "SELECT `name` FROM `char` WHERE `char_id` = '"+.@ch_id[.@r]+"'",.@ch_na$;
+		dispbottom .@ch_na$+":    "+.@sh_r[.@r];
+	}
+	end;
+	
+// Arena Shop
+	case 3:
+	mes .n$;
+	mes "Hello, I can sell your useful items for the daily PvP need and more.";
+	mes "Depending on the bounty, I will open the respective shop.";
+	switch($@bty_type) {
+		
+		case 0:
+		next;
+		mes .n$;
+		mes "I'm sorry, but the bounty feature is not enabled.";
+		close;
+		
+		case 1:
+		dispbottom "[Arena Shop]: I will now open the Bounty Shop, which uses \"Zeny\" as payment.";
+		break;
+		
+		case 2:
+		dispbottom "[Arena Shop]: I will now open the Bounty Shop, which uses \""+$@bty_cvard$+"\" as payment.";
+		dispbottom "[Arena Shop]: You have "+getd(""+$@bty_cvarn$)+" "+$@bty_cvard$+".";
+		break;
+		
+		case 3:
+		set @pts,0;
+		dispbottom "[Arena Shop]: I will now open the Bounty Shop, which uses \"Bounty Points\" as payment.";
+		query_sql "SELECT `bounty_pts` FROM `arena_master` WHERE `char_id` = '"+getcharid(0)+"'",@pts;
+		dispbottom "[Arena Shop]: You have "+@pts+" Bounty Points.";
+		break;
+	}
+	close2;
+	callshop "Arena_Shop",1;
+	npcshopattach "Arena_Shop";
+	end;
+
+	OnBuyItem:
+	for( set @s,0; @s < getarraysize(@bought_nameid); set @s,@s + 1) {
+		for( set @i,0; @i < getarraysize(.arena_sh); set @i,@i + 1) {
+			if(@bought_nameid[@s] == .arena_sh[@i]) {
+				if(checkweight(@bought_nameid[@s],@bought_quantity[@s]) == 1) {
+					set @c_item,(@bought_quantity[@s]*.arena_ar[@i]);
+					set @total,(@total + @c_item);
+					break;
+				} else {
+					dispbottom "[Arena Shop]: You have reached your weight limit, lose some weight and come back please.";
+					end;
+				}
+			}
+		}
+	}
+	switch($@bty_type) {
+
+		case 1:
+		if(Zeny >= @total) set Zeny,Zeny - @total;
+		else dispbottom "[Arena Shop]:You don't have enough Zeny.";
+		break;
+		
+		case 2: 
+		if(getd(""+$@bty_cvarn$) >= @total) setd(""+$@bty_cvarn$),getd(""+$@bty_cvarn$) - @total;
+		else dispbottom "[Arena Shop]:You don't have enough "+$@bty_cvard$+", currently "+getd(""+$@bty_cvarn$)+".";
+		break;
+		
+		case 3:
+		if(@pts >= @total) query_sql "UPDATE `arena_master` SET `bounty_pts` = `bounty_pts` - "+@total+" WHERE `char_id` = '"+getcharid(0)+"'";
+		else dispbottom "[Arena Shop]:You don't have enough Bounty Points, currently "+@pts;
+		break;
+	}
+	
+	for ( set @b,0; @b < getarraysize(@bought_nameid); set @b,@b + 1) 
+		getitem @bought_nameid[@b],@bought_quantity[@b];
+
+	set @total,0;
+	deletearray @bought_nameid[0],getarraysize(@bought_nameid);
+	deletearray @bought_quantity[0],getarraysize(@bought_quantity);
+	end;
+	
+// Information
+	case 4:
+	mes .n$;
+	mes "What do you want to know about?";
+	next;
+	switch(select("- PvP:- GvG:- Sphree:- Ranking:- Bounty Feature:- Nevermind")) {
+		
+		case 1:
+		mes "[=== PvP ===]";
+		mes "PvP Types:";
+		mes " - Normal";
+		mes " - Dispell";
+		mes " - Deathmatch";
+		mes " - Party PvP:";
+		mes "   - 2vs2";
+		mes "   - 3vs3";
+		mes "   - 4vs4";
+		mes "   - 5vs5";
+		next;
+		mes "[=== PvP ===]";
+		mes "Dispell PvP:";
+		mes " - You'll be dispelled, when you enter the room.";
+		mes " ";
+		mes "Deathmatch PvP:";
+		mes " - You'll be auto-resurrect on death, except you type @die, get comaed or similar, then you'll be warped to your savepoint.";
+		close;
+		
+		case 2:
+		mes "[=== GvG ===]";
+		mes "In these rooms, you can see what WoE would look like.";
+		close;
+		
+		case 3:
+		mes "[=== Sphree ===]";
+		mes "Sphree - Required Kills.";
+		mes "First Blood - 1";
+		for ( set .@s,0; .@s < getarraysize($@sphree_names$); set .@s,.@s + 1) 
+			mes $@sphree_names$[.@s] +" - "+$@sphree_kills[.@s];
+		
+		next;
+		mes "[=== Sphree ===]";
+		mes "For each sphree you accomplish, except First Blood, you gain an point for the bounty feature, if it has been activated.";
+		mes "For more ask me about the Bounty Feature.";
+		next;
+		mes "[=== Sphree ===]";
+		mes "Also there is the Multi Kill Sphrees, but you won't recieve points for them.";
+		mes "The time span you can achieve them is "+ $@multi/1000+" seconds.";
+		next;
+		mes "[=== Sphree ===]";
+		mes "In this time you, if you kill";
+		mes " - one more player = Double Kill";
+		mes " - two more players = Triple Kill";
+		mes " - three or more players = Ultra Kill";
+		close;
+		
+		case 4:
+		mes "[=== Ranking ===]";
+		mes "Kills, Deaths, Sphree Counts (like Killing Sphree), the highest kill count till you died and lists it in either a Top 5, 10, 15, 20, 25 or	a Top 30 List with the wanted information you have chosen.";
+		close;
+		
+		case 5:
+		mes .n$;
+		if(!$@bty_type) {
+			mes "This feature isn't activate.";
+			close;
+		}
+		mes "Current Bounty Reward: "+ $@bty_price + " " + ( ($@bty_type == 1)?"Zeny": ( ($@bty_type == 2)?$@bty_cvard$:"Bounty Points") );
+		mes "Also an Shop exists so you can prepare you for battle easier.";
+		mes "Next is an Bounty Bonus, which automatically activates when someone reaches "+$@bty_bon_start+" kills.";
+		mes "An announce will be displayed, to stop him and that you get an bonus to the bounty price, which depends on the bounty type.";
+		mes "Current Bonus is: "+$@bty_bonus+" " + ( ($@bty_type == 1)?"Zeny": ( ($@bty_type == 2)?$@bty_cvard$:"Bounty Points") );
+		mes "Also there is an Bounty Bonus Multiplier, but the value of that will stay an secret.";
+		next;
+		mes .n$;
+		mes "The bounty depends on your victims sphree.";
+		mes "Here is a list of them:";
+		mes " ";
+		mes "Sphree - Points";
+		for ( set .@s,0; .@s < getarraysize($@sphree_names$); set .@s,.@s + 1) 
+			mes $@sphree_names$[.@s] +" - "+.@s;
+			
+		next;
+		
+		case 6:
+		break;
+	}
+
+// Nevermind
+	case 5:
+	break;
+}
+
+R_Bye:
+mes .n$;
+mes "Okay, see ya.";
+close;
+
+// GM Menu
+GM_Menu:
+mes "How can I help you?";
+next;
+switch(select("- Table Settings:- Debug State:- Nevermind")) {
+	
+	case 1:
+	mes .n$;
+	mes "Table Status: "+( ($@pvptable == 1)?"":"Not ")+"Installed";
+	mes "What do you want to do?";
+	next;
+	if($@pvptable == 1) {
+		switch(select("- Erase Content from Table:- Delete Table completely:- Nevermind")) {
+			case 1:
+			mes .n$;
+			mes "Are you sure, that you want to delete the rankings from the tables?";
+			if(select("- Yes:- No") - 1) close;
+			next;
+			mes .n$;
+			mes "Here we go!";
+			query_sql "TRUNCATE TABLE `arena_master`";
+			break;
+			
+			case 2:
+			mes .n$;
+			mes "Are you sure, that you want to delete the whole table from the database?";
+			if(select("- Yes:- No") - 1) close;
+			next;
+			mes .n$;
+			mes "Here we go!!!";
+			query_sql "DROP TABLE IF EXISTS `arena_master`";
+			set $@pvp_table,0;
+			break;
+			
+			case 3:
+			break;
+		}
+	} else if($@pvptable == 0) {
+		if(select("- Create Tables:- Nevermind") - 1) close;
+		mes .n$;
+		mes "Are you sure, that you want to create the tables for the rankings?";
+		if(select("- Yes:- No") - 1) close;
+		next;
+		mes .n$;
+		mes "Here we go!";
+		query_sql "CREATE TABLE `arena_master` ( `char_id` int(10) unsigned NOT NULL, `kills` smallint(5) unsigned DEFAULT '0', `death` smallint(5) unsigned DEFAULT '0', `hscore` smallint(5) unsigned DEFAULT '0', `bounty` smallint(5) unsigned DEFAULT '0', `bounty_pts` smallint(5) unsigned DEFAULT '0', `killer` smallint(5) unsigned DEFAULT '0', `domi` smallint(5) unsigned DEFAULT '0', `mega` smallint(5) unsigned DEFAULT '0', `unstopp` smallint(5) unsigned DEFAULT '0', `wicked` smallint(5) unsigned DEFAULT '0', `monster` smallint(5) unsigned DEFAULT '0', `godlike` smallint(5) unsigned DEFAULT '0', `holys` smallint(5) unsigned DEFAULT '0', `mvp` smallint(5) unsigned DEFAULT '0' )";
+		set $@pvp_table,1;
+		break;
+	}
+	close;
+	
+	case 2:
+	mes .n$;
+	mes "Debug State: "+( ($arena_debug == 1)?"Online":"Offline");
+	mes "Do you want to change it?";
+	if(select("- Yes:- No") - 1) close;
+	next;
+	mes .n$;
+	mes "Debug State has been turned "+ ( (!$arena_debug)?"on":"off")+".";
+	set $arena_debug,!$arena_debug;
+	break;
+	
+	case 3:
+	break;
+}
+close;
+
+OnLoading:
+set .n$,"["+strnpcinfo(1)+"]";
+while($@pvpgvg_load) {
+	delwaitingroom;
+	waitingroom "Arena: Closed",0;
+	sleep 2000;
+}
+delwaitingroom;
+announce "PvP/GvG Arena is now opened.",0;
+waitingroom "PvP/GvG Arena: Open",0;
+if($arena_debug) debugmes "Main OnInit Loaded, continuing with Arena Shop";
+if($@bty_type) { // If Bounty is enabled
+	// Shop Items: PvP useful stuff, like Elements, Boxes and Food
+	// These will be used for all shops, but the prices depends on the Bounty Type you have set.
+	setarray .arena_sh[0],12020, // [0] == Cursed Water
+						   12028, // [1] == Box of Thunder
+						   12029, // [2] == Box of Gloom
+						   12030, // [3] == Box of Resentment
+						   12031, // [4] == Box of Drowsiness
+						   12032, // [5] == Box of Stroms
+						   12033, // [6] == Box of Sunlight
+						   12034, // [7] == Box of Panting
+						   12108, // [8] == Scroll Package
+						   12215, // [9] == LV 10 Blessing Scroll
+						   12216, // [10] == LV 10 Agi Scroll
+						   12217, // [11] == LV 5 Aspersio Scroll
+						   12218, // [12] == LV 5 Assumptio Scroll
+						   12219, // [13] == LV 10 Wind Walker Scroll
+						   12075, // [14] == Steamed Tongue
+						   12080, // [15] == Dragon Breath Cocktail
+						   12085, // [16] == Immortal Stew
+						   12090, // [17] == Steamed Desert Scorpions
+						   12095, // [18] == Hwergelmir's Tonic
+						   12100, // [19] == Cooked Nice Tail's Tails
+						   12114, // [20] == Elemental Converter[Fire]
+						   12115, // [21] == Elemental Converter[Water]
+						   12116, // [22] == Elemental Converter[Earth]
+						   12117, // [23] == Elemental Converter[Wind]
+						   12118, // [24] == Fireproof Potion
+						   12119, // [25] == Coldproof Potion
+						   12120, // [26] == Earthproof Potion
+						   12121, // [27] == Thunderproof Potion
+						   13543, // [28] == Chemical Protection Helm Scroll Box
+						   13544, // [29] == Chemical Protection Shield Scroll Box
+						   13545, // [30] == Chemical Protection Armor Scroll Box
+						   13546, // [31] == Chemical Protection Weapon Scroll Box
+						   13547, // [32] == Repair Weapon Scroll Box
+						   14593; // [33] == Mystical Amplification Scroll
+
+	// Prices:
+	// Two ways of doing so:
+	// - Per formula
+	// - Per Array
+	// You can determine for each currency the way of calculation and prices.
+	// If you want to use the formula, set ".arena_pay" to 1.
+	// If you wanna use the array, set ".arena_pay" to 2, 
+	// but remember to put the prices for all items, also there is no multiplier added for this.
+	set .@arena_pay,1;
+	
+	// Cost Multiplier:
+	// The value here will multiply the costs in the shop.
+	// Fill in the index of the item array for which Item you want to use the multiplier.
+	// * Suggested Values:
+	// - Minimum: 1
+	// - Maximum: 10
+	// Note: On Mid Rate and High Rate Servers, it's easy to gain money very fast.
+	// So I added this to only increase the costs in the shop, but not the gain per kill.
+	// Note2: NEVER PUT '0' ALSO I DIDN'T ADD AN PREVENTION IF YOU GO HIGHER THAN '10'!!!
+	setarray .@arena_multi[0],1, // [0]
+							  2, // [1]
+							  2, // [2]
+							  2, // [3]
+							  2, // [4]
+							  2, // [5]
+							  2, // [6]
+							  2, // [7]
+							  4, // [8]
+							  4, // [9]
+							  4, // [10]
+							  4, // [11]
+							  4, // [12]
+							  4, // [13]
+							  5, // [14]
+							  5, // [15]
+							  5, // [16]
+							  5, // [17]
+							  5, // [18]
+							  5, // [19]
+							  3, // [20]
+							  3, // [21]
+							  3, // [22]
+							  3, // [23]
+							  1, // [24]
+							  1, // [25]
+							  1, // [26]
+							  1, // [27]
+							  4, // [28]
+							  4, // [29]
+							  4, // [30]
+							  4, // [31]
+							  3, // [32]
+							  2; // [33]
+
+	if(.@arena_pay == 1) {
+// ============== * By Formula * ================
+// Note: If the formula results in a decimal number it will be degraded.
+
+		for ( set .@s,0; .@s < getarraysize(.arena_sh); set .@s,.@s + 1) {
+		// =============== Zeny Formula ========== //
+			// Default: (($@bty_price+(.@s*($@bty_price/10)))/2)*.@arena_multi
+			// Base Price = $@bty_price, "Bonus" = + (Index ID* ($@bty_price/10))/2
+			// Example: 5000 + (4(=Index of 12031)*(5000/10=500) > 7000/2 = 3500 Zeny for 12031
+			// With Multiplier: ".@arena_multi[4] = 5": 3500 * 5 = 17500
+			if($@bty_type == 1) set .@arena_fo,(($@bty_price+(.@s*($@bty_price/10)))/2)*.@arena_multi[.@s];
+			
+		// =============== Custom Points Formula ========== //
+			// Default: (($@bty_price+.@s)/2)*.@arena_multi
+			// Base Price = $@bty_price, "Bonus" = + Index ID/2
+			// Example: 2 + 4(=Index of 12031) > 6/2 = 3 Custom Points for 12031
+			// With Multiplier: ".@arena_multi[4] = 5": 3 * 5 = 15
+			else if($@bty_type == 2) set .@arena_fo,(($@bty_price+.@s)/2)*.@arena_multi[.@s];
+			
+		// =============== Bounty Points Formula ========== //
+			// Default: (($@bty_price+(.@s*10))/2)*.@arena_multi
+			// Base Price = $@bty_price, "Bonus" = + (Index ID* 10)/2
+			// Example: 5 + (4(=Index of 12031)*10) > 45/2 = 22 Bounty Points for 12031
+			// With Multiplier: ".@arena_multi[4] = 5": 22 * 5 = 110
+			else if($@bty_type == 3) set .@arena_fo,(($@bty_price+(.@s*10))/2)*.@arena_multi[.@s];
+			
+		// =============== Adding the price (calculated by the formula) to the array ========== //
+			setarray .arena_ar[.@s],.@arena_fo;
+		}
+
+	// Price Array
+	} else 
+		setarray .arena_ar[0],100, // [0]
+							   100, // [1]
+							   100, // [2]
+							   100, // [3]
+							   100, // [4]
+							   100, // [5]
+							   100, // [6]
+							   100, // [7]
+							   100, // [8]
+							   100, // [9]
+							   100, // [10]
+							   100, // [11]
+							   100, // [12]
+							   100, // [13]
+							   100, // [14]
+							   100, // [15]
+							   100, // [16]
+							   100, // [17]
+							   100, // [18]
+							   100, // [19]
+							   100, // [20]
+							   100, // [21]
+							   100, // [22]
+							   100, // [23]
+							   100, // [24]
+							   100, // [25]
+							   100, // [26]
+							   100, // [27]
+							   100, // [28]
+							   100, // [29]
+							   100, // [30]
+							   100, // [31]
+							   100, // [32]
+							   100; // [33]
+	
+	npcshopdelitem "Arena_Shop",512;
+	// Adding Items and Prices to the Shop
+	for ( set .@s,0; .@s < getarraysize(.arena_sh); set .@s,.@s + 1)
+		npcshopadditem "Arena_Shop",.arena_sh[.@s],.arena_ar[.@s];
+		
+if($arena_debug) debugmes "Arena Shop loaded - Items: "+getarraysize(.arena_sh)+", Prices: "+getarraysize(.arena_ar);
+}
+end;
+}
+// =============== Bounty Shop =========== //
+-	shop	Arena_Shop	-1,512:-1
+// =============== Main Settings ===============//
+-	script	PvPGvGMain	-1,{
+end;
+
+OnInit:
+freeloop(1);
+// =============== Ranking Check & Debug Messages ================//
+set $@pvpgvg_load,1;
+//set $arena_debug,1;
+initnpctimer;
+if($arena_debug) debugmes "====== Arena Master - Debug initiate... ========";
+if(query_sql("SHOW TABLES LIKE 'arena_master'",.@pvptab) == 0) set $@pvptable,0; else set $@pvptable,1;
+donpcevent "Arena Master::OnLoading";
+// ============== Sphree Settings ============//
+setarray $@sphree_names$[0],"Killing Sphree","Dominating","Mega Kill","Unstoppable","Wicked Sick","Monster Kill","GodLike","Holy Sh1t";
+setarray $@sphree_kills[0],3,5,7,9,11,13,15,17; // Kills required for each sphree.
+setarray $@sphree_wav$[0],"killingspree","dominating","megakill","unstoppable","wickedsick","monsterkill","godlike","holyshit"; // WAV file names
+setarray $@sphree_rank$[0],"killer","domi","mega","unstopp","wicked","monster","godlike","holys"; // Variable Names for the ranking of each sphree
+set $@multi,5000; // Time Span for chance to gain Multi-Kill in milliseconds.
+if($arena_debug) debugmes "PvP Sphree Names loaded: "+getarraysize($@sphree_names$);
+if($arena_debug) debugmes "PvP Sphree Kills loaded: "+getarraysize($@sphree_kills);
+if($arena_debug) debugmes "PvP Sphree WAV Names loaded: "+getarraysize($@sphree_wav$);
+if($arena_debug) debugmes "PvP Sphree Ranking Names loaded: "+getarraysize($@sphree_rank$);
+// ============== Bounty Settings =========//
+// Bounty Type: 
+// * 0 = Off
+// * 1 = Zeny
+// * 2 = Custom Points
+// * 3 = Bounty Points
+set $@bty_type,2;
+if($@bty_type) {
+	set $@bty_bonus,5; // Bonus, if you kill an player
+	set $@bty_bon_start,4; //which has achieved an spree of "$@bty_bon_start"
+	set $@bty_bonus_multi,1; // Use Bonus Multiplier depending on the Bounty Type? See seperate sections below
+	set $@bty_bonus_m,1000; // Multiplier for Bounty Bonus
+	// Custom Points Settings
+	set $@bty_cvard$,"Cash Points"; // What to display for players
+	set $@bty_cvarn$,"#CASHPOINTS"; // Actual Variable Name
+	
+	// =============== Zeny ========== //
+	if($@bty_type == 1) 
+		set $@bty_price,5000; // Zeny per Sphree
+	
+	// =============== Custom Points ========== //
+	else if($@bty_type == 2)
+		set $@bty_price,2; // Custom Points per Sphree
+	
+	// =============== Bounty Points ========== //
+	else if($@bty_type == 3)
+		set $@bty_price,5; // Bounty Points per Sphree
+
+	// Custom Bounty Maps
+	// = Maps on which you also can gain the reward
+	// 1 = On
+	// 0 = Off, ordinary ones
+	set $@bty_cmap,1;
+	
+	if($@bty_cmap == 1) {
+		// Map Type:
+		// 1 = Every Map with PvP/GvG Mapflags
+		// 2 = Specific (Array below)
+		set $@bty_cmap_type,2;
+		
+		if($@bty_cmap_type == 2) {
+			// Map Array
+			// Put the either the whole map name
+			// or a part of it to add more maps with the part containing
+			setarray $@bty_cmaps$[0],"prt_fild08","prt_gld";
+			
+			// Which map is a PvP/GvG Map?
+			// 6 = PvP
+			// 9 = GvG
+			// Note: In the same order as above
+			setarray $@bty_cmap_pg[0],6,9;
+		}
+		
+		// Party Usage
+		// 1 = No parties Allowed
+		// 2 = Parties allowed
+		setarray $@bty_cmap_pty,2,1;
+		
+		// Mapflags
+		setarray $@bty_cmapfl[0],0, //mf_nomemo
+							//	 1, //mf_noteleport
+								 2, //mf_nosave
+								 3, //mf_nobranch
+								 4, //mf_nopenalty
+								 5, //mf_nozenypenalty
+								11, //mf_notrade
+							//	13, //mf_nowarp
+							//	22, //mf_nogo
+								33, //mf_noreturn
+							//	34, //mf_nowarpto
+							//	35, //mf_nightmaredrop
+								38, //mf_nodrop
+								41, //mf_novending
+								44, //mf_noexppenalty
+								14, //mf_partylock
+								 7; //mf_pvp_noparty
+
+		// ======= Auto Mapflag Adding ===============//
+		for ( set .@m,0; .@m < getarraysize($@bty_cmaps$); set .@m,.@m + 1 ) {
+			if($arena_debug) debugmes "Mapflag set at "+$@bty_cmaps$[.@m] + " initiate...";
+			for ( set .@mf,0; .@mf < getarraysize($@bty_cmapfl); set .@mf,.@mf + 1 ) {
+				if(($@bty_cmapfl[.@mf] == 14 || $@bty_cmapfl[.@mf] == 7) && $@bty_cmap_pty[.@m] == 1) continue;
+				setmapflag $@bty_cmaps$[.@m],$@bty_cmapfl[.@mf];
+				if($arena_debug) debugmes "Mapflag "+ $@bty_cmapfl[.@mf] +" set at "+$@bty_cmaps$[.@m] + " complete";
+			}
+			// PvP or GvG Mapflag
+			setmapflag $@bty_cmaps$[.@m],$@bty_cmap_pg[.@m];
+			if($arena_debug) debugmes "Mapflag "+ $@bty_cmap_pg[.@m] +" set at "+$@bty_cmaps$[.@m] + " complete";
+		}
+	}
+}
+if($arena_debug) debugmes "Bounty Shop - Currency: " + ( ($@bty_type == 1)?"Zeny": ( ($@bty_type == 2)?$@bty_cvard$:"Bounty Points") ) + ", Basic Price: "+ $@bty_price;
+// Bounty Calculation:
+// Scroll down till the line with "function	getBounty	{"
+if($arena_debug) debugmes "Bounty Type loaded: "+$@bty_type;
+// ============ GvG Settings ============//
+setarray $@gvgr$[0],"guild_vs1","guild_vs2","guild_vs3";
+if($arena_debug) debugmes "Guild Maps loaded: "+getarraysize($@gvgr$);
+// Party Usage
+// 1 = No parties Allowed
+// 2 = Parties allowed
+setarray $@gvg_pty[0],2,2,2;
+// ======== Mapflags ======== //
+// If you want you can add more mapflags
+setarray .gvg_mf[0],0, //mf_nomemo
+					 1, //mf_noteleport
+					 2, //mf_nosave
+					 3, //mf_nobranch
+					 4, //mf_nopenalty
+					 5, //mf_nozenypenalty
+					 9, //mf_gvg
+					11, //mf_notrade
+					13, //mf_nowarp
+					15, //mf_noicewall
+					22, //mf_nogo
+					33, //mf_noreturn
+					34, //mf_nowarpto
+					35, //mf_nightmaredrop
+					38, //mf_nodrop
+					41, //mf_novending
+					44, //mf_noexppenalty
+					14, //mf_partylock
+					10; //mf_gvg_noparty
+					
+if($arena_debug) debugmes "Guild Mapflags loaded: "+getarraysize(.gvg_mf);
+if($arena_debug) debugmes "Array Reading of GvG Maps complete";
+for ( set .@m,0; .@m < getarraysize($@gvgr$); set .@m,.@m + 1 ) {
+	if($arena_debug) debugmes "Mapflag set at "+$@gvgr$[.@m] + " initiate...";
+	for ( set .@mf,0; .@mf < getarraysize(.gvg_mf); set .@mf,.@mf + 1 ) {
+		if((.gvg_mf[.@mf] == 14 || .gvg_mf[.@mf] == 10) && .gvg_pty[.@m] == 2) continue;
+		setmapflag $@gvgr$[.@m],.gvg_mf[.@mf];
+		if($arena_debug) debugmes "Mapflag "+ .gvg_mf[.@mf] +" set at "+$@gvgr$[.@m] + " complete";
+	}
+}
+if($arena_debug) debugmes "Guild Mapflag loading completed";
+// ============ PvP Settings ============//
+// = You can use your own Maps as you like, even reduce or put more
+// = These below are the default PvP Maps
+// ====== Dispell PvP ==========//
+setarray $@disppvp$[1],"pvp_y_1-1","pvp_y_1-4","pvp_y_1-2","pvp_y_1-3","pvp_y_1-5";
+if($arena_debug) debugmes "PvP Dispell Maps loaded: "+(getarraysize($@disppvp$)-1);
+// ================== Normal Maps ================//
+setarray $@npvp$[1],"pvp_y_2-1","pvp_y_2-4","pvp_y_2-2","pvp_y_2-3","pvp_y_2-5";
+if($arena_debug) debugmes "PvP Normal Maps loaded: "+(getarraysize($@npvp$)-1);
+// ================== Deathmatch Maps ================//
+setarray $@dmpvp$[1],"pvp_y_3-1","pvp_y_3-4","pvp_y_3-2","pvp_y_3-3","pvp_y_3-5";
+if($arena_debug) debugmes "PvP DM Maps loaded: "+(getarraysize($@dmpvp$)-1);
+// ========= 2vs2 Party PvP ==========//
+setarray $@pt2pvp$[1],"pvp_y_4-1","pvp_y_4-4","pvp_y_4-2","pvp_y_4-3","pvp_y_4-5";
+if($arena_debug) debugmes "Party PvP 2vs2 Maps loaded: "+(getarraysize($@pt2pvp$)-1);
+// ========= 3vs3 Party PvP ==========//
+setarray $@pt3pvp$[1],"pvp_y_5-1","pvp_y_5-4","pvp_y_5-2","pvp_y_5-3","pvp_y_5-5";
+if($arena_debug) debugmes "Party PvP 3vs3 Maps loaded: "+(getarraysize($@pt3pvp$)-1);
+// ========= 4vs4 Party PvP ==========//
+setarray $@pt4pvp$[1],"pvp_y_6-1","pvp_y_6-4","pvp_y_6-2","pvp_y_6-3","pvp_y_6-5";
+if($arena_debug) debugmes "Party PvP 4vs4 Maps loaded: "+(getarraysize($@pt4pvp$)-1);
+// ========= 5vs5 Party PvP ==========//
+setarray $@pt5pvp$[1],"pvp_y_7-1","pvp_y_7-4","pvp_y_7-2","pvp_y_7-3","pvp_y_7-5";
+if($arena_debug) debugmes "Party PvP 5vs5 Maps loaded: "+(getarraysize($@pt5pvp$)-1);
+// ======= Party Usage ==========
+// 1 = No parties Allowed
+// 2 = Parties allowed
+setarray .disp_pty[1],2,2,2,2,2;
+setarray .n_pty[1],2,2,2,2,2;
+setarray .dm_pty[1],2,2,2,2,2;
+// ============= Class Limitation ========//
+// * Values:
+// 0 = No 3rd Job Allowed
+// 1 = Only 3rd Job Allowed
+// 2 = All
+// --------------------------------------
+// * Dispell PvP Rooms
+setarray $@class_disp[1],2,2,2,2,2;
+// * Normal PvP Rooms
+setarray $@class_n[1],2,2,2,2,2;
+// * Deathmatch PvP Rooms
+setarray $@class_dm[1],2,2,2,2,2;
+// * Party PvP 2vs2 Rooms
+setarray $@class_p2[1],2,2,2,2,2;
+// * Party PvP 3vs3 Rooms
+setarray $@class_p3[1],2,2,2,2,2;
+// * Party PvP 4vs4 Rooms
+setarray $@class_p4[1],2,2,2,2,2;
+// * Party PvP 5vs5 Rooms
+setarray $@class_p5[1],2,2,2,2,2;
+//==============================
+// ===== Map Rotation ====== //
+// 1 = Fixed Map (Always Default)
+// 2 = Random each Day
+// 3 = Each specific Day an specific Map
+set .pvp_map,3;
+// ===== 1: Fixed Map (Always Default) ======== //
+// Type the Index of $@<Type>pvp$ for the Map to be used
+set $disppvp_map,2;
+set $npvp_map,3;
+set $dmpvp_map,1;
+set $pt2pvp_map,4;
+set $pt3pvp_map,4;
+set $pt4pvp_map,4;
+set $pt5pvp_map,4;
+	
+// ===== 3: Specific Day ======== //
+if(.pvp_map == 3) {
+	//     > Chose your time in the same row as the $@pvp_maps$ order
+	//     > Values for the Array:
+	//       MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
+	// ============================== //
+	setarray $@disppvp_day[1],MONDAY,MONDAY,WEDNESDAY,SATURDAY,TUESDAY;
+	setarray $@npvp_day[1],TUESDAY,SATURDAY,WEDNESDAY,THURSDAY,MONDAY;
+	setarray $@dmpvp_day[1],WEDNESDAY,MONDAY,SUNDAY,TUESDAY,FRIDAY;
+	setarray $@pt2pvp_day[1],FRIDAY,TUESDAY,SATURDAY,MONDAY,TUESDAY;
+	setarray $@pt3pvp_day[1],FRIDAY,TUESDAY,SATURDAY,MONDAY,TUESDAY;
+	setarray $@pt4pvp_day[1],FRIDAY,TUESDAY,SATURDAY,MONDAY,TUESDAY;
+	setarray $@pt5pvp_day[1],FRIDAY,TUESDAY,SATURDAY,MONDAY,TUESDAY;
+}
+// ======== Mapflags ======== //
+// If you want to add more mapflags, 
+// add them before the last two, which are for allowing party or not
+setarray .pvp_mf[0],0, //mf_nomemo
+					 1, //mf_noteleport
+					 2, //mf_nosave
+					 3, //mf_nobranch
+					 4, //mf_nopenalty
+					 5, //mf_nozenypenalty
+					11, //mf_notrade
+					13, //mf_nowarp
+					22, //mf_nogo
+					33, //mf_noreturn
+					34, //mf_nowarpto
+					35, //mf_nightmaredrop
+					38, //mf_nodrop
+					41, //mf_novending
+					44, //mf_noexppenalty
+					14, //mf_partylock
+					 7; //mf_pvp_noparty
+if($arena_debug) debugmes "PvP Mapflags loaded: "+(getarraysize(.pvp_mf)-1);
+function writeStats;
+if($arena_debug) debugmes "Write Stats Function loaded.";
+function getBounty;
+function writeBounty;
+if($arena_debug) debugmes "Bounty Function loaded.";
+function PVP_BTY_CMAP;
+if($arena_debug) debugmes "Custom Bounty Map Function loaded.";
+stopnpctimer;
+set .time,getnpctimer(0);
+if($arena_debug) debugmes "Loading Time: "+.time+" seconds.";
+freeloop(0);
+set $@pvpgvg_load,0;
+
+OnClock0001:
+freeloop(1);
+setarray .@pre$[0],"disp","n","dm","pt2","pt3","pt4","pt5";
+if(.pvp_map == 2) {
+	if($arena_debug) debugmes "Random Map Rotation:";
+	for ( set .@l,0; .@l < getarraysize(.@pre$); set .@l,.@l + 1) {
+		if($arena_debug) debugmes ".@pre$ = "+.@pre$[.@l];
+		if($arena_debug) debugmes "Array Size: $@"+.@pre$[.@l]+"pvp$ = "+getarraysize(getd("$@"+.@pre$[.@l]+"pvp$"));
+		
+		setd("$"+.@pre$[.@l]+"pvp_map"),rand(1,getarraysize(getd("$@"+.@pre$[.@l]+"pvp$"))-1);
+		
+		if($arena_debug) debugmes "$"+.@pre$[.@l]+"pvp_map = "+getd("$"+.@pre$[.@l]+"pvp_map");
+		if($arena_debug) debugmes "$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_map")+"] == "+getd("$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_map")+"]");
+	
+		if(!getd("$"+.@pre$[.@l]+"pvp_last") || getd("$"+.@pre$[.@l]+"pvp_last") != getd("$"+.@pre$[.@l]+"pvp_map")) 
+			setd("$"+.@pre$[.@l]+"pvp_last"),getd("$"+.@pre$[.@l]+"pvp_map");
+	}
+} else if(.pvp_map == 3) {
+	if($arena_debug) debugmes "Specific Day an Specific Map:";
+	for ( set .@l,0; .@l < getarraysize(.@pre$); set .@l,.@l + 1) {
+		if($arena_debug) debugmes ".@pre$ = "+.@pre$[.@l];
+		if($arena_debug) debugmes "Previous Map: "+getd("$"+.@pre$[.@l]+"pvp_map");
+		// Saving the previous Map
+		if($arena_debug) debugmes "Saving Previous Map: "+getd("$@"+.@pre$[.@l]+"pvp_last");		
+		setd("$"+.@pre$[.@l]+"pvp_last"),getd("$"+.@pre$[.@l]+"pvp_map");	
+		
+		for ( set .@t,1; .@t < getarraysize(getd("$@"+.@pre$[.@l]+"pvp$")); set .@t,.@t + 1) {
+			if($arena_debug) debugmes "Checking Day of ["+.@t+"]: "+getd("$@"+.@pre$[.@l]+"pvp_day["+.@t+"]")+" == "+gettime(DT_DAYOFWEEK);			
+			if(getd("$@"+.@pre$[.@l]+"pvp_day["+.@t+"]") == gettime(DT_DAYOFWEEK)) {
+				setd("$"+.@pre$[.@l]+"pvp_map"),.@t;
+				if($arena_debug) debugmes "Day Check passed: "+getd("$"+.@pre$[.@l]+"pvp_map")+" == "+.@t;
+			}
+		}
+	}
+}
+if($arena_debug) debugmes "OnClock0001 and/or OnInit loaded, Auto Mapflag adding now....";
+// ======= Auto Mapflag Adding ===============//
+// ======= Dispell PvP ===============//
+if($arena_debug) debugmes "Mapflag set at "+$@disppvp$[$disppvp_map] + " initiate...";
+for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
+	if((.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) && .disp_pty[.@m] == 2) continue;
+	setmapflag $@disppvp$[$disppvp_map],.pvp_mf[.@mf];
+	if($disppvp_map != $disppvp_last) 
+		removemapflag $@disppvp$[$disppvp_last],.pvp_mf[.@mf];
+	if($arena_debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@disppvp$[$disppvp_map] + " complete";
+}
+if($arena_debug) debugmes "PvP Dispell Mapflags loaded.";
+// ======= Normal PvP ===============//
+if($arena_debug) debugmes "Mapflag set at "+$@npvp$[$npvp_map] + " initiate...";
+for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
+	if((.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) && .n_pty[.@m] == 2) continue;
+	setmapflag $@npvp$[$npvp_map],.pvp_mf[.@mf];
+	if($npvp_map != $npvp_last) 
+		removemapflag $@npvp$[$npvp_last],.pvp_mf[.@mf];
+	if($arena_debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@npvp$[$npvp_map] + " complete";
+}
+if($arena_debug) debugmes "PvP Normal Mapflags loaded.";		
+// ======= Deathmatch PvP ===============//
+if($arena_debug) debugmes "Mapflag set at "+$@dmpvp$[$dmpvp_map] + " initiate...";
+for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
+	if((.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) && .dm_pty[.@m] == 2) continue;
+	setmapflag $@dmpvp$[$dmpvp_map],.pvp_mf[.@mf];
+	if($dmpvp_map != $dmpvp_last) 
+		removemapflag $@dmpvp$[$dmpvp_last],.pvp_mf[.@mf];
+	if($arena_debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@dmpvp$[$dmpvp_map] + " complete";
+}
+if($arena_debug) debugmes "PvP DM Mapflags loaded.";	
+// ============== Party 2vs2 =================//
+if($arena_debug) debugmes "Mapflag set at "+$@pt2pvp$[$pt2pvp_map] + " initiate...";
+for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
+	if(.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) continue;
+	setmapflag $@pt2pvp$[$pt2pvp_map],.pvp_mf[.@mf];
+	if($pt2pvp_map != $pt2pvp_last) 
+		removemapflag $@pt2pvp$[$pt2pvp_last],.pvp_mf[.@mf];
+	if($arena_debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@pt2pvp$[$pt2pvp_map] + " complete";
+}
+if($arena_debug) debugmes "Party 2v2 PvP Mapflags loaded.";
+// ============== Party 3vs3 =================//
+if($arena_debug) debugmes "Mapflag set at "+$@pt3pvp$[$pt3pvp_map] + " initiate...";
+for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
+	if(.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) continue;
+	setmapflag $@pt3pvp$[$pt3pvp_map],.pvp_mf[.@mf];
+	if($pt3pvp_map != $pt3pvp_last) 
+		removemapflag $@pt3pvp$[$pt3pvp_last],.pvp_mf[.@mf];
+	if($arena_debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@pt3pvp$[$pt3pvp_map] + " complete";
+}
+if($arena_debug) debugmes "Party 3v3 PvP Mapflags loaded.";
+// ============== Party 4vs4 =================//
+if($arena_debug) debugmes "Mapflag set at "+$@pt4pvp$[$pt4pvp_map] + " initiate...";
+for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
+	if(.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) continue;
+	setmapflag $@pt4pvp$[$pt4pvp_map],.pvp_mf[.@mf];
+	if($pt4pvp_map != $pt4pvp_last) 
+		removemapflag $@pt4pvp$[$pt4pvp_last],.pvp_mf[.@mf];
+	if($arena_debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@pt4pvp$[$pt4pvp_map] + " complete";
+}
+if($arena_debug) debugmes "Party 4v4 PvP Mapflags loaded.";
+// ============== Party 5vs5 =================//
+if($arena_debug) debugmes "Mapflag set at "+$@pt5pvp$[$pt5pvp_map] + " initiate...";
+for ( set .@mf,0; .@mf < getarraysize(.pvp_mf); set .@mf,.@mf + 1 ) {
+	if(.pvp_mf[.@mf] == 14 || .pvp_mf[.@mf] == 7) continue;
+	setmapflag $@pt5pvp$[$pt5pvp_map],.pvp_mf[.@mf];
+	if($pt5pvp_map != $pt5pvp_last) 
+		removemapflag $@pt5pvp$[$pt5pvp_last],.pvp_mf[.@mf];
+	if($arena_debug) debugmes "Mapflag "+ .pvp_mf[.@mf] +" set at "+$@pt5pvp$[$pt5pvp_map] + " complete";
+}
+freeloop(0);
+if($arena_debug) debugmes "Party 5v5 PvP Mapflags loaded.";
+if($arena_debug) debugmes "PvP Mapflags loaded.";
+end;
+
+OnPCKillEvent:
+if(PVP_BTY_CMAP($@bty_cmap_type,strcharinfo(3)) == 1) end;
+set .@v,killedrid;
+mapannounce strcharinfo(3),strcharinfo(0) + " has killed "+rid2name(.@v)+"!!!!!",0;
+set @killct,@killct + 1;
+if($arena_debug) {
+	debugmes "[Arena]: Showing debug messages";
+
+	for ( set .@l,0; .@l < getarraysize($@sphree_kills); set .@l,.@l + 1) 
+		debugmes "[Arena]: Sphree Kills Array - Index #"+.@l+": "+$@sphree_kills[.@l];
+	for ( set .@l,0; .@l < getarraysize($@sphree_names$); set .@l,.@l + 1) 
+		debugmes "[Arena]: Sphree Names Array - Index #"+.@l+": "+$@sphree_names$[.@l];
+	for ( set .@l,0; .@l < getarraysize($@sphree_wav$); set .@l,.@l + 1) 
+		debugmes "[Arena]: Sphree WAV Names Array - Index #"+.@l+": "+$@sphree_wav$[.@l];
+
+	debugmes "[Arena]: Kill Counter Check and announces...";
+	debugmes "[Arena]: Kills: "+@killct+", Arraysize $@sphree_kills: "+getarraysize($@sphree_kills)+", last sphree kills: "+$@sphree_kills[getarraysize($@sphree_kills)-1];
+}
+// Checking if the kill counter is below the last sphree number
+if(@killct <= $@sphree_kills[getarraysize($@sphree_kills)-1]) {
+	if($arena_debug) debugmes "[Arena]: Kills is less than last sphree kill.";
+	// Looping through the array to check for the sphree kill
+	for ( set .@k,0; .@k < getarraysize($@sphree_kills); set .@k,.@k + 1) {
+		if($arena_debug) debugmes "[Arena]: Array Index:"+.@k+", Array Content: "+$@sphree_kills[.@k];
+		if(@killct == $@sphree_kills[.@k]) {
+			if($arena_debug) debugmes "[Arena]: "+@killct+", "+$@sphree_kills[.@k];
+			mapannounce strcharinfo(3),strcharinfo(0) + " is now on "+$@sphree_names$[.@k]+"!!!!",0;
+			soundeffectall $@sphree_wav$[.@k]+".wav",0,strcharinfo(3);
+			setd("@"+$@sphree_rank$[.@k]),getd("@"+$@sphree_rank$[.@k]) + 1; // Ranking Variable
+			break;
+		}
+	}
+// Checking if the kill counter is above the last sphree number
+} else if(@killct >= $@sphree_kills[getarraysize($@sphree_kills)-1]) {
+	mapannounce strcharinfo(3),strcharinfo(0) + " is now on "+$@sphree_names$[getarraysize($@sphree_names$)-1]+"!!!!",0;
+	soundeffectall $@sphree_wav$[getarraysize($@sphree_wav$)-1]+".wav",0,strcharinfo(3);
+}
+if($arena_debug) debugmes "[Arena]: Check Done";
+set @prokill,@prokill + 1;
+
+set @mkillct,@mkillct + 1;
+deltimer strnpcinfo(0)+"::OnMultiSpan";
+addtimer $@multi,strnpcinfo(0)+"::OnMultiSpan";
+if(@mkillct >= 4) sleep2 500; // Slowing down multi-kill sound effects
+if(@mkillct == 2) {
+	mapannounce strcharinfo(3),strcharinfo(0) + " has made an Double Kill!!!!",0;
+	soundeffectall "doublekill.wav",0,strcharinfo(3);
+} else if(@mkillct == 3) {	
+	mapannounce strcharinfo(3),strcharinfo(0) + " has made an Triple Kill!!!!",0;
+	soundeffectall "triplekill.wav",0,strcharinfo(3);
+} else if(@mkillct >= 4) {
+	mapannounce strcharinfo(3),strcharinfo(0) + " has made an Ultra Kill!!!!",0;
+	soundeffectall "ultrakill.wav",0,strcharinfo(3);
+}
+if($@bty_type && $@pvptable) {
+	if(@killct >= $@bty_bon_start) {
+		if(!@hunt) {
+			announce "Bounty Hunter: Oh My God!!! Someone stop "+strcharinfo(0)+" please!!! I'll give you a bonus of "+($@bty_bonus*$@bty_bonus_m)+" " + ( ($@bty_type == 1)?"Zeny": ( ($@bty_type == 2)?$@bty_cvard$:"Bounty Points") ) + " on "+ ( (Sex)?"his":"her") +" head!!",0;
+			sleep2 2500;
+			setarray .@pvp_pre$[0],"disp","n","dm","pt2","pt3","pt4","pt5";
+			setarray .@pvp_n$[0],"Dispell","Normal","Deathmatch","Party 2vs2","Party 3vs3","Party 4vs4","Party 5vs5";
+			for ( set .@l,0; .@l < getarraysize(.@pvp_pre$); set .@l,.@l + 1)
+				for ( set .@m,1; .@m < getarraysize(getd("$@"+.@pvp_pre$[.@l]+"pvp$")); set .@m,.@m + 1)
+					if(strcharinfo(3) == getd("$@"+.@pvp_pre$[.@l]+"pvp$["+.@m+"]")) {
+						announce "Bounty Hunter: "+( (Sex)?"He":"She")+" is in the '"+$@room$[.@m]+" "+.@pvp_n$[.@l]+" Arena'!!!",0;
+						break;
+					}
+			for ( set .@m,0; .@m < getarraysize($@gvgr$); set .@m,.@m + 1)
+				if(strcharinfo(3) == $@gvgr$[.@m]) {
+					announce "Bounty Hunter: "+( (Sex)?"He":"She")+" is in the Guild Room "+(.@m+1)+"!!!",0;
+					break;
+				}
+				
+			if($@bty_cmap) 
+				for ( set .@m,0; .@m < getarraysize($@bty_cmaps$); set .@m,.@m + 1)
+					if(compare(strcharinfo(3),$@bty_cmaps$[.@m]) == 1) {
+						announce "Bounty Hunter: "+( (Sex)?"He":"She")+" is on the map '"+$@bty_cmaps$[.@m]+"'!!!",0;
+						break;
+					}
+
+			set @hunt,1;
+		}
+		set @sphr,@killct + $@bty_bonus;
+	}
+	query_sql("SELECT `bounty` FROM `arena_master` WHERE `char_id` = '"+getcharid(0,rid2name(.@v))+"'",@bty);
+	getBounty(@bty,.@v);
+	writeBounty(@sphr,getcharid(0));
+	writeStats(@killct,0);
+}
+if(@killct%5==0) message strcharinfo(0),"Defeated Players: "+@killct;
+end;
+
+OnPCDieEvent:
+if(PVP_BTY_CMAP(1,strcharinfo(3)) == 1) end;
+// ===== Should affects you only, if you warped to an player via @warpto/@goto or were @recall-ed
+// ==== so you won't recieve a value for @map, which is required for the respawn in DM Maps
+if(!@dm) 
+	if(strcharinfo(3) == $@dmpvp$[$dmpvp_map]) 
+		set @dm,1;
+
+if($@pvptable) {
+	writeStats(0,1);
+	if($@bty_type) writeBounty(@sphr,getcharid(0));
+}
+set @sphr,0;
+set @killct,0;
+
+if(@dm) {
+	if($arena_debug) debugmes "KillerRid: "+killerrid+", KilledRid: "+killedrid;
+	sleep2 1300;
+	if(killerrid != 0 && killerrid != getcharid(3)) {
+		warp strcharinfo(3),0,0;
+		if(HP == 0) atcommand "@alive";
+		percentheal 100,100; 
+	} else warp "SavePoint",0,0;
+}
+set @hunt,0;
+end;
+
+OnMultiSpan:
+set @mkillct,0;
+end;
+
+OnNPCKillEvent:
+if(!$@pvptable) end;
+if(getmonsterinfo(killedrid,MOB_MVPEXP) > 0) { // Update to rAthena: getmonsterinfo supports now an check for MVP Exp
+	if(query_sql("SELECT `char_id` FROM `arena_master` WHERE `char_id` = '"+getcharid(0)+"'",@charid) != 0)
+		query_sql "UPDATE `arena_master` SET `mvp` = `mvp` + 1  WHERE `char_id` = '"+getcharid(0)+"'";
+	else query_sql "INSERT INTO `arena_master` ( `char_id` , `mvp`) VALUES ( '"+getcharid(0)+"' , '1' )";
+}
+end;
+
+	function	writeStats	{
+	if(!$@pvptable) return; // To be save :O
+	set @k,getarg(0); // Kills
+	set @d,getarg(1); // Deaths
+	if(query_sql("SELECT `kills` FROM `arena_master` WHERE `char_id` = '"+getcharid(0)+"'",@kills) != 0) {
+		if(@k > query_sql("SELECT `hscore` FROM `arena_master` WHERE `char_id` = '"+getcharid(0)+"'",@hscore)) set @hscore,@k;
+		// Adding General Kill/Death/Highscore Values
+		query_sql "UPDATE `arena_master` SET `kills` = `kills` + "+@k+", `death` = `death` + "+@d+" , `hscore` = '"+@hscore+"' WHERE `char_id` = '"+getcharid(0)+"'";
+		// Adding Sphree Ranking Values
+		query_sql "UPDATE `arena_master` SET `killer` = `killer` + "+@killer+" , `domi` = `domi` + "+@domi+" , `mega` = `mega` + "+@mega+" , `unstopp` = `unstopp` + "+@unstopp+" , `wicked` = `wicked` + "+@wicked+" , `monster` = `monster` + "+@monster+" , `godlike` = `godlike` + "+@godlike+" , `holys` = `holys` + "+@holys+" WHERE `char_id` = '"+getcharid(0)+"'";
+		// Reseting Ranking Variables
+		for ( set .@l,0; .@l < getarraysize($@sphree_rank$); set .@l,.@l + 1)
+			setd("@"+$@sphree_rank$[.@l]),0;
+		
+	} else query_sql "INSERT INTO `arena_master` ( `char_id` , `kills` , `death` , `hscore` , `killer` , `domi` , `mega` , `unstopp` , `wicked` , `monster` , `godlike` , `holys` ) VALUES ( '"+getcharid(0)+"' , '"+@k+"' , '"+@d+"' , '"+@k+"' , '"+@killer+"' , '"+@domi+"' , '"+@mega+"' , '"+@unstopp+"' , '"+@wicked+"' , '"+@monster+"' , '"+@godlike+"' , '"+@holys+"' )";
+	return; 
+	}
+	
+	function	getBounty	{
+	// getarg(0) == Last Sphree of Victim
+	// getarg(1) == RID of Victim
+	if(!getarg(0)) return; // No Sphree = No Bounty ;I
+	// Calculation:
+	// Exchange the */+ with the symbol you want,
+	// but note that it can be exploited if you change it too much,
+	// like 8 (Sphree Index)*$@bty_price (Custom Points,5) = 40 Custom Points
+		
+		// If Bounty Bonus Multiplier is active
+		if($@bty_bonus_multi == 1) 
+			set .@bty_b_gain,$@bty_bonus*$@bty_bonus_m;
+		else
+			set .@bty_b_gain,$@bty_bonus;
+			
+		if(getarg(0) >= $@bty_bon_start) 
+			mapannounce strcharinfo(3),"Bounty Hunter: "+strcharinfo(0)+" has ended "+rid2name(getarg(1))+"'s Spree and was rewarded with additional "+.@bty_b_gain+" " + ( ($@bty_type == 1)?"Zeny": ( ($@bty_type == 2)?$@bty_cvard$:"Bounty Points") ),0;
+		
+		switch($@bty_type) { // Bounty Reward Type
+			case 1: // Zeny
+			set Zeny,Zeny + ($@bty_price*getarg(0)) + .@bty_b_gain;
+			dispbottom "Bounty Hunter: You have recieved "+($@bty_price*getarg(0)+.@bty_b_gain)+" Zeny for killing "+rid2name(getarg(1))+".";
+			break;
+			
+			case 2: // Custom Points
+			setd(""+$@bty_cvarn$),getd(""+$@bty_cvarn$) + ($@bty_price+getarg(0)) + .@bty_b_gain;
+			dispbottom "Bounty Hunter: You have recieved "+($@bty_price+getarg(0)+.@bty_b_gain)+" "+$@bty_cvard$+" for killing "+rid2name(getarg(1))+".";
+			dispbottom "You have now "+getd(""+$@bty_cvarn$)+" "+$@bty_cvard$+".";
+			break;
+			
+			case 3: // Bounty Points
+			query_sql "UPDATE `arena_master` SET `bounty_pts` = `bounty_pts` + "+($@bty_price+getarg(0)+.@bty_b_gain)+" WHERE `char_id` = '"+getcharid(0)+"'";
+			dispbottom "Bounty Hunter: You have recieved "+($@bty_price+getarg(0)+.@bty_b_gain)+" Bounty Points for killing "+rid2name(getarg(1))+".";
+			break;
+		}
+		writeBounty(0,getcharid(0,rid2name(getarg(1))));
+		return;
+	}
+	
+	function	writeBounty	{
+	// getarg(0) == Kills
+	// getarg(1) == Character ID
+		query_sql "UPDATE `arena_master` SET `bounty` = '"+getarg(0)+"' WHERE `char_id` = '"+getarg(1)+"'";
+		return;
+	}
+	
+	function	PVP_BTY_CMAP	{
+	// =====================================
+	// getarg(0) - Flag Type > $@bty_cmap_type
+	//        1 = Mapflags
+	//        2 = Specific Maps
+	// getarg(1) - strcharinfo(3) value
+	// =====================================
+
+	// Regular Maps in $@<.>pvp$ & $@gvgr$ array
+		setarray .@pvp_pre$[0],"disp","dm","n","pt2","pt3","pt4","pt5";
+		for ( set .@l,0; .@l < getarraysize(.@pvp_pre$); set .@l,.@l + 1)
+			for ( set .@m,1; .@m < getarraysize(getd("$@"+.@pvp_pre$[.@l]+"pvp$")); set .@m,.@m + 1)
+				if(getarg(1) != getd("$@"+.@pvp_pre$[.@l]+"pvp$["+.@m+"]"))
+					set .@f,1;
+				else 
+					set .@f,0;
+				
+		for ( set .@m,0; .@m < getarraysize($@gvgr$); set .@m,.@m + 1)
+				if(getarg(1) != $@gvgr$[.@m])
+					set .@f,1;
+				else 
+					set .@f,0;
+		
+		// Mapflag
+		if(getarg(0) == 1)
+			if(getmapflag(getarg(1),mf_pvp) == 0 && getmapflag(getarg(1),mf_gvg) == 0) 
+				set .@f,1;
+			else 
+				set .@f,0;
+
+		// Custom Maps
+		else if(getarg(0) == 2) {
+			// One Map
+			if(getarraysize($@bty_cmaps$) == 1)
+				if(compare(getarg(1),$@bty_cmaps$[0]) == 0)
+					set .@f,1;
+				else 
+					set .@f,0;
+
+			// Array	
+			else if(getarraysize($@bty_cmaps$) > 1)
+				for ( set .@m,0; .@m < getarraysize($@bty_cmaps$); set .@m,.@m + 1)
+					if(compare(getarg(1),$@bty_cmaps$[.@m]) == 0)
+						set .@f,1;
+					else 
+						set .@f,0;
+		}
+		return .@f;
+	}
+// =========== End of Function ==========
+}
