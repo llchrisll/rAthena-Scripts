@@ -26,6 +26,25 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2017/12/31
+<< == |*| Quest System v1.1 - @Update to v1.2 |*| == >>
+- Major bug fixes and updates
+- Added EXP Reward
+- Fixed SQL Queries: == -1 > == 0
+- Added `req_am` to `quest_player` for required Mob Amount
+- Added `quest_name` to `quest_list` for better display
+- Added .max_quests to prevent the string limitation for menus
+- Added an info for the players how many NPC's are added
+- Removed Create/Delete SQL Tables from Ingame Menu
+- Fixed new Quest ID Selection
+- Exchanged strmobinfo with getmonsterinfo
+- Moved the SQL Insertions for Quests at the end of it
+- Removed QSys_Delete function
+- Modified the Quest Rewards and added the config for an pre-defined item
+- Changed the `global_reg_value` to match the new tables
+- Rewrote the Code about Killing Mobs again
+- Fixed the custom command @checkquest and changed the layout a bit
+------------------------------------------------------------------------------------------------------------------------
 * 2017/11/10
 << == |*| Most Scripts - @Update |*| == >>
 - "Tested with" 
@@ -38,7 +57,7 @@
 - Script Optimization
 - Exchanged Edit Gender for Account to Character specific
 - Added .char_gender to set delay for change gender per Character
-- Fixxed Reuest Equip, which didn't work of getarg(0)
+- Fixxed Reset Equip, which didn't work of getarg(0)
 << == |*| PvP-GvG-MvP Arena v1.5 [RE] - @Update to v1.6 |*| == >>
 - Renamed PvP-GvG-MvP Arena to Arena Master (pvp-gvg-mvp.txt to arena_master.txt)
 - Reduced PvP Rooms by adding Map Rotation Settings; Fixed Maps + Random Map each Day + Specific Map on an specific Day
@@ -78,7 +97,7 @@
 << == |*| Card Compounder v1.0 [RE] - @Update to v1.1 |*| == >>
 - Script Optimization
 - Added config for custom Variable
-<< == |*| Dynamic Shop v1.0 [RE] - @Update |*| == >>
+<< == |*| Dynamic Shop v1.1 [RE] - @Update |*| == >>
 - Added extra config for maximum items in the shop
 - Changed function ShopStuff
 << == |*| GM Activity Log v1.0 [RE] - @Update to v1.1 |*| == >>

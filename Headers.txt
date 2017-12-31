@@ -12,7 +12,7 @@ Changelog + Script Headers:
 << == |*| Script Name vX.X - @Update to vX.X/Release/Removed/Request |*| == >>
 - Changes/Description
 
-NPC Headers:
+NPC Header:
 //===== rAthena Script =======================================
 //= Script Name
 //===== By ===================================================
@@ -20,7 +20,8 @@ NPC Headers:
 //===== Version ==============================================
 //= 1.0 - Initial Version
 //===== Tested With ==========================================
-//= rAthena SQL 07/16-2017 Revision
+//= rAthena 12/24/2017 Revision
+//= GIT Hash: ae69e506263f9b183c945f49b1d88c5fc2b73a6a
 //===== Description ==========================================
 //= ...
 //===== Comments =============================================

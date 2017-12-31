@@ -19,12 +19,27 @@
 //      - Removed the variable "MobHunt_"+<MobID>"
 //      - Modified the code about "MobHunt_"+<MobID>+"_CT" to increase it's value
 //        in case there is another quest with the same required mob (= Total Mob Counter)
-//===== Compatible With ======================================
-//= rAthena SQL 11.06.2015 Rev+
-//===== Tested With ==========================================
-//= rAthena SQL 11.06.2015 Rev
+//= 1.2 - Major bug fixes and updates
+//      - Added EXP Reward
+//      - Fixed SQL Queries: == -1 > == 0
+//      - Added `req_am` to `quest_player` for required Mob Amount
+//		- Added `quest_name` to `quest_list` for better display
+//		- Added .max_quests to prevent the string limitation for menus
+//		- Added an info for the players how many NPC's are added
+//		- Removed Create/Delete SQL Tables from Ingame Menu
+//		- Fixed new Quest ID Selection
+//		- Exchanged strmobinfo with getmonsterinfo
+//		- Moved the SQL Insertions for Quests at the end of it
+//		- Removed QSys_Delete function
+//		- Modified the Quest Rewards and added the config for an pre-defined item
+//		- Changed the `global_reg_value` to match the new tables
+//		- Rewrote the Code about Killing Mobs again
+//		- Fixed the custom command @checkquest and changed the layout a bit
+//===== Tested With =========================================
+//= rAthena 12/24/2017 Revision
+//= GIT Hash: ae69e506263f9b183c945f49b1d88c5fc2b73a6a
 //===== Description ==========================================
-//= Every NPC has an unique ID and can hold up .array Quests
+//= Every NPC has an unique ID and can hold up unlimited Quests
 //  You can put as many as you want Quest NPC's on one map.
 //= Quests:
 //  - Monster Hunting
@@ -36,6 +51,8 @@
 //  - On Login Progress Display
 //===== Comments =============================================
 //= None yet... 
+//===== ToDO List =============================================
+//= ...
 //===== Modification Requests =============================================
 //= Custom @checkquest to display your Quest Progress by Azeroth
 //===== SQL Tables ==========================================
@@ -43,6 +60,7 @@
 CREATE TABLE IF NOT EXISTS `quest_list` (
  `npc_id` int(10) unsigned NOT NULL default '1',
  `quest_id` int(10) unsigned default '1',
+ `quest_name` varchar(255) default 'Quest',
  `quest_type` tinyint(3) unsigned default '1',
  `mob_id` int(10) unsigned default '0',
  `mob_am` int(12) unsigned default '0',
@@ -50,6 +68,9 @@ CREATE TABLE IF NOT EXISTS `quest_list` (
  `item_am` int(10) unsigned default '0',
  `reward_id` int(10) unsigned default '0',
  `reward_am` int(10) unsigned default '0',
+ `reward_exptype` int(10) unsigned default '0',
+ `reward_bexp` int(10) unsigned default '0',
+ `reward_jexp` int(10) unsigned default '0', 
  `limit` tinyint(3) unsigned default '0',
  `level` int(10) unsigned default '0'
  ) ENGINE=MyISAM;
@@ -74,11 +95,11 @@ CREATE TABLE IF NOT EXISTS `quest_player` (
  `npc_id` int(10) unsigned NOT NULL,
  `quest_id` int(10) unsigned NOT NULL,
  `mob_id` int(10) unsigned default '0',
- `mob_am` int(12) unsigned default '0'
+ `mob_am` int(12) unsigned default '0',
+ `req_am` int(12) UNSIGNED DEFAULT '0'
  ) ENGINE=MyISAM;
-*/
-prontera,150,180,4	script	Quest System	100,{
-function QSys_Delete;
+ */
+prontera,163,173,4	script	Quest System	100,{
 
 mes .n$;
 mes "Hello, "+strcharinfo(0)+"!";
@@ -89,6 +110,11 @@ if(getgroupid() < .gm) {
 	mes .n$;
 	mes "Good to hear!";
 	mes " ";
+	mes "[==== Quest NPC's ====]";
+	mes "I will list now how many NPC's are on which Map:";
+	query_sql "SELECT `map` , `npc_count` FROM `quest_map`",.@npc_map$,.@npc_ct;
+	for ( set .@d,0; .@d < getarraysize(.@npc_map); set .@d,.@d + 1)
+		mes .@npc_map$[.@d]+" - "+.@npc_ct[.@d]+" NPC's.";
 	mes "[==== Quest Types ====]";
 	mes "- Monster Hunting";
 	mes "- Item Collecting";
@@ -124,13 +150,15 @@ if(getgroupid() < .gm) {
 	mes "[ === Rewards ===]";
 	mes "- Zeny";
 	mes "  > Maximum Amount: "+.rew_zeny;
-	mes "- Cash Points";
-	mes "  > Maximum Amount: "+.rew_cash;
-	mes "- Items";
-	mes "  > Maximum Amount per Item: "+.rew_item;
+	mes "- Points";
+	mes "  > Maximum Amount: "+.rew_var;
+	mes "- Items; Either specific or pre-defined: "+getitemname(.rew_itemid);
+	mes "- EXP (Optional)";
+	mes "  > Maximum Flat Amount: "+.rew_expflat;
+	mes "  > Maximum Percent: "+.rew_expperc;
 	close;
 }
-if($@q_tab$[0] == "") {
+if(!$@q_tab) {
 	mes "It seems like the database tables weren't created yet.";
 	mes "I would recommend you to do that first.";
 	next;
@@ -138,7 +166,7 @@ if($@q_tab$[0] == "") {
 }
 mes "How can I help you?";
 next;
-switch(select("- Overview:- Quest Management:- "+( ($@q_tab$[0] == "")?"Create":"Delete")+" SQL Tables:- Nothing")) {
+switch(select("- Overview:- Quest Management:- Nothing")) {
 	case 1:
 	mes .n$;
 	query_sql "SELECT DISTINCT `npc_id` FROM `quest_list` WHERE `npc_id` != '0'",.@n_ids;
@@ -190,15 +218,29 @@ switch(select("- Overview:- Quest Management:- "+( ($@q_tab$[0] == "")?"Create":
 	switch(select("- Add Quests:- Remove Quests:- Nothing")) {
 		case 1:
 		mes .n$;
-		if(query_sql("SELECT `quest_id` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@npc_c]+"'",.@q_list) >= .array) {
+		if(query_sql("SELECT DISTINCT `quest_id`  FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@npc_c]+"'",.@q_id) == .max_quests) {
 			mes "I'm sorry, but you can't add anymore quests to this NPC, please try another one.";
 			close;
 		}
-		if(getarraysize(.@q_list) == 0)
-			set .@que_id,1;
-		else 
-			set .@que_id,.@q_list[getarraysize(.@q_list) - 1] + 1;
-			
+		set .@q,1;
+		while(.@q < .max_quests) {
+			set .@f,0;
+			for ( set .@s,0; .@s < getarraysize(.@q_id); set .@s,.@s +1)
+				if(.@q == .@q_id[.@s]) {
+					set .@f,1;
+					break;
+				}
+			if(.@f == 0)
+				break;
+			set .@q,.@q + 1;
+		}
+		set .@que_id,.@q;
+		
+		mes "Please type the name of the Quest:";
+		next;
+		input .@q_name$;
+		next;
+		mes .n$;
 		mes "Please choose what type of quest it will be:";
 		next;
 		set .@type,select("- Monster Hunting:- Item Collecting");
@@ -238,11 +280,11 @@ switch(select("- Overview:- Quest Management:- "+( ($@q_tab$[0] == "")?"Create":
 				next;
 				input .@mobid;
 				mes .n$;
-				if(strmobinfo(1,.@mobid) == "null" || strmobinfo(1,.@mobid) == "") {
+				if(getmonsterinfo(.@mobid,MOB_NAME) == "null" || getmonsterinfo(.@mobid,MOB_NAME) == "") {
 					mes "Mob not found, please be sure that you have typed the ID correctly and try again.";
 					continue;
 				}
-				mes "Mob Name: "+strmobinfo(1,.@mobid);
+				mes "Mob Name: "+getmonsterinfo(.@mobid,MOB_NAME);
 				mes " ";
 				mes "Now type the amount to hunt:";
 				mes "Minimum: "+.mob_min+", Maximum: "+.mob_max;
@@ -253,16 +295,16 @@ switch(select("- Overview:- Quest Management:- "+( ($@q_tab$[0] == "")?"Create":
 					continue;
 				}
 				mes .n$;
-				mes "Mob Name: "+strmobinfo(1,.@mobid)+" ("+.@mobid+")";
+				mes "Mob Name: "+getmonsterinfo(.@mobid,MOB_NAME)+" ("+.@mobid+")";
 				mes "Mob Quantity: "+.@mobam;
 				mes " ";
 				mes "Is this correct?";
 				if(select("- Yes:- No") - 1) continue;
-				query_sql "INSERT INTO `quest_list` ( `npc_id` , `quest_id` , `quest_type` , `mob_id` , `mob_am` ) VALUES ( '"+.@n_id[.@npc_c]+"', '"+.@que_id+"' , '"+.@type+"' , '"+.@mobid+"' , '"+.@mobam+"' )";
+				setarray .@q_req1[getarraysize(.@q_req1)],.@mobid;
+				setarray .@q_req2[getarraysize(.@q_req2)],.@mobam;
 				set .@count,.@count + 1;
 			}
-			query_sql "UPDATE `quest_list` SET `level` = '"+.@lvl+"' WHERE `npc_id` = '"+.@n_id[.@npc_c]+"' AND `quest_id` = '"+.@que_id+"'";
-		
+			
 		// Item Collecting
 		} else if(.@type == 2) {
 			mes "How many items do you want to add?";
@@ -304,7 +346,8 @@ switch(select("- Overview:- Quest Management:- "+( ($@q_tab$[0] == "")?"Create":
 				mes " ";
 				mes "Correct?";
 				if(select("- Yes:- No") - 1) continue;
-				query_sql "INSERT INTO `quest_list` ( `npc_id` , `quest_id` , `quest_type` , `item_id` , `item_am` ) VALUES ( '"+.@n_id[.@npc_c]+"', '"+.@que_id+"' , '"+.@type+"' , '"+.@itemid+"' , '"+.@itemam+"' )";
+				setarray .@q_req1[getarraysize(.@q_req1)],.@itemid;
+				setarray .@q_req2[getarraysize(.@q_req2)],.@itemam;
 				set .@count,.@count + 1;
 			}
 		}
@@ -314,94 +357,145 @@ switch(select("- Overview:- Quest Management:- "+( ($@q_tab$[0] == "")?"Create":
 		mes "^FF0000Note: 0 is Unlimited and "+(.q_max_limit+1)+" is Cancel^000000";
 		if(input(.@limit,0,.q_max_limit) != 0) {
 			mes .n$;
-			mes "You have put an Invalid Limit, please try again.";
-			mes "^FF0000Note: 0 is Unlimited and "+(.q_max_limit+1)+" is Cancel^000000";
-			next;
-			if(input(.@limit,0,.q_max_limit) != 0) {
+			mes "You have put an Invalid Limit again, aborting quest creation.";
+			close;
+		}
+		next;
+		mes .n$;
+		mes "Now choose the reward:";
+		set .@rew_t,select("- Zeny:- Points ["+( (.rew_vart == 1)?"Enabled":"Disabled")+"]:- Items");
+		next;
+		switch(.@rew_t) {
+			case 1: set .@rew_1,1; break;
+			case 2:
+			if(.rew_vart == 0) {
 				mes .n$;
-				mes "You have put an Invalid Limit again, aborting quest creation.";
-				QSys_Delete(.@que_id,.@n_id[.@npc_c]);
+				mes "I'm sorry, but I can't offer you this reward for choice.";
 				close;
 			}
+			set .@rew_1,2; 
+			break;
+				
+			case 3:
+			mes .n$;
+			mes "Now please choose if you want to use an specific Item or the pre-defined Item, which is "+getitemname(.rew_itemid)+":";
+			next;
+			if(select("- Specific Item:- Pre-Defined Item") == 2)
+				set .@rew_1,.rew_itemid;
+			else {
+				input .@rew_1;
+				if(getitemname(.@rew_1) == "null" || getitemname(.@rew_1) == "") {
+					mes .n$;
+					mes "You have put an invalid Item ID.";
+					mes "Try again please.";
+					close;
+				}
+			}
+			break;
 		}
-		query_sql "UPDATE `quest_list` SET `limit` = '"+.@limit+"' WHERE `npc_id` = '"+.@n_id[.@npc_c]+"' AND `quest_id` = '"+.@que_id+"'";
-		next;
 		mes .n$;
-		mes "Now put the reward:";
-		mes " > Zeny = 1";
-		mes " > Cash Points = 2";
-		mes " > Item = Item ID";
-		input .@rew_1;
-		next;
-		mes .n$;
-		if(.@rew_1 == 0 || (.@rew_1 > 2 && .@rew_1 < 512)) {
-			mes "You have put an invalid Reward.";
-			mes "Aborting Quest creation";
-			QSys_Delete(.@que_id,.@n_id[.@npc_c]);
-			close;
-		}	
-		if(.@rew_1 >= 512 && (getitemname(.@rew_1) == "null" || getitemname(.@rew_1) == "") ) {
-			mes "You have put an invalid Item ID.";
-			mes "Aborting Quest creation";
-			QSys_Delete(.@que_id,.@n_id[.@npc_c]);
-			close;
-		}
-		mes "Chosen Reward: "+( (.@rew_1 == 1)?"Zeny": ( (.@rew_1 == 2)?"Cash Points":"Item: "+getitemname(.@rew_1)));
+		mes "Chosen Reward: "+( (.@rew_t == 1)?"Zeny": ( (.@rew_t == 2)?.rew_vard$:"Item: "+getitemname(.@rew_1)) );
 		mes "Now the amount:";
-		mes " - Maximum Zeny: "+.rew_zeny;
-		mes " - Maximum Cash Points: "+.rew_cash;
-		mes " - Maximum Item Amount: "+.rew_item;
-		input .@rew_2;
+		if(.@rew_t == 1) mes " - Maximum Zeny: "+.rew_zeny;
+		if(.@rew_t == 2) mes " - Maximum Points: "+.rew_var;
+		if(.@rew_t == 3) mes " - Maximum Item Amount: "+.rew_item;
 		next;
+		input .@rew_2;
 		mes .n$;
-		switch(.@rew_1) {
+		switch(.@rew_t) {
 			
 			// Zeny Reward
 			case 1:	if(.@rew_2 > .rew_zeny) set .@f,1; break;
-			// Cash Points Reward
-			case 2:	if(.@rew_2 > .rew_cash) set .@f,1; break;
 			// Item Reward
-			default: 
+			case 2: 
 			if(.@rew_2 > .rew_item) 
 				set .@f,1;
-			else if(.@rew2*getiteminfo(.@rew1,6)) >= .rew_weight)
+			else if( (.@rew_2*getiteminfo(.@rew_1,6)) >= .rew_weight)
 				set .@f,2;
 			break;
+			// Points Reward
+			case 3:	if(.@rew_2 > .rew_var) set .@f,1; break;
 		}
 		if(.@f) {
 			mes "I'm sorry, but the reward amount you have put is higher than the limit.";
 			if(.@f == 2) mes "To precise - Weight limit of "+.rew_weight+" has been reached. "+.@rew_2+"x "+getitemname(.@rew_1)+" would weight "+(.@rew_2*getiteminfo(.@rew_1,6))+".";
-			mes "Aborting Quest creation";
-			QSys_Delete(.@que_id,.@n_id[.@npc_c]);
 			close;
 		}
-		query_sql "UPDATE `quest_list` SET `reward_id` = '"+.@rew_1+"' , `reward_am` = '"+.@rew_2+"' WHERE `npc_id` = '"+.@n_id[.@npc_c]+"' AND `quest_id` = '"+.@que_id+"'";
-		mes "The Quest ID#"+.@que_id+" has been added successfully.";
+		mes "Now please choose the EXP Reward:";
+		next;
+		set .@exp_type,select("- No EXP Reward:- Flat Amount:- Percent of Total EXP") - 1;
+		mes .n$;
+		mes "Chosen EXP Type: "+ ( (.@exp_type == 0)?"None": ( (.@exp_type == 1)?"Flat Amount":"Percent") );
+		if(.@exp_type != 0) {
+			mes "Now type the exp amount:";
+			if(.@exp_type == 1) mes "- Maximum Flat Amount: "+.rew_expflat;
+			if(.@exp_type == 2) mes "- Maximum Percent: "+.rew_expperc;
+			mes " ";
+			mes "> Base EXP:";
+			input .@rew_bexp;
+			switch(.@exp_type) {
+				case 1: if(.@rew_bexp > .rew_expflat) set .@b,1; break;
+				case 2: if(.@rew_bexp > .rew_expperc) set .@b,1; break;
+			}
+			mes "> Job EXP:";
+			input .@rew_jexp;
+			switch(.@exp_type) {
+				case 1: if(.@rew_jexp > .rew_expflat) set .@j,1; break;
+				case 2: if(.@rew_jexp > .rew_expperc) set .@j,1; break;
+			}
+			next;
+			mes .n$;
+			if(.@b || .@j) {
+				mes "You put either in Base EXP or Job EXP an invalid amount.";
+				mes "Please try again.";
+				close;
+			}
+			mes "Base EXP: "+.@rew_bexp + ( (.@exp_type == 2)?"% of Total EXP":"");
+			mes "Job EXP: "+.@rew_jexp + ( (.@exp_type == 2)?"% of Total EXP":"");
+			mes " ";
+			mes "Is this correct?";
+			if(select("- Yes:- No") - 1) close;
+			
+		} else { // Reseting
+			set .@rew_bexp,0;
+			set .@rew_jexp,0;
+		}
+		next;
+		mes .n$;
+		for ( set .@r,0; .@r < getarraysize(.@q_req1); set .@r,.@r + 1)
+			if(.@type == 1)
+				query_sql "INSERT INTO `quest_list` ( `npc_id` , `quest_id` , `quest_name` , `quest_type` , `mob_id` , `mob_am` , `reward_id` , `reward_am` , `reward_exptype` , `reward_bexp` , `reward_jexp` , `level` , `limit` ) VALUES ( '"+.@n_id[.@npc_c]+"' , '"+.@que_id+"' , '"+.@q_name$+"' , '"+.@type+"' , '"+.@q_req1[.@r]+"' , '"+.@q_req2[.@r]+"' , '"+.@rew_1+"' , '"+.@rew_2+"' , '"+.@exp_type+"' , '"+.@rew_bexp+"' , '"+.@rew_jexp+"' , '"+.@lvl+"' , ' "+.@limit+"' )";
+			else if(.@type == 2)
+				query_sql "INSERT INTO `quest_list` ( `npc_id` , `quest_id` , `quest_name` , `quest_type` , `item_id` , `item_am` , `reward_id` , `reward_am` , `reward_exptype` , `reward_bexp` , `reward_jexp` , `level` , `limit` ) VALUES ( '"+.@n_id[.@npc_c]+"' , '"+.@que_id+"' , '"+.@q_name$+"' , '"+.@type+"' , '"+.@q_req1[.@r]+"' , '"+.@q_req2[.@r]+"' , '"+.@rew_1+"' , '"+.@rew_2+"' , '"+.@exp_type+"' , '"+.@rew_bexp+"' , '"+.@rew_jexp+"' , '"+.@lvl+"' , ' "+.@limit+"' )";
+			
+		mes "The Quest \""+.@q_name$+"\" with ID#"+.@que_id+" has been added successfully.";
 		break;
 		
 		// Deleting Quests
 		case 2:
 		mes .n$;
-		query_sql "SELECT DISTINCT `quest_id` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@npc_c]+"'",.@q_list;
+		query_sql "SELECT DISTINCT `quest_id` , `quest_name` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@npc_c]+"'",.@q_list,.@q_name$;
 		if(getarraysize(.@q_list) < 1) {
 			mes "I'm sorry, but you can't remove quests from this NPC, because there are none yet. Please try another one.";
 			close;
 		}
 		mes "Please choose, which Quest you want to remove:";
-		for ( set .@q,0; .@q < getarraysize(.@q_list); set .@q,.@q + 1) {
-			set .@r_menu$,.@r_menu$ + "- ID#"+.@q_list[.@q]+ ( (.@q_list[.@q+1] != 0)?":":"");
+		for ( set .@q,0; .@q < getarraysize(.@q_list); set .@q,.@q + 1)
+			set .@r_menu$,.@r_menu$ + "- "+.@q_name$[.@q]+ ( (.@q_list[.@q+1] != 0)?":":"");
 		next;
 		set .@rem,select(.@r_menu$) - 1;
 		mes .n$;
-		mes "Do you really want to remove the Quest with the ID '"+.@q_list[.@rem]+"'?";
+		mes "Do you really want to remove the Quest \""+.@q_name$[.@rem]+"\" with the ID '"+.@q_list[.@rem]+"'?";
 		if(select("- Yes:- No") - 1) close;
 		next;
 		mes .n$;
 		mes "The Quest with the ID '"+.@q_list[.@rem]+"' has been removed successfully.";
 		// Deleting Delay Variables from the database
-		query_sql "DELETE FROM `global_reg_value` WHERE `str` = 'QSys_"+.@n_id[.@npc_c]+"_"+.@q_list[.@rem]+"_Limit'";
-		query_sql "DELETE FROM `global_reg_value` WHERE `str` = 'QSys_"+.@n_id[.@npc_c]+"_"+.@q_list[.@rem]+"_QDelay'";
-		QSys_Delete(.@q_list[.@rem],.@n_id[.@npc_c]);
+		query_sql "DELETE FROM `char_reg_num` WHERE `key` = 'QSys_"+.@n_id[.@npc_c]+"_"+.@q_list[.@rem]+"_Limit'";
+		query_sql "DELETE FROM `char_reg_num` WHERE `key` = 'QSys_"+.@n_id[.@npc_c]+"_"+.@q_list[.@rem]+"_QDelay'";
+		
+		query_sql "DELETE FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@npc_c]+"' AND `quest_id` = '"+.@q_list[.@rem]+"'";
+		query_sql "DELETE FROM `quest_player` WHERE `npc_id` = '"+.@n_id[.@npc_c]+"' AND `quest_id` = '"+.@q_list[.@rem]+"'";
 		break;
 		
 		case 3:
@@ -410,49 +504,17 @@ switch(select("- Overview:- Quest Management:- "+( ($@q_tab$[0] == "")?"Create":
 	close;
 	
 	case 3:
-	mes .n$;
-	if($@q_tab$ == "") {
-		// Quest Table
-		query_sql "CREATE TABLE IF NOT EXISTS `quest_list` ( `npc_id` int(10) unsigned NOT NULL default '1', `quest_id` int(10) unsigned default '1', `quest_type` tinyint(3) unsigned default '1', `mob_id` int(10) unsigned default '0', `mob_am` int(12) unsigned default '0', `item_id` int(10) unsigned default '0', `item_am` int(10) unsigned default '0', `reward_id` int(10) unsigned default '0', `reward_am` int(10) unsigned default '0', `limit` tinyint(3) unsigned default '0', `level` int(10) unsigned default '0'	) ENGINE=MyISAM";
-		// NPC Table
-		query_sql "CREATE TABLE IF NOT EXISTS `quest_npc` ( `npc_id` int(10) unsigned NOT NULL default '1', `npc_name` varchar(255) default 'NewNPC', `npc_map` varchar(25) default 'prontera', `npc_x` tinyint(5) unsigned default '0', `npc_y` tinyint(5) unsigned default '0', PRIMARY KEY (`npc_id`) ) ENGINE=MyISAM";
-		// Map Table
-		query_sql "CREATE TABLE IF NOT EXISTS `quest_map` ( `map` varchar(255) NOT NULL default 'prontera', `npc_count` int(5) unsigned, PRIMARY KEY (`map`) ) ENGINE=MyISAM";
-		// Player Data
-		query_sql "CREATE TABLE IF NOT EXISTS `quest_player` ( `char_id` int(15) unsigned NOT NULL, `npc_id` int(10) unsigned NOT NULL, `quest_id` int(10) unsigned NOT NULL, `mob_id` int(10) unsigned default '0', `mob_am` int(12) unsigned default '0' ) ENGINE=MyISAM";
-		mes "The tables have been created.";
-	} else {
-		query_sql "DROP TABLE IF EXISTS `quest_list`";
-		query_sql "DROP TABLE IF EXISTS `quest_npc`";
-		query_sql "DROP TABLE IF EXISTS `quest_map`";
-		query_sql "DROP TABLE IF EXISTS `quest_player`";
-		mes "The tables have been deleted.";
-	}
-	break;
-	
-	case 4:
 	break;
 }
 close;
-
-function	QSys_Delete	{
-// getarg(0) = Quest ID
-// getarg(1) = NPC ID
-query_sql "DELETE FROM `quest_list` WHERE `npc_id` = '"+getarg(1)+"' AND `quest_id` = '"+getarg(0)+"'";
-query_sql "DELETE FROM `quest_player` WHERE `npc_id` = '"+getarg(1)+"' AND `quest_id` = '"+getarg(0)+"'";
-return;
-}
 
 OnInit:
 set $@QSys,0; // Quest System not loaded yet
 set .n$,"["+strnpcinfo(1)+"]";
 set .gm,60; // GM Access Level
-// Server Array Limit
-// > rAthena since commit 6295c77 (Script Engine Upgrade):
-// = 2000000000000 (2 Billion)
-// > Others/Default: 128
-set .array,128;
 // ===== Quest Settings =====
+// Maximum Quests per NPC:
+set .max_quests,20;
 // Minimum and Maximum Mob Amount
 set .mob_min,1;
 set .mob_max,10;
@@ -489,19 +551,36 @@ switch(.q_del_type) {
 // Actual Calculation
 set .q_delay,.@calc*.q_del_multi;
 // ==== Reward Settings per Quest ====
+// * Allow usage of variables?
+// = 1: Yes
+// = 0: No
+set .rew_vart,1;
+if(.rew_vart == 1) {
+	// * Display Text of the Variable for the players
+	set .rew_vard$,"Cash Points";
+	// * Variable Name
+	set .rew_varn$,"#CASHPOINTS";
+	// * Maximum Variable Points Amount
+	set .rew_var,1000;
+}
 // * Maximum Zeny Amount
 set .rew_zeny,10000000; // 10m Zeny
-// * Maximum Cash Points Amount
-set .rew_cash,1000;
+// * Pre-Defined Item ID
+set .rew_itemid,6480; // 6480 = Poring Coin
 // * Maximum Item Amount
 set .rew_item,10000;
 // * Maximum Item Weight
 // (= Item Weight* Reward Amount)
 set .rew_weight,10000;
+// * Maximum EXP Amount
+set .rew_expflat,100000000; // 100m EXP
+set .rew_expperc,75; // 75% of Total EXP
 // ========================
-query_sql "SHOW TABLES LIKE 'quest_list'",$@q_tab$;
-if($@q_tab$[0] != "")
+query_sql "SHOW TABLES LIKE 'quest_list'",.@q_table$;
+if(.@q_table$[0] != "") {
 	query_sql "DELETE FROM `quest_map`";
+	set $@q_tab,1;
+}
 // Custom atcommand: @checkquest
 bindatcmd "checkquest","QuestSysEvents::OnPCLoginEvent";
 set $@QSys,1; // Quest System loaded
@@ -511,34 +590,38 @@ end;
 -	script	QuestSysEvents	-1,{
 
 OnNPCKillEvent:
-if($@q_tab$[0] == "") end;
-// Player is in a party
-if(getcharid(1) != 0) {
-	getpartymember(getcharid(1),1);
-	getpartymember(getcharid(1),2);
-	for ( set .@p,0; .@p < $@partymembercount; set .@p,.@p + 1) {
-		if(isloggedin($@partymemberaid[.@p],$@partymembercid[.@p]) == 0) continue;
-		attachrid($@partymemberaid[.@p]);
-		callsub OnQuestMobKill;
-	}
-	end;
+if(!$@q_tab) end;
+set .KilledMob,killedrid;
+// Player in Party?
+if(getcharid(1) != 0)
+	addrid(2,1,getcharid(1));
+if(getarraysize(@quest_mobid) < 1) 
+	query_sql "SELECT `mob_id` , `mob_am` , `req_am` , `npc_id` , `quest_id` FROM `quest_player` WHERE `char_id` = '"+getcharid(0)+"'",@quest_mobid,@quest_mobam,@quest_mobreq,@quest_npcid,@quest_qid;
+
+for ( set .@m,0; .@m < getarraysize(@quest_mobid); set .@m,.@m + 1) {
+	debugmes "@quest_mobid["+.@m+"]: "+@quest_mobid[.@m];
+	debugmes "@quest_mobam["+.@m+"]: "+@quest_mobam[.@m];
+	debugmes "@quest_mobreq["+.@m+"]: "+@quest_mobreq[.@m];
+	debugmes "@quest_npcid["+.@m+"]: "+@quest_npcid[.@m];
+	debugmes "@quest_qid["+.@m+"]: "+@quest_qid[.@m];
 }
-OnQuestMobKill:		
-if(getd("MobHunt_"+killedrid+"_CT") == 0) // Checking if the killed monster is wanted
-	if(getcharid(1) != 0) return; else end;
-query_sql "SELECT SUM( `mob_am` ) , `npc_id` , `quest_id` FROM `quest_player` WHERE `char_id` = '"+getcharid(0)+"' AND `mob_id` = '"+killedrid+"'",.@mob_am,.@n_id,.@q_id;
-if( (.@mob_am + 1) <= getd("MobHunt_"+killedrid+"_CT"))
-	for ( set .@m,0; .@m < getarraysize(.@n_id); set .@m,.@m + 1) {
-		query_sql "SELECT `mob_am` FROM `quest_list` WHERE `mob_id` = '"+killedrid+"' AND `quest_id` = '"+.@q_id[.@m]+"' AND `npc_id` = '"+.@n_id[.@m]+"'",.@req_am;
-		// Updating SQL Table for Monster Hunting Quests
-		query_sql "UPDATE `quest_player` SET `mob_am` = `mob_am` + 1 WHERE `char_id` = '"+getcharid(0)+"' AND `mob_id` = '"+killedrid+"' AND `mob_am` < '"+.@req_am+"' LIMIT 1";
-		query_sql "SELECT `npc_name` , `npc_map` FROM `quest_npc` WHERE `npc_id` = '"+.@n_id[.@m]+"'",.@n_name$,.@n_map$;
-		dispbottom .@n_name$+"@"+.@n_map$+": Monster Hunting - "+strmobinfo(1,killedrid)+" : "+(.@mob_am + 1)+"/"+getd("MobHunt_"+killedrid+"_CT"),0x00FF00;
-	}
-if(getcharid(1) != 0) return; else end;
+for ( set .@m,0; .@m < getarraysize(@quest_mobid); set .@m,.@m + 1)
+	if(@quest_mobid[.@m] == killedrid)
+		if(@quest_mobam[.@m] < @quest_mobreq[.@m]) {
+			set @quest_mobam[.@m],@quest_mobam[.@m] + 1;
+			query_sql "SELECT `npc_name` , `npc_map` FROM `quest_npc` WHERE `npc_id` = '"+@quest_npcid[.@m]+"'",.@n_name$,.@n_map$;
+			dispbottom .@n_name$+"@"+.@n_map$+": Monster Hunting - "+getmonsterinfo(killedrid,MOB_NAME)+" : "+@quest_mobam[.@m]+"/"+@quest_mobreq[.@m],0x00FF00;
+		} else if(@quest_mobam[.@m] >= @quest_mobreq[.@m])
+			continue;
+end;
+
+OnPCLogoutEvent:
+for ( set .@m,0; .@m < getarraysize(@quest_mobid); set .@m,.@m + 1)
+	query_sql "UPDATE `quest_player` SET `mob_am` = '"+@quest_mobam[.@m]+"' WHERE `npc_id` = '"+@quest_npcid[.@m]+"' AND `mob_id` = '"+@quest_mobid[.@m]+"' AND `quest_id` = '"+@quest_qid[.@m]+"'";
+end;
 
 OnPCLoginEvent:
-if($@q_tab$[0] == "") end;
+if(!$@q_tab) end;
 query_sql "SELECT DISTINCT `quest_id` , `npc_id` FROM `quest_player` WHERE `char_id` = '"+getcharid(0)+"'",.@q_id,.@n_id;
 set .@n$,"[Quest System]";
 if(getarraysize(.@q_id) < 1) {
@@ -547,11 +630,18 @@ if(getarraysize(.@q_id) < 1) {
 }
 dispbottom .@n$+": You have "+getarraysize(.@q_id)+" active Quests.";
 dispbottom .@n$+": I will now list them per NPC with the info about the NPC:";
-	
+// Updating SQL Entries for Monster Hunting before displaying Quest Progress
+for ( set .@m,0; .@m < getarraysize(@quest_mobid); set .@m,.@m + 1)
+	query_sql "UPDATE `quest_player` SET `mob_am` = '"+@quest_mobam[.@m]+"' WHERE `npc_id` = '"+@quest_npcid[.@m]+"' AND `mob_id` = '"+@quest_mobid[.@m]+"' AND `quest_id` = '"+@quest_qid[.@m]+"' AND `char_id` = '"+getcharid(0)+"'";
+
 // Displaying Quest Progress
 for ( set .@l,0; .@l < getarraysize(.@q_id); set .@l,.@l + 1) {
-	dispbottom "  [* ====== Quest #"+.@q_id[.@l]+" - Progress: ====== *]  ";
-	query_sql "SELECT `quest_type` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@q_type;
+	set .@q_name$,0;
+	set .@q_type,0;
+	deletearray .@req1[0],getarraysize(.@req1);
+	deletearray .@req2[0],getarraysize(.@req2);
+	query_sql "SELECT `quest_name` , `quest_type` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@q_name$,.@q_type;
+	dispbottom "  [* ====== Quest - "+.@q_name$+" - Progress: ====== *]  ";
 	dispbottom "  >  Type: "+( (.@q_type == 1)?"Monster Hunting":"Item Collecting");
 	if(.@q_type == 1)
 		query_sql "SELECT `mob_id` , `mob_am` FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"'",.@req1,.@req2;
@@ -561,14 +651,12 @@ for ( set .@l,0; .@l < getarraysize(.@q_id); set .@l,.@l + 1) {
 	for ( set .@p,0; .@p < getarraysize(.@req1); set .@p,.@p + 1)
 		if(.@q_type == 1) {
 			query_sql "SELECT `mob_am` FROM `quest_player` WHERE `npc_id` = '"+.@n_id[.@l]+"' AND `quest_id` = '"+.@q_id[.@l]+"' AND `char_id` = '"+getcharid(0)+"' AND `mob_id` = '"+.@req1[.@p]+"'",.@m_got;
-			dispbottom "  >  Mob#"+(.@p+1)+": "+strmobinfo(1,.@req1[.@p])+" - "+.@m_got+"/"+.@req2[.@p];
+			dispbottom "  >  Mob#"+(.@p+1)+": "+getmonsterinfo(.@req1[.@p],MOB_NAME)+" - "+.@m_got+"/"+.@req2[.@p];
 		} else 
 			dispbottom "  >  Item#"+(.@p+1)+": "+getitemname(.@req1[.@p])+" - "+countitem(.@req1[.@p])+"/"+.@req2[.@p];
 	
-	dispbottom "  [* ======  NPC Location: ====== *]  ";
 	query_sql "SELECT `npc_name` , `npc_map` , `npc_x` , `npc_y` FROM `quest_npc` WHERE `npc_id` = '"+.@n_id[.@l]+"'",.@n_name$,.@n_map$,.@n_x,.@n_y;
-	dispbottom "  >  Name: "+.@n_name$;
-	dispbottom "  >  Map: "+.@n_map$+", X: "+.@n_x+", Y: "+.@n_y;
+	dispbottom "  >  From "+.@n_name$+", located at: "+.@n_map$+", X: "+.@n_x+", Y: "+.@n_y;
 }
 end;
 }
@@ -577,15 +665,14 @@ end;
 -	script	QuestNPC::QuestTemp	-1,{
 set .@n$,"["+strnpcinfo(1)+"]";
 
-query_sql "SELECT DISTINCT `quest_id` , `quest_type` , `level` , `limit` FROM `quest_list` WHERE `npc_id` = '"+strnpcinfo(2)+"'",.@q_id,.@q_type,.@q_lvl,.@limit;
+query_sql "SELECT DISTINCT `quest_id` , `quest_name` , `quest_type` , `level` , `limit` FROM `quest_list` WHERE `npc_id` = '"+atoi(strnpcinfo(2))+"'",.@q_id,.@q_name$,.@q_type,.@q_lvl,.@limit;
 for ( set .@q,0; .@q < getarraysize(.@q_id); set .@q,.@q + 1) {
 	set .@que_id,0; // Resetting variable
-	query_sql "SELECT `quest_id` FROM `quest_player` WHERE `npc_id` = '"+strnpcinfo(2)+"' AND `quest_id` = '"+.@q_id[.@q]+"' AND `char_id` = '"+getcharid(0)+"' LIMIT 1",.@que_id;
+	query_sql "SELECT `quest_id` FROM `quest_player` WHERE `npc_id` = '"+atoi(strnpcinfo(2))+"' AND `quest_id` = '"+.@q_id[.@q]+"' AND `char_id` = '"+getcharid(0)+"' LIMIT 1",.@que_id;
 	setarray .@que[.@q],.@que_id;
-	debugmes "Recieving Status of Quest: "+.@que[.@q];
-	if(getd("QSys_"+strnpcinfo(2)+"_"+.@q_id[.@q]+"_QDelay") <= gettimetick(2))
-		setd("QSys_"+strnpcinfo(2)+"_"+.@q_id[.@q]+"_QDelay"),0;
-	set .@q_list$,.@q_list$ + "- #"+.@q_id[.@q]+" ("+ ( (.@q_type[.@q] == 1)?"Monster Hunting":"Item Collecting")+") "+( (.@q_lvl[.@q] != 0)?"("+.@q_lvl[.@q]+") ":"") + "["+( (.@que[.@q] > 0)?"^FF0000Running": ( (getd("QSys_"+strnpcinfo(2)+"_"+.@q_id[.@q]+"_QDelay") == 0)?"^00FFFFNew":"^0000FFQuest Delay active") )+"^000000]" + ( (.@q_id[.@q+1] != 0)?":":"");
+	if(getd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q]+"_QDelay") <= gettimetick(2))
+		setd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q]+"_QDelay"),0;
+	set .@q_list$,.@q_list$ + "- "+.@q_name$[.@q]+" ("+ ( (.@q_type[.@q] == 1)?"Monster Hunting":"Item Collecting")+") "+( (.@q_lvl[.@q] != 0)?"("+.@q_lvl[.@q]+") ":"") + "["+( (.@que[.@q] > 0)?"^FF0000Running": ( (getd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q]+"_QDelay") == 0)?"^00FF00New":"^FF00FFQuest Delay active") )+"^000000]" + ( (.@q_id[.@q+1] != 0)?":":"");
 }	
 mes .@n$;
 if(getarraysize(.@q_id) < 1) {
@@ -594,28 +681,31 @@ if(getarraysize(.@q_id) < 1) {
 }
 mes "Please choose the quest from below you want to accept/abort or look at your progress.";
 mes "Format:";
-mes "Quest_ID (Quest Type) (Level) [Quest Status]";
+mes "Quest Name (Quest Type) (Level) [Quest Status]";
 next;
 set .@q_c,select(.@q_list$) - 1;
 mes .@n$;
-mes " --- Quest #"+.@q_id[.@q_c]+" - "+ ( (.@que[.@q_c] != -1)?"Progress":"Information")+": ---";
+mes .@q_name$[.@q_c]+" - "+ ( (.@que[.@q_c] != 0)?"Progress":"Information")+":";
 mes "Type: "+( (.@q_type[.@q_c] == 1)?"Monster Hunting":"Item Collecting");
 
 // Quest Details
-if(.@q_type[.@q_c] == 1)
-	query_sql "SELECT `mob_id` , `mob_am` , `reward_id` , `reward_am` FROM `quest_list` WHERE `npc_id` = '"+strnpcinfo(2)+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@req1,.@req2,.@rew_id,.@rew_am;
-else
-	query_sql "SELECT `item_id` , `item_am` , `reward_id` , `reward_am` FROM `quest_list` WHERE `npc_id` = '"+strnpcinfo(2)+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@req1,.@req2,.@rew_id,.@rew_am;
+if(.@q_type[.@q_c] == 1) {
+	for ( set .@m,0; .@m < getarraysize(@quest_mobid); set .@m,.@m + 1)
+		if(@quest_npcid[.@m] == atoi(strnpcinfo(2)) && @quest_qid[.@m] == .@q_id[.@q_c])
+			query_sql "UPDATE `quest_player` SET `mob_am` = '"+@quest_mobam[.@m]+"' WHERE `npc_id` = '"+@quest_npcid[.@m]+"' AND `mob_id` = '"+@quest_mobid[.@m]+"' AND `quest_id` = '"+@quest_qid[.@m]+"'";
+	query_sql "SELECT `mob_id` , `mob_am` , `reward_id` , `reward_am` FROM `quest_list` WHERE `npc_id` = '"+atoi(strnpcinfo(2))+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@req1,.@req2,.@rew_id,.@rew_am;
+} else
+	query_sql "SELECT `item_id` , `item_am` , `reward_id` , `reward_am` FROM `quest_list` WHERE `npc_id` = '"+atoi(strnpcinfo(2))+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@req1,.@req2,.@rew_id,.@rew_am;
 if(.@q_type[.@q_c] == 1) mes "Required Level: "+.@q_lvl[.@q_c];
 for ( set .@l,0; .@l < getarraysize(.@req1); set .@l,.@l + 1) 
-	mes "- "+.@req2[.@l]+"x "+ ( (.@q_type[.@q_c] == 1)?strmobinfo(1,.@req1[.@l]):getitemname(.@req1[.@l]) );
+	mes "- "+.@req2[.@l]+"x "+ ( (.@q_type[.@q_c] == 1)?getmonsterinfo(.@req1[.@l],MOB_NAME):getitemname(.@req1[.@l]) );
 mes "Reward:";
 mes .@rew_am+"x "+( (.@rew_id == 1)?"Zeny": ( (.@rew_id == 2)?"Cash Points":getitemname(.@rew_id)));
 mes "Quest Limit: "+.@limit[.@q_c]+" times";
 mes " ";
 mes "What do you like to do now?";
 next;
-if(.@que[.@q_c] == -1) {
+if(.@que[.@q_c] == 0) {
 	select("- Accept:- Nevermind");
 	if(@menu == 2) set .@s,4; else set .@s,@menu;
 } else
@@ -626,28 +716,11 @@ switch(.@s) {
 	// Accept Quest 
 	case 1:
 	mes .@n$;
-	if(getd("QSys_"+strnpcinfo(2)+"_"+.@q_id[.@q_c]+"_QDelay") <= gettimetick(2))
-		setd("QSys_"+strnpcinfo(2)+"_"+.@q_id[.@q_c]+"_QDelay"),0;
+	if(getd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q_c]+"_QDelay") <= gettimetick(2))
+		setd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q_c]+"_QDelay"),0;
 	else {
 		mes "I'm sorry, but quest delay hasn't passed yet.";
-		set .@left,getd("QSys_"+strnpcinfo(2)+"_"+.@q_id[.@q_c]+"_QDelay") - gettimetick(2);
-		if(.@left > 2592000) {
-			set .@dur$,"Months";
-			set .@time,.@left/2592000;
-		} else if(.@left > 604800 && .@left <= 2592000) {
-			set .@dur$,"Weeks";
-			set .@time,.@left/604800;
-		} else if(.@left > 86400 && .@left <= 604800) {
-			set .@dur$,"Days";
-			set .@time,.@left/86400;
-		} else if(.@left > 3600 && .@left <= 86400) {
-			set .@dur$,"Hours";
-			set .@time,.@left/3600;
-		} else {
-			set .@dur$,"Hour";
-			set .@time,1;
-		}
-		mes .@time+" "+.@dur$+" left!!!";
+		mes callfunc("Time2Str",getd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q_c]+"_QDelay"))+" left!!!";
 		close;
 	}
 	if(BaseLevel < .@q_lvl[.@q_c]) {
@@ -657,14 +730,14 @@ switch(.@s) {
 	mes "You have accepted the quest.";
 	for ( set .@a,0; .@a < getarraysize(.@req1); set .@a,.@a + 1)
 		if(.@q_type[.@q_c] == 1) { // Monster Hunting
-			query_sql "INSERT INTO `quest_player` ( `npc_id` , `char_id` , `quest_id` , `mob_id` ) VALUES ( '"+strnpcinfo(2)+"' , '"+getcharid(0)+"' , '"+.@q_id[.@q_c]+"' , '"+.@req1[.@a]+"' )";
-			if(getd("MobHunt_"+.@req1[.@a]+"_CT") == 0)
-				setd("MobHunt_"+.@req1[.@a]+"_CT"),.@req2[.@a];
-			else 
-				setd("MobHunt_"+.@req1[.@a]+"_CT"),getd("MobHunt_"+.@req1[.@a]+"_CT") + .@req2[.@a];
+			query_sql "INSERT INTO `quest_player` ( `npc_id` , `char_id` , `quest_id` , `mob_id` , `req_am` ) VALUES ( '"+atoi(strnpcinfo(2))+"' , '"+getcharid(0)+"' , '"+.@q_id[.@q_c]+"' , '"+.@req1[.@a]+"' , '"+.@req2[.@a]+"' )";
+			setarray @quest_mobid[getarraysize(@quest_mobid)],.@req1[.@a];
+			setarray @quest_mobreq[getarraysize(@quest_mobreq)],.@req2[.@a];
+			setarray @quest_npcid[getarraysize(@quest_npcid)],atoi(strnpcinfo(2));
+			setarray @quest_qid[getarraysize(@quest_qid)],.@q_id[.@q_c];
 				
 		} else // Item Collecting
-			query_sql "INSERT INTO `quest_player` ( `npc_id` , `char_id` , `quest_id` ) VALUES ( '"+strnpcinfo(2)+"' , '"+getcharid(0)+"' , '"+.@q_id[.@q_c]+"' )";
+			query_sql "INSERT INTO `quest_player` ( `npc_id` , `char_id` , `quest_id` ) VALUES ( '"+atoi(strnpcinfo(2))+"' , '"+getcharid(0)+"' , '"+.@q_id[.@q_c]+"' )";
 	break;
 	
 	// Abort Quest
@@ -677,13 +750,17 @@ switch(.@s) {
 	mes "Quest has been aborted.";
 	if(.@q_type[.@q_c] == 1) // Monster Hunting
 	for ( set .@a,0; .@a < getarraysize(.@req1); set .@a,.@a + 1) {
-		query_sql "SELECT `mob_am` FROM `quest_list` WHERE `npc_id` = '"+strnpcinfo(2)+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@req2;
-		if(getd("MobHunt_"+.@req1[.@a]+"_CT") > .@req2)
-			setd("MobHunt_"+.@req1[.@a]+"_CT"),getd("MobHunt_"+.@req1[.@a]+"_CT") - .@req2;
-		else 
-			setd("MobHunt_"+.@req1[.@a]+"_CT"),0;
+		query_sql "SELECT `mob_am` FROM `quest_list` WHERE `npc_id` = '"+atoi(strnpcinfo(2))+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@req2;
+		for ( set .@m,0; .@m < getarraysize(@quest_mobid); set .@m,.@m + 1)
+			if(@quest_npcid[.@m] == atoi(strnpcinfo(2)) && @quest_qid[.@m] == .@q_id[.@q_c]) {
+				deletearray @quest_mobid[.@m],1;
+				deletearray @quest_mobreq[.@m],1;
+				deletearray @quest_mobam[.@m],1;
+				deletearray @quest_npcid[.@m],1;
+				deletearray @quest_qid[.@m],1;
+			}
 	}
-	query_sql "DELETE FROM `quest_player` WHERE `npc_id` = '"+strnpcinfo(2)+"' AND `quest_id` = '"+.@q_id[.@q_c]+"' AND `char_id` = '"+getcharid(0)+"'";
+	query_sql "DELETE FROM `quest_player` WHERE `npc_id` = '"+atoi(strnpcinfo(2))+"' AND `quest_id` = '"+.@q_id[.@q_c]+"' AND `char_id` = '"+getcharid(0)+"'";
 	break;
 	
 	// Check Progress
@@ -691,63 +768,70 @@ switch(.@s) {
 	mes .@n$;
 	mes "Let's see, if you have completed the target....";
 	if(.@q_type[.@q_c] == 1)
-		query_sql "SELECT `mob_id` , `mob_am` FROM `quest_list` WHERE `npc_id` = '"+strnpcinfo(2)+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@req1,.@req2;
+		query_sql "SELECT `mob_id` , `mob_am` FROM `quest_list` WHERE `npc_id` = '"+atoi(strnpcinfo(2))+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@req1,.@req2;
 	else
-		query_sql "SELECT `item_id` , `item_am` FROM `quest_list` WHERE `npc_id` = '"+strnpcinfo(2)+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@req1,.@req2;
+		query_sql "SELECT `item_id` , `item_am` FROM `quest_list` WHERE `npc_id` = '"+atoi(strnpcinfo(2))+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@req1,.@req2;
 	
 	for ( set .@p,0; .@p < getarraysize(.@req1); set .@p,.@p + 1) {
 		if(.@q_type[.@q_c] == 1)
 			// Selecting the latest value in the database
-			query_sql "SELECT `mob_am` FROM `quest_player` WHERE `npc_id` = '"+strnpcinfo(2)+"' AND `quest_id` = '"+.@q_id[.@q_c]+"' AND `char_id` = '"+getcharid(0)+"' AND `mob_id` = '"+.@req1[.@p]+"'",.@am;
+			query_sql "SELECT `mob_am` FROM `quest_player` WHERE `npc_id` = '"+atoi(strnpcinfo(2))+"' AND `quest_id` = '"+.@q_id[.@q_c]+"' AND `char_id` = '"+getcharid(0)+"' AND `mob_id` = '"+.@req1[.@p]+"'",.@am;
 		else 
 			set .@am,countitem(.@req1[.@p]);
 		
 		if(.@am < .@req2[.@p]) set .@f,.@f + 1;
 	}
 	for ( set .@l,0; .@l < getarraysize(.@req1); set .@l,.@l + 1) 
-		mes "- "+ ( (.@q_type[.@q_c] == 1)?strmobinfo(1,.@req1[.@l]):getitemname(.@req1[.@l]) )+": "+.@am+"/"+.@req2[.@l];
+		mes "- "+ ( (.@q_type[.@q_c] == 1)?getmonsterinfo(.@req1[.@l],MOB_NAME):getitemname(.@req1[.@l]) )+": "+.@am+"/"+.@req2[.@l];
 	mes " ";
 	if(.@f) {
 		mes "You didn't finish "+.@f+" target"+( (.@f == 1)?"":"s")+". Please come back, when you have finished those.";
 		close;
 	}
-	
 	next;
-	mes .@n$;
-	query_sql "SELECT `reward_id` , `reward_am` FROM `quest_list` WHERE `npc_id` = '"+strnpcinfo(2)+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@rew_id,.@rew_am;
+	query_sql "SELECT `reward_id` , `reward_am` , `reward_exptype` , `reward_bexp` , `reward_jexp` FROM `quest_list` WHERE `npc_id` = '"+atoi(strnpcinfo(2))+"' AND `quest_id` = '"+.@q_id[.@q_c]+"'",.@rew_id,.@rew_am,.@exp_type,.@rew_bexp,.@rew_jexp;		
 	switch(.@rew_id) {
 		case 1: set Zeny,Zeny + .@rew_am; break;
-		case 2: set #CASHPOINTS,#CASHPOINTS + .@rew_am; break;
-		default: 
-		if(checkweight(.@rew_id,.@rew_am) == 1) 
-			getitem .@rew_id,.@rew_am; 
-		else {
-			mes "It seems like you can't carry more items, than you already do. You have to remove some weight before you can recieve your reward.";
-			close;
-		}
+		case 2: setd(""+.rew_varn$),getd(""+.rew_varn$) + .@rew_am; break;
+		default:	getitem .@rew_id,.@rew_am; 
 		break;
 	}
-	mes "You have completed the quest, here is your reward!!";
-	dispbottom "You have recieved "+.@rew_am+"x "+( (.@rew_id == 1)?"Zeny": ( (.@rew_id == 2)?"Cash Points":getitemname(.@rew_id)));
+	dispbottom "You have recieved "+.@rew_am+"x "+( (.@rew_id == 1)?"Zeny": ( (.@rew_id == 2)?getd(""+.rew_vard$):getitemname(.@rew_id)));			
+	switch(.@exp_type) {
+		case 0: break;
+		case 1: 
+		getexp2 .@rew_bexp,.@rew_jexp; 
+		dispbottom "You have recieved "+.@rew_bexp+" Base EXP and "+.@rew_jexp+" Job EXP.";
+		break;
+		
+		case 2: 
+		set .@bexp_perc,(BaseExp + NextBaseExp)*.@rew_bexp/100;
+		set .@jexp_perc,(JobExp + NextJobExp)*.@rew_jexp/100;
+		getexp2 .@bexp_perc,.@jexp_perc;
+		dispbottom "You have recieved "+.@rew_bexp+"% Base EXP ("+.@bexp_perc+") and "+.@rew_jexp+"% Job EXP ("+.@jexp_perc+").";
+		break;
+	}
 	if(.@limit[.@q_c] != 0) { // No Quest Limit
-		setd("QSys_"+strnpcinfo(2)+"_"+.@q_id[.@q_c]+"_Limit"),getd("QSys_"+strnpcinfo(2)+"_"+.@q_id[.@q_c]+"_Limit") + 1;
-		if(getd("QSys_"+strnpcinfo(2)+"_"+.@q_id[.@q_c]+"_Limit") == .@limit[.@q_c]) {
-			setd("QSys_"+strnpcinfo(2)+"_"+.@q_id[.@q_c]+"_QDelay"),gettimetick(2)+getvariableofnpc(.q_delay,"Quest System");
-			setd("QSys_"+strnpcinfo(2)+"_"+.@q_id[.@q_c]+"_Limit"),0;
+		setd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q_c]+"_Limit"),getd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q_c]+"_Limit") + 1;
+		if(getd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q_c]+"_Limit") == .@limit[.@q_c]) {
+			setd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q_c]+"_QDelay"),gettimetick(2)+getvariableofnpc(.q_delay,"Quest System");
+			setd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q_c]+"_Limit"),0;
 		}
 	}
 	// Deleting Mob ID Variable or removing quest items from inventory
-	for ( set .@r,0; .@r < getarraysize(.@req1); set .@r,.@r + 1) 
-		if(.@q_type[.@q_c] == 1) {
-			// Reseting Mob ID Variable and Mob Counter
-			if(getd("MobHunt_"+.@req1[.@r]+"_CT") > .@req2[.@r])
-				setd("MobHunt_"+.@req1[.@r]+"_CT"),getd("MobHunt_"+.@req1[.@r]+"_CT") - .@req2;
-			else 
-				setd("MobHunt_"+.@req1[.@r]+"_CT"),0;
-		} else
+	if(.@q_type[.@q_c] == 1) {
+		for ( set .@m,0; .@m < getarraysize(@quest_mobid); set .@m,.@m + 1)
+			if(@quest_npcid[.@m] == atoi(strnpcinfo(2)) && @quest_qid[.@m] == .@q_id[.@q_c]) {
+				deletearray @quest_mobid[.@m],1;
+				deletearray @quest_mobreq[.@m],1;
+				deletearray @quest_mobam[.@m],1;
+				deletearray @quest_npcid[.@m],1;
+				deletearray @quest_qid[.@m],1;
+			}
+	} else
+		for ( set .@r,0; .@r < getarraysize(.@req1); set .@r,.@r + 1) 
 			delitem .@req1[.@r],.@req2[.@r];
-		
-	query_sql "DELETE FROM `quest_player` WHERE `npc_id` = '"+strnpcinfo(2)+"' AND `quest_id` = '"+.@q_id[.@q_c]+"' AND `char_id` = '"+getcharid(0)+"'";
+	query_sql "DELETE FROM `quest_player` WHERE `npc_id` = '"+atoi(strnpcinfo(2))+"' AND `quest_id` = '"+.@q_id[.@q_c]+"' AND `char_id` = '"+getcharid(0)+"'";
 	break;
 	
 	// Nevermind
@@ -758,13 +842,13 @@ close;
 
 OnInit:
 while($@QSys == 0) sleep 5000;
-if($@q_tab$[0] == "") end;
+if($@q_tab == 0) end;
 if(strnpcinfo(3) == "QuestTemp") end;
-if(query_sql("SELECT `npc_name` FROM `quest_npc` WHERE `npc_id` = '"+strnpcinfo(2)+"' AND `npc_map` = '"+strnpcinfo(4)+"'",.@npc) == -1) {
+if(query_sql("SELECT `npc_name` FROM `quest_npc` WHERE `npc_id` = '"+atoi(strnpcinfo(2))+"' AND `npc_map` = '"+strnpcinfo(4)+"'",.@npc) == 0) {
 	getmapxy(.@n_map$,.@n_x,.@n_y,1);
-	query_sql "INSERT INTO `quest_npc` ( `npc_id` , `npc_name` , `npc_map` , `npc_x` , `npc_y` ) VALUES ( '"+strnpcinfo(2)+"' , '"+escape_sql(strnpcinfo(1))+"' , '"+escape_sql(strnpcinfo(4))+"' , '"+.@n_x+"' , '"+.@n_y+"' )"; 
+	query_sql "INSERT INTO `quest_npc` ( `npc_id` , `npc_name` , `npc_map` , `npc_x` , `npc_y` ) VALUES ( '"+atoi(strnpcinfo(2))+"' , '"+escape_sql(strnpcinfo(1))+"' , '"+escape_sql(strnpcinfo(4))+"' , '"+.@n_x+"' , '"+.@n_y+"' )"; 
 }
-if(query_sql("SELECT `map` FROM `quest_map` WHERE `map` = '"+strnpcinfo(4)+"'",.@m) != -1)
+if(query_sql("SELECT `map` FROM `quest_map` WHERE `map` = '"+strnpcinfo(4)+"'",.@m) != 0)
 	query_sql "UPDATE `quest_map` SET `npc_count` = `npc_count` + 1 WHERE `map` = '"+strnpcinfo(4)+"'";
 else 
 	query_sql "INSERT INTO `quest_map` ( `map` , `npc_count` ) VALUES ( '"+strnpcinfo(4)+"' , '1' )";
