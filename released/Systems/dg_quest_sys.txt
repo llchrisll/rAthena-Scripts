@@ -4,14 +4,10 @@
 //= llchrisll
 //===== Credits ==============================================
 //= rAthena Dev Team for the Warper NPC, used the Dungeon Cooardinates
-//===== Current Version ======================================
-//= 1.0
 //===== Changelog ============================================
-//= 1.0 - Initial Release
-//===== Compatible With ======================================
-//= rAthena SQL 09/26-2015 Revision and later
-//===== Tested With ==========================================
-//= rAthena SQL 09/26-2015 Revision
+//= 1.0 - Initial Version
+//===== Tested With =========================================
+//= rAthena SQL 07/16-2017 Revision
 //===== Description ==========================================
 //= Additional EXP Bonus (in Percent) based on Dungeon's Difficulty
 //  - Difficulties: Easy, Medium, Hard
@@ -37,12 +33,12 @@
 //= ...
 //===== ToDO =============================================
 //= Add 5 mob Quests and 5 item quests
-//  Amount - difficulty: rewards
-//	> 1 - normal : Zeny
-//	> 2 - normal: points
-//	> 3 - normal : item + exp
-//	> 2 - hard: item + exp%
-//	> 3 - hard: points + exp%
+//  - Difficulty: rewards
+//	> normal : Zeny
+//	> normal: points
+//	> normal : item + exp
+//	> hard: item + exp%
+//	> hard: points + exp%
 ///============================================================
 prontera,151,185,4	script	Dungeon Quest Service	110,{
 function F_GetMobData;
