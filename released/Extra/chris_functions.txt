@@ -1,17 +1,12 @@
 //===== rAthena Script =======================================
-//= Pagination & Mob per Map and getmobdrops Functions
+//= Pagination & Mob Functions
 //===== Author ===============================================
 //= llchrisll
-//===== Credits ==============================================
-//= None
-//===== Current Version ======================================
-//= 1.0
-//===== Changelog ============================================
-//= 1.0 - Initial Release
-//===== Compatible With ======================================
-//= rAthena SQL 09/26-2015 Revision and later
+//===== Version ==============================================
+//= 1.0 - Initial Version
 //===== Tested With ==========================================
-//= rAthena SQL 09/26-2015 Revision
+//= rAthena 12/24/2017 Revision
+//= GIT Hash: ae69e506263f9b183c945f49b1d88c5fc2b73a6a
 //===== Description ==========================================
 //= F_Pages handles an Pagination for you menus, in case you have lots of entries
 //= F_GetMobData + mob_map_db are taken from my Dungeon Quest Service
@@ -22,10 +17,9 @@
 //  get every Mob ID of these Maps
 //  It's also possible to get every Item Drop of each Mob with their drop chance, if requested
 //  But for that I used my F_Pages already to prevent the String Limitation error
+//  If you want to add more mobs to your DB, put .fill on '1' in the script at the end
 //===== Comments =============================================
 //= For the F_GetMobData Function to work you need the mob_map_db.sql installed
-//===== ToDO =============================================
-//= ...
 //============================================================
 // Function for Pagination
 // Preventing string limitation error for menus
@@ -169,4 +163,18 @@ if(getarg(1,0) == 0) {
 freeloop(0);
 debugmes "F_GetMobData Function Error!";
 return 0;
+}
+-	script	SQL_MobDB	-1,{
+
+OnInit:
+if(query_sql("SHOW TABLES LIKE 'mob_map_db'",.tbl) == 0) end; // SQL Table not installed
+set .fill,0; // Is this script active?
+set .gm,80; // GM Level
+end;
+
+OnNPCKillEvent:
+if(!.tbl || !.fill || getgmlevel() < .gm) end;
+if(query_sql("SELECT `mob_id` FROM `mob_map_db` WHERE `map` = '"+strcharinfo(3)+"' AND `mob_id` == '"+killedrid+"'",.@mob_id) == 0)
+	query_sql "INSERT INTO `mob_map_db` ( `mob_id` , `map` ) VALUES ( '"+killedrid+"' , '"+strcharinfo(3)+"' )";
+end;
 }
