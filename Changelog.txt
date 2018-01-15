@@ -26,6 +26,51 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2017/01/15
+<< == |*| Chris Functions v1.0 - @Update |*| == >>
+- Added an code so you can fill the `mob_map_db` by yourself too
+- Also moved the mob_map_db.sql file to the released/Extra folder
+<< == |*| Dungeon Quest Service v1.0 - @Release |*| == >>
+- Moved to released/Systems folder
+<< == |*| Training System v1.0 - @Update to v2.0 |*| == >>
+- Major Update and bug fixes:
+- Added the forgotten GM Setting > .gm
+- Removed SQL Support
+- Removed Custom Mobs
+- Removed Mastery Bounding
+- Removed Settings for using global cooardintes or specific
+- Changed Map to 06guild_01
+- Added Training Fee/Requirement
+- Added seperate Training Limit
+- Simplified Delay for Status Mastery
+- Removed nude; and Full Strip Debuffs at STR Training
+- Removed Class Restriction
+- Added Mob Spawn Quantity depending on Mastery Level
+  for Weapon and VIT Mastery
+- Added setting how many different mobs should spawn at once
+  for Weapon and VIT Mastery
+- Added more questions to INT Mastery
+- Added ATK/MATK Formula Setting for the Weapon Boost
+- Renamed a few variables
+- Removed MVP Usage in Weapon Mastery
+- Removed Debug Lines
+- Merged StatusBonus NPC with the Mastery Trainer
+- Changed the Mastery Boost to use an timer, so no need to recall it
+- Added some npctalk in the DEX Training
+- Added Mapflags: mf_nobaseexp, mf_nojobexp, mf_nocommand, mf_nopenalty
+- Added an check to prevent boost message spams
+- Added custom command to see your mastery levels
+- Added MvP Mastery and MvP Ladder via SQL
+- Removed the GM Panel
+- Added an feature to only show the mastery of equipable weapons
+<< == |*| Daily Reward v1.0 - @Release |*| == >>
+- My own Daily Reward
+<< == |*| Mass Seller v1.0 - @Release |*| == >>
+- An NPC where the players can sell multiply items at once by category
+<< == |*| Player Shops v1.0 - @Removed |*| == >>
+- Duo complications I cancel this script
+= Updated Headers.txt & Project_List.txt 
+------------------------------------------------------------------------------------------------------------------------
 * 2017/12/31
 << == |*| Quest System v1.1 - @Update to v1.2 |*| == >>
 - Major bug fixes and updates

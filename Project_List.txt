@@ -6,19 +6,13 @@
 // ====================================================================
 
 Scripts currently in work-in-progress:
-	- None
+	- Dynamic Battleground Arena: Brainstorming
 	
 Scripts currently in testing phase:
-	- Personal Shops v1.0 [UT]
-    - Dungeon Quest System v1.0 [UT]
-		Merged Dungeon Party System with Quest System (SQL)
-
+	-
+	
 Scripts currently in update phase:
-	- PvP-GvG-MvP Arena v1.6 [MOD]
-	- Fame System v1.3 [MOD]
-	- Security System v2.0 [MOD]
-	- Virtual Security Password System v1.2.1 [MOD]
+	- 
 	
 Other Stuff:
-	- Changing Author part in all scripts into "llchrisll",
-	  saw it is mostly "lllchrislll" which is kinda wrong xD
+	- 
