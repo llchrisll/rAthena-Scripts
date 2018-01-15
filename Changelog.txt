@@ -69,6 +69,12 @@
 - An NPC where the players can sell multiply items at once by category
 << == |*| Player Shops v1.0 - @Removed |*| == >>
 - Duo complications I cancel this script
+<< == |*| Guild Ranker v1.2 - @Update to v1.3 |*| == >>
+- Removed Holiday List
+- Removed Donation
+- Script Optimization
+- Removed `guild_rank_guild`
+- Renamed `guild_rank_mem` to `guild_rank`
 = Updated Headers.txt & Project_List.txt 
 ------------------------------------------------------------------------------------------------------------------------
 * 2017/12/31
