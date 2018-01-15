@@ -3,7 +3,7 @@
 //===== By ===================================================
 //= llchrisll
 //===== Version ==============================================
-//= 1.0 - Script Made
+//= 1.0 - Initial Version
 //      - Added Debug Messages
 //      - Changed Variable Names
 //      - Fixed some typos

@@ -1,0 +1,144 @@
+//===== rAthena Script =======================================
+//= Mass Seller
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Initial Version
+//===== Tested With ==========================================
+//= rAthena 12/24/2017 Revision
+//= GIT Hash: ae69e506263f9b183c945f49b1d88c5fc2b73a6a
+//===== Description ==========================================
+//= This NPC can sell every item in your inventory at once.
+//  But you can use an exception list to let it ignore certain items
+//  like Arrows, Potions and more.
+//= The Price is always the value which you would get if you would sell
+//  the items at an normal NPC.
+//===== Comments =============================================
+//= ...
+//============================================================
+prontera,150,180,4	script	Mass Seller	100,{
+
+mes .n$;
+mes "Welcome, "+strcharinfo(0)+"!";
+mes "How can I help you?";
+next;
+switch(select("- Sell Items:- Personal Config:- Leave")) {
+
+	case 1:
+	mes .n$;
+	if(!getarraysize(MS_Types)) {
+		mes "If this is your first time using my service, I would recommend you setup your personal config before proceeding.";
+		mes "Otherwise I will sell every Item in your Inventory, except Refined Equipment and Equipment with Cards.";
+		mes " ";
+	} else {
+		mes "Here is the current list of your ignored items:";
+			for ( set .@p,0; .@p < getarraysize(MS_Types); set .@p,.@p + 1)
+				for ( set .@q,0; .@q < getarraysize(.itemtypesid); set .@q,.@q + 1)
+					if(MS_Types[.@p] == .itemtypesid[.@q])
+						mes " > "+.itemtypestxt$[.@q];
+						
+	next;
+	if(select("- Continue:- Leave") - 1) close;
+	getinventorylist;
+	for ( set .@i,0; .@i < @inventorylist_count; set .@i,.@i + 1) {
+		set .@e,0;
+		// Skip Equipment which is: Equipped, Refined and has Cards/Enchantments
+		if(@inventorylist_equip[.@i] != 0) continue;
+		if(@inventorylist_refine[.@i] != 0) continue;
+		if(@inventorylist_card1[.@i] != 0) continue;
+		if(@inventorylist_card2[.@i] != 0) continue;
+		if(@inventorylist_card3[.@i] != 0) continue;
+		if(@inventorylist_card4[.@i] != 0) continue;
+		for ( set .@l,0; .@l < getarraysize(MS_Types); set .@l,.@l + 1)
+			if(getiteminfo(@inventorylist_id[.@i],2) == (MS_Types[.@l]-1) ) {
+				set .@e,1;
+				break;
+			}
+		// Check if the selected item id was already mentioned for having more of the same than once
+		for ( set .@d,0; .@d < getarraysize(.@dup_item); set .@d,.@d + 1)
+			if(@inventorylist_id[.@i] == .@dup_item[.@d]) {
+				set .@e,1;
+				break;
+			}
+		if(.@e) continue;
+		
+		// Checking if an item is equipped while you have multiply items of it in your inventory,
+		// preventing it of selling accidently
+		for ( set .@t,0; .@t < 20; set .@t,.@t + 1)
+			if(getequipid(.@t) == @inventorylist_id[.@i]) {
+				message strcharinfo(0),.n$+": You have the following item equipped and in your inventory, which I will not sell: "+countitem(@inventorylist_id[.@i])+"x "+getitemname(@inventorylist_id[.@i])+"!";
+				setarray .@dup_item[getarraysize(.@dup_item)],@inventorylist_id[.@i];
+				set .@e,1;
+				break;
+			}
+		if(.@e) continue;
+		setarray .@sellid[getarraysize(.@sellid)],@inventorylist_id[.@i];
+	}
+	for ( set .@s,0; .@s < getarraysize(.@sellid); set .@s,.@s + 1) {
+		set .@total,.@total + (getiteminfo(.@sellid[.@s],1)*countitem(.@sellid[.@s]));
+		delitem2 .@sellid[.@s],countitem(.@sellid[.@s]),1,0,0,0,0,0,0;
+	}
+	mes .n$;
+	if(getarraysize(.@sellid) > 0) {
+		mes "Your items were sold and you recieved "+.@total+" Zeny.";
+		set Zeny,Zeny + .@total;
+	} else
+		mes "No Items were sold, therefore you don't recieve any Zeny.";
+	break;
+	
+	case 2:
+	mes .n$;
+	mes "What do you want to do?";
+	next;
+	if(select("- Add Item Type:- Remove Item Type") == 1) {
+		mes .n$;
+		mes "Please choose which Item Type you want to add to your list:";
+		for ( set .@l,0; .@l < getarraysize(.itemtypestxt$); set .@l,.@l + 1)
+			set .@ms_list$,.@ms_list$ + "- "+.itemtypestxt$[.@l] + ( (.itemtypestxt$[.@l+1] != "")?":":"");
+		
+		set .@it,select(.@ms_list$) - 1;
+		next;
+		mes .n$;
+		for ( set .@p,0; .@p < getarraysize(MS_Types); set .@p,.@p + 1)
+			if(.@it == MS_Types[.@p]) {
+				mes "This Item Type is already included in your list. Please choose a different one.";
+				close;
+			}
+		mes "The Item Type \""+.itemtypestxt$[.@it]+"\" has been added.";
+		setarray MS_Types[getarraysize(MS_Types)],.itemtypesid[.@it];
+	} else {
+		mes .n$;
+		if(!getarraysize(MS_Types)) {
+			mes "I'm sorry, but there is nothing to remove.";
+			close;
+		}
+		mes "Please choose which Item Type you want to remove from your list:";
+		for ( set .@p,0; .@p < getarraysize(MS_Types); set .@p,.@p + 1)
+			for ( set .@q,0; .@q < getarraysize(.itemtypesid); set .@q,.@q + 1)
+				if(MS_Types[.@p] == .itemtypesid[.@q])
+					set .@ms_list$,.@ms_list$ + "- "+.itemtypestxt$[.@q] + ( (MS_Types[.@p+1] != 0)?":":"");
+		next;
+		set .@it,select(.@ms_list$) - 1;
+		mes .n$;
+		for ( set .@p,0; .@p < getarraysize(MS_Types); set .@p,.@p + 1)
+			for ( set .@q,0; .@q < getarraysize(.itemtypesid); set .@q,.@q + 1)
+				if(MS_Types[.@it] == .itemtypesid[.@q]) {
+					mes "The Item Type \""+.itemtypestxt$[.@q]+"\" has been removed.";
+					deletearray MS_Types[.@it],1;
+					end;
+				}
+	}
+	break;
+	
+	case 3:
+	break;
+}
+end;
+	
+
+OnInit:
+set .n$,"["+strnpcinfo(0)+"]";
+setarray .itemtypestxt$[0],"Healing","Usable","Equipment","Weapon","Card","Pet Egg","Pet Equipment","Ammuntion","Usable with delay","Shadow Equipment","Usable with confirmation";
+setarray .itemtypesid[0],1,3,5,6,7,8,9,11,12,13,19;
+end;
+}
