@@ -34,6 +34,7 @@
 //		- Added MvP Mastery and MvP Ladder via SQL
 //		- Removed the GM Panel
 //		- Added an feature to only show the mastery of equipable weapons
+//= 2.1 - Fixxed an bug with the Mastery Boost
 //===== Tested With =========================================
 //= rAthena 12/24/2017 Revision
 //= GIT Hash: ae69e506263f9b183c945f49b1d88c5fc2b73a6a
@@ -1338,17 +1339,19 @@ if(.equip_b == 1)
 	}
 OnMasteryBoost:
 if(SWM_Sys == 0) end; // No Mastery started yet
+set .@boost,300000; // 5 Minutes
+bonus_script_clear;
 // Stat Applying from Status Training
 for ( set .@s,0; .@s < 6; set .@s,.@s + 1) {
 	if( set(.@s_up,callfunc("DATA_D-M",2,1,.@s,2) ) == 0) continue;
 
 	switch(.@s) {
-		case 0: bonus bStr,.@s_up;	if(!@SWMLogin) dispbottom .n$+": Applied "+.@s_up+" STR Mastery-Boost.";	break;
-		case 1: bonus bAgi,.@s_up;	if(!@SWMLogin) dispbottom .n$+": Applied "+.@s_up+" AGI Mastery-Boost.";	break;
-		case 2:	bonus bVit,.@s_up;	if(!@SWMLogin) dispbottom .n$+": Applied "+.@s_up+" VIT Mastery-Boost.";	break;
-		case 3:	bonus bInt,.@s_up;	if(!@SWMLogin) dispbottom .n$+": Applied "+.@s_up+" INT Mastery-Boost.";	break;
-		case 4:	bonus bDex,.@s_up;	if(!@SWMLogin) dispbottom .n$+": Applied "+.@s_up+" DEX Mastery-Boost.";	break;
-		case 5:	bonus bLuk,.@s_up;	if(!@SWMLogin) dispbottom .n$+": Applied "+.@s_up+" LUK Mastery-Boost.";	break;
+		case 0: bonus_script "{ bonus bStr,"+.@s_up+"; }",.@boost,8; if(!@SWMLogin) dispbottom .n$+": Applied "+.@s_up+" STR Mastery-Boost.";	break;
+		case 1: bonus_script "{ bonus bAgi,"+.@s_up+"; }",.@boost,8; if(!@SWMLogin) dispbottom .n$+": Applied "+.@s_up+" AGI Mastery-Boost.";	break;
+		case 2: bonus_script "{ bonus bVit,"+.@s_up+"; }",.@boost,8; if(!@SWMLogin) dispbottom .n$+": Applied "+.@s_up+" VIT Mastery-Boost.";	break;
+		case 3: bonus_script "{ bonus bInt,"+.@s_up+"; }",.@boost,8; if(!@SWMLogin) dispbottom .n$+": Applied "+.@s_up+" INT Mastery-Boost.";	break;
+		case 4: bonus_script "{ bonus bDex,"+.@s_up+"; }",.@boost,8; if(!@SWMLogin) dispbottom .n$+": Applied "+.@s_up+" DEX Mastery-Boost.";	break;
+		case 5: bonus_script "{ bonus bLuk,"+.@s_up+"; }",.@boost,8; if(!@SWMLogin) dispbottom .n$+": Applied "+.@s_up+" LUK Mastery-Boost.";	break;	
 	}
 }
 // Weapon Boost
@@ -1381,24 +1384,24 @@ if( set(.@w_m,callfunc("DATA_D-M",2,2,.@e,2) ) > 0) { // Get Mastery Level
 		break;
 	}
 	set .@atk,.@w_m*.@ref;
-	bonus bWeaponAtkRate,.@atk;
-	bonus bWeaponMatkRate,.@atk;
+	bonus_script "{ bonus bAtkRate,"+.@atk+"; }",.@boost,8;
+	bonus_script "{ bonus bMatkRate,"+.@atk+"; }",.@boost,8;
 
 	if(!@SWMLogin) dispbottom .n$+": Applied "+.@atk+"% Weapon ATK & MATK Boost.";
 }
 // MvP Mastery
 if(set(.@mvp_m,callfunc("DATA_D-M",2,3,0,2) ) > 0) { // Get Mastery Level above 1
-	bonus2 bAddClass,Class_Boss,.@mvp_m;
-	bonus2 bMagicAddClass,Class_Boss,.@mvp_m;
+	bonus_script "{ bonus2 bAddClass,Class_Boss,"+.@mvp_m+"; }",.@boost,8;
+	bonus_script "{ bonus2 bMagicAddClass,Class_Boss,"+.@mvp_m+"; }",.@boost,8;
 	if(.@mvp_m > 1) {
-		bonus2 bIgnoreDefClassRate,Class_Boss,.@mvp_m/2;
-		bonus2 bIgnoreMdefClassRate,Class_Boss,.@mvp_m/2;
+		bonus_script "{ bonus2 bIgnoreDefClassRate,Class_Boss,"+.@mvp_m/2+"; }",.@boost,8;
+		bonus_script "{ bonus2 bIgnoreMdefClassRate,Class_Boss,"+.@mvp_m/2+"; }",.@boost,8;
 	}
 	if(!@SWMLogin) dispbottom .n$+": Applied "+.@mvp_m+"% Physical & Magical Damage Boost and ignore "+.@mvp_m/2+"% DEF & MDEF against MvP's.";
 }
 if(!@SWMLogin) 
 	set @SWMLogin,1; // Prevent spamming of Boost messages duo OnPCCalcEvent
-addtimer (300*1000),strnpcinfo(0)+"::OnMasteryBoost";
+addtimer .@boost,strnpcinfo(0)+"::OnMasteryBoost";
 end;
 
 OnSWMStatus:
