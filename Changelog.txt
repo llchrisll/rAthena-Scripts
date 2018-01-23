@@ -26,6 +26,12 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2017/01/23
+<< == |*| Training System v2.0 - @Update to v2.1 |*| == >>
+- Fixxed an bug with the Mastery Boost
+<< == |*| Quest System v1.2 - @Update |*| == >>
+- Removed lines with debugmes
+------------------------------------------------------------------------------------------------------------------------
 * 2017/01/15
 << == |*| Chris Functions v1.0 - @Update |*| == >>
 - Added an code so you can fill the `mob_map_db` by yourself too

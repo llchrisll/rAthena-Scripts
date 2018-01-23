@@ -598,13 +598,6 @@ if(getcharid(1) != 0)
 if(getarraysize(@quest_mobid) < 1) 
 	query_sql "SELECT `mob_id` , `mob_am` , `req_am` , `npc_id` , `quest_id` FROM `quest_player` WHERE `char_id` = '"+getcharid(0)+"'",@quest_mobid,@quest_mobam,@quest_mobreq,@quest_npcid,@quest_qid;
 
-for ( set .@m,0; .@m < getarraysize(@quest_mobid); set .@m,.@m + 1) {
-	debugmes "@quest_mobid["+.@m+"]: "+@quest_mobid[.@m];
-	debugmes "@quest_mobam["+.@m+"]: "+@quest_mobam[.@m];
-	debugmes "@quest_mobreq["+.@m+"]: "+@quest_mobreq[.@m];
-	debugmes "@quest_npcid["+.@m+"]: "+@quest_npcid[.@m];
-	debugmes "@quest_qid["+.@m+"]: "+@quest_qid[.@m];
-}
 for ( set .@m,0; .@m < getarraysize(@quest_mobid); set .@m,.@m + 1)
 	if(@quest_mobid[.@m] == killedrid)
 		if(@quest_mobam[.@m] < @quest_mobreq[.@m]) {
