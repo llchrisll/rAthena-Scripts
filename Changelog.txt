@@ -26,19 +26,33 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
-* 2017/01/23
-<< == |*| Training System v2.0 - @Update to v2.1 |*| == >>
+* 2018/03/11
+<< == |*| Arena Master v1.6 [RE] - @Update to v1.7 |*| == >>
+- Fixed PvP KIll Announcer and Kill display message
+- Changed `hscore` to `hstreak` (confused people)
+- Fixed typo at PvP Deathmatch warp "$dmpvp$" > "$@dmpvp$"
+<< == |*| Training System v2.1 [RE] - @Update to v2.2 |*| == >>
+- Fixxed missing Limit Reset
+<< == |*| Dynamic Battleground Arena v1.0 [WIP] - @Added |*| == >>
+- Provided extra file: BattlegroundArena.rar
+<< == |*| Instanced Hunting Ground v1.0 [WIP] - @Added |*| == >>
+- Provided extra file: HuntingGrounds_DB.txt
+<< == |*| Unofficial Excellion Gear v1.0 [REQ] - @Added |*| == >>
+- Unofficial Excellion Gear NPC's
+------------------------------------------------------------------------------------------------------------------------
+* 2018/01/23
+<< == |*| Training System v2.0 [RE] - @Update to v2.1 |*| == >>
 - Fixxed an bug with the Mastery Boost
-<< == |*| Quest System v1.2 - @Update |*| == >>
+<< == |*| Quest System v1.2 [RE] - @Update |*| == >>
 - Removed lines with debugmes
 ------------------------------------------------------------------------------------------------------------------------
-* 2017/01/15
-<< == |*| Chris Functions v1.0 - @Update |*| == >>
+* 2018/01/15
+<< == |*| Chris Functions v1.0 [RE] - @Update |*| == >>
 - Added an code so you can fill the `mob_map_db` by yourself too
 - Also moved the mob_map_db.sql file to the released/Extra folder
 << == |*| Dungeon Quest Service v1.0 - @Release |*| == >>
 - Moved to released/Systems folder
-<< == |*| Training System v1.0 - @Update to v2.0 |*| == >>
+<< == |*| Training System v1.0 [RE] - @Update to v2.0 |*| == >>
 - Major Update and bug fixes:
 - Added the forgotten GM Setting > .gm
 - Removed SQL Support
@@ -69,13 +83,13 @@
 - Added MvP Mastery and MvP Ladder via SQL
 - Removed the GM Panel
 - Added an feature to only show the mastery of equipable weapons
-<< == |*| Daily Reward v1.0 - @Release |*| == >>
+<< == |*| Daily Reward v1.0 [RE] - @Release |*| == >>
 - My own Daily Reward
-<< == |*| Mass Seller v1.0 - @Release |*| == >>
+<< == |*| Mass Seller v1.0 [RE] - @Release |*| == >>
 - An NPC where the players can sell multiply items at once by category
 << == |*| Player Shops v1.0 - @Removed |*| == >>
 - Duo complications I cancel this script
-<< == |*| Guild Ranker v1.2 - @Update to v1.3 |*| == >>
+<< == |*| Guild Ranker v1.2 [RE] - @Update to v1.3 |*| == >>
 - Removed Holiday List
 - Removed Donation
 - Script Optimization
@@ -84,7 +98,7 @@
 = Updated Headers.txt & Project_List.txt 
 ------------------------------------------------------------------------------------------------------------------------
 * 2017/12/31
-<< == |*| Quest System v1.1 - @Update to v1.2 |*| == >>
+<< == |*| Quest System v1.1 [RE] - @Update to v1.2 |*| == >>
 - Major bug fixes and updates
 - Added EXP Reward
 - Fixed SQL Queries: == -1 > == 0
@@ -103,7 +117,7 @@
 - Fixed the custom command @checkquest and changed the layout a bit
 ------------------------------------------------------------------------------------------------------------------------
 * 2017/11/10
-<< == |*| Most Scripts - @Update |*| == >>
+<< == |*| Most Scripts - @Update [RE] |*| == >>
 - "Tested with" 
 - "Script Made" into "Initial Version"
 - Script Optimization depending on Script, see below which was updated
