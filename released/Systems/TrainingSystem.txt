@@ -35,6 +35,7 @@
 //		- Removed the GM Panel
 //		- Added an feature to only show the mastery of equipable weapons
 //= 2.1 - Fixxed an bug with the Mastery Boost
+//= 2.2 - Fixxed missing Limit Reset
 //===== Tested With =========================================
 //= rAthena 12/24/2017 Revision
 //= GIT Hash: ae69e506263f9b183c945f49b1d88c5fc2b73a6a
@@ -683,8 +684,10 @@ prontera,150,180,4	script	Mastery Trainer	110,{
 			OnComplete:
 			callfunc "DATA_D-M",2,1,@p,1,1,1;
 			set SWM_Status_Limit,SWM_Status_Limit + 1;
-			if(SWM_Status_Limit >= .train_statlimit)
+			if(SWM_Status_Limit >= .train_statlimit) {
 				callfunc "DATA_D-M",1,.delay_type,1,.delay_time,1;
+				set SWM_Status_Limit,0;
+			}
 			dispbottom .n$+":The training has been completed, your mastery level has increased by 1.";
 			set @train,0;
 			set @p,0;
@@ -1315,8 +1318,10 @@ if(mobcount(.map$,strnpcinfo(0)+"::OnMobTrainDead") == 0) {
 	set @SWMLogin,0;
 } else end;
 set SWM_Weapon_Limit,SWM_Weapon_Limit + 1;
-if(SWM_Weapon_Limit >= .train_weaplimit)
+if(SWM_Weapon_Limit >= .train_weaplimit) {
 	callfunc("DATA_D-M",1,.delay_type,2,.delay_time,1);
+	set SWM_Weapon_Limit,0;
+}
 set @train,0;
 sleep2 1000;
 warp "SavePoint",0,0;
@@ -1351,7 +1356,7 @@ for ( set .@s,0; .@s < 6; set .@s,.@s + 1) {
 		case 2: bonus_script "{ bonus bVit,"+.@s_up+"; }",.@boost,8; if(!@SWMLogin) dispbottom .n$+": Applied "+.@s_up+" VIT Mastery-Boost.";	break;
 		case 3: bonus_script "{ bonus bInt,"+.@s_up+"; }",.@boost,8; if(!@SWMLogin) dispbottom .n$+": Applied "+.@s_up+" INT Mastery-Boost.";	break;
 		case 4: bonus_script "{ bonus bDex,"+.@s_up+"; }",.@boost,8; if(!@SWMLogin) dispbottom .n$+": Applied "+.@s_up+" DEX Mastery-Boost.";	break;
-		case 5: bonus_script "{ bonus bLuk,"+.@s_up+"; }",.@boost,8; if(!@SWMLogin) dispbottom .n$+": Applied "+.@s_up+" LUK Mastery-Boost.";	break;	
+		case 5: bonus_script "{ bonus bLuk,"+.@s_up+"; }",.@boost,8; if(!@SWMLogin) dispbottom .n$+": Applied "+.@s_up+" LUK Mastery-Boost.";	break;
 	}
 }
 // Weapon Boost
