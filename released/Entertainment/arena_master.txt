@@ -54,6 +54,7 @@
 //= 1.7 - Fixed PvP KIll Announcer and Kill display message
 //      - Changed `hscore` to `hstreak` (confused people)
 //      - Fixed typo at PvP Deathmatch warp "$dmpvp$" > "$@dmpvp$"
+//		- Added some lines for the dynamic Map setting
 //===== Tested With ==========================================
 //= rAthena 02/16/2018 Revision
 //= GIT Hash: f6e0a0a3442d6bebcab6fbbfb35bd381a7ff386c
@@ -1043,6 +1044,7 @@ freeloop(1);
 setarray .@pre$[0],"disp","n","dm","pt2","pt3","pt4","pt5";
 if(.pvp_map == 2) {
 	if($arena_debug) debugmes "Random Map Rotation:";
+	announce "[Arena Master]: New Day, new Battlefield!!! Random Map rotation has been loaded!",bc_all;
 	for ( set .@l,0; .@l < getarraysize(.@pre$); set .@l,.@l + 1) {
 		if($arena_debug) debugmes ".@pre$ = "+.@pre$[.@l];
 		if($arena_debug) debugmes "Array Size: $@"+.@pre$[.@l]+"pvp$ = "+getarraysize(getd("$@"+.@pre$[.@l]+"pvp$"));
@@ -1052,16 +1054,17 @@ if(.pvp_map == 2) {
 		if($arena_debug) debugmes "$"+.@pre$[.@l]+"pvp_map = "+getd("$"+.@pre$[.@l]+"pvp_map");
 		if($arena_debug) debugmes "$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_map")+"] == "+getd("$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_map")+"]");
 	
-		if(!getd("$"+.@pre$[.@l]+"pvp_last") || getd("$"+.@pre$[.@l]+"pvp_last") != getd("$"+.@pre$[.@l]+"pvp_map")) {
+		if(!getd("$"+.@pre$[.@l]+"pvp_last") || getd("$"+.@pre$[.@l]+"pvp_last") != getd("$"+.@pre$[.@l]+"pvp_map")) { 
 			setd("$"+.@pre$[.@l]+"pvp_last"),getd("$"+.@pre$[.@l]+"pvp_map");
-			set .@day,1;
-			announce "[Arena Master]: New Day, new Battlefield!!! Random Map rotation has been loaded!",bc_all;
-			sleep 5000;
+			mapannounce getd("$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_last")+"]"),"[Arena Master]: Duo the map change I will move every player from the current map to the new map in 3 seconds!",bc_map|bc_red;
+			sleep 3000;
+			mapwarp getd("$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_last")+"]"),getd("$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_map")+"]"),0,0;
 		}
 		
 	}
 } else if(.pvp_map == 3) {
 	if($arena_debug) debugmes "Specific Day an Specific Map:";
+	mapannounce "[Arena Master]: New Day, new Battlefield!!! Map selection depending on the day has been loaded!",bc_all;
 	for ( set .@l,0; .@l < getarraysize(.@pre$); set .@l,.@l + 1) {
 		if($arena_debug) debugmes ".@pre$ = "+.@pre$[.@l];
 		if($arena_debug) debugmes "Previous Map: "+getd("$"+.@pre$[.@l]+"pvp_map");
@@ -1074,16 +1077,12 @@ if(.pvp_map == 2) {
 			if(getd("$@"+.@pre$[.@l]+"pvp_day["+.@t+"]") == gettime(DT_DAYOFWEEK)) {
 				setd("$"+.@pre$[.@l]+"pvp_map"),.@t;
 				if($arena_debug) debugmes "Day Check passed: "+getd("$"+.@pre$[.@l]+"pvp_map")+" == "+.@t;
-				set .@day,1;
-				mapannounce "[Arena Master]: New Day, new Battlefield!!! Map selection depending on the day has been loaded!",bc_all;
+				mapannounce getd("$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_last")+"]"),"[Arena Master]: Duo the map change I will move every player from the current map to the new map in 3 seconds!",bc_map|bc_red;
+				sleep 3000;
+				mapwarp getd("$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_last")+"]"),getd("$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_map")+"]"),0,0;
 			}
 		}
 	}
-}
-if(.@day) {
-	mapannounce getd("$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_last")+"]"),"[Arena Master]: Duo the map change I will move every player from the current map to the new map in 5 seconds!",bc_map|bc_red;
-	sleep 5000;
-	mapwarp getd("$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_last")+"]"),getd("$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_map")+"]"),0,0;
 }
 if($arena_debug) debugmes "OnClock0001 and/or OnInit loaded, Auto Mapflag adding now....";
 // ======= Auto Mapflag Adding ===============//

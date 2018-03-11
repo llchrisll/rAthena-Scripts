@@ -31,6 +31,7 @@
 - Fixed PvP KIll Announcer and Kill display message
 - Changed `hscore` to `hstreak` (confused people)
 - Fixed typo at PvP Deathmatch warp "$dmpvp$" > "$@dmpvp$"
+- Added some lines for the dynamic Map setting
 << == |*| Training System v2.1 [RE] - @Update to v2.2 |*| == >>
 - Fixxed missing Limit Reset
 << == |*| Dynamic Battleground Arena v1.0 [WIP] - @Added |*| == >>
