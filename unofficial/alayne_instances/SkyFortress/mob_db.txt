@@ -1,0 +1,566 @@
+//RATHENA
+3473,AS_D_RAGGED_GOLEM,Stefan J.E Wolf,Stefan J.E Wolf,160,10000000,1,0,0,3,2800,3200,100,68,100,50,100,100,110,50,10,12,2,6,88,0x6203885,500,1500,500,1000,0,0,0,0,0,0,0,984,5000,985,5000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3474,AS_BLOODY_KNIGHT,Immortal Cursed Knight,Immortal Cursed Knight,160,10000000,1,7513,8457,2,4785,4977,138,53,102,104,72,57,98,57,10,12,1,6,47,0x6203885,500,1500,500,1000,0,0,0,0,0,0,0,985,500,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3475,AS_WIND_GHOST,Immortal Wind Ghost,Immortal Wind Ghost,160,10000000,1,9086,17532,5,2513,3315,105,41,100,63,35,99,106,61,10,12,1,6,47,0x6203885,500,1500,500,1000,0,0,0,0,0,0,0,984,5000,985,5000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3476,AS_ZOMBIE,Immortal Zombie Soldier,Immortal Zombie Soldier,160,405694,1,10570,10100,1,1504,1625,128,84,5,99,39,48,30,24,10,12,1,6,47,0x6203885,500,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3477,AS_IMMORTAL_CORPS,Immortal Fortress Legion,Immortal Fortress Legion,160,405694,1,11040,10730,1,1851,2022,103,25,109,76,61,53,98,30,10,12,1,6,47,0x6203885,500,1500,500,1000,0,0,0,0,0,0,0,28706,50,28008,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3478,AS_ZOMBIE_SLAUGHTER,Immortal Fortress Key Keeper,Immortal Fortress Key Keeper,160,423332,1,11040,10730,1,1851,2022,103,25,109,76,61,53,98,30,10,12,1,6,47,0x6203885,500,1500,500,1000,0,0,0,0,0,0,0,6960,10000,28605,50,13328,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3479,AS_ZOMBIE_MASTER,Immortal Zombie Assaulter,Immortal Zombie Assaulter,160,405694,1,11500,10100,1,1653,3274,140,44,155,126,89,108,213,76,10,12,1,6,47,0x6203885,500,1500,500,1000,0,0,0,0,0,0,0,28605,50,1800,50,2026,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3480,AS_CURSED_SOLDIER,Immortal Cursed Zombie,Immortal Cursed Zombie,160,405694,1,10101,10003,1,1850,3451,81,87,119,87,86,60,94,55,10,12,1,6,47,0x6203885,500,1500,500,1000,0,0,0,0,0,0,0,18121,100,13128,50,21016,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3481,AS_EVIL_SHADOW1,Immortal Nightmare Shadow,Immortal Nightmare Shadow,160,423330,1,6666,7332,2,1444,1944,106,44,44,166,44,44,166,44,10,12,1,6,47,0x6203885,500,1500,500,1000,0,0,0,0,0,0,0,985,10000,1450,50,28107,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3482,AS_EVIL_SHADOW2,Immortal Angry Shadow,Immortal Angry Shadow,160,388054,1,279836,260199,1,2730,3990,80,180,155,88,110,135,154,59,10,12,1,6,47,0x6203885,500,1500,500,1000,0,0,0,0,0,0,0,1900,50,16041,50,1996,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3483,AS_EVIL_SHADOW3,Immortal Death Shadow,Immortal Death Shadow,160,423330,1,280009,267592,1,3020,4265,80,150,165,82,110,122,154,52,10,12,1,6,47,0x6203885,500,1500,500,1000,0,0,0,0,0,0,0,1600,50,13455,50,1400,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3484,AS_D_RAGGED_GOLEM,Stefan J.E Wolf,Stefan J.E Wolf,160,20000000,1,2800090,2675920,3,4500,6500,100,68,200,100,200,200,220,100,10,12,2,6,88,0x6203885,500,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+
+//HERCULES
+
+{
+	Id: 3473
+	SpriteName: "AS_D_RAGGED_GOLEM"
+	Name: "Stefan J.E Wolf"
+	Lv: 160
+	Hp: 10000000
+	Sp: 1
+	Exp: 1
+	JExp: 1
+	AttackRange: 3
+	Attack: [2800,3200]
+	Def: 100
+	Mdef: 68
+	Stats: {
+		Str: 100
+		Agi: 50
+		Vit: 100
+		Int: 100
+		Dex: 110
+		Luk: 50
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Large"
+	Race: "RC_Undead"
+	Element: ("Ele_Undead",4)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+		Oridecon: 500
+    Elunium: 500
+	}
+},
+{
+	Id: 3474
+	SpriteName: "AS_BLOODY_KNIGHT"
+	Name: "Immortal Cursed Knight"
+	Lv: 160
+	Hp: 10000000
+	Sp: 1
+	Exp: 7513
+	JExp: 8457
+	AttackRange: 2
+	Attack: [4785,4977]
+	Def: 138
+	Mdef: 53
+	Stats: {
+		Str: 102
+		Agi: 104
+		Vit: 72
+		Int: 57
+		Dex: 98
+		Luk: 57
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Large"
+	Race: "RC_Demon"
+	Element: ("Ele_Dark",3)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+    Elunium: 500
+	}
+},
+{
+	Id: 3475
+	SpriteName: "AS_WIND_GHOST"
+	Name: "Immortal Wind Ghost"
+	Lv: 160
+	Hp: 10000000
+	Sp: 1
+	Exp: 9086
+	JExp: 17532
+	AttackRange: 5
+	Attack: [2513,3315]
+	Def: 105
+	Mdef: 41
+	Stats: {
+		Str: 100
+		Agi: 63
+		Vit: 35
+		Int: 99
+		Dex: 106
+		Luk: 61
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Medium"
+	Race: "RC_Demon"
+	Element: ("Ele_Wind",3)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+    Oridecon: 500
+    Elunium: 500
+	}
+},
+{
+	Id: 3476
+	SpriteName: "AS_ZOMBIE"
+	Name: "Immortal Zombie Soldier"
+	Lv: 160
+	Hp: 405694
+	Sp: 1
+	Exp: 10570
+	JExp: 10100
+	AttackRange: 1
+	Attack: [1504,1625]
+	Def: 128
+	Mdef: 84
+	Stats: {
+		Str: 5
+		Agi: 99
+		Vit: 39
+		Int: 48
+		Dex: 30
+		Luk: 24
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Medium"
+	Race: "RC_Undead"
+	Element: ("Ele_Undead",1)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+	}
+},
+{
+	Id: 3477
+	SpriteName: "AS_IMMORTAL_CORPS"
+	Name: "Immortal Fortress Legion"
+	Lv: 160
+	Hp: 405694
+	Sp: 1
+	Exp: 11040
+	JExp: 10730
+	AttackRange: 1
+	Attack: [1851,2022]
+	Def: 103
+	Mdef: 25
+	Stats: {
+		Str: 109
+		Agi: 76
+		Vit: 61
+		Int: 53
+		Dex: 98
+		Luk: 30
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Medium"
+	Race: "RC_Demon"
+	Element: ("Ele_Undead",4)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+   Dagger_of_Vicious_Mind: 2500
+	}
+},
+{
+	Id: 3478
+	SpriteName: "AS_ZOMBIE_SLAUGHTER"
+	Name: "Immortal Fortress Key Keeper"
+	Lv: 160
+	Hp: 423332
+	Sp: 1
+	Exp: 11040
+	JExp: 10730
+	AttackRange: 1
+	Attack: [1851,2022]
+	Def: 103
+	Mdef: 25
+	Stats: {
+		Str: 109
+		Agi: 76
+		Vit: 61
+		Int: 53
+		Dex: 98
+		Luk: 30
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Medium"
+	Race: "RC_Undead"
+	Element: ("Ele_Undead",3)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+   Sky_Fortress_Key: 10000
+	}
+},
+{
+	Id: 3479
+	SpriteName: "AS_ZOMBIE_MASTER"
+	Name: "Immortal Zombie Assaulter"
+	Lv: 160
+	Hp: 405694
+	Sp: 1
+	Exp: 11500
+	JExp: 10100
+	AttackRange: 1
+	Attack: [1653,3274]
+	Def: 140
+	Mdef: 44
+	Stats: {
+		Str: 155
+		Agi: 126
+		Vit: 89
+		Int: 108
+		Dex: 213
+		Luk: 76
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Medium"
+	Race: "RC_Undead"
+	Element: ("Ele_Undead",1)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+   Book_of_Vicious_Mind: 3000
+	}
+},
+{
+	Id: 3480
+	SpriteName: "AS_CURSED_SOLDIER"
+	Name: "Immortal Cursed Zombie"
+	Lv: 160
+	Hp: 405694
+	Sp: 1
+	Exp: 10101
+	JExp: 10003
+	AttackRange: 1
+	Attack: [1850,3451]
+	Def: 81
+	Mdef: 87
+	Stats: {
+		Str: 119
+		Agi: 87
+		Vit: 86
+		Int: 60
+		Dex: 94
+		Luk: 55
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Medium"
+	Race: "RC_Undead"
+	Element: ("Ele_Undead",3)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+	}
+},
+{
+	Id: 3481
+	SpriteName: "AS_EVIL_SHADOW1"
+	Name: "Immortal Nightmare Shadow"
+	Lv: 160
+	Hp: 423330
+	Sp: 1
+	Exp: 6666
+	JExp: 7332
+	AttackRange: 2
+	Attack: [1444,1944]
+	Def: 106
+	Mdef: 44
+	Stats: {
+		Str: 44
+		Agi: 166
+		Vit: 44
+		Int: 44
+		Dex: 166
+		Luk: 44
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Large"
+	Race: "RC_Demon"
+	Element: ("Ele_Dark",2)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+   Elunium: 5000
+	}
+},
+{
+	Id: 3482
+	SpriteName: "AS_EVIL_SHADOW2"
+	Name: "Immortal Angry Shadow"
+	Lv: 160
+	Hp: 388054
+	Sp: 1
+	Exp: 279836
+	JExp: 260199
+	AttackRange: 1
+	Attack: [2730,3990]
+	Def: 80
+	Mdef: 180
+	Stats: {
+		Str: 155
+		Agi: 88
+		Vit: 110
+		Int: 135
+		Dex: 154
+		Luk: 59
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Medium"
+	Race: "RC_Demon"
+	Element: ("Ele_Dark",2)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+   Violin_of_Vicious_Mind: 250
+	}
+},
+{
+	Id: 3483
+	SpriteName: "AS_EVIL_SHADOW3"
+	Name: "Immortal Death Shadow"
+	Lv: 160
+	Hp: 423330
+	Sp: 1
+	Exp: 280009
+	JExp: 267592
+	AttackRange: 1
+	Attack: [3020,4265]
+	Def: 80
+	Mdef: 150
+	Stats: {
+		Str: 165
+		Agi: 82
+		Vit: 110
+		Int: 122
+		Dex: 154
+		Luk: 52
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Large"
+	Race: "RC_Demon"
+	Element: ("Ele_Dark",2)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+	}
+},
+{
+	Id: 3484
+	SpriteName: "AS_D_RAGGED_GOLEM"
+	Name: "Stefan J.E Wolf"
+	Lv: 160
+	Hp: 20000000
+	Sp: 1
+	Exp: 2800090
+	JExp: 2675920
+	AttackRange: 3
+	Attack: [4500,6500]
+	Def: 100
+	Mdef: 68
+	Stats: {
+		Str: 200
+		Agi: 100
+		Vit: 200
+		Int: 200
+		Dex: 220
+		Luk: 100
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Large"
+	Race: "RC_Undead"
+	Element: ("Ele_Undead",4)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+	}
+},

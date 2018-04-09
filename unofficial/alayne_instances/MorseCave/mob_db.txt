@@ -1,0 +1,565 @@
+//RATHENA
+2998,EP14_MORS_EVENT,Weakened Morocc,Weakened Morocc,158,1771440,1,5874,6618,1,1872,2272,113,45,87,51,45,88,106,50,10,12,2,0,20,0x6203695,300,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+2999,EP14_MORS_BOSSA,Morocc Necromancer,Morocc Necromancer,158,4000000,1,5874,6618,1,700,701,215,555,165,190,142,146,299,93,10,12,1,0,20,0x6203695,300,1500,500,1000,0,0,0,0,0,0,0,607,2000,603,200,604,200,522,200,0,0,0,0,0,0,0,0,0,0,0,0
+3000,EP14_MORS_BOSSB,Morocc Necromancer,Morocc Necromancer,101,80000000,1,5874,6618,12,700,701,1,1,1,1,1,180,1,1,12,14,1,0,20,0x6203695,300,1500,500,1000,0,0,0,0,0,0,0,607,2000,603,200,604,200,22537,10000,22537,10000,522,200,0,0,0,0,0,0,0,0
+3001,EP14_MORS_MOB1,Morocc Ghoul,Morocc Ghoul,158,295240,1,5874,6618,1,1872,2772,113,45,87,51,45,88,106,50,10,12,2,0,20,0x6203695,300,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3002,EP14_MORS_MOB2,Morocc Osiris,Morocc Osiris,158,442860,1,5874,6618,1,1872,2772,113,45,87,51,45,88,106,50,10,12,2,0,20,0x6203695,300,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3003,EP14_MORS_MOB3,Morocc Archer Skeleton,Morocc Archer Skeleton,158,295240,1,5874,6618,3,1872,2772,113,45,87,51,45,88,106,50,10,12,2,0,20,0x6203695,300,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3004,EP14_MORS_MOB4,Morocc Wraith,Morocc Wraith,158,100000,1,5874,6618,1,90,180,113,45,87,51,45,88,106,50,10,12,2,0,20,0x6203695,300,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3005,EP14_MORS_MOB5,Morocc Verit,Morocc Verit,158,442860,1,5874,6618,1,1872,2772,113,45,87,51,45,88,106,50,10,12,2,0,20,0x6203695,300,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3006,EP14_MORS_MOB6,Morocc Lude,Morocc Lude,158,885720,1,5874,6618,1,113,226,113,45,87,51,45,88,299,50,10,12,2,0,20,0x6203695,300,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3007,EP14_MORS_DUMMY,Morocc Shadow,Morocc Shadow,158,99999999,1,5874,6618,1,1872,2772,113,45,87,51,45,88,106,50,10,12,2,0,20,0x6203695,300,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+3008,EP14_MORS_HIDDEN,Morocc Plankton,Morocc Plankton,158,295240,1,0,0,1,159,413,113,45,1,51,45,255,106,50,10,12,0,6,60,0x6203695,300,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+
+//HERCULES
+
+{
+	Id: 2998
+	SpriteName: "EP14_MORS_EVENT"
+	Name: "Weakened Morocc"
+	Lv: 158
+	Hp: 1771440
+	Sp: 1
+	Exp: 5874
+	JExp: 6618
+	AttackRange: 1
+	Attack: [1872,2272]
+	Def: 113
+	Mdef: 45
+	Stats: {
+		Str: 87
+		Agi: 51
+		Vit: 45
+		Int: 88
+		Dex: 106
+		Luk: 50
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Large"
+	Race: "RC_Demon"
+	Element: ("Ele_Neutral", 3)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {  
+	}
+},
+{
+	Id: 2999
+	SpriteName: "EP14_3_DEATH_BOSSA"
+	Name: "Morocc Necromancer"
+	Lv: 158
+	Hp: 4000000
+	Sp: 1
+	Exp: 5874
+	JExp: 6618
+	AttackRange: 1
+	Attack: [700,701]
+	Def: 215
+	Mdef: 555
+	Stats: {
+		Str: 165
+		Agi: 190
+		Vit: 142
+		Int: 146
+		Dex: 299
+		Luk: 93
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Medium"
+	Race: "RC_Human"
+	Element: ("Ele_Neutral", 3)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {  
+     Yggdrasilberry: 2000
+     Old_Blue_Box: 200
+     Branch_Of_Dead_Tree: 200
+     Fruit_Of_Mastela: 200
+	}
+},
+{
+	Id: 3000
+	SpriteName: "EP14_3_DEATH_BOSS"
+	Name: "Morocc Necromancer"
+	Lv: 101
+	Hp: 80000000
+	Sp: 1
+	Exp: 5874
+	JExp: 6618
+	AttackRange: 12
+	Attack: [700,701]
+	Def: 1
+	Mdef: 1
+	Stats: {
+		Str: 1
+		Agi: 1
+		Vit: 1
+		Int: 180
+		Dex: 1
+		Luk: 1
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Medium"
+	Race: "RC_Human"
+	Element: ("Ele_Earth", 4)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {  
+     Yggdrasilberry: 2000
+     Old_Blue_Box: 200
+     Branch_Of_Dead_Tree: 200
+     Prize_Of_Hero: 10000
+     Prize_Of_Hero: 10000
+     Fruit_Of_Mastela: 200
+	}
+},
+{
+	Id: 3001
+	SpriteName: "EP14_MORS_MOB1"
+	Name: "Morocc Ghoul"
+	Lv: 158
+	Hp: 295240
+	Sp: 1
+	Exp: 5874
+	JExp: 6618
+	AttackRange: 1
+	Attack: [1872,2772]
+	Def: 113
+	Mdef: 45
+	Stats: {
+		Str: 87
+		Agi: 51
+		Vit: 45
+		Int: 88
+		Dex: 106
+		Luk: 50
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Medium"
+	Race: "RC_Demon"
+	Element: ("Ele_Neutral", 3)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {  
+	}
+},
+{
+	Id: 3002
+	SpriteName: "EP14_MORS_MOB2"
+	Name: "Morocc Osiris"
+	Lv: 158
+	Hp: 442860
+	Sp: 1
+	Exp: 5874
+	JExp: 6618
+	AttackRange: 1
+	Attack: [1872,2772]
+	Def: 113
+	Mdef: 45
+	Stats: {
+		Str: 87
+		Agi: 51
+		Vit: 45
+		Int: 88
+		Dex: 106
+		Luk: 50
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Medium"
+	Race: "RC_Demon"
+	Element: ("Ele_Neutral", 3)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {  
+	}
+},
+{
+	Id: 3003
+	SpriteName: "EP14_MORS_MOB3"
+	Name: "Morocc Archer Skeleton"
+	Lv: 158
+	Hp: 295240
+	Sp: 1
+	Exp: 5874
+	JExp: 6618
+	AttackRange: 1
+	Attack: [1872,2772]
+	Def: 113
+	Mdef: 45
+	Stats: {
+		Str: 87
+		Agi: 51
+		Vit: 45
+		Int: 88
+		Dex: 106
+		Luk: 50
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Medium"
+	Race: "RC_Demon"
+	Element: ("Ele_Neutral", 3)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {  
+	}
+},
+{
+	Id: 3004
+	SpriteName: "EP14_MORS_MOB4"
+	Name: "Morocc Wraith"
+	Lv: 158
+	Hp: 100000
+	Sp: 1
+	Exp: 5874
+	JExp: 6618
+	AttackRange: 1
+	Attack: [90, 180]
+	Def: 113
+	Mdef: 45
+	Stats: {
+		Str: 87
+		Agi: 51
+		Vit: 45
+		Int: 88
+		Dex: 106
+		Luk: 50
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Large"
+	Race: "RC_Demon"
+	Element: ("Ele_Neutral", 3)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {  
+	}
+},
+{
+	Id: 3005
+	SpriteName: "EP14_MORS_MOB5"
+	Name: "Morocc Verit"
+	Lv: 158
+	Hp: 442860
+	Sp: 1
+	Exp: 5874
+	JExp: 6618
+	AttackRange: 1
+	Attack: [1872,2772]
+	Def: 113
+	Mdef: 45
+	Stats: {
+		Str: 87
+		Agi: 51
+		Vit: 45
+		Int: 88
+		Dex: 106
+		Luk: 50
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Medium"
+	Race: "RC_Demon"
+	Element: ("Ele_Neutral", 3)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {  
+	}
+},
+{
+	Id: 3006
+	SpriteName: "EP14_MORS_MOB6"
+	Name: "Morocc Lude"
+	Lv: 158
+	Hp: 885720
+	Sp: 1
+	Exp: 5874
+	JExp: 6618
+	AttackRange: 1
+	Attack: [1872,2772]
+	Def: 113
+	Mdef: 45
+	Stats: {
+		Str: 87
+		Agi: 51
+		Vit: 45
+		Int: 88
+		Dex: 106
+		Luk: 50
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Small"
+	Race: "RC_Demon"
+	Element: ("Ele_Neutral", 3)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {  
+	}
+},
+{
+	Id: 3007
+	SpriteName: "Beruem_Soul"
+	Name: "Beruem Soul"
+	Lv: 158
+	Hp: 99999999
+	Sp: 1
+	Exp: 5874
+	JExp: 6618
+	AttackRange: 1
+	Attack: [1872,2772]
+	Def: 113
+	Mdef: 45
+	Stats: {
+		Str: 87
+		Agi: 51
+		Vit: 45
+		Int: 88
+		Dex: 106
+		Luk: 50
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Small"
+	Race: "RC_Demon"
+	Element: ("Ele_Neutral", 3)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {  
+	}
+},
+{
+	Id: 3008
+	SpriteName: "EP14_MORS_HIDDEN"
+	Name: "Morocc Event"
+	Lv: 158
+	Hp: 1771440
+	Sp: 1
+	Exp: 5874
+	JExp: 6618
+	AttackRange: 1
+	Attack: [1872,2772]
+	Def: 113
+	Mdef: 45
+	Stats: {
+		Str: 87
+		Agi: 51
+		Vit: 45
+		Int: 88
+		Dex: 106
+		Luk: 50
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Small"
+	Race: "RC_Demon"
+	Element: ("Ele_Neutral", 3)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {  
+	}
+},
+{
+	Id: 3009
+	SpriteName: "EP14_MORS_DUMMY"
+	Name: "Morocc Shadow"
+	Lv: 158
+	Hp: 4000000
+	Sp: 1
+	Exp: 5874
+	JExp: 6618
+	AttackRange: 1
+	Attack: [700,700]
+	Def: 215
+	Mdef: 555
+	Stats: {
+		Str: 165
+		Agi: 190
+		Vit: 142
+		Int: 146
+		Dex: 299
+		Luk: 93
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Small"
+	Race: "RC_Demon"
+	Element: ("Ele_Neutral", 3)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {  
+	}
+},

@@ -1,0 +1,32 @@
+//RATHENA
+6713,Heart_of_Soul,Heart of Soul,3,0,,0,,,,,,,,,,,,,{},{},{}
+6714,Sheenas_Soul,Sheena's Soul,3,20,,0,,,,,,,,,,,,,{},{},{}
+22567,Expedition_Award_Box,Expedition Award Box,0,20,,100,,,,,0xFFFFFFFF,63,2,,,,,,{ callfunc "IGF_SquadPrize"; },{},{}
+
+//HERCULES
+{
+	Id: 6713
+	AegisName: "Heart_of_Soul"
+	Name: "Heart of Soul"
+	Buy: 0
+	Weight: 10
+	BuyingStore: true
+},
+{
+	Id: 6714
+	AegisName: "Sheenas_Soul"
+	Name: "Shnaim's Soul"
+	Buy: 0
+	Weight: 10
+	BuyingStore: true
+},
+{
+	Id: 22567
+	AegisName: "Expedition_Award_Box"
+	Name: "Expedition Award Box"
+	Type: 0
+	Buy: 20
+	Weight: 100
+	BuyingStore: true
+	Script: <" ">
+},

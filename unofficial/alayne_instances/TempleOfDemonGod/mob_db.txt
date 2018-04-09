@@ -1,0 +1,595 @@
+//RATHENA
+3039,B_MOROCC_1,Fire Morroc Loyal Vessel,Fire Morroc Loyal Vessel,149,8000000,1,285500,164700,1,1901,2046,199,35,126,91,63,61,114,37,10,12,2,8,27,0x6203695,110,576,480,432,0,0,0,0,0,0,0,2111,10,7799,1000,7798,3000,985,160,7054,4850,2537,3,1541,20,0,0,0,0,0,0
+3041,B_MOROCC_4,Cold Morroc Loyal Vessel,Cold Morroc Loyal Vessel,149,7700000,1,299000,202800,1,1235,1834,199,35,126,91,63,61,114,37,10,12,2,8,27,0x6203695,110,576,480,432,0,0,0,0,0,0,0,2111,10,7799,1000,7798,3000,985,160,7054,4850,2537,3,1541,20,0,0,0,0,0,0
+
+3087,M_NYDHOG,Nyddhog,Nyddhog,160,215000,1,100,100,2,1835,2279,15,89,76,66,90,55,189,22,10,12,1,7,20,0x6203695,100,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+3088,MM_BRINARANEA_BABY,Brinarea Baby,Brinarea Baby,155,155600,1,0,100,1,2051,2267,80,200,16,26,30,115,79,5,10,12,2,0,20,0x6203695,100,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+3089,MM_LOCO_KASA,Loco Kasa,Loco Kasa,155,185000,1,0,0,1,3266,3932,30,30,88,44,88,21,95,44,10,12,2,6,47,0x6203695,300,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+3090,MM_LOCO_SALAMANDER,Loco Salamander,Loco Salamander,155,217650,1,0,0,1,2357,3428,121,36,60,103,45,35,172,15,10,12,2,6,47,0x6203695,500,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+3091,MM_BRINARANEA,Brinararea,Brinararea,165,81650000,1,0,0,3,8255,28452,264,177,135,135,12,72,220,91,10,12,2,6,61,0x6203295,500,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+3092,MM_MUSPELLSKOLL,Muspelskoll,Muspelskoll,165,55620000,1,0,0,3,9600,11970,211,170,202,119,6,45,275,71,10,12,2,6,63,0x6203295,500,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+3093,MM_BRINARANEA_CORE,Brinararea Core,Brinararea Core,160,300,1,0,0,0,1,2,1,1,1,1,1,1,1,1,0,0,2,6,21,0x0,500,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+3094,MM_MUSPELLSKOLL_CORE,Muspelskoll Core,Muspelskoll Core,160,300,1,0,0,0,1,2,1,1,1,1,1,1,1,1,0,0,2,6,23,0x0,500,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+3095,MM_GOD_SHADOW,God Shadow,God Shadow,1,100000000,1,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,2,6,23,0x6203885,500,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+3096,MM_MOROCC_KID,Morocc Kid,Morocc Kid,175,80000000,1,0,0,3,4249,6241,158,134,90,122,7,87,287,36,10,12,1,6,66,0x6203885,500,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+3097,MM_MOROCC_ADT,Morocc Adult,Morocc Adult,175,120000000,1,0,0,3,4715,6924,203,155,122,103,12,106,269,51,10,12,1,0,63,0x6203885,500,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+3098,MM_MOROCC_ORIGIN,Morocc Origin,Morocc Origin,160,3258000,1,0,0,3,6177,6217,351,212,195,35,5,36,355,7,10,12,2,6,87,0x6203885,500,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+3099,MM_MOROCC_REST,Morocc Origin,Morocc Origin,160,1450000,1,0,0,3,2963,3030,112,98,110,98,13,48,271,9,10,12,2,6,87,0x6203885,500,1500,500,1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+
+//HERCULES
+
+{
+	Id: 3039
+	SpriteName: "B_MOROCC_1"
+	Name: "Fire Morroc Loyal Vessel"
+	Lv: 149
+	Hp: 8000000
+	Sp: 1
+	Exp: 285500
+	JExp: 164700
+	AttackRange: 1
+	Attack: [1901,2046]
+	Def: 199
+	Mdef: 35
+	Stats: {
+		Str: 126
+		Agi: 91
+		Vit: 63
+		Int: 61
+		Dex: 114
+		Luk: 37
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Large"
+	Race: "RC_Angel"
+	Element: ("Ele_Dark",1)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+	}
+},
+{
+	Id: 3041
+	SpriteName: "B_MOROCC_4"
+	Name: "Cold Morroc Loyal Vessel"
+	Lv: 149
+	Hp: 7700000
+	Sp: 1
+	Exp: 299000
+	JExp: 202800
+	AttackRange: 1
+	Attack: [1235,1834]
+	Def: 199
+	Mdef: 35
+	Stats: {
+		Str: 126
+		Agi: 91
+		Vit: 63
+		Int: 61
+		Dex: 114
+		Luk: 37
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Medium"
+	Race: "RC_Demon"
+	Element: ("Ele_Ghost",3)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+	}
+},
+{
+	Id: 3087
+	SpriteName: "M_NYDHOG"
+	Name: "Nyddhog"
+	Lv: 160
+	Hp: 215000
+	Sp: 1
+	Exp: 100
+	JExp: 200
+	AttackRange: 2
+	Attack: [1235,1834]
+	Def: 15
+	Mdef: 89
+	Stats: {
+		Str: 76
+		Agi: 66
+		Vit: 90
+		Int: 55
+		Dex: 189
+		Luk: 22
+	}
+	ViewRange: 10
+	ChaseRange: 12
+	Size: "Size_Medium"
+	Race: "RC_DemiHuman"
+	Element: ("Ele_Neutral",1)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+	}
+},
+{
+	Id: 3088
+	SpriteName: "MM_BRINARANEA_BABY"
+	Name: "Brinarea Baby"
+	Lv: 155
+	Hp: 155600
+	Sp: 1
+	Exp: 0
+	JExp: 0
+	AttackRange: 1
+	Attack: [2051,2267]
+	Def: 80
+	Mdef: 200
+	Stats: {
+		Str: 16
+		Agi: 26
+		Vit: 30
+		Int: 115
+		Dex: 79
+		Luk: 5
+	}
+	ViewRange: 10
+	ChaseRange: "Size_Large"
+	Race: "RC_Formless"
+	Element: ("Ele_Neutral",1)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+	}
+},
+{
+	Id: 3089
+	SpriteName: "MM_LOCO_KASA"
+	Name: "Loco Kasa"
+	Lv: 155
+	Hp: 185000
+	Sp: 1
+	Exp: 0
+	JExp: 0
+	AttackRange: 1
+	Attack: [3266,3932]
+	Def: 30
+	Mdef: 30
+	Stats: {
+		Str: 88
+		Agi: 44
+		Vit: 88
+		Int: 21
+		Dex: 95
+		Luk: 44
+	}
+	ViewRange: 10
+	ChaseRange: "Size_Large"
+	Race: "RC_Demon"
+	Element: ("Ele_Dark",2)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+	}
+},
+{
+	Id: 3090
+	SpriteName: "MM_LOCO_SALAMANDER"
+	Name: "Loco Salamander"
+	Lv: 155
+	Hp: 217650
+	Sp: 1
+	Exp: 0
+	JExp: 0
+	AttackRange: 1
+	Attack: [2357,3428]
+	Def: 121
+	Mdef: 36
+	Stats: {
+		Str: 60
+		Agi: 103
+		Vit: 45
+		Int: 35
+		Dex: 172
+		Luk: 15
+	}
+	ViewRange: 10
+	ChaseRange: "Size_Medium"
+	Race: "RC_Demon"
+	Element: ("Ele_Dark",2)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+	}
+},
+{
+	Id: 3091
+	SpriteName: "MM_BRINARANEA"
+	Name: "Brinararea"
+	Lv: 165
+	Hp: 81650000
+	Sp: 1
+	Exp: 0
+	JExp: 0
+	AttackRange: 3
+	Attack: [8255,28452]
+	Def: 264
+	Mdef: 177
+	Stats: {
+		Str: 135
+		Agi: 135
+		Vit: 12
+		Int: 72
+		Dex: 220
+		Luk: 91
+	}
+	ViewRange: 10
+	ChaseRange: "Size_Large"
+	Race: "RC_Demon"
+	Element: ("Ele_Water",3)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+	}
+},
+{
+	Id: 3092
+	SpriteName: "MM_MUSPELLSKOLL"
+	Name: "Muspelskoll"
+	Lv: 165
+	Hp: 55620000
+	Sp: 1
+	Exp: 0
+	JExp: 0
+	AttackRange: 3
+	Attack: [9600,11970]
+	Def: 211
+	Mdef: 170
+	Stats: {
+		Str: 202
+		Agi: 119
+		Vit: 6
+		Int: 45
+		Dex: 275
+		Luk: 71
+	}
+	ViewRange: 10
+	ChaseRange: "Size_Large"
+	Race: "RC_Demon"
+	Element: ("Ele_Fire",3)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+	}
+},
+{
+	Id: 3095
+	SpriteName: "MM_GOD_SHADOW"
+	Name: "God Shadow"
+	Lv: 1
+	Hp: 100000000
+	Sp: 1
+	Exp: 0
+	JExp: 0
+	AttackRange: 1
+	Attack: [1,1]
+	Def: 1
+	Mdef: 1
+	Stats: {
+		Str: 1
+		Agi: 1
+		Vit: 1
+		Int: 1
+		Dex: 1
+		Luk: 1
+	}
+	ViewRange: 10
+	ChaseRange: "Size_Small"
+	Race: "RC_Demon"
+	Element: ("Ele_Fire",1)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+	}
+},
+{
+	Id: 3096
+	SpriteName: "MM_MOROCC_KID"
+	Name: "Morocc Kid"
+	Lv: 175
+	Hp: 80000000
+	Sp: 1
+	Exp: 0
+	JExp: 0
+	AttackRange: 3
+	Attack: [4249,6241]
+	Def: 158
+	Mdef: 134
+	Stats: {
+		Str: 90
+		Agi: 122
+		Vit: 7
+		Int: 87
+		Dex: 287
+		Luk: 36
+	}
+	ViewRange: 10
+	ChaseRange: "Size_Small"
+	Race: "RC_Demon"
+	Element: ("Ele_Holy",3)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+	}
+},
+{
+	Id: 3097
+	SpriteName: "MM_MOROCC_ADT"
+	Name: "Morocc Adult"
+	Lv: 175
+	Hp: 120000000
+	Sp: 1
+	Exp: 0
+	JExp: 0
+	AttackRange: 3
+	Attack: [4715,6924]
+	Def: 203
+	Mdef: 155
+	Stats: {
+		Str: 122
+		Agi: 103
+		Vit: 12
+		Int: 106
+		Dex: 269
+		Luk: 51
+	}
+	ViewRange: 10
+	ChaseRange: "Size_Medium"
+	Race: "RC_Demon"
+	Element: ("Ele_Dark",2)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+	}
+},
+{
+	Id: 3098
+	SpriteName: "MM_MOROCC_ORIGIN"
+	Name: "Morocc Origin"
+	Lv: 160
+	Hp: 3258000
+	Sp: 1
+	Exp: 0
+	JExp: 0
+	AttackRange: 3
+	Attack: [6177,6217]
+	Def: 351
+	Mdef: 212
+	Stats: {
+		Str: 195
+		Agi: 35
+		Vit: 5
+		Int: 36
+		Dex: 355
+		Luk: 17
+	}
+	ViewRange: 10
+	ChaseRange: "Size_Large"
+	Race: "RC_Demon"
+	Element: ("Ele_Dark",4)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+	}
+},
+{
+	Id: 3099
+	SpriteName: "MM_MOROCC_REST"
+	Name: "Morocc Rest"
+	Lv: 160
+	Hp: 1450000
+	Sp: 1
+	Exp: 0
+	JExp: 0
+	AttackRange: 3
+	Attack: [2963,3030]
+	Def: 112
+	Mdef: 98
+	Stats: {
+		Str: 110
+		Agi: 98
+		Vit: 13
+		Int: 48
+		Dex: 271
+		Luk: 9
+	}
+	ViewRange: 10
+	ChaseRange: "Size_Large"
+	Race: "RC_Demon"
+	Element: ("Ele_Dark",4)
+	Mode: {
+		CanMove: true
+		Aggressive: true
+		CastSensorIdle: true
+		CanAttack: true
+		Detector: true
+		CastSensorChase: true
+		ChangeChase: true
+		ChangeTargetMelee: true
+		ChangeTargetChase: true
+	}
+	MoveSpeed: 500
+	AttackDelay: 1500
+	AttackMotion: 500
+	DamageMotion: 1000
+	MvpExp: 0
+	Drops: {
+	}
+},
