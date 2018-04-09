@@ -6,10 +6,10 @@
 // ====================================================================
 
 Scripts currently in work-in-progress:
-	- Dynamic Battleground Arena: Brainstorming
+	-
 	
 Scripts currently in testing phase:
-	-
+	- Dynamic Battleground Arena
 	
 Scripts currently in update phase:
 	- 

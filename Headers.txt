@@ -1,14 +1,3 @@
-Folder Headers:
-< -- |#| Entertainments |#| -- >
-< -- |#| Utilities |#| -- >
-< -- |#| Extras |#| -- >
-< -- |#| Systems |#| -- >
-< -- |#| Updating |#| -- >
-< -- |#| Requests |#| -- >
-< -- |#| Unofficial |#| -- >
-< -- |#| Work-in-Progress |#| -- >
-< -- |#| General |#| -- >
-
 Changelog + Script Headers:
 << == |*| Script Name vX.X - @Update to vX.X/Release/Removed/Request |*| == >>
 - Changes/Description
