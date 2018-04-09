@@ -21,8 +21,8 @@ NPC Header:
 //===== Version ==============================================
 //= 1.0 - Initial Version
 //===== Tested With ==========================================
-//= rAthena 02/16/2018 Revision
-//= GIT Hash: f6e0a0a3442d6bebcab6fbbfb35bd381a7ff386c
+//= rAthena 03/26/2018 Revision
+//= GIT Hash: 333f0dddc8353663eacba0423751988c9bc38e34
 //===== Description ==========================================
 //= ...
 //===== Comments =============================================

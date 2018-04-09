@@ -19,13 +19,44 @@
 // ====================================================================
 // ================= Line Indicator (since 2013/10/09) ================
 // *: Date
-// << == |*| Script Name vX.X - @Update to vX.X/Added/Release/Removed/Request |*| == >>: Which script has been changed
+// << == |*| Script Name vX.X - @Update to vX.X/Added/Release/Removed/Request/Modified |*| == >>: Which script has been changed
 // -: Which part of the script
-//   >: More details / *: More details (previous)
+//   >: More details
 // ?: Comment by me
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2018/04/09
+<< == |*| Headers.txt - @Update |*| == >>
+- Updated Tested with part
+<< == |*| Costume Enchanter v1.1 - @Request |*| == >>
+- This NPC allows players to enchant Costumes.
+- Selectable Enchants and reseting the Enchantments.
+<< == |*| MvP Ranker v1.2 - @Request |*| == >>
+- MvP Ranking with MvP Card Shop as soon as the Goal Points of respective MvP has been reached.
+- Automatic detection of MvPs hunting state and addition of MvP Card//  into the Shop.
+- Top 10 Ranking
+- List of MvP Goals
+- Price per MvP Card = Goal Points/4
+<< == |*| Alayne Instances - @Modified |*| == >>
+- Morse Cave
+  > Lowered Movement Speed of Monsters
+  > Fixed attachedrid errors
+  > Removed instance_destroy where unneeded
+- Sky Fortress
+  > Added missing Mob Drops based on Nova Ro
+  > Added my custom Vicious Mind Weapon Enchanter until rAthena improves their item_randopt_db.txt structure
+- Temple of the Demon God
+  > Fixed wrong HP values of Monsters
+  > Fixed Party Bug
+  > Moved instance delay check a bit below
+  > Moved warp disables into "OnInstanceInit"
+  > Fixed wrong Quest ID values
+  > Removed instance_id() parameter in most commands, not needed
+  > Added missing EXP Rewards at Nydhogg based on iRo Wiki
+  > Added getitem reward to the Quest NPCs
+  > Added custom function (IGF_SquadPrize) for Expedition Price Box (22567)
+------------------------------------------------------------------------------------------------------------------------
 * 2018/03/11
 << == |*| Arena Master v1.6 [RE] - @Update to v1.7 |*| == >>
 - Fixed PvP KIll Announcer and Kill display message
