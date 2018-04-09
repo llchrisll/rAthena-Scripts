@@ -1,0 +1,148 @@
+//===== rAthena Script =======================================
+//= Costume Enchanter
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Initial Version
+//= 1.1 - Added support for all costume slots
+//      - Added forgotten "Reset Enchantment" menu option
+//===== Tested With ==========================================
+//= rAthena 03/26/2018 Revision
+//= GIT Hash: 333f0dddc8353663eacba0423751988c9bc38e34
+//===== Description ==========================================
+//= This NPC allows players to enchant Costumes.
+//= Selectable Enchants and reseting the Enchantments.
+//===== Request =============================================
+//= by Vegas (https://rathena.org/board/profile/53497-vegas/)
+//= Topic: https://rathena.org/board/topic/115174-runen-enchanter-npc-for-custom-upper-middle-lower/
+//============================================================
+prontera,150,160,4	script	Costume Enchanter	101,{
+
+mes .n$;
+mes "Hello, "+strcharinfo(0)+"!";
+mes "If you like I can enchant your costume equipment with any enchantment I have in store for free.";
+next;
+switch(select("- Enchant Costumes:- Reset Enchantment:- Nevermind")) {
+	
+	case 1:
+	mes .n$;
+	mes "Okay, please select the Costume you want me to enchant!";
+	for ( set .@s,0; .@s < getarraysize(.enchant_slot); set .@s,.@s + 1) {
+		switch(.enchant_slot[.@s]) {
+			case EQI_COSTUME_HEAD_TOP: set .@c_slot$,"Costume Top Headgear"; break;
+			case EQI_COSTUME_HEAD_MID: set .@c_slot$,"Costume Mid Headgear"; break;
+			case EQI_COSTUME_HEAD_LOW: set .@c_slot$,"Costume Low Headgear"; break;
+			case EQI_COSTUME_GARMENT: set .@c_slot$,"Costume Garment"; break;
+			case EQI_SHADOW_ARMOR: set .@c_slot$,"Costume Garment"; break;
+			case EQI_SHADOW_WEAPON: set .@c_slot$,"Shadow Weapon"; break;
+			case EQI_SHADOW_SHIELD: set .@c_slot$,"Shadow Shield"; break;
+			case EQI_SHADOW_SHOES: set .@c_slot$,"Shadow Shoes"; break;
+			case EQI_SHADOW_ACC_R: set .@c_slot$,"Shadow Accessory Right"; break;
+			case EQI_SHADOW_ACC_L: set .@c_slot$,"Shadow Accessory Left"; break;
+		}
+		set .@c_m$,.@c_m$ + .@c_slot$ + " - "+((getequipid(.enchant_slot[.@s]) != -1)?getitemname(getequipid(.enchant_slot[.@s])):"Not equipped") + ( (.enchant_slot[.@s+1] != 0)?":":"");
+	}
+	set .@part,.enchant_slot[select(.@c_m$) - 1];
+	next;
+	set .@hg,getequipid(.@part); // Saving Item ID
+	set .@ref,getequiprefinerycnt(.@part); 	// Saving Refine Level, if there is one
+	set .@card1,getequipcardid(.@part,0); // Save Item ID of Card Slot 1
+	mes .n$;
+	mes "Selected Costume: "+getitemname(getequipid(.@part));
+	if(getequipcardid(.@part,3) != 0) {
+		mes "But it looks like you already have an enchantment in this costume.";
+		close;
+	}
+	mes "Now please select the Enchantment:";
+	next;
+	for ( set .@e,0; .@e < getarraysize(.enchant_id); set .@e,.@e + 1)
+		set .@e_m$,.@e_m$ + "> "+getitemname(.enchant_id[.@e])+ ( (.enchant_id[.@e+1] != 0)?":":"");
+	set .@rune,select(.@e_m$) - 1;
+	mes .n$;
+	mes "Selected Enchantment: "+getitemname(.enchant_id[.@rune]);
+	mes "Proceed?";
+	if(select("- Yes:- No") - 1) close;
+	next;
+	delequip .@part;
+	getitem2 .@hg,1,1,.@ref,0,.@card1,0,0,.enchant_id[.@rune];
+	equip .@hg;
+	mes .n$;
+	mes "The enchantment was a success.";
+	mes "See ya next time.";
+	break;
+		
+	case 2:
+	mes .n$;
+	if(.enchant_r) 
+		mes "To reset an Enchantment I require "+.enchant_reset[1]+"x "+getitemname(.enchant_reset[0])+".";
+	mes "Please select the Costume you want me to reset the enchantment!";
+	for ( set .@s,0; .@s < getarraysize(.enchant_slot); set .@s,.@s + 1) {
+		switch(.enchant_slot[.@s]) {
+			case EQI_COSTUME_HEAD_TOP: set .@c_slot$,"Costume Top Headgear"; break;
+			case EQI_COSTUME_HEAD_MID: set .@c_slot$,"Costume Mid Headgear"; break;
+			case EQI_COSTUME_HEAD_LOW: set .@c_slot$,"Costume Low Headgear"; break;
+			case EQI_COSTUME_GARMENT: set .@c_slot$,"Costume Garment"; break;
+			case EQI_SHADOW_ARMOR: set .@c_slot$,"Costume Garment"; break;
+			case EQI_SHADOW_WEAPON: set .@c_slot$,"Shadow Weapon"; break;
+			case EQI_SHADOW_SHIELD: set .@c_slot$,"Shadow Shield"; break;
+			case EQI_SHADOW_SHOES: set .@c_slot$,"Shadow Shoes"; break;
+			case EQI_SHADOW_ACC_R: set .@c_slot$,"Shadow Accessory Right"; break;
+			case EQI_SHADOW_ACC_L: set .@c_slot$,"Shadow Accessory Left"; break;
+		}
+		set .@c_m$,.@c_m$ + .@c_slot$ + " - "+((getequipid(.enchant_slot[.@s]) != -1)?getitemname(getequipid(.enchant_slot[.@s])):"Not equipped") + ( (.enchant_slot[.@s+1] != 0)?":":"");
+	}
+	set .@part,.enchant_slot[select(.@c_m$) - 1];
+	next;
+	mes .n$;
+	if(getequipcardid(.@part,3) == 0) {
+		mes "It looks like you don't have any enchantment in this costume.";
+		close;
+	}
+	set .@hg,getequipid(.@part); // Saving Item ID
+	set .@ref,getequiprefinerycnt(.@part); 	// Saving Refine Level, if there is one
+	set .@card1,getequipcardid(.@part,0); // Save Item ID of Card Slot 1
+	mes "Selected Costume: "+getitemname(getequipid(.@part));
+	if(.enchant_r && countitem(.enchant_reset[0]) < .enchant_reset[1]) {
+		mes "But you don't have the required Items to reset the enchantment!";
+		close;
+	}
+	mes "Proceed?";
+	if(select("- Yes:- No") - 1) close;
+	next;
+	if(.enchant_r) 
+		delitem .enchant_reset[0],.enchant_reset[1];
+	delequip .@part;
+	getitem2 .@hg,1,1,.@ref,0,.@card1,0,0,0;
+	equip .@hg;
+	mes .n$;
+	mes "The enchantment has been reseted.";
+	mes "See ya next time.";
+	break;
+	
+	case 3: break;
+}
+end;
+
+OnInit:
+set .n$,"[Costume Enchanter]";
+// Enter here every Costume Slot, which you want to be enchantable
+// Valid Entries:
+// - EQI_COSTUME_HEAD_TOP
+// - EQI_COSTUME_HEAD_MID
+// - EQI_COSTUME_HEAD_LOW
+// - EQI_SHADOW_WEAPON
+// - EQI_SHADOW_SHIELD
+// - EQI_SHADOW_SHOES
+// - EQI_SHADOW_ACC_R
+// - EQI_SHADOW_ACC_L
+setarray .enchant_slot[0],EQI_COSTUME_HEAD_TOP,EQI_COSTUME_HEAD_MID,EQI_COSTUME_HEAD_LOW;
+// Enchantment ID's
+setarray .enchant_id[0],4709,4719,4729,4739,4749,4759;
+// Require Item to reset Enchantment?
+// 1 = Yes
+// 0 = No
+set .enchant_r,1;
+if(.enchant_r) 
+	setarray .enchant_reset[0],501,10; // Item ID,Amount
+end;
+}
