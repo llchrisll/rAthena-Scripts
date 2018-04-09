@@ -1,0 +1,242 @@
+//===== rAthena Script =======================================
+//= MvP Ranker with Shop
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Initial Version
+//= 1.1 - Fixed Ranking Display
+//      - Exchanged .mvp_ with $@mvp_ variables
+//      - Modified OnMvPCardUnlock to be a function
+//      - Added freeloop(); to prevent infinite loop <<----- DON'T NEED ANY freeloop
+//= 1.2 - Improved by AnnieRuru <3
+//===== Tested With ==========================================
+//= rAthena 03/26/2018 Revision
+//= GIT Hash: 333f0dddc8353663eacba0423751988c9bc38e34
+//===== Description ==========================================
+//= MvP Ranking with MvP Card Shop as soon as the Goal Points of
+//  respective MvP has been reached.
+//= Automatic detection of MvPs hunting state and addition of MvP Card
+//  into the Shop.
+//= Top 10 Ranking
+//= List of MvP Goals
+//= Price per MvP Card = Goal Points/4
+//===== Request ==============================================
+//= by Radian (https://rathena.org/board/profile/27689-radian/)
+//= Topic: https://rathena.org/board/topic/115216-mvp-ranker-w-rewards/
+//===== SQL Tables ===========================================
+/* SQL Tables:
+CREATE TABLE `mvp_rank` (
+ `char_id` int(11) unsigned NOT NULL,
+ `char_name` varchar(30) NOT NULL default 'Unknown',
+ `mvp_points` int(11) default '0',
+PRIMARY KEY ( `char_id` ),
+KEY (`mvp_points`)
+ ) ENGINE=MyISAM;
+ 
+CREATE TABLE `mvp_goal` (
+ `mvp_id` smallint(5) unsigned NOT NULL,
+ `goal_points` int(11) default '4',
+ `goal_needed` int(11) default '4',
+ `mvp_card` smallint(5) unsigned NOT NULL,
+PRIMARY KEY ( `mvp_id` )
+ ) ENGINE=InnoDB;
+*/
+//============================================================
+poring_w01,100,100,4	script	MvP Ranker	102,{
+
+	mes .n$;
+	mes "How can I help you?";
+	next;
+	switch(select("- Server Ranking","- MVP Goals","- Open MVP Shop:- Nevermind")) {
+
+	case 1:
+		mes .n$;
+		mes "I will now list the Top 10 MvP Hunters:";
+		next;
+		mes "[ Top 10 MvP Hunters ]";
+		if ( !( .@nb = query_sql( "SELECT `char_name` , `mvp_points` FROM `mvp_rank` ORDER BY `mvp_points` DESC LIMIT 10;", .@c_name$, .@mvp_pts ) ) ) {
+			mes "There is currently no player ranked.";
+			mes "Come back later.";
+			close;
+		}
+		for ( .@i = 0; .@i < .@nb; ++.@i )
+			mes ( .@i +1 )+". "+ .@c_name$[.@i] +" - "+ .@mvp_pts[.@i] +" Points";
+		close;
+	
+	case 2:
+		mes .n$;
+		mes "Here is the list of the MvP's with their needed Goal Points:";
+		mes " ";
+		mes "> MvP / Required / Current";
+		.@nb = query_sql( "SELECT `mvp_id` , `goal_points`, `goal_needed` FROM `mvp_goal`", .@mvp_id, .@goal_pts, .@need_goal );
+		for ( .@i = 0; .@i < .@nb; ++.@i )
+			mes "> "+ getmonsterinfo(.@mvp_id[.@i], MOB_NAME) +" / "+ .@need_goal[.@i] +" / "+( .@goal_pts[.@i] ? .@goal_pts[.@i] : "UNLOCKED" );
+		close;
+	
+	case 3:
+		mes .n$;
+		if(!MVPPOINTS) {
+			mes "I'm sorry, but you have to kill at least 1 MvP to gain access to the MvP Shop";
+			close;
+		}
+		mes "Your current MvP Points: "+MVPPOINTS;
+		if(!.shop_card_total) { // Prevent opening an empty shop
+			mes "I'm sorry, but there is no card yet available.";
+			mes "Kill one of the MvP's first until their goal has been reached!";
+			close;
+		}
+		mes "I will now open the Shop.";
+		close2;
+		callshop "MvPRankShop",1;
+		npcshopattach "MvPRankShop";
+		end;	
+	
+	case 4:
+		close;
+	}
+	end;
+
+OnInit:
+	set .n$,"["+strnpcinfo(1)+"]";
+	// MvP ID's to Hunt:
+	// Put every MvP ID here, which should be hunted
+		setarray .mvp_id[0],
+			1511,	// Amonra
+			1785,	// Atroce
+			1630,	// Bacsojin
+			1039,	// Baphomet
+			1272,	// Dark Lord
+			1719,	// Detale
+			1046,	// Doppelganger
+			1389,	//
+			1112,
+			1115,
+			1418,
+			1871,
+			1252,
+			1768,
+			1086,
+			1832,
+			1492,
+			1734,
+			1251,
+			1779,
+			1688,
+			1373,
+			1147,
+			1059,
+			1087,
+			1190,
+			1038,
+			1157,
+			1159,
+			1623,
+			1583,
+			1708,
+			1312,
+			1751,
+			1685,
+			1658;
+	
+	// MvP Card ID's
+	// magically built with SQL commands ~
+
+	set .mvp_id_size, getarraysize( .mvp_id );
+
+	// Goal Points required
+	//	setarray .mvp_goal[0],4,4,4,4,4;
+	cleararray .mvp_goal, 4, .mvp_id_size; // change back to setarray
+
+
+	// Automatic check for existing database entries
+	for ( .@i = 0; .@i < .mvp_id_size; ++.@i )
+		.@values$[.@i] = "SELECT "+ .mvp_id[.@i] +" AS MVPID, "+ .mvp_goal[.@i] +", "+ .mvp_goal[.@i] +", ( SELECT `DropCardid` FROM `"+( checkre(0)? "mob_db_re" : "mob_db" )+"` where ID = MVPID )";
+	if ( .mvp_id_size )
+		query_sql "INSERT IGNORE INTO `mvp_goal` ( `mvp_id`, `goal_points`, `goal_needed`, `mvp_card` ) "+ implode( .@values$, " UNION " );
+
+	// Automatic check if MvP will not be hunted anymore:
+	// It checks if the MvP is in the .mvp_id array, if not remove it from the database
+	// Note: Be aware that the acquired goal points will not be saved anywhere for later usage!
+	for ( .@i = 0; .@i < .mvp_id_size; ++.@i )
+		.@where_clause$[.@i] = "`mvp_id` != "+ .mvp_id[.@i];
+	if ( .mvp_id_size )
+		query_sql "DELETE FROM `mvp_goal` WHERE "+ implode( .@where_clause$, " AND " );
+	else
+		query_sql "TRUNCATE TABLE `mvp_goal`";
+
+	npcshopdelitem "MvPRankShop", 501;
+	if ( ( .shop_card_total = query_sql( "SELECT `mvp_card`, `goal_needed` FROM `mvp_goal` WHERE `goal_points` = 0", .@mvpcard, .@need_goal ) ) ) {
+		for ( .@i = 0; .@i < .shop_card_total; ++.@i ) {
+			npcshopadditem "MvPRankShop", .@mvpcard[.@i], .@need_goal[.@i] /4;
+			.shop_card_id[.@i] = .@mvpcard[.@i];
+			.shop_goal[.@i] = .@need_goal[.@i] /4;
+		}
+	}
+	end;
+
+OnNPCKillEvent:
+	if ( !getmonsterinfo( killedrid, MOB_MVPEXP ) ) end;
+
+	if ( !query_sql( "SELECT `goal_points`, `goal_needed`, `mvp_card` FROM `mvp_goal` WHERE `mvp_id` = "+ killedrid, .@goal, .@need_goal, .@mvpcard ) )
+		end; // if the killedrid is MVP but not a mvp_goal ...
+
+	if ( .@goal )
+		query_sql "UPDATE `mvp_goal` SET `goal_points` = `goal_points` - 1 WHERE `mvp_id` = "+ killedrid;
+	if ( .@goal -1 == 0 ) {
+		announce "[ MVP Ranker ]: "+ strcharinfo(0) +" has fullfilled the last kill of ["+ getmonsterinfo( killedrid, MOB_NAME ) +"], the Monster Card can now be purchased in the Shop!", bc_all;
+		npcshopadditem "MvPRankShop", .@mvpcard, .@need_goal /4;
+		.shop_card_id[.shop_card_total] = .@mvpcard[.@i];
+		.shop_goal[.shop_card_total] = .@need_goal[.@i] /4;
+		++.shop_card_total;
+	}
+
+	if ( !getcharid(1) ) {
+		++MVPPOINTS;
+		query_sql "INSERT INTO `mvp_rank` ( `char_id`, `char_name`, `mvp_points` ) VALUES ( "+ getcharid(0) +", '"+ escape_sql( strcharinfo(0) ) +"', 1 ) ON DUPLICATE KEY UPDATE `mvp_points` = `mvp_points` +1;";
+	}
+	else {
+		// *addrid is evil XD
+		.@map$ = strcharinfo(3);
+		getpartymember getcharid(1), 1;
+		getpartymember getcharid(1), 2;
+		for ( .@i = 0; .@i < $@partymembercount; ++.@i ) {
+			if ( isloggedin( $@partymemberaid[.@i], $@partymembercid[.@i] ) ) {
+				attachrid $@partymemberaid[.@i];
+				if ( strcharinfo(3) == .@map$ ) { // only those in the same map
+					++MVPPOINTS;
+					message strcharinfo(0), .n$ +": You have recieved 1 MvP Point for slaying "+ getmonsterinfo( killedrid, MOB_NAME ) +"!";
+					.@cid[.@count] = $@partymembercid[.@i];
+					.@name$[.@count] = strcharinfo(0);
+					++.@count;
+				}
+			}
+		}
+		for ( .@i = 0; .@i < .@count; ++.@i )
+			.@values$[.@i] = "( "+ .@cid[.@i] +", '"+ escape_sql( .@name$[.@i] ) +"', 1 )";
+		query_sql "INSERT INTO `mvp_rank` ( `char_id`, `char_name`, `mvp_points` ) VALUES "+ implode( .@values$, ", " ) +" ON DUPLICATE KEY UPDATE `mvp_points` = `mvp_points` +1;";
+	}
+	end;
+
+OnBuyItem:
+	if ( checkweight2( @bought_nameid, @bought_quantity ) == false ) {
+		dispbottom .n$+": I'm sorry, but you don't have enough space in inventory to take these items.";
+		end;
+	}
+
+	.@item_bought = getarraysize( @bought_nameid );
+	for ( .@i = 0; .@i < .@item_bought; ++.@i )
+		for ( .@j = 0; .@j < .shop_card_total; ++.@j )
+			if ( @bought_nameid[.@i] == .shop_card_id[.@j] )
+				.@total += .shop_goal[.@j] * @bought_quantity[.@i];
+
+	if ( .@total > MVPPOINTS ) {
+		dispbottom .n$+": I'm sorry, but you don't enough MvP Points to purchase these cards.";
+		end;
+	}
+	MVPPOINTS -= .@total;
+	for ( .@i = 0; .@i < .@item_bought; ++.@i )
+		getitem @bought_nameid[.@i], @bought_quantity[.@i];
+	end;
+}
+
+-	shop	MvPRankShop	-1,501:-1
