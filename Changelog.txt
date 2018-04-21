@@ -14,8 +14,6 @@
 //    * Folder: released
 // = [REQ] > Request = Will not be released officially
 //    * Folder: requests
-// = [MOD] > Modifications in Progress
-//    * Folder: updating
 // ====================================================================
 // ================= Line Indicator (since 2013/10/09) ================
 // *: Date
@@ -26,11 +24,37 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2018/05/21
+<< == |*| Dynamic Battleground Arena v1.0 [WIP] - @Update |*| == >>
+- Added an setting how the announces will be displayed > $@DBG_Anno_T$
+- Modified the round system for S&D, Rush and CTF
+- Fixed the Auto-Join for participants of an previous match
+- Fixed an bug affecting the Voting
+- Lessened the usage of addrid
+- Merged every Mode NPC into "DBG_Init"
+- Added an switch(<Mode>) in OnBGArenaDeath
+- Moved the special death events for S&D and CTF to OnBGArenaDeath
+- Fixed the OnBGArenaEnd
+- Modified the @joinbgarena to check if an player is already registered
+- Modified the @leavebgarena to check if an player is even registered
+- Updated the texts in the announce to make more sense
+- Added comments here and there
+- Modified the Healer NPC's to be clickable and small delay
+- Added an code to enable the respective Healer NPC's on the map depending on the mode
+- Exchanged dispbottom with the message command
+- Fixed bugs in S&D and CTF
+- Modified the Information section to give more info depending on the mode
+- Updated the BattlegroundArena.rar
+<< == |*| Costume Enchanter v1.1 [REQ] - @Update to v1.2 |*| == >>
+- Added support to use an price to enchant
+- Removed the unecessary variable for Reset Enchantment
+- Modified the menu creation
+------------------------------------------------------------------------------------------------------------------------
 * 2018/04/09
 << == |*| General - @Update |*| == >>
 - Headers.txt
 - Project_list.txt
-<< == |*| Costume Enchanter v1.1 - @Request |*| == >>
+<< == |*| Costume Enchanter v1.1 [REQ] - @Request |*| == >>
 - This NPC allows players to enchant Costumes.
 - Selectable Enchants and reseting the Enchantments.
 << == |*| MvP Ranker v1.2 - @Request |*| == >>
