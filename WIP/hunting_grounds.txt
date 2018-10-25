@@ -11,11 +11,14 @@
 //= Based on the idea of Gramps.
 //= Instance based with 6 different element rotations
 //  Each Instance (6 total) can be a different element
+//= Min. Player, Max. Player and required Player are configureable
 //= Harder Mobs + Better Rewards
+//= 13 Quests per Instance
+//  Rewards for each Quest seperatly configureable
 //===== Comments =============================================
 //= For the db entries you need the HuntingGrounds_DB.txt file
 //============================================================
-prontera,163,172,4	script	Exiled Warror	4_F_VALKYRIE2,{
+prontera,163,172,4	script	Exiled Warrior	4_F_VALKYRIE2,{
 
 mes .n$;
 mes "Hello "+strcharinfo(0)+"!";
@@ -27,43 +30,31 @@ switch(select("Enter Hunting Grounds:Hunting Quests")) {
 	mes .n$;
 	mes "Please select the Level for the Hunting Ground:";
 	next;
-	switch(select("[99 - 114]:[115 - 129]:[130 - 144]:[145 - 159]:[160 - 174]:[175]")) {
-		case 1: set .@HG_Name$,"Hunting Ground 99"; set .@min_p,2; set .@min_l,99; set .@max_l,114; break;
-		case 2: set .@HG_Name$,"Hunting Ground 115"; set .@min_p,2; set .@min_l,115; set .@max_l,129; break;
-		case 3: set .@HG_Name$,"Hunting Ground 130"; set .@min_p,4; set .@min_l,130; set .@max_l,144; break;
-		case 4: set .@HG_Name$,"Hunting Ground 145"; set .@min_p,4; set .@min_l,145; set .@max_l,159; break;
-		case 5: set .@HG_Name$,"Hunting Ground 160"; set .@min_p,6; set .@min_l,160; set .@max_l,174; break;
-		case 6: set .@HG_Name$,"Hunting Ground 175"; set .@min_p,8; set .@min_l,175; break;
-	}
-	set .@level,@menu;
+	set .@h,select(.HG_Menu$) - 1;
+	set .@i,.@h + 1;
 	mes .n$;
-	mes "Level: "+.@min_l+" - "+.@max_l;
-	mes "Element: "+.Hunt_Ele_TxT$[getd(".HuntGround_I"+.@level)-1];
-	mes "Minimum Players: "+.@min_p;
-	if(getgroupid()) { // Testing purposes
-		set .@min_p,1;
-		set .@min_l,1;
-		set .@max_l,BaseLevel;
-	}
+	mes "Level: "+.HG_MinLvL[.@h]+ ( (.HG_MaxLvL[.@h])?" - "+.HG_MaxLvL[.@h]:"+");
+	mes "Element: "+.Hunt_Ele_TxT$[getd(".HuntGround_I"+.@i)-1];
+	mes "Minimum Players: "+.HG_Players[.@h];
 	next;
 	switch(select("Generate Dimension Gate:Enter Dimension:Leave")) {
 		case 1:
-		switch(checkquest(.Hunt_QDelay[(.@level-1)],PLAYTIME)) {
+		switch(checkquest(.Hunt_QDelay[.@h],PLAYTIME)) {
 			case -1: break;
 			case 0:
 			case 1:
 			mes .n$;
-			mes "The "+.@HG_Name$+" hasn't stabilized yet.";
+			mes "The "+.HG_Name$[.@h]+" hasn't stabilized yet.";
 			mes "Please come back later.";
 			close;
 			
 			case 2:
-			erasequest .Hunt_QDelay[.@level-1];
+			erasequest .Hunt_QDelay[.@h];
 			break;
 		}
 		if(!getcharid(1)) {
 			mes .n$;
-			mes "First make a party with at least "+.@min_p+" players online, before talking to me again.";
+			mes "First make a party with at least "+.HG_Players[.@h]+" players online, before talking to me again.";
 			close;
 		}
 		if(getpartyleader(getcharid(1)) != strcharinfo(0)) {
@@ -71,44 +62,57 @@ switch(select("Enter Hunting Grounds:Hunting Quests")) {
 			mes "Please have your Party Leader talk to me!";
 			close;
 		}
-		if(instance_check_party(getcharid(1),.@min_p,.@min_l,.@max_l) == 0) {
+		if(getgroupid() < 1) // testing purposes
+		if(instance_check_party(getcharid(1),.HG_Players[.@h],.HG_MinLvL[.@h],.HG_MaxLvL[.@h]) == 0) {
 			mes .n$;
 			mes "You're party doesn't meet the conditions:";
-			mes "Level "+.@min_l+" - "+.@max_l+", at least "+.@min_p+" players";
+			mes "Level "+.HG_MinLvL[.@h]+" - "+.HG_MaxLvL[.@h]+", at least "+.HG_Players[.@h]+" players";
 			close;
 		}
 		mes .n$;
-		switch(instance_create(.@HG_Name$)) {
-			case -1:
-			case -2:
-			case -4:
-			mes "Instance creation failed.";
+		set .@hg_ins,instance_create(.HG_Name$[.@h]);
+		if(.@hg_ins == -3) {
+			mes "Do you want to close the Dimension Gate?";
+			if(select("- Yes:- No") - 1) close;
+			next;
+			mes .n$;
+			mes "The Dimension Gate has been closed.";
+			instance_destroy instance_id();
 			close;
 			
-			case -3:
-			mes "'"+.@HG_Name$+"' Instance already exists.";
+		} else if(.@hg_ins < 0) {
+			mes "Instance creation failed.";
 			close;
 		}
 		mes "The time gap will be generated soon. Please talk to me again to enter.";
 		// Reading Normal Mob Quest IDs
-		for ( set .@q,0; .@q < getarraysize(getd(".Hunt_MobQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level))); set .@q,.@q + 1) 
-			for ( set .@m,0; .@m < getarraysize(getd(".Hunt_QID_"+getd(".Hunt_MobQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)))); set .@m,.@m + 2) {
-				setarray 'mob_id[getarraysize('mob_id)],getd(".Hunt_QID_"+getd(".Hunt_MobQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level))+"["+.@m+"]");
-				set 'Max_Mobs,'Max_Mobs + getd(".Hunt_QID_"+getd(".Hunt_MobQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level))+"["+(.@m+1)+"]");
+		for ( set .@q,0; .@q < getarraysize(getd(".Hunt_MobQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i))); set .@q,.@q + 1) 
+			for ( set .@m,0; .@m < getarraysize(getd(".Hunt_QID_"+getd(".Hunt_MobQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)))); set .@m,.@m + 2) {
+				setarray 'mob_id[getarraysize('mob_id)],getd(".Hunt_QID_"+getd(".Hunt_MobQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i))+"["+.@m+"]");
+				set 'Max_Mobs,'Max_Mobs + getd(".Hunt_QID_"+getd(".Hunt_MobQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i))+"["+(.@m+1)+"]");
 			}
 		// Reading MvP Quest IDs
-		for ( set .@q,0; .@q < getarraysize(getd(".Hunt_MvPQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level))); set .@q,.@q + 1) 
-			for ( set .@m,0; .@m < getarraysize(getd(".Hunt_QID_"+getd(".Hunt_MvPQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)))); set .@m,.@m + 2) {
-				setarray 'mvp_id[getarraysize('mvp_id)],getd(".Hunt_QID_"+getd(".Hunt_MvPQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level))+"["+.@m+"]");
-				setarray 'mvp_am[getarraysize('mvp_am)],getd(".Hunt_QID_"+getd(".Hunt_MvPQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level))+"["+(.@m+1)+"]");
+		for ( set .@q,0; .@q < getarraysize(getd(".Hunt_MvPQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i))); set .@q,.@q + 1) 
+			for ( set .@m,0; .@m < getarraysize(getd(".Hunt_QID_"+getd(".Hunt_MvPQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)))); set .@m,.@m + 2) {
+				setarray 'mvp_id[getarraysize('mvp_id)],getd(".Hunt_QID_"+getd(".Hunt_MvPQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i))+"["+.@m+"]");
+				setarray 'mvp_am[getarraysize('mvp_am)],getd(".Hunt_QID_"+getd(".Hunt_MvPQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i))+"["+(.@m+1)+"]");
 			}
 			set 'Max_MvP,getarraysize('mvp_id);
-		set 'HG_Instance,.@level;
+		set 'HG_Instance,.@h;
 		close;
 
 		case 2:
 		mes .n$;
-		switch(instance_enter(.@HG_Name$)) {
+		switch(checkquest(.Hunt_QDelay[.@h],PLAYTIME)) {
+			case -1: break;
+			case 0:
+			case 1:
+			mes .n$;
+			mes "The "+.HG_Name$[.@h]+" hasn't stabilized yet.";
+			mes "Please come back later.";
+			close;
+		}
+		switch(instance_enter(.HG_Name$[.@h])) {
 		
 			case IE_NOINSTANCE:
 			mes "You didn't generate the time gap yet!";
@@ -116,13 +120,13 @@ switch(select("Enter Hunting Grounds:Hunting Quests")) {
 			
 			case IE_NOMEMBER:
 			case IE_OTHER:
-			mes "Unknown Error has occurded in entering "+.@HG_Name$+".";
+			mes "Unknown Error has occurded in entering "+.HG_Name$[.@h]+".";
 			close;
 			
 			case IE_OK:
-			mes "You'll now enter the "+.@HG_Name$+".";
+			mes "You'll now enter the "+.HG_Name$[.@h]+".";
 			close2;
-			announce "["+strcharinfo(0)+"] and the party ["+getpartyname(getcharid(1))+"] are entering the " + .@HG_Name$ + ".", bc_all,0x00FF99;
+			announce "["+strcharinfo(0)+"] and the party ["+getpartyname(getcharid(1))+"] are entering the "+.HG_Name$[.@h]+".", bc_all,0x00FF99;
 			end;
 		}
 		close;
@@ -136,30 +140,19 @@ switch(select("Enter Hunting Grounds:Hunting Quests")) {
 	mes .n$;
 	mes "For which Levels do you want to view the quests?";
 	next;
-	set .@level,select("[99 - 114]:[115 - 129]:[130 - 144]:[145 - 159]:[160 - 174]:[175]");
-	switch(.@level) {
-		case 1: set .@min_l,99; set .@max_l,114; break;
-		case 2: set .@min_l,115; set .@max_l,129; break;
-		case 3: set .@min_l,130; set .@max_l,144; break;
-		case 4: set .@min_l,145; set .@max_l,159; break;
-		case 5: set .@min_l,160; set .@max_l,174; break;
-		case 6: set .@min_l,175; break;
-	}
-	if(getgroupid()) { // Testing purposes
-		set .@min_l,1;
-		set .@max_l,BaseLevel;
-	}
+	set .@h,select(.HG_Menu$) - 1;
+	set .@i,.@h + 1;
 	mes .n$;
 	mes "Do you want to accept quests or remove every Quest for these Levels?";
 	if(select("Accept Quests:Remove Quests") == 2) {
 		for ( set .@e,1; .@e < 7; set .@e,.@e + 1) {
-			for ( set .@q,0; .@q < getarraysize(getd(".Hunt_MobQ_I"+.@level+"_E"+.@e)); set .@q,.@q + 1) 
-				if(checkquest(getd(".Hunt_MobQ_I"+.@level+"_E"+.@e+"["+.@q+"]")) != -1) 
-					erasequest getd(".Hunt_MobQ_I"+.@level+"_E"+.@e+"["+.@q+"]");
+			for ( set .@q,0; .@q < getarraysize(getd(".Hunt_MobQ_I"+.@i+"_E"+.@e)); set .@q,.@q + 1) 
+				if(checkquest(getd(".Hunt_MobQ_I"+.@i+"_E"+.@e+"["+.@q+"]")) != -1) 
+					erasequest getd(".Hunt_MobQ_I"+.@i+"_E"+.@e+"["+.@q+"]");
 			
-			for ( set .@q,0; .@q < getarraysize(getd(".Hunt_MvPQ_I"+.@level+"_E"+.@e)); set .@q,.@q + 1) 
-				if(checkquest(getd(".Hunt_MvPQ_I"+.@level+"_E"+.@e+"["+.@q+"]")) != -1) 
-					erasequest getd(".Hunt_MvPQ_I"+.@level+"_E"+.@e+"["+.@q+"]");
+			for ( set .@q,0; .@q < getarraysize(getd(".Hunt_MvPQ_I"+.@i+"_E"+.@e)); set .@q,.@q + 1) 
+				if(checkquest(getd(".Hunt_MvPQ_I"+.@i+"_E"+.@e+"["+.@q+"]")) != -1) 
+					erasequest getd(".Hunt_MvPQ_I"+.@i+"_E"+.@e+"["+.@q+"]");
 		}
 		mes "Every Quest for these Levels has been removed.";
 	}
@@ -168,50 +161,50 @@ switch(select("Enter Hunting Grounds:Hunting Quests")) {
 	mes "For this week we have the following quest available:";
 	mes " ";
 	// Reading Normal Mob Quest IDs
-	for ( set .@q,0; .@q < getarraysize(getd(".Hunt_MobQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level))); set .@q,.@q + 1) {
+	for ( set .@q,0; .@q < getarraysize(getd(".Hunt_MobQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i))); set .@q,.@q + 1) {
 		mes "Monster Quest #"+(.@q+1)+":";
-		for ( set .@m,0; .@m < getarraysize(getd(".Hunt_QID_"+getd(".Hunt_MobQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)))); set .@m,.@m + 2) 
-			mes "> "+getd(".Hunt_QID_"+getd(".Hunt_MobQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)+"["+.@q+"]")+"["+(.@m+1)+"]")+"x "+getmonsterinfo(getd(".Hunt_QID_"+getd(".Hunt_MobQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)+"["+.@q+"]")+"["+.@m+"]"),MOB_NAME);
-		setarray .@m_quest[getarraysize(.@m_quest)],getd(".Hunt_MobQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)+"["+.@q+"]");
-		set .@q_m$,.@q_m$ + "Monster Quest #"+(.@q+1)+ ( (getd(".Hunt_MobQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)+"["+(.@q+1)+"]") != 0)?":":"");
+		for ( set .@m,0; .@m < getarraysize(getd(".Hunt_QID_"+getd(".Hunt_MobQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)))); set .@m,.@m + 2) 
+			mes "> "+getd(".Hunt_QID_"+getd(".Hunt_MobQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)+"["+.@q+"]")+"["+(.@m+1)+"]")+"x "+getmonsterinfo(getd(".Hunt_QID_"+getd(".Hunt_MobQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)+"["+.@q+"]")+"["+.@m+"]"),MOB_NAME);
+		setarray .@m_quest[getarraysize(.@m_quest)],getd(".Hunt_MobQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)+"["+.@q+"]");
+		set .@q_m$,.@q_m$ + "Monster Quest #"+(.@q+1)+ ( (getd(".Hunt_MobQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)+"["+(.@q+1)+"]") != 0)?":":"");
 		mes " ";
 	}
 	set .@q_m$,.@q_m$ + ":";
 	// Reading MvP Quest IDs
-	for ( set .@q,0; .@q < getarraysize(getd(".Hunt_MvPQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level))); set .@q,.@q + 1) {
+	for ( set .@q,0; .@q < getarraysize(getd(".Hunt_MvPQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i))); set .@q,.@q + 1) {
 		mes "MvP Quest #"+(.@q+1)+":";
-		for ( set .@m,0; .@m < getarraysize(getd(".Hunt_QID_"+getd(".Hunt_MvPQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)))); set .@m,.@m + 2) 
-			mes "> "+getd(".Hunt_QID_"+getd(".Hunt_MvPQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)+"["+.@q+"]")+"["+(.@m+1)+"]")+"x "+getmonsterinfo(getd(".Hunt_QID_"+getd(".Hunt_MvPQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)+"["+.@q+"]")+"["+.@m+"]"),MOB_NAME);
-		setarray .@m_quest[getarraysize(.@m_quest)],getd(".Hunt_MvPQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)+"["+.@q+"]");
-		set .@q_m$,.@q_m$ + "MvP Quest #"+(.@q+1)+ ( (getd(".Hunt_MvPQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)+"["+(.@q+1)+"]") != 0)?":":"");
+		for ( set .@m,0; .@m < getarraysize(getd(".Hunt_QID_"+getd(".Hunt_MvPQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)))); set .@m,.@m + 2) 
+			mes "> "+getd(".Hunt_QID_"+getd(".Hunt_MvPQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)+"["+.@q+"]")+"["+(.@m+1)+"]")+"x "+getmonsterinfo(getd(".Hunt_QID_"+getd(".Hunt_MvPQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)+"["+.@q+"]")+"["+.@m+"]"),MOB_NAME);
+		setarray .@m_quest[getarraysize(.@m_quest)],getd(".Hunt_MvPQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)+"["+.@q+"]");
+		set .@q_m$,.@q_m$ + "MvP Quest #"+(.@q+1)+ ( (getd(".Hunt_MvPQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)+"["+(.@q+1)+"]") != 0)?":":"");
 		mes " ";
 	}
 	mes "Total Reward:";
-	for ( set .@q,0; .@q < getarraysize(getd(".Hunt_MobQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level))); set .@q,.@q + 1)
-		for ( set .@r,0; .@r < getarraysize(getd(".Hunt_RewardQ_"+getd(".Hunt_MobQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)+"["+.@q+"]"))); set .@r,.@r + 2) {
+	for ( set .@q,0; .@q < getarraysize(getd(".Hunt_MobQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i))); set .@q,.@q + 1)
+		for ( set .@r,0; .@r < getarraysize(getd(".Hunt_RewardQ_"+getd(".Hunt_MobQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)+"["+.@q+"]"))); set .@r,.@r + 2) {
 			for ( set .@a,0; .@a < getarraysize(.@reward); set .@a,.@a + 2) {
 				set .@f,0;
-				if(.@reward[.@a] == getd(".Hunt_RewardQ_"+getd(".Hunt_MobQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)+"["+.@q+"]")+"["+.@r+"]") ) {
-					setarray .@reward[.@a+1],(.@reward[.@a+1] + getd(".Hunt_RewardQ_"+getd(".Hunt_MobQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)+"["+.@q+"]")+"["+(.@r+1)+"]")); 
+				if(.@reward[.@a] == getd(".Hunt_RewardQ_"+getd(".Hunt_MobQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)+"["+.@q+"]")+"["+.@r+"]") ) {
+					setarray .@reward[.@a+1],(.@reward[.@a+1] + getd(".Hunt_RewardQ_"+getd(".Hunt_MobQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)+"["+.@q+"]")+"["+(.@r+1)+"]")); 
 					set .@f,1;
 					break;
 				}
 			}
 			if(!.@f)
-				setarray .@reward[getarraysize(.@reward)],getd(".Hunt_RewardQ_"+getd(".Hunt_MobQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)+"["+.@q+"]")+"["+.@r+"]"),getd(".Hunt_RewardQ_"+getd(".Hunt_MobQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)+"["+.@q+"]")+"["+(.@r+1)+"]");
+				setarray .@reward[getarraysize(.@reward)],getd(".Hunt_RewardQ_"+getd(".Hunt_MobQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)+"["+.@q+"]")+"["+.@r+"]"),getd(".Hunt_RewardQ_"+getd(".Hunt_MobQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)+"["+.@q+"]")+"["+(.@r+1)+"]");
 		}
-	for ( set .@q,0; .@q < getarraysize(getd(".Hunt_MvPQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level))); set .@q,.@q + 1)
-		for ( set .@r,0; .@r < getarraysize(getd(".Hunt_RewardQ_"+getd(".Hunt_MvPQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)+"["+.@q+"]"))); set .@r,.@r + 2) {
+	for ( set .@q,0; .@q < getarraysize(getd(".Hunt_MvPQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i))); set .@q,.@q + 1)
+		for ( set .@r,0; .@r < getarraysize(getd(".Hunt_RewardQ_"+getd(".Hunt_MvPQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)+"["+.@q+"]"))); set .@r,.@r + 2) {
 			for ( set .@a,0; .@a < getarraysize(.@reward); set .@a,.@a + 2) {
 				set .@f,0;
-				if(.@reward[.@a] == getd(".Hunt_RewardQ_"+getd(".Hunt_MvPQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)+"["+.@q+"]")+"["+.@r+"]") ) {
-					setarray .@reward[.@a+1],(.@reward[.@a+1] + getd(".Hunt_RewardQ_"+getd(".Hunt_MvPQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)+"["+.@q+"]")+"["+(.@r+1)+"]")); 
+				if(.@reward[.@a] == getd(".Hunt_RewardQ_"+getd(".Hunt_MvPQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)+"["+.@q+"]")+"["+.@r+"]") ) {
+					setarray .@reward[.@a+1],(.@reward[.@a+1] + getd(".Hunt_RewardQ_"+getd(".Hunt_MvPQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)+"["+.@q+"]")+"["+(.@r+1)+"]")); 
 					set .@f,1;
 					break;
 				}
 			}
 			if(!.@f)
-				setarray .@reward[getarraysize(.@reward)],getd(".Hunt_RewardQ_"+getd(".Hunt_MvPQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)+"["+.@q+"]")+"["+.@r+"]"),getd(".Hunt_RewardQ_"+getd(".Hunt_MobQ_I"+.@level+"_E"+getd(".HuntGround_I"+.@level)+"["+.@q+"]")+"["+(.@r+1)+"]");
+				setarray .@reward[getarraysize(.@reward)],getd(".Hunt_RewardQ_"+getd(".Hunt_MvPQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)+"["+.@q+"]")+"["+.@r+"]"),getd(".Hunt_RewardQ_"+getd(".Hunt_MobQ_I"+.@i+"_E"+getd(".HuntGround_I"+.@i)+"["+.@q+"]")+"["+(.@r+1)+"]");
 		}	
 	for ( set .@t,0; .@t < getarraysize(.@reward); set .@t,.@t + 2) 
 		if(.@reward[.@t] == 1) // Zeny
@@ -224,7 +217,8 @@ switch(select("Enter Hunting Grounds:Hunting Quests")) {
 	mes " ";
 	mes "EXP Reward:";
 	mes "You will gain the same EXP for each Mob you had to kill for the Quest again!";
-	if(BaseLevel < .@min_l || BaseLevel > .@max_l) {
+	if(getgroupid() < 1) // testing purposes
+	if(BaseLevel < .HG_MinLvL[.@h] || BaseLevel > .HG_MaxLvL[.@h]) {
 		next;
 		mes .n$;
 		mes "I'm sorry, but you can't accept quests of this level range.";
@@ -278,6 +272,15 @@ switch(select("Enter Hunting Grounds:Hunting Quests")) {
 
 OnInit:
 set .n$,"["+strnpcinfo(0)+"]";
+// Instance Level and Player Settings
+// = Order is important!
+// = .HG_Name$ > Need to be the same as in instance_db.txt
+setarray .HG_Name$[0],"Hunting Ground 99","Hunting Ground 115","Hunting Ground 130","Hunting Ground 145","Hunting Ground 160","Hunting Ground 175";
+setarray .HG_MinLvL[0],99,115,130,145,160,175; // Minimum Level
+setarray .HG_MaxLvL[0],114,129,144,159,174,175; // Maximum Level
+setarray .HG_Players[0],2,2,4,4,6,8; // Required Players to enter
+for ( set .@h,0; .@h < getarraysize(.HG_Name$); set .@h,.@h + 1)
+	set .HG_Menu$,.HG_Menu$ + "["+.HG_MinLvL[.@h]+" - "+.HG_MaxLvL[.@h]+"]" + ( (.HG_Name$[.@h+1] != "")?":":"");
 // Delay Quest ID's
 setarray .Hunt_QDelay[0],160200,160201,160202,160203,160204,160205;
 // Element Display Text
@@ -589,7 +592,7 @@ set .HuntGround_I2,rand(1,6); // Instance Element for Level 115-129
 set .HuntGround_I3,rand(1,6); // Instance Element for Level 130-144
 set .HuntGround_I4,rand(1,6); // Instance Element for Level 145-159
 set .HuntGround_I5,rand(1,6); // Instance Element for Level 160-174
-set .HuntGround_I6,rand(1,6); // Instance Element for Level 175
+set .HuntGround_I6,rand(1,6); // Instance Element for Level 175+
 end;
 }
 gef_fild14,1,1,0	script	#HuntGround_Instance	-1,{
@@ -672,21 +675,14 @@ monster 'map$,0,0,getmonsterinfo(killedrid,MOB_NAME),killedrid,1,'label$;
 end;
 	
 }
-gef_fild14,371,219,0	script	#HG_Exit	45,4,4,{
+gef_fild14,371,219,0	script	#HG_Exit	45,3,3,{
 
 mes "[HG Exit]";
 mes "Do you really want to leave the Hunting Ground?";
-mes "Be warned, that you can't re-enter until the time gap has been stabilized again!";
-if(select("Yes:Nevermind") - 1) close;
+mes "Be warned, that you can't re-enter until the time gap has stabilized itself again!";
+if(select("> Yes:> Nevermind") - 1) close;
 close2;
-switch('HG_Instance) { // Set Delay Quest
-	case 1: setquest 160200; break;
-	case 2: setquest 160201; break;
-	case 3: setquest 160202; break;
-	case 4: setquest 160203; break;
-	case 5: setquest 160204; break;
-	case 6: setquest 160205; break;
-}
+setquest getvariableofnpc(.Hunt_QDelay['HG_Instance],"Exiled Warrior");
 warp "SavePoint",0,0;
 end;
 

@@ -211,7 +211,7 @@ switch(select("- Dungeon Menu:- Information:- Points Shop:- Nothing")) {
 		}
 		mes "Well done, you have passed all checks.";
 		mes "You"+ ( (getcharid(1) != 0)?"r party":"")+" will recieve an bonus of "+.exp[.@diff[.@fl]]+"%."; 
-		mes "But before you can enter an dungeon, you can accept more quests first, therefore talk to me again and choose \"Quest Board\"";
+		mes "But before you can enter an dungeon, you can accept more quests first, therefore talk to me again and choose \"Quest Board\".";
 		// Inserting Data in the Database `dqs_party`
 		query_sql "INSERT INTO `dqs_party` ( `dg_id` , `"+ ( (getcharid(1) == 0)?"char_id":"pty_id")+"` , `quest_id` , `start` , `map` ) VALUES ( '"+.@dg_id[@d]+"' , '"+ ( (getcharid(1) == 0)?getcharid(0):getcharid(1))+"' , '1' , '"+.@floors[.@fl]+"' , '"+.@map$[.@fl]+"' )";
 		break;

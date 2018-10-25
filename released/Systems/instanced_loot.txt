@@ -1,0 +1,231 @@
+//===== rAthena Script =======================================
+//= Instance Loot System
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Initial Version
+//===== Tested With ==========================================
+//= rAthena 10/10/2018 Revision
+//= GIT Hash: 55acdb9863382d8935d9df25e1462d5d1ebd7d54
+//===== Description ==========================================
+//= Handles an Loot Distribution after an Instance run
+//= Every Monster Drop will be automatically "looted"
+//  and saved in the database
+//= Members can select the loot they want
+//= Loot will be shared evenly
+//= Odd Amount of Loot will be random given to the members,
+//  which wanted the specific item
+//===== Comments ==============================================
+//= Installation:
+//  1. Add the instance maps at the end of the file via duplicate
+//  2. Add the function "F_InstancedLoot" in every NPC Event regarding Mob Deaths
+//  > callfunc "F_InstancedLoot",killedrid,getcharid(1);
+//===== SQL Tables ===========================================
+/* phpMyAdmin:
+CREATE TABLE IF NOT EXISTS `ilootsys` (
+  `pty_id` int(5) UNSIGNED NOT NULL,
+  `item_id` int(8) UNSIGNED DEFAULT NULL,
+  `item_am` int(5) UNSIGNED DEFAULT NULL,
+  KEY `pty_id` (`pty_id`),
+  KEY `item_id` (`item_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+*/
+//===== ToDO =================================================
+//= Thinking about a good way to checkweight and maybe
+// automatically store items when weight is at capacity
+//============================================================
+prontera,147,172,5	script	Instance Loot	100,{
+
+mes .n$;
+mes "Welcome!";
+if(!getcharid(1)) {
+	mes "It looks like you are not in a party, therefore I can't help you!";
+	close;
+}
+mes "How can I help you?";
+next;
+switch(select("- Select Loot:- Information:- Nevermind")) {
+	case 1:
+	query_sql "SELECT `item_id` , `item_am` FROM `ilootsys` WHERE `pty_id` = '"+getcharid(1)+"'",.@item_id,.@item_am;
+	if(getarraysize(.@item_id) < 1) {
+		mes .n$;
+		mes "I'm sorry, but there is no loot you could select from.";
+		close;
+	}
+	set .@pty_id,getcharid(1);
+	for ( set .@p,0; .@p < getarraysize(.pty_id); set .@p,.@p + 1)
+		if(.@pty_id == .pty_id[.@p]) break;
+	
+	if(.@p >= getarraysize(.pty_id)) 
+		setarray .pty_id[.@p],.@pty_id;
+		
+	if(getarraysize(getd(".pty_aid_"+.@pty_id)) == 0) {
+		getpartymember(.@pty_id),1;
+		getpartymember(.@pty_id),2;
+		for ( set .@a,0; .@a < $@partymembercount; set .@a,.@a + 1)
+			if(isloggedin($@partymemberaid[.@a],$@partymembercid[.@a]) == 1)
+				setarray getd(".pty_aid_"+.@pty_id+"["+getarraysize(getd(".pty_aid_"+.@pty_id))+"]"),$@partymemberaid[.@a];
+	}
+	if(getarraysize(getd(".items_"+getcharid(3))) != 0) {
+		mes .n$;
+		mes "You have selected your loot already.";
+		mes "Please wait until everybody else selected their items.";
+		close;
+	}
+	while(1) {
+		set .@loot$,"";
+		for ( set .@i,0; .@i < getarraysize(.@item_id); set .@i,.@i + 1) 
+			set .@loot$,.@loot$ + "> "+.@item_am[.@i]+"x "+getitemname(.@item_id[.@i])+ ( (.@item_id[.@i+1] != 0)?":":"");
+
+		if(.@loot$ != "") // Optical Check, existing value?
+			set .@loot$,.@loot$ + ":> Done";
+		else // No item inserted, nothing else to select
+			set .@loot$,"> Done";
+		mes .n$;
+		mes "Please select the loot you want:";
+		mes "Note: The amount is what you're party has looted in total, not what is left!";
+		next;
+		if(select(.@loot$) >= getarraysize(.@item_id)) { // Selected "Done"
+			setarray .pty_ct[.@p],.pty_ct[.@p] + 1;
+			if(getarraysize(getd(".items_"+getcharid(3))) == 0) // Loot selected? No?
+				setarray getd(".items_"+getcharid(3)+"[0]"),1; // Better than using an extra variable
+			break;
+		}
+		set .@c,@menu - 1;
+		
+		mes .n$;
+		mes "Chosen Item:";
+		mes getitemname(.@item_id[.@c]);
+		mes " ";
+		mes "Is this correct?";
+		next;
+		if(select("- Yes:- No") - 1) continue;
+		setarray getd(".items_"+getcharid(3)+"["+getarraysize(getd(".items_"+getcharid(3)))+"]"),.@item_id[.@c];
+		deletearray .@item_id[.@c],1;
+		deletearray .@item_am[.@c],1;
+	}
+	mes .n$;
+	mes "Now I'll have to wait at least 1 minute until everybody else from your party has selected their loot.";
+	if(getpartyleader(.@pty_id,1) == getcharid(3)) { // If the attached player is the party leader
+		attachnpctimer; // attach the Timer to him/her
+		initnpctimer;
+	}
+	break;
+	
+	case 2:
+	mes .n$;
+	mes "I will manage your loot from instances by distributing it evenly and according to your party members selection evenly.";
+	mes "Every party member will be able to select the loot he/she wants from a list, which you have recieved during your instance run.";
+	mes " ";
+	mes "As soon every member has completed this task, I will calculate from the looted items how many of the selected item recieves the players which want it.";
+	mes "In case there is a odd number of loot, the last item will distributed randomly among them.";
+	mes "Example:";
+	mes "You have looted 10 Yellopy, got 5 Members which want this item, so each of them gets 2 of it.";
+	break;
+
+	case 3: break;
+}
+close;
+
+OnTimer60000: // Every Minute		
+stopnpctimer;
+for ( set .@p,0; .@p < getarraysize(.pty_id); set .@p,.@p + 1)
+	if(getcharid(1) == .pty_id[.@p]) break;
+// Just a check to prevent a possible bug
+if(.@p >= getarraysize(.pty_id)) {
+	debugmes "Instanced Loot: Attached party ID "+getcharid(1)+" not found in .pty_id Array";
+	end;
+}
+if(.pty_ct[.@p] != getarraysize(getd(".pty_aid_"+getcharid(1)))) {
+	initnpctimer;
+	end;
+}
+query_sql "SELECT `item_id` , `item_am` FROM `ilootsys` WHERE `pty_id` = '"+getcharid(1)+"'",.@item_id,.@item_am;
+// Count how many players want the same item:
+for ( set .@c,0; .@c < getarraysize(getd(".pty_aid_"+getcharid(1))); set .@c,.@c + 1) 
+	for ( set .@i,0; .@i < getarraysize(.@item_id); set .@i,.@i + 1) {
+		for ( set .@l,0; .@l < getarraysize(getd(".items_"+getd(".pty_aid_"+getcharid(1)))); set .@l,.@l + 1) 
+			if(getd(".items_"+getd(".pty_aid_"+getcharid(1)+"["+.@c+"]")+"["+.@l+"]") == .@item_id[.@i])
+				setarray .@item_pl[.@i],.@item_pl[.@i] + 1;
+		
+		// Calculate the shared amount of the loot and delete the Loot Counter
+		if(.@item_pl[.@i]) { // The selected item is wanted
+			setarray .@item_share[.@i],.@item_am[.@i]/.@item_pl[.@i];
+			if(.@item_am[.@i]%.@item_pl[.@i] > 0)
+				setarray .@item_left[.@i],1;
+		}
+		deletearray .@item_pl[.@i],1;
+	}
+// Loot Distribution:
+for ( set .@c,0; .@c < getarraysize(getd(".pty_aid_"+getcharid(1))); set .@c,.@c + 1) 
+	for ( set .@i,0; .@i < getarraysize(.@item_id); set .@i,.@i + 1) {
+		for ( set .@l,0; .@l < getarraysize(getd(".items_"+getd(".pty_aid_"+getcharid(1)))); set .@l,.@l + 1)
+			// Check if the current Player has chosen the current Item
+			if(getd(".items_"+getd(".pty_aid_"+getcharid(1)+"["+.@c+"]")+"["+.@l+"]") == .@item_id[.@i]) {
+				if(.@item_am[.@i] >= .@item_share[.@i]) // Check if there is still loot available, in case the Loot is not enough for Player who selected it
+					getitem .@item_id[.@i],.@item_share[.@i],getd(".pty_aid_"+getcharid(1)+"["+.@c+"]");
+				setarray .@item_am[.@i],( (.@item_am[.@i] > .@item_share[.@i])?.@item_am[.@i]-.@item_share[.@i]:0); // Reduce the item amount available 
+				if(.@item_left[.@i]) // Save Account ID in an extra array in case there is an odd number of loot
+					setarray getd(".@items_shared_"+.@item_id[.@i]+"["+getarraysize(getd(".@items_shared_"+.@item_id[.@i]))+"]"),getd(".pty_aid_"+getcharid(1)+"["+.@c+"]");
+				deletearray getd(".items_"+getd(".pty_aid_"+getcharid(1)+"["+.@c+"]")+"["+.@l+"]"),1; // Remove Item from Loot list of the player
+			}
+		if(.@item_left[.@i] > 0)
+			getitem .@item_id[.@i],1,rand(getarraysize(getd(".@items_shared_"+.@item_id[.@i]))+"]");
+	}
+deletearray getd(".pty_aid_"+getcharid(1)+"[0]"),getarraysize(getd(".pty_aid_"+getcharid(1)));
+deletearray .pty_id[.@p],1;
+deletearray .pty_ct[.@p],1;
+query_sql "DELETE FROM `ilootsys` WHERE `pty_id` = '"+getcharid(1)+"'";
+npctalk .n$+": The Loot Distribution is complete!",strnpcinfo(0),bc_self;
+end;
+
+OnInit:
+set .n$,"["+strnpcinfo(0)+"]";
+//query_sql "DROP TABLE IF EXISTS `ilootsys`";
+if(query_sql("SHOW TABLES LIKE 'ilootsys'",.@iloot$) == 0) {
+	query_sql "CREATE TABLE IF NOT EXISTS `ilootsys` (  `pty_id` int(5) UNSIGNED NOT NULL,  `item_id` int(8) UNSIGNED DEFAULT NULL,  `item_am` int(5) UNSIGNED DEFAULT NULL, KEY `pty_id` (`pty_id`), KEY `item_id` (`item_id`) ) ENGINE=InnoDB DEFAULT CHARSET=latin1;";
+	//query_sql "ALTER TABLE `ilootsys` ADD KEY `pty_id` (`pty_id`), ADD KEY `item_id` (`item_id`)";
+}
+set $@ilootsys,1;
+end;
+}
+
+function	script	F_InstancedLoot	{
+// getarg(0) == Party ID
+// getarg(1) == Mob ID
+if(!$@ilootsys) return;
+if(getarraysize(getd("'items_"+getarg(1))) == 0) {
+	getmobdrops(getarg(1));
+	copyarray getd("'items_"+getarg(1)+"[0]"),$@MobDrop_item[0],$@MobDrop_count;
+	copyarray getd("'rate_"+getarg(1)+"[0]"),$@MobDrop_rate[0],$@MobDrop_count;
+}
+for ( set .@d,0; .@d < getarraysize(getd("'items_"+getarg(1))); set .@d,.@d + 1)
+	if(rand(1,10000) <= getd("'rate_"+getarg(1)+"["+.@d+"]")) {
+		if(query_sql("SELECT `item_am` FROM `ilootsys` WHERE `pty_id` = '"+getarg(0)+"' AND `item_id` = '"+getd("'items_"+getarg(1)+"["+.@d+"]")+"'",.@i_am) == 0)
+			query_sql "INSERT INTO `ilootsys` ( `pty_id` , `item_id` , `item_am` ) VALUES ( '"+getarg(0)+"' , '"+getd("'items_"+getarg(1)+"["+.@d+"]")+"' , '1')";
+		else
+			query_sql "UPDATE `ilootsys` SET `item_am` = `item_am` + '1' WHERE `pty_id` = '"+getarg(0)+"' AND `item_id` = '"+getd("'items_"+getarg(1)+"["+.@d+"]")+"'";
+	}
+return;
+}
+-	script	I_Loot	-1,{
+end;
+
+OnInstanceInit:
+if(!$@ilootsys) end;
+setmapflag instance_mapname(strnpcinfo(4)),mf_noloot;
+if(getmapflag(instance_mapname(strnpcinfo(4)),mf_noloot) == 1)
+	instance_announce 0,"[Instance Loot]: This Instance uses the Instance Loot System, which means that your loot will not appear on the floor, but can be collected afterwards at the NPC in the Main Town.",0;
+end;
+
+OnInstanceDestroy:
+if(!$@ilootsys) end;
+removemapflag instance_mapname(strnpcinfo(4)),mf_noloot;
+end;
+}
+// Duplicates of I_Loot Template above, for OnInstanceInit required
+// To add an instance, add the maps used in it
+//map_of_instance,0,0,0	duplicate(I_Loot)	I_Loot#1	-1
+//map_of_instance,0,0,0	duplicate(I_Loot)	I_Loot#2	-1
+//map_of_instance,0,0,0	duplicate(I_Loot)	I_Loot#3	-1
+//map_of_instance,0,0,0	duplicate(I_Loot)	I_Loot#4	-1

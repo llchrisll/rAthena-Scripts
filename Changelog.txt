@@ -24,6 +24,29 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2018/10/25
+<< == |*| Chris Functions v1.0 [RE] - @Modified |*| == >>
+- Split into two files according to their functions and renamed them:
+  > F_GetMobData = func_getmobdata.txt
+  > F_Pages = func_page.txt
+<< == |*| Instanced Loot System v1.0 [RE] - @Release |*| == >>
+<< == |*| Armor Enchanter v1.0 [RE] - @Release |*| == >>
+- Pretty much a copy of the Costume Enchanter, but more features and better config
+<< == |*| Unofficial Bio Lab Nightmare NPC's v1.0 [RE] - @Release |*| == >>
+- Missing official texts and correct warp coordinates
+<< == |*| Hunting Grounds v1.0 [WIP] - @Modified |*| == >>
+- Added more config options regarding Level Range, Required Members for each Instance
+<< == |*| Dungeon Quest Service v1.0 [RE] - @Modified |*| == >>
+- Very small typo
+<< == |*| Card Compounder v1.1 [RE] - @Modified |*| == >>
+- Fixed an bug duo missing variable change from Script Optimization
+<< == |*| Costume Enchanter v1.2 [REQ] - @Modified |*| == >>
+- Fixed an typo
+<< == |*| General - @Update |*| == >>
+- Headers.txt
+- Project_List.txt
+- Merged TOS.md with README.md and updated it a bit
+------------------------------------------------------------------------------------------------------------------------
 * 2018/05/21
 << == |*| Dynamic Battleground Arena v1.0 [WIP] - @Update |*| == >>
 - Added an setting how the announces will be displayed > $@DBG_Anno_T$

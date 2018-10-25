@@ -38,7 +38,7 @@ switch(select("- Enchant Costumes:- Reset Enchantment:- Nevermind")) {
 			case EQI_COSTUME_HEAD_MID: set .@c_slot$,"Costume Mid Headgear"; break;
 			case EQI_COSTUME_HEAD_LOW: set .@c_slot$,"Costume Low Headgear"; break;
 			case EQI_COSTUME_GARMENT: set .@c_slot$,"Costume Garment"; break;
-			case EQI_SHADOW_ARMOR: set .@c_slot$,"Costume Garment"; break;
+			case EQI_SHADOW_ARMOR: set .@c_slot$,"Shadow Armor"; break;
 			case EQI_SHADOW_WEAPON: set .@c_slot$,"Shadow Weapon"; break;
 			case EQI_SHADOW_SHIELD: set .@c_slot$,"Shadow Shield"; break;
 			case EQI_SHADOW_SHOES: set .@c_slot$,"Shadow Shoes"; break;
@@ -97,7 +97,7 @@ switch(select("- Enchant Costumes:- Reset Enchantment:- Nevermind")) {
 			case EQI_COSTUME_HEAD_MID: set .@c_slot$,"Costume Mid Headgear"; break;
 			case EQI_COSTUME_HEAD_LOW: set .@c_slot$,"Costume Low Headgear"; break;
 			case EQI_COSTUME_GARMENT: set .@c_slot$,"Costume Garment"; break;
-			case EQI_SHADOW_ARMOR: set .@c_slot$,"Costume Garment"; break;
+			case EQI_SHADOW_ARMOR: set .@c_slot$,"Shadow Armor"; break;
 			case EQI_SHADOW_WEAPON: set .@c_slot$,"Shadow Weapon"; break;
 			case EQI_SHADOW_SHIELD: set .@c_slot$,"Shadow Shield"; break;
 			case EQI_SHADOW_SHOES: set .@c_slot$,"Shadow Shoes"; break;
@@ -147,6 +147,8 @@ set .n$,"[Costume Enchanter]";
 // - EQI_COSTUME_HEAD_TOP
 // - EQI_COSTUME_HEAD_MID
 // - EQI_COSTUME_HEAD_LOW
+// - EQI_COSTUME_GARMENT
+// - EQI_SHADOW_ARMOR
 // - EQI_SHADOW_WEAPON
 // - EQI_SHADOW_SHIELD
 // - EQI_SHADOW_SHOES

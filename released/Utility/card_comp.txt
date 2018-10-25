@@ -6,6 +6,7 @@
 //= 1.0 - Initial Version
 //= 1.1 - Script Optimization
 //      - Added config for custom Variable, see .requ_vard$ and .requ_varn$
+//      - Fixed an bug duo missing variable change from Script Optimization
 //===== Tested With =========================================
 //= rAthena SQL 07/16-2017 Revision
 //===== Description ==========================================
@@ -116,7 +117,7 @@ switch(select("- Compound Cards:- Information:- Nothing")) {
 			mes "Slots left: "+.@slots;
 			next;
 			if(prompt(.@ca_m$) != 255) {
-				setd(".@card"+@c),.@ca_list[@menu-1];
+				setd(".@card"+.@c),.@ca_list[@menu-1];
 				if(.@ca_am[@menu-1] == 1) {
 					deletearray .@ca_list[@menu-1],1;
 					deletearray .@ca_am[@menu-1],1;
@@ -133,6 +134,7 @@ switch(select("- Compound Cards:- Information:- Nothing")) {
 	mes "You will recieve the following Item:";
 	mes "Name: 1x +"+.@eq_ref[.@id]+" "+ getitemname(.@eq_list[.@id]) + " with these cards:";
 	if(!.@cards) { // No new Cards inserted!
+		mes " ";
 		mes "Error: No Cards inserted."; 
 		close;
 	}

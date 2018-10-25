@@ -1,0 +1,1081 @@
+//===== rAthena Script =======================================
+//= Nightmare Biolab NPC's
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Initial Version
+//===== Tested With ==========================================
+//= rAthena 01/24/2018 Revision
+//= GIT Hash: bb0dd7b8dc05f7791b1a23d60dc0585db579da82
+//===== Description ==========================================
+//= Entrance/Trader/Enchanter
+//===== Comments =============================================
+//= Missing/Corrected Item Database Entries:
+/*
+> db/import/item_db.txt:
+// Nightmare Bio Lab
+20391,C_Silent_Executer,Costume Silence Enforcer,5,20,10,0,,0,,0,0xFFFFFFFF,7,2,6144,,1,0,0,{},{},{}
+22687,Fragments_Vicious_Mind,Fragments Vicious Mind,2,10,,1,,,,0,0xFFFFFFFF,63,2,,,,,,{ callfunc "F_ViciousMind"; },{},{}
+23016,Fragment_Of_Grudge,Cursed Fragment,3,0,,1,,,,,,,2,,,,,,{},{},{}
+25127,Silent_Energy_Particle,Silent Energy Particle,3,0,,,,,,,,,,,,,,,{},{},{}
+25128,Weak_Energy_Particle,Weak Energy Particle,3,0,,,,,,,,,,,,,,,{},{},{}
+25129,Unstable_Energy_Particle,Unstable Energy Particle,3,0,,,,,,,,,,,,,,,{},{},{}
+25130,Sinister_Energy_Particle,Sinister Energy Particle,3,0,,,,,,,,,,,,,,,{},{},{}
+25131,Fallen_Energy_Particle,Fallen Energy Particle,3,0,,,,,,,,,,,,,,,{},{},{}
+
+Note: 22687 (Fragments of Vicious Mind) exists in db/re/itemdb.txt, but doesn't have any script
+and is an ETC item instead of an Usable Item. So better disable it there, or you'll get duplicate item error.
+*/
+//= This script doesn't include the Mob Spawns and ID's, only the NPC's
+//= Most of the dialogues are custom, as well as the warp coordinates
+//===== Credits ==============================================
+//= ...
+//============================================================
+// Entrance NPC #1 - Ohno Tohiro
+lighthalzen,320,220,2	script	Ohno Tohiro	4_M_RASWORD,{
+
+mes .n$;
+mes "Uh...? I didn't realize someone is there aready.";
+mes "hmm... hmm...";
+mes "Is there something you want from me?";
+next;
+switch(select("End the conversation.:Ask him about the tomb of honor.:Return to the tomb of honor:Say that's too much zeny.")) {
+
+	case 1: break;
+	case 2: // Tomb of Honor Info
+	mes .n$;
+	mes "It was a crevice situated in an unassuming part of the village.";
+	mes "Although the town was no stranger to oddities, the crevice that emitted strange sounds was new.";
+	next;
+	mes .n$;
+	mes "Curious, I ventured inside ...";
+	mes "... and I immediatly scrambled back out!";
+	next;
+	mes .n$;
+	mes "Terrified of what I saw... I told an adventuring friend of mine about this incident.";
+	next;
+	mes .n$;
+	mes "That nuthead, also ventured into the strange crevice.";
+	mes "...Bloody fool!";
+	next;
+	mes .n$;
+	mes "A few days later, my friend emerged from the crevice badle injured, but alive - and loaded with mysterious, powerful items.";
+	next;
+	mes .n$;
+	mes "Word of his time in the mysterious crevice spread, and soon more adventures and mercenaries flocked by here.";
+	next;
+	mes .n$;
+	mes "They begin showing up in hopes of gaining such riches. Unfortunately, they never returned.";
+	next;
+	mes .n$;
+	mes "As quickly as it rose in popularity, the crevice began to grow quieter.";
+	mes "...With only rumors of its horros and riches surrounding it.";
+	break;
+	
+	case 3:
+	mes .n$;
+	if(Zeny < 100000) {
+		mes "You need to pay 100,000 Zeny first, before I can let you in.";
+		close;
+	}
+	mes "Very well, payment recieved.";
+	mes "You may go inside.";
+	close2;
+	set Zeny,Zeny - 100000;
+	warp "lhz_dun_n",0,0; // need coordinates
+	end;
+	
+	case 4:
+	mes .n$;
+	mes "I'll gladly let you in for 100,000 Zeny.";
+	next;
+	mes .n$;
+	mes "Hmm....";
+	sleep2 1500;
+	mes "Hmmmmmm......";
+	sleep2 1500;
+	mes "Okay...!";
+	next;
+	mes .n$;
+	mes "How about giving me 10 Research Charts?";
+	mes "I'll grant you access.";
+	next;
+	if(select("No thanks:Give him 10 Research Charts") == 1) {
+		mes .n$;
+		mes "Then I can't help you, take care.";
+		close;
+	}
+	mes .n$;
+	if(countitem(7347) < 10) {
+		mes "You don't have 10 Research Charts, you only have "+countitem(7347)+" of them.";
+		mes "Come back when you have collected the rest.";
+		close;
+	}
+	mes "Very well, trade accepted.";
+	mes "You may go inside.";
+	close2;
+	delitem 7347,10;
+	warp "lhz_dun_n",140,138;
+	end;
+}
+close;	
+
+OnInit:
+set .n$,"["+strnpcinfo(0)+"]";
+end;
+}
+
+lighthalzen,320,203,2	script	Lunar	4_F_04,{
+
+mes .n$;
+mes "Where do you want to go?";
+next;
+switch(select("Where all dead men roam.:Only thoughts can be met.:What kind of place is it?:I don't mind.")) {
+
+	case 1: // Dungeon Entrance
+	mes .n$;
+	mes "So I can bring you there I need an payment from you, which is 150,000 Zeny.";
+	mes "But I will bring you to the Enchantment Room much closer.";
+	next;
+	if(select("Let's go!:Nevermind") == 2) break;
+	mes .n$;
+	if(Zeny < 150000) {
+		mes "You don't have the required amount of Zeny.";
+		close;
+	}
+	mes "So.. if you go inside, you'll see a ^0000FFStrange Machine that looks like a crystal.^000000";
+	next;
+	mes .n$;
+	mes "This machine will recover your HP if you use it. It helped me survive. I have no idea why it's in that kind of place though..";
+	close2;
+	warp "lhz_dun_n",99,200;
+	end;
+	
+	case 2: // Enchantment Room
+	mes .n$;
+	mes "I can bring to you the Enchantment Room directly too, but I will need you to pay 2,000,000 Zeny for that.";
+	mes "But while you're in there, you won't be able to cast any skills!";
+	next;
+	if(select("Bring me there please:Okay, nevermind...") == 2) break;
+	mes .n$;
+	if(Zeny < 2000000) {
+		mes "You don't have enough Zeny. Please come back when you have it.";
+		close;
+	}
+	mes "Let's go!";
+	close2;
+	set Zeny,Zeny - 2000000;
+	atcommand "@monsterignore";
+	pcblockskill getcharid(3),1;
+	enablenpc "Dungeon Exit#LHZ_N";
+	warp "lhz_dun_n",139,262;
+	end;
+	
+	case 3: // What kind of place is it?
+	mes .n$;
+	mes "In the Tomb of Horror resides many powerfull monsters.";
+	mes "You'll have to battle through them to get to the Ghosts which can in exchange for Souls, Energies, Pieces of Sentiment and Pieces of Grudge make you powerfull equipment.";
+	mes "These equipments are an more stronger version of the 3rd Job Hats.";
+	mes "These Hats can also be enchanted.";
+	next;
+	mes .n$;
+	mes "I can either bring you near the Enchantment Room or directly into it with no monsters attacking you.";
+	break;
+	
+	case 4:
+	mes .n$;
+	mes "Come again!";
+	break;
+	
+}
+close;
+
+OnInit:
+set .n$,"["+strnpcinfo(0)+"]";
+end;
+}
+
+// Bio Lab 4/5 Loot Shop
+lighthalzen,319,213,2	script	Experienced Adventurer	4_M_MELODY,{
+
+mes "["+strnpcinfo(0)+"]";
+mes "At the price of Energy Fragments, I can offer you some of the loots I found!";
+next;
+if(select("Energy Fragments("+countitem(6820)+"):Cancel") == 2) close;
+callshop "BioLab5Shop",1;
+end;
+}
+
+-	itemshop	BioLab5Shop	-1,6820,6469:200,6470:200,6471:300
+
+// Inside Tomb of Honor (lhz_dun_n)
+
+// Warp Function for Item ID 22687
+function	script	F_ViciousMind	{
+	if(BioLab5_ItemDelay > gettimetick(2))
+		end;
+	set BioLab5_ItemDelay,gettimetick(2) + 300;
+	warp "lhz_dun_n",166,254;
+end;
+}
+// System Boxes
+// > Recover your HP on usage
+lhz_dun_n,167,259,4	script	#RT_BOX	4_SYSTEM_BOX,{
+
+mes .n$;
+mes "Emergency Protocol activated. The";
+mes "user will be able to to run RT-223";
+next;
+if(select("Do not run.:Run") == 1) {
+	mes .n$;
+	mes "Emergency Protocol deactivated.";
+	close;
+}
+mes .n$;
+mes "Recovery Program executed.";
+percentheal 100,100;
+close;
+
+OnInit:
+set .n$,"[System Message]";
+end;
+}
+lhz_dun_n,133,59,4	duplicate(#RT_BOX)	#RT_BOX2	4_SYSTEM_BOX
+lhz_dun_n,149,148,4	duplicate(#RT_BOX)	#RT_BOX3	4_SYSTEM_BOX
+lhz_dun_n,48,130,4	duplicate(#RT_BOX)	#RT_BOX4	4_SYSTEM_BOX
+lhz_dun_n,216,131,4	duplicate(#RT_BOX)	#RT_BOX5	4_SYSTEM_BOX
+
+// Dungeon Gateways
+lhz_dun_n,96,203,0	script	Dungeon Gateway	4_CRACK,{
+
+if(select("Don't exit the Dungeon.:Exit the Dungeon") == 1) end;
+warp "lighthalzen",326,203;
+end;
+}
+
+lhz_dun_n,126,261,0	script	Dungeon Exit#LHZ_N	1_SHADOW_NPC,{
+
+mes "["+strcharinfo(0)+"]";
+mes "You can see the exit.";
+if(select("Go back to Lighthalzen.:Don't go back.") == 2) end;
+warp "lighthalzen",326,203;
+atcommand "@monsterignore";
+pcblockskill getcharid(3),0;
+disablenpc strnpcinfo(0); // Disable it again afterwards
+end;
+
+OnInit:
+disablenpc strnpcinfo(0); // Only visible when entered via Lunar (2m Zeny paied)
+end;
+}
+
+// Biolab Headgear NPC#1
+// > Bio Lab Synthesis
+//   Create Old 3rd Headgears
+// > Slot Cloack of Casualty
+lhz_dun_n,136,269,6	script	Memory of Tears	4_M_DEATH,{
+
+mes .n$;
+mes "What do you want from me human?!";
+next;
+if(select("Craft Old 3rd Job Hats:Slot Cloack of Casualty") == 1) {
+	mes .n$;
+	mes "To craft an Old 3rd Job Headgear,";
+	mes "I need the following items depending on the Headgear you want:";
+	mes " > 1x Costume 3rd Job Headgear";
+	mes " > 1-5x First Job Souls";
+	mes " > 20-100x Energy Debris";
+	mes " ";
+	mes "100% Success or Risk?";
+	next;
+	set .@chance,select("Guaranted:Risk");
+	mes .n$;
+	mes "Now choose the Headgear you want tme to craft:";
+	next;
+	switch(select("Old Rune Circlet:Old Mitra:Old Driver Band:Old Yellow Driver Band:Old Shadow Crown:Old Minstrel Song Hat:Old Midas Whisper:Old Magic Stone Hat:Old Burning Spirit:Old Wispers of Wind:Old Resting Swan:Old Bone Circlet:Old Guardian Crown:Old Camouflage Rabbit Hood")) {
+		case 1:	set .@h_id,18971; set .@c_id,19961; set .@s_id,6814; break; // Costume Rune Circlet > Old Rune Circlet
+		case 2: set .@h_id,18972; set .@c_id,19962; set .@s_id,6819; break; // Costume Mitra > Old Mitra
+		case 3: set .@h_id,18973; set .@c_id,19963; set .@s_id,6815; break; // Costume Driver Band > Old Driver Band 
+		case 4: set .@h_id,18974; set .@c_id,19964; set .@s_id,6815; break; // Costume Yellow Driver Band > Old Yellow Driver Band
+		case 5: set .@h_id,18975; set .@c_id,19965; set .@s_id,6816; break; // Costume Shadow Crown > Shadow Crown
+		case 6: set .@h_id,18976; set .@c_id,19966; set .@s_id,6818; break; // Costume Minstrel Song Hat > Minstrel Song Hat
+		case 7: set .@h_id,18977; set .@c_id,19967; set .@s_id,6815; break; // Costume Midas Whisper > Midas Whisper
+		case 8: set .@h_id,18978; set .@c_id,19968; set .@s_id,6817; break; // Costume Magic Stone Hat > Old Magic Stone Hat
+		case 9: set .@h_id,18979; set .@c_id,19969; set .@s_id,6819; break; // Costume Burning Spirit > Old Burning Spirit
+		case 10: set .@h_id,18980; set .@c_id,19970; set .@s_id,6817; break; // Costume Wispers of Wind > Old Wispers of Wind
+		case 11: set .@h_id,18981; set .@c_id,19971; set .@s_id,6818; break; // Costume Resting Swan > Costum Resting Swan
+		case 12: set .@h_id,18982; set .@c_id,19973; set .@s_id,6816; break; // Costume Bone Circlet > Old Bone Circlet
+		case 13: set .@h_id,18983; set .@c_id,19972; set .@s_id,6814; break; // Costume Guardian Crown > Old Guardian Crown
+		case 14: set .@h_id,18984; set .@c_id,19974; set .@s_id,6818; break; // Costume Camouflage Rabbit Hood > Old Camouflage Rabbit Hood
+	}
+	mes .n$;
+	if(countitem(.@c_id) < 1) {
+		mes "You don't have any "+getitemname(.@c_id)+" with you!";
+		close;
+	}
+	if(.@chance == 1) { //Guaranteed Crafting
+		if(countitem(.@s_id) < 5 || countitem(6820) < 100) {
+			mes "I need 5x "+getitemname(.@s_id)+" and 100x "+getitemname(6820)+" to safely craft it!";
+			close;
+		}
+		delitem .@s_id,5; // Soul
+		delitem 6820,100; // Energy Debris
+		delitem .@c_id,1; // Costume
+		getitem .@h_id,1; // Old Headgear
+		mes "Crafting complete";
+		
+	} else if(.@chance == 2) { // Risky Crafting
+		if(countitem(.@s_id) < 1 || countitem(6820) < 20) {
+			mes "I need 1x "+getitemname(.@s_id)+" and 20x "+getitemname(6820)+" to craft it!";
+			close;
+		}
+		if(rand(1,100) < 20) { // 20% to have success
+			mes "Crafting was a success ";
+			getitem .@h_id,1; // Old Headgear
+		} else
+			mes "Ugh...failed...";
+			
+		delitem .@s_id,1; // Soul
+		delitem 6820,20; // Energy Debris
+		delitem .@c_id,1; // Costume
+	}
+} else { // Slot Cloack of Casualty
+	mes .n$;
+	mes "To slot the "+getitemname(20748)+",";
+	mes "I need the following items:";
+	mes " > 1x Unslotted "+getitemname(20748)+" (Equipped)";
+	mes " > 20-100x Ghost Chill";
+	mes " > 100-500x Energy Debris";
+	mes " ";
+	mes "100% Success or Risk?";
+	next;
+	set .@chance,select("Guaranted:Risk");
+	mes .n$;
+	if(getequipid(EQI_GARMENT) != 20748) {
+		mes "You don't have any "+getitemname(20748)+" equipped!";
+		close;
+	}
+	set .@ref,getequiprefinerycnt(EQI_GARMENT);
+	if(.@chance == 1) { //Guaranteed Crafting
+		if(countitem(6471) < 100 || countitem(6820) < 500) {
+			mes "I need 100x "+getitemname(6471)+" and 500x "+getitemname(6820)+" to safely craft it!";
+			close;
+		}
+		delitem 6471,100;
+		delitem 6820,500;
+		delequip EQI_GARMENT;
+		getitem2 20749,1,1,.@ref,0,0,0,0,0;
+		equip 20749;
+		mes "Slotting complete";
+		
+	} else if(.@chance == 2) { // Risky Crafting
+		if(countitem(6471) < 20 || countitem(6820) < 100) {
+			mes "I need 20x "+getitemname(6471)+" and 100x "+getitemname(6820)+" to craft it!";
+			close;
+		}
+		if(rand(1,100) > 20) {
+			mes "Ugh...failed...";
+			delequip EQI_GARMENT;
+		} else {
+			mes "Slotting was a success!";
+			delequip EQI_GARMENT;
+			getitem2 20749,1,1,.@ref,0,0,0,0,0;
+			equip 20749;
+		}
+		delitem 6471,20;
+		delitem 6820,100;
+	}
+}
+close;
+
+OnInit:
+set .n$,"["+strnpcinfo(0)+"]";
+end;
+}
+// Biolab Headgear NPC#2
+// > Energy Debris Exchange
+// > Create Costume version of 3rd job headgears
+lhz_dun_n,143,269,4	script	Memory of Regret	4_M_DEATH2,{
+
+mes .n$;
+mes "What do you want from me?";
+next;
+switch(select("Energy Exchange:Exchange Info:Create Costume 3rd Hats")) {
+	case 1:
+	mes "["+strcharinfo(0)+"]";
+	mes "I heard that you can dismantle powerfull weapons I don't need into "+getitemname(6820)+".";
+	next;
+	mes .n$;
+	mes "Well, that is correct.";
+	mes "But be warned, that I only can exchange for each weapon 1~3 "+getitemname(6820)+".";
+	next;
+	getinventorylist;
+	freeloop(1);
+	for ( set .@i,0; .@i < @inventorylist_count; set .@i,.@i + 1) 
+		switch(@inventorylist_id[.@i]) {
+			// 1-Handed Swords
+			case 13431: // Chrome Metal Sword
+			case 13421: // Ruber
+			// 2-Handed Swords
+			case 1189: // Krasnaya
+			case 1196: // Two-Handed Chrome Metal Sword
+			// Spears
+			case 1433: // Imperial Spear
+			case 1435: // Cannon Spear
+			case 1490: // Gigantic Lance
+			// Daggers
+			case 13061: // Black Wing
+			case 13062: // Ancient Dagger
+			case 13070: // Scarletto Nail
+			case 13069: // As Nail
+			case 13046: // Krieg
+			case 13047: // Weihna
+			// Maces
+			case 16017: // Bloody Cross
+			case 16010: // Red Ether Bag
+			case 16000: // Erde
+			case 16001: // Red Square Bag
+			// Axes
+			case 1311: // Vecer Axe
+			case 1392: // Ygnus Steel
+			case 1393: // End Sektora
+			// Bows
+			case 18109: // Catapult
+			case 18110: // Giant Crossbow
+			case 18111: // Creeper Bow
+			case 1745: // Falken Blitz
+			case 18103: // Mystic Bow
+			// Katars
+			case 1284: // Krishna
+			case 1285: // Chakram
+			case 1290: // Agent Katars
+			case 1291: // Guillotine Katar
+			// Staffs
+			case 1647: // Croce Staff
+			case 1659: // Light of Recovery
+			case 1646: // Lacryma Stick
+			case 1654: // Mental Stick
+			case 2004: // Kronos
+			case 2005: // Dea Staff
+			// Books
+			case 1584: // Cold Magic Book
+			// Instruments
+			case 1930: // Green Whistle
+			case 1894: // Stem Whip
+			case 1963: // Rapture Rose
+			// Knuckles
+			case 1830: // Sura Rampage
+			set .@r,0;
+			for ( set .@w,0; .@w < getarraysize(.@weap); set .@w,.@w + 1)
+				if(.@weap[.@w] == @inventorylist_id[.@i]) {
+					set .@r,1;
+					break;
+				}
+			if(!.@r) setarray .@weap[getarraysize(.@weap)],@inventorylist_id[.@i];
+			break;
+		}
+	freeloop(0);
+	if(getarraysize(.@weap) < 1) {
+		mes .n$;
+		mes "You don't have an valid weapon for the exchange!";
+		close;
+	}
+	for ( set .@c,0; .@c < getarraysize(.@weap); set .@c,.@c + 1)
+		set .@exc_m$,.@exc_m$ + getitemname(.@weap[.@c]) + ( (.@weap[.@c+1] != 0)?":":"");
+	
+	mes .n$;
+	mes "Please choose the weapon you have in your inventory for the exchange:";
+	next;
+	set .@weap_id,.@weap[select(.@exc_m$) - 1]; // Resaving Weapon ID
+	
+	set .@w_ct,countitem(.@weap_id);
+	if(.@w_ct > 1) {
+		mes .n$;
+		mes "Do you want to exchange all "+.@w_ct+" "+getitemname(.@weap_id)+"?";
+		next;
+		if(select("Yep:Let me choose") == 2) {
+			mes .n$;
+			mes "Tell me how many you want to exchange:";
+			next;
+			if(input(.@i_am,1,.@w_ct) != 0) {
+				mes .n$;
+				mes "Invalid amount.";
+				close;
+			}
+		}
+	}
+	if(!.@i_am)
+		set .@i_am,.@w_ct;
+		
+	for ( set .@e,1; .@e <= .@i_am; set .@e,.@e + 1)
+		set .@exc_t,.@exc_t + rand(1,3);
+	
+	mes .n$;
+	mes "Exchange complete.";
+	mes "Now leave me alone!";
+	getitem 6820,.@exc_t;
+	delitem .@weap_id,.@i_am;
+	break;
+		
+	case 2:
+	mes .n$;
+	mes "Which Weapon Type do you want to see the list about?";
+	next;
+	set .@wt,select("One-Handed Swords:Two-Handed Swords:Spears:Daggers:Maces:Axes:Bows:Katars:Staffs:Books:Instruments:Knuckles");
+	mes .n$;
+	mes "You can exchange the following weapons:";
+	mes " ";
+	
+	setarray .@weap_1[0],13431,13421; // 1 Handed Swords
+	setarray .@weap_2[0],1189,1196; // 2 Handed Swords
+	setarray .@weap_3[0],1433,1435,1490; // Spears
+	setarray .@weap_4[0],13061,13062,13070,13069,13046,13047; // Daggers
+	setarray .@weap_5[0],16017,16010,16000,16001; // Maces
+	setarray .@weap_6[0],1311,1392,1393; // Axes
+	setarray .@weap_7[0],18109,18110,18111,1745,18103; // Bows
+	setarray .@weap_8[0],1284,1285,1290,1291; // Katars
+	setarray .@weap_9[0],1647,1659,1646,1654,2004,2005; // Staffs
+	setarray .@weap_10[0],1584; // Books
+	setarray .@weap_11[0],1930,1984,1963; // Instruments
+	setarray .@weap_12[0],1830; // Knuckles
+	
+	for ( set .@c,0; .@c < getarraysize(getd(".@weap_"+.@wt)); set .@c,.@c + 1)
+		mes "> "+getitemname(getd(".@weap_"+.@wt+"["+.@c+"]")) +" (ID: "+getd(".@weap_"+.@wt+"["+.@c+"]")+")";
+	
+	break;
+
+	case 3:
+	mes "["+strcharinfo(0)+"]";
+	mes "I heard that you can craft cosmetic headgears.";
+	next;
+	mes .n$;
+	mes "That is correct, but I need an 3rd Job Headgear and 50 "+getitemname(6820)+" to make them.";
+	if(select("Craft:Leave") == 2) close;
+	next;
+	mes .n$;
+	mes "Which Costume do you want me to craft?";
+	next;
+	switch(select("Rune Circlet:Mitra:Driver Band:Yellow Driver Band:Shadow Crown:Minstrel Song Hat:Midas Whisper:Magic Stone Hat:Burning Spirit:Wispers of Wind:Resting Swan:Silent Executor:Bone Circlet:Dip Schmidt Helm:Guardian Crown:Sniper Googles:Camouflage Rabbit Hood")) {
+		case 1:	set .@h_id,5746; set .@c_id,19961; break; // Rune Circlet > Costume Rune Circlet
+		case 2: set .@h_id,5747; set .@c_id,19962; break; // Mitra > Costume Mitra
+		case 3: set .@h_id,5749; set .@c_id,19963; break; // Driver Band > Costume Driver Band
+		case 4: set .@h_id,5760; set .@c_id,19964; break; // Yellow Driver Band > Costume Yellow Driver Band
+		case 5: set .@h_id,5750; set .@c_id,19965; break; // Shadow Crown > Costume Shadow Crown
+		case 6: set .@h_id,5751; set .@c_id,19966; break; // Minstrel Song Hat > Costume Minstrel Song Hat
+		case 7: set .@h_id,5752; set .@c_id,19967; break; // Midas Whisper > Costume Midas Whisper
+		case 8: set .@h_id,5753; set .@c_id,19968; break; // Magic Stone Hat > Costume Magic Stone Hat
+		case 9: set .@h_id,5754; set .@c_id,19969; break; // Burning Spirit > Costume Burning Spirit
+		case 10: set .@h_id,5756; set .@c_id,19970; break; // Wispers of Wind > Costume Wispers of Wind
+		case 11: set .@h_id,5758; set .@c_id,19971; break; // Resting Swan > Costum Resting Swan
+		case 12: set .@h_id,5755; set .@c_id,20391; break; // Silent Executor > Costume Silent Executor
+		case 13: set .@h_id,5755; set .@c_id,19973; break; // Silent Executor > Costume Bone Circlet
+		case 14: set .@h_id,5757; set .@c_id,20393; break; // Dip Schmidt Helm > Costume Dip Schmidt Helm
+		case 15: set .@h_id,5757; set .@c_id,19972; break; // Dip Schmidt Helm > Costume Guardian Crown
+		case 16: set .@h_id,5748; set .@c_id,20392; break; // Sniper Googles > Costume Sniper Googles
+		case 17: set .@h_id,5748; set .@c_id,19974; break; // Sniper Googles > Costume Camouflage Rabbit Hood
+	}
+	mes .n$;
+	mes "For the \""+getitemname(.@c_id)+"\" I need one "+getitemname(.@h_id)+" and 50x "+getitemname(6820)+".";
+	if(select("I got them.:Ugh...") == 2) close;
+	next;
+	mes .n$;
+	if(countitem(.@h_id) < 1) {
+		mes "I need one "+getitemname(.@h_id)+" to craft the costume, bring one with you next time!";
+		close;
+	}
+	if(countitem(6820) < 50) {
+		mes "I need 50x "+getitemname(6820)+" to proceed.";
+		close;
+	}
+	delitem 6820,50;
+	delitem .@h_id,1;
+	getitem .@c_id,1;
+	mes "Crafting completed.";
+}
+close;
+
+OnInit:
+set .n$,"["+strnpcinfo(0)+"]";
+end;
+}
+// Biolab Heagear NPC#3
+// > Trade Souls for Death Box
+lhz_dun_n,145,265,4	script	Victimized Souls' Mind	4_CENERE,{
+
+mes "["+strnpcinfo(0)+"]";
+mes "So many regrets....";
+mes ".....";
+mes "What are you doing here, human?";
+next;
+switch(select("Soul Exchange:Information:Leave")) {
+	
+	case 1:
+	mes "["+strnpcinfo(0)+"]";
+	mes "Which Soul do you want to exchange?";
+	next;
+	set .@id,select("Swordman Soul:Merchant Soul:Thief Soul:Mage Soul:Archer Soul:Acolyte Soul") + 6813;
+	mes "["+strnpcinfo(0)+"]";
+	if(countitem(.@id) < 3) {
+		mes "I need at least 3 of the same Souls to make the exchange!";
+		close;
+	}
+	getitem 22679,1;
+	delitem .@id,3;
+	mes "Trade complete.";
+	break;
+	
+	case 2:
+	mes "["+strnpcinfo(0)+"]";
+	mes "If you can give me 3x First Class Souls, I'll exchange it for a "+getitemname(22679)+".";
+	mes "It all depends on your luck.";
+	break;
+	
+	case 3:
+	break;
+}
+close;
+}
+// Biolab Headgear NPC#4
+// > Enchant 3rd Job Hats
+// > Reset Enchantments
+lhz_dun_n,134,265,7	script	Wandering Mind	4_CENERE,{
+
+disable_items;
+mes .n$;
+mes "I need... grudge's.... grudge's...";
+mes "strong... power... It will help...";
+mes "both me... and you... all...";
+mes "Kkk...";
+next;
+switch(select("Enchant Old Headgear:Reset Entchantment:Enchantment Description")) {
+
+	case 1:
+	if(!getequipid(EQI_HEAD_TOP)) {
+		mes .n$;
+		mes "I can't enchant your brain tho...., or can I..?";
+		close;
+	}
+	switch(getequipid(EQI_HEAD_TOP)) {
+		case 18971:
+		case 18972:
+		case 18973:
+		case 18974:
+		case 18975:
+		case 18976:
+		case 18977:
+		case 18978:
+		case 18979:
+		case 18980:
+		case 18981:
+		case 18982:
+		case 18983:
+		case 18984:
+		break;
+		
+		default:
+		mes .n$;
+		mes "You don't have an Old 3rd Headgear equipped.";
+		close;
+	}
+	set .@id,getequipid(EQI_HEAD_TOP);
+	set .@ref,getequiprefinerycnt(EQI_HEAD_TOP);
+	set .@part,EQI_HEAD_TOP;
+	set .@slot4,getequipcardid(.@part,3);
+	set .@slot3,getequipcardid(.@part,2);
+	set .@slot2,getequipcardid(.@part,1);
+	set .@slot1,getequipcardid(.@part,0); // Card Slot
+	
+	// Stat Enchants
+	setarray .@stat_1[0],4700,4701,4702,4703,4704; // STR Stat
+	setarray .@stat_2[0],4730,4731,4732,4733,4734; // AGI Stat
+	setarray .@stat_3[0],4740,4741,4742,4743,4744; // VIT Stat
+	setarray .@stat_4[0],4710,4711,4712,4713,4714; // INT Stat
+	setarray .@stat_5[0],4720,4721,4722,4723,4724; // DEX Stat
+	setarray .@stat_6[0],4750,4751,4752,4753,4754; // LUK Stat
+	set .@stat_cost,10;
+	
+	// Special Enchants
+	setarray .@enchant_1[0],29061,29062,29063,29064,29065,29066,29067,29068,29069,29070; // Mettle (ATK% + HIT)
+	setarray .@enchant_2[0],29071,29072,29073,29074,29075,29076,29077,29078,29079,29080; // Magic Essence (MATK% + Reduce Fixed Cast Time)
+	setarray .@enchant_3[0],29091,29092,29093,29094,29095,29096,29097,29098,29099,29100; // Master Archer (ASPD% + Phy Damage with Bow)
+	setarray .@enchant_4[0],29101,29102,29103,29104,29105,29106,29107,29108,29109,29110; // Adamantine (MAX HP% + DEF%)
+	setarray .@enchant_5[0],29111,29112,29113,29114,29115,29116,29117,29118,29119,29120; // Affection (MDEF% + Effect of Recovery Skills%)
+	setarray .@enchant_6[0],29081,29082,29083,29084,29085,29086,29087,29088,29089,29090; // Acute (CRIT% + Crit Damage%)
+	setarray .@enchant_cost[0],10,20,40,50,70,100,150,250,500,1000;
+	
+	if(!.@slot4) { // Enchant 4th Slot
+		mes .n$;
+		mes "To enchant the 4th Slot with an Stats Enchantment, I require "+.@stat_cost+" "+getitemname(23016)+".";
+		next;
+		if(select("Cancel:Enchant") == 1) {
+			mes .n$;
+			mes "....:";
+			close;
+		}
+		if(!.stat_random) {
+			mes .n$;
+			mes "Which Stat Enchant do you want?";
+			mes "Note: The value is random!";
+			next;
+			set .@s,select("STR:AGI:VIT:INT:DEX:LUK");
+		
+		} else {
+			// Random Stat Enchant
+			set .@r,rand(1,1000);
+			if(.@r < 150) set .@s,1;
+			else if(.@r < 300) set .@s,2;
+			else if(.@r < 450) set .@s,3;
+			else if(.@r < 600) set .@s,4;
+			else if(.@r < 750) set .@s,5;
+			else if(.@r < 900) set .@s,6;
+		}
+		// Random Value 1~5
+		set .@r,rand(1,500);
+		if(.@r < 100) set .@e,1;
+		else if(.@r < 200) set .@e,2;
+		else if(.@r < 300) set .@e,3;
+		else if(.@r < 400) set .@e,4;
+		else if(.@r < 500) set .@e,5;
+		
+		set .@slot4,getd(".@stat_"+.@s+"["+(.@e-1)+"]");
+		set .@cost,.@stat_cost;
+		
+	} else {
+		if(!.@slot3) { // Enchant 3rd Slot
+			mes .n$;
+			mes "To enchant the 3rd Slot with an Stats Enchantment, I require "+.@stat_cost+" "+getitemname(23016)+".";
+			next;
+			if(select("Cancel:Enchant") == 1) {
+				mes .n$;
+				mes "....:";
+				close;
+			}
+			if(!.stat_random) {
+				mes .n$;
+				mes "Which Stat Enchant do you want?";
+				mes "Note: The value is random!";
+				next;
+				set .@s,select("STR:AGI:VIT:INT:DEX:LUK");
+			
+			} else {
+				// Random Stat Enchant
+				set .@r,rand(1,1000);
+				if(.@r < 150) set .@s,1;
+				else if(.@r < 300) set .@s,2;
+				else if(.@r < 450) set .@s,3;
+				else if(.@r < 600) set .@s,4;
+				else if(.@r < 750) set .@s,5;
+				else if(.@r < 900) set .@s,6;
+			}
+			// Random Value 1~5
+			set .@r,rand(1,500);
+			if(.@r < 100) set .@e,1;
+			else if(.@r < 200) set .@e,2;
+			else if(.@r < 300) set .@e,3;
+			else if(.@r < 400) set .@e,4;
+			else if(.@r < 500) set .@e,5;
+			
+			set .@slot3,getd(".@stat_"+.@s+"["+(.@e-1)+"]");
+			set .@cost,.@stat_cost;
+			
+		} else {
+			if(!.@slot2) { // Enchant 2nd Slot
+				mes .n$;
+				mes "By enchanting the 2nd Slot you can choose if you want an stats enchant or an special enchant:";
+				mes "But it also depends on your luck what you get!";
+				next;
+				if(select("Stats Enchant:Special Enchant") == 1) {
+					mes .n$;
+					mes "To enchant the 2nd Slot with an Stats Enchantment, I require "+.@stat_cost+" "+getitemname(23016)+".";
+					next;
+					if(select("Cancel:Enchant") == 1) {
+						mes .n$;
+						mes "....:";
+						close;
+					}
+					if(!.stat_random) {
+						mes .n$;
+						mes "Which Stat Enchant do you want?";
+						mes "Note: The value is random!";
+						next;
+						set .@s,select("STR:AGI:VIT:INT:DEX:LUK");
+					
+					} else {
+						// Random Stat Enchant
+						set .@r,rand(1,900);
+						if(.@r < 150) set .@s,1;
+						else if(.@r < 300) set .@s,2;
+						else if(.@r < 450) set .@s,3;
+						else if(.@r < 600) set .@s,4;
+						else if(.@r < 750) set .@s,5;
+						else if(.@r < 900) set .@s,6;
+					}
+					// Random Value 1~5
+					set .@r,rand(1,500);
+					if(.@r < 100) set .@e,1;
+					else if(.@r < 200) set .@e,2;
+					else if(.@r < 300) set .@e,3;
+					else if(.@r < 400) set .@e,4;
+					else if(.@r < 500) set .@e,5;
+					
+					set .@slot2,getd(".@stat_"+.@s+"["+(.@e-1)+"]");
+					set .@cost,.@stat_cost;
+				
+				} else {
+					mes .n$;
+					mes "To enchant the 2nd Slot with an Special Enchantment, I require "+.@enchant_cost[0]+" "+getitemname(23016)+".";
+					next;
+					if(select("Cancel:Enchant") == 1) {
+						mes .n$;
+						mes "....:";
+						close;
+					}
+					// Random Special Enchant
+					set .@r,rand(1,900);
+					if(.@r < 150) set .@s,1;
+					else if(.@r < 300) set .@s,2;
+					else if(.@r < 450) set .@s,3;
+					else if(.@r < 600) set .@s,4;
+					else if(.@r < 750) set .@s,5;
+					else if(.@r < 900) set .@s,6;
+					
+					set .@slot2,getd(".@enchant_"+.@s+"[0]");
+					set .@cost,.@enchant_cost[0];
+				}
+			
+			} else {
+				for ( set .@s,1; .@s <= 6; set .@s,.@s + 1)
+					for ( set .@r,0; .@r < getarraysize(getd(".@enchant_"+.@s)); set .@r,.@r + 1)
+						if(.@slot2 == getd(".@enchant_"+.@s+"["+.@r+"]")) {
+							set .@enchant_type,.@s; // Resaving Enchanting Type
+							set .@lvl,.@r; // Resaving Enchanting Level
+							break;
+						}
+				
+				if(.@lvl == 9) {
+					mes .n$;
+					mes "This Headgear is already fully enchanted.";
+					close;
+				}
+				set .@cost,.@enchant_cost[.@lvl+1];
+				setarray .@e_chance[0],100,100,100,50,50,50,30,30,10,10;
+				mes .n$;
+				mes "To upgrade the Special Enchantment from Level \""+(.@lvl+1)+"\" to Level \""+(.@lvl+2)+"\", I require "+.@cost+" "+getitemname(23016)+".";
+				mes "Chance of Upgrade: "+.@e_chance[.@lvl+1]+"%";
+				next;
+				if(select("Cancel:Upgrade") == 1) {
+					mes .n$;
+					mes "....:";
+					close;
+				}
+				if(rand(1,100) <= .@e_chance[.@lvl+1])  // Success 
+					set .@slot2,getd(".@enchant_"+.@enchant_type+"["+(.@lvl+1)+"]");
+				
+				else { // Fail
+					if(.@lvl > 0) 
+						set .@lvl,.@lvl - 1;
+					else 
+						set .@lvl,0;
+						
+					set .@slot2,getd(".@enchant_"+.@enchant_type+"["+.@lvl+"]");
+					set .@upg_fail,1;
+				}
+			}
+		}
+	}
+	if(countitem(23016) < .@cost) {
+		mes .n$;
+		mes "You don't have enough "+getitemname(23016)+".";
+		close;
+	}
+	specialeffect2 EF_REPAIRWEAPON;
+	delequip .@part;
+	delitem 23016,.@cost;
+	getitem2 .@id,1,1,.@ref,0,.@slot1,.@slot2,.@slot3,.@slot4;
+	equip .@id;
+	mes .n$;
+	if(.@upg_fail == 1) {
+		mes "I'm sorry, but the enchantment upgrade has failed.";
+		mes "The enchantment level was lowered by 1.";
+	} else 
+		mes "The enchantment was a success!";
+	break;
+	
+	case 2: // Resetting Enchantments
+	mes .n$;
+	mes "Do really want to reset the enchants on your Headgear?";
+	if(select("Reset:Leave") - 1) close;
+	next;
+	mes .n$;
+	if(countitem(22687) < 10) {
+		mes "You need more "+getitemname(22687)+".";
+		close;
+	}
+	if(!getequipid(EQI_HEAD_TOP)) {
+		mes "I can't reset your brain tho....";
+		close;
+	}
+	switch(getequipid(EQI_HEAD_TOP)) {
+		case 18971:
+		case 18972:
+		case 18973:
+		case 18974:
+		case 18975:
+		case 18976:
+		case 18977:
+		case 18978:
+		case 18979:
+		case 18980:
+		case 18981:
+		case 18982:
+		case 18983:
+		case 18984:
+		break;
+		
+		default:
+		mes "You don't have an Old 3rd Headgear equipped.";
+		close;
+	}
+	set .@part,EQI_HEAD_TOP;
+	set .@slot4,getequipcardid(.@part,3);
+	set .@slot3,getequipcardid(.@part,2);
+	set .@slot2,getequipcardid(.@part,1);
+	set .@slot1,getequipcardid(.@part,0); // Card Slot
+	if(!.@slot4 && !.@slot3 && !.@slot4) {
+		mes "There is nothing to reset.";
+		close;
+	}
+	set .@id,getequipid(EQI_HEAD_TOP);
+	set .@ref,getequiprefinerycnt(.@part);
+	
+	delequip .@part;
+	delitem 22687,10;
+	getitem2 .@id,1,1,.@ref,0,.@slot1,0,0,0;
+	equip .@id;
+	mes "Reseted Enchantments!";
+	break;
+	
+	case 3:	// Enchantment Description
+	mes .n$;
+	mes "To enchant an 3rd Job Headgear I need "+getitemname(23016)+".";
+	mes "4th and 3rd Slot are stats enchantments and cost 10 "+getitemname(23016)+".";
+	mes "2nd Slot can either be stats or special enchanted.";
+	next;
+	mes .n$;
+	mes "Special enchants can be further upgraded up to level 10.";
+	mes "The first level is 100% chance and every level after it has a chance to fail.";
+	mes "Failing means that the enchant level will be reduced by 1.";
+	mes "For every next level I require more "+getitemname(23016)+" than before.";
+	next;
+	mes .n$;
+	mes "In case you are not satisfied with the enchants you've got, you can reset them with the cost of 10x "+getitemname(22687)+".";
+	break;
+}
+close;
+
+OnInit:
+set .n$,"["+strnpcinfo(0)+"]";
+// Custom Setting:
+// Should the Stat Enchantment be random or selectable?
+// 1 = Random
+// 0 = Selectable
+set .stat_random,1;
+end;
+}
+
+// Energy Debris Exchanger
+lighthalzen,312,296,3	script	Thug	4_M_LGTPOOR,{
+
+mes .n$;
+mes "...";
+mes "What you starring at me for?";
+next;
+switch(select("Information:Synthesize Energy Fragments:Synthesize Fragment of Vicious Mind:Synthesize Cursed Fragments:Cancel")) {
+	case 1:
+	mes .n$;
+	mes "I can exchange Energy Particles into "+getitemname(6820)+" and "+getitemname(6820)+" in either "+getitemname(22687)+" or "+getitemname(23016)+".";
+	close;
+	
+	case 2:
+	mes .n$;
+	mes "Energy Particle : "+getitemname(6820)+" conversion rate.";
+	mes "2000x "+getitemname(25127)+" : 1 "+getitemname(6820);
+	mes "1000x "+getitemname(25128)+" : 1 "+getitemname(6820);
+	mes "500x "+getitemname(25129)+" : 1 "+getitemname(6820);
+	mes "500x "+getitemname(25130)+" : 1 "+getitemname(6820);
+	mes "50x "+getitemname(25131)+" : 1 "+getitemname(6820);
+	mes "... Which Energy Particles have you brought to me?";
+	next;
+	getinventorylist;
+	for ( set .@e,0; .@e < @inventorylist_count; set .@e,.@e + 1) {
+		if(@inventorylist_id[.@e] == 25127)
+			setarray .@energy[getarraysize(.@energy)],25127;
+		if(@inventorylist_id[.@e] == 25128)
+			setarray .@energy[getarraysize(.@energy)],25128;
+		if(@inventorylist_id[.@e] == 25129)
+			setarray .@energy[getarraysize(.@energy)],25129;
+		if(@inventorylist_id[.@e] == 25130)
+			setarray .@energy[getarraysize(.@energy)],25130;
+		if(@inventorylist_id[.@e] == 25131)
+			setarray .@energy[getarraysize(.@energy)],25131;
+	}
+	for ( set .@l,0; .@l < getarraysize(.@energy); set .@l,.@l + 1)
+		set .@debri_m$,.@debri_m$ + getitemname(.@energy[.@l]) + ( (.@energy[.@l+1] != 0)?":":"");
+		
+	set .@debri_m$,.@debri_m$ + ":Cancel";
+	if(select(.@debri_m$) - getarraysize(.@energy) > 0) {
+		mes .n$;
+		mes "... It's a no?";
+		close;
+	}
+	mes .n$;
+	set .@id,.@energy[@menu - 1];
+	set .@am,countitem(.@id);
+	if( (.@id == 25127 && .@am < 2000) || (.@id == 25128 && .@am < 1000) || (.@id == 25129 && .@am < 500) || (.@id == 25130 && .@am < 500) || (.@id == 25131 && .@am < 50) ) {
+		mes "You don't have the required amount to the exchange.";
+		close;
+	}
+	switch(.@id) {
+		case 25127: delitem 25127,2000; break;
+		case 25128:	delitem 25128,1000; break;
+		case 25129:	delitem 25129,500; break;
+		case 25130:	delitem 25130,500; break;
+		case 25131:	delitem 25131,50; break;
+	}
+	getitem 6820,1;
+	mes "Exchange done, now leave!";
+	break;
+	
+	case 3:
+	mes .n$;
+	if(countitem(6820) < 50) {
+		mes "You require 50x "+getitemname(6820)+" to exchange for 1x "+getitemname(22687)+".";
+		close;
+	}
+	getitem 22687,1;
+	delitem 6820,50;
+	mes "Exchange done.";
+	break;
+	
+	case 4:
+	mes .n$;
+	if(countitem(6820) < 666) {
+		mes "You require 666x "+getitemname(6820)+" to exchange for 1x "+getitemname(23016)+".";
+		close;
+	}
+	getitem 23016,1;
+	delitem 6820,666;
+	mes "Exchange done.";
+	break;
+	
+	case 5:
+	mes .n$;
+	mes "......";
+	break;
+}
+close;
+
+OnInit:
+set .n$,"["+strnpcinfo(0)+"]";
+end;
+}

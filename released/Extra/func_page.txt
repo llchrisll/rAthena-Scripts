@@ -1,0 +1,79 @@
+//===== rAthena Script =======================================
+//= F_Pages
+//===== Author ===============================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Initial Version
+//===== Tested With ==========================================
+//= rAthena 12/24/2017 Revision
+//= GIT Hash: ae69e506263f9b183c945f49b1d88c5fc2b73a6a
+//===== Description ==========================================
+//= Handles an Pagination for you menus, in case you have lots of entries
+//===== Comments =============================================
+//= None
+//============================================================
+// Function for Pagination
+// Preventing string limitation error for menus
+//
+// *getarg(0) = Array Content for the Menu Selection
+//  You can save everything into the array, like Color Codes, Symbols like "( )"
+//  ex.: [0] = "- Mob ID (Map)"
+// *getarg(1) = Max Entries per Page
+//
+// ex.: set .@c,callfunc("F_Pages",implode(<Array Name$>,":"),<Max. Entries per Page >);
+// The return value is the @menu value
+function	script	F_Pages	{
+
+	explode(.@pg_array$,getarg(0),":"); // Re-Saving string into Array
+	set .@pg_count,getarraysize(.@pg_array$)/getarg(1); // Calculating max pages based on getarg(1)
+	if(!.@pg_count) 
+		set .@pg_count,1;
+
+	set .@cur_pg,1;
+	
+	while(1) {
+		if(.@cur_pg == 1) 
+			set .@p,0;
+		else
+			set .@p,.@c+(getarg(1)*(.@cur_pg-1));
+			
+		if(.@cur_pg > 1 && .@cur_pg < .@pg_count) {
+			set .@q_pg$,":- Next Page:- Previous Page";
+			set .@pg_opt,2;
+		} else if(.@cur_pg > 1 && .@cur_pg == .@pg_count) {
+			set .@q_pg$,":- Previous Page";
+			set .@pg_opt,3;
+		} else if(.@cur_pg == 1 && .@cur_pg < .@pg_count) {
+			set .@q_pg$,":- Next Page";
+			set .@pg_opt,1;
+		} else { // Only when there are not more than getarg(1) entries
+			set .@q_pg$,"";
+			set .@pg_opt,0;
+		}
+		set .@pg_m$,"";
+		set .@e_ct,0;
+		for ( set .@q,.@p; .@q < getarraysize(.@pg_array$); set .@q,.@q + 1) {
+			if((.@q+1)%getarg(1) == 0) break;
+			set .@pg_m$,.@pg_m$ + .@pg_array$[.@q] + ( (.@pg_array$[.@q+1] != "")?":":"");
+			set .@e_ct,.@e_ct + 1;
+		}
+
+		set .@pg_m$,.@pg_m$ + .@q_pg$;
+		set .@c,select(.@pg_m$) - 1;
+		if((.@c*.@cur_pg)/.@e_ct > 0) {
+			switch(.@pg_opt) {
+				case 1: set .@cur_pg,.@cur_pg + 1; break;
+				case 2:
+				if(.@c%.@e_ct == 1)
+					set .@cur_pg,.@cur_pg + 1;
+				else if(.@c%.@e_ct == 2)
+					set .@cur_pg,.@cur_pg - 1;
+				break;
+				case 3: set .@cur_pg,.@cur_pg - 1; break;
+			}
+			continue;
+		} else 
+			break;
+	}
+return .@c;
+}
