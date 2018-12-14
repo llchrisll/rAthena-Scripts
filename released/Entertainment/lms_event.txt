@@ -1,13 +1,15 @@
-//===== eAthena Script =======================================
+//===== rAthena Script =======================================
 //= Last Man Standing
 //===== By ===================================================
 //= llchrisll
 //===== Version ==============================================
-//= 1.0 - Script Created
-//===== Compatible With ======================================
-//= Every eAthena SQL SVN
+//= 1.0 - Initial Version
+//      - Fixed an fatal error after someone wins the match
+//      - Added Queue Usage
+//      - Some minor adjustments
 //===== Tested With ==========================================
-//= eAthena 14428 SQL Trunk 
+//= rAthena 10/10/2018 Revision
+//= GIT Hash: 55acdb9863382d8935d9df25e1462d5d1ebd7d54
 //===== Description ==========================================
 //= Last Man Standing is an PvP Event, where the last one to
 //	survive wins.
@@ -36,16 +38,14 @@
 //  - Event Map
 //= These can be configured InGame too.
 //  But there is a extra variable for that: .conf to allow it or not
-//===== Comments =============================================
-//= None yet... 
 //===========================================================
-prontera,150,180,0	script	Last Man Standing	100,{
+prontera,147,173,4	script	Last Man Standing	100,{
 
 mes .n$;
 mes "Hello, "+strcharinfo(0)+"!";
 mes "How can I help you?";
 next;
-if(getgmlevel() >= .gm) {
+if(getgroupid() >= .gm) {
 	menu "GM Menu",GM_Menu,"Player Menu",-;
 	mes .n$;
 	mes "What now?";
@@ -59,10 +59,15 @@ switch(select("- Join LMS:- Information:- Recieve Reward:- "+ ( (.rew_type == 2)
 		mes "I'm sorry, but the registration is not opened yet.";
 		close;
 	}
-	if(getmapusers(.map$) >= .limit) {
+	if(getarraysize(.LMS_Queue) >= .limit) {
 		mes "I'm sorry, but I can't register you anymore, since the maximum amount of players has been reached.";
 		close;
-	}
+	} else
+		for ( set .@c,0; .@c < getarraysize(.LMS_Queue); set .@c,.@c + 1)
+			if(getcharid(0) == .LMS_Queue[.@c]) {
+				mes "You are already registered. Please wait until the Last Man Standing starts.";
+				close;
+			}
 	if(.job || .lvl) {
 		mes "These are the restrictions for the event:";
 		mes ( (!.job)?"":( (.rand)?.upper_n$[.j]:.job_l$)+" are forbidden to join.");
@@ -106,7 +111,8 @@ switch(select("- Join LMS:- Information:- Recieve Reward:- "+ ( (.rew_type == 2)
 	mes "I will warp you now to the event map.";
 	close2;
 	set @lms,1;
-	warp .map$,0,0;
+	setarray .LMS_Queue[getarraysize(.LMS_Queue)],getcharid(0);
+	announce .n$+": ["+strcharinfo(0)+"] registered "+ (!Sex)?"her":"him" +"self for the Event!",bc_all;
 	end;
 
 	case 2:
@@ -206,13 +212,12 @@ mes "Current Start Settings:";
 mes ( (.init)?"Automatic every "+.time+" "+ ( (.del_type == 1)?"hours":"days"):"Manually");
 mes "The event is currently "+( (.LMS_Eve)?"^00FF00Active":"^FF0000Offline")+"^000000.";
 mes "Registering is currently "+( (.LMS_Reg)?"^00FF00opened":"^FF0000closed")+"^000000.";
-mes "Preparetions are currently "+( (.LMS_Pre)?"^FF0000in process":( (.LMS_Reg)?"^00FF00finished":"^FF0000not loaded") )+"^000000.";
+mes "Preparetions are "+( (.LMS_Pre)?"^FF0000currently in process":( (.LMS_Reg)?"^00FF00finished":"^FF0000have'nt started yet") )+"^000000.";
 if(.init) mes "Since the event is on Automatic, you can't start/stop the event.";
-if(!.conf) mes "The event settings can't be changed. If you want to change something ask an GM who has access to the script itself.";
-mes "I will show you in the brackets your Access Status.";
+if(!.conf) mes "The event settings can't be changed.";
 mes " ";
 mes "What do you want to do?";
-switch(select("- Start/Stop Event ("+( (!.init)?"^00FF00Granted":"^FF0000Rejected")+"^000000):- Event Settings ("+( (.conf)?"^00FF00Granted":"^FF0000Rejected")+"^000000):- Nevermind")) {
+switch(select(( (!.init)?"- Start/Stop Event":"")+":"+( (.conf)?"- Event Settings":"")+":- Nevermind")) {
 	
 	case 1:
 	next;
@@ -799,41 +804,41 @@ if(.job) // Job Restriction enabled?
 		set .job_l$,"";
 		for ( set .@l,0; .@l < getarraysize(.upper); set .@l,.@l + 1) {
 			if(.upper[.@l] == 1)
-				set .job_l$,.job_l$+ .upper_n$[0];
+				set .@job_l$,.@job_l$+ .upper_n$[0];
 			if(.upper[.@l] == 2)
-				set .job_l$,.job_l$+ .upper_n$[1];
+				set .@job_l$,.@job_l$+ .upper_n$[1];
 			if(.upper[.@l] == 3)
-				set .job_l$,.job_l$+ .upper_n$[2];
+				set .@job_l$,.@job_l$+ .upper_n$[2];
 			if(.upper[.@l] == 5)
-				set .job_l$,.job_l$+ .upper_n$[3];
+				set .@job_l$,.@job_l$+ .upper_n$[3];
 			if(.upper[.@l] == 6)
-				set .job_l$,.job_l$+ .upper_n$[4];
+				set .@job_l$,.@job_l$+ .upper_n$[4];
 			if(.upper[.@l] == 7)
-				set .job_l$,.job_l$+ .upper_n$[5];
+				set .@job_l$,.@job_l$+ .upper_n$[5];
 		
-			if( (.@l + 1) != getarraysize(.upper)) set .job_l$,.job_l$+", ";
+			if( (.@l + 1) != getarraysize(.upper)) set .@job_l$,.@job_l$+", ";
 		}
 	}
 set .LMS_Pre,1;
 announce .n$+": The event, Last Man Standing, will be started shortly.",bc_all;
-sleep 10000;
+sleep 5000;
 announce .n$+": The maximum players which can join are "+.limit+".",bc_all;
-sleep 10000;
-announce .n$+": I will open the registration for 2 minutes.",bc_all;
-sleep 10000;
+sleep 5000;
+announce .n$+": The registration will be opened for 2 minutes.",bc_all;
+sleep 5000;
 announce .n$+": "+ ( (!.job)?"All jobs are allowed":( (.rand)?.upper_n$[.j]:.job_l$)+" are forbidden") +" to join"+ ( (!.lvl)?"":", also there is a level restriction - Normal/Extended Jobs: "+.norm+", Rebirth Jobs: "+.adv+", Baby Jobs: "+.baby+", 3rd Jobs: "+.third)+".",bc_all;
-sleep 10000;
+sleep 5000;
 announce .n$+": I just need to finish the preparations!",bc_all;
 if(getmapusers(.map$) > 0) {
-	mapannounce .map$,.n$+": You all will be warped in 10 seconds back to prontera, since this map will be used for an event, Last Man Standing.",bc_all;
-	sleep 10000;
-	mapwarp .map$,"prontera.gat",150,180;
+	mapannounce .map$,.n$+": You all will be warped in 5 seconds back to prontera, since this map will be used for an event, Last Man Standing.",bc_all;
+	sleep 5000;
+	mapwarp .map$,"prontera",150,180;
 }
-sleep 10000;
+sleep 5000;
 set .LMS_Reg,1; // Registration enabled
 set .time_ch,0; // Reset Time Counter
 set .LMS_Pre,0; // Preparetion done
-announce .n$+": Registration is now opened, please hurry!!!",bc_all;
+announce .n$+": The Registration has been opened, please hurry!!!",bc_all;
 initnpctimer;
 end;
 
@@ -843,18 +848,18 @@ set .time_ch,.time_ch + 1;
 switch(.time_ch) {
 
 	case 1:
-	announce .n$+": Registration will last for 1 minute, please hurry!!!",bc_all;
+	announce .n$+": The Registration will last for 1 minute, please hurry!!!",bc_all;
 	break;
 	
 	case 2:
 	set .LMS_Reg,0;
-	announce .n$+": Registration has been closed!!!",bc_all;
+	announce .n$+": The Registration has been closed!!!",bc_all;
 	sleep 10000;
-	if(getmapusers(.map$) < 2) {
+	if(getarraysize(.LMS_Queue) < 2) {
 		announce .n$+": But it seems too less have registered, so I have to cancel it!!!",bc_all;
 		goto OnDisable;
 	}
-	announce .n$+": "+getmapusers(.map$)+" players have registered!!! I will start the event soon!",bc_all;
+	announce .n$+": "+getarraysize(.LMS_Queue)+" players have registered!!! I will start the event soon!",bc_all;
 	sleep 5000;
 	setmapflag .map$,mf_nowarpto;
 	setmapflag .map$,mf_nowarp;
@@ -900,51 +905,57 @@ removemapflag .map$,mf_loadevent;
 pvpoff .map$;
 set .LMS_Eve,0;
 announce .n$+": The event, Last Man Standing, has ended!!!",bc_all;
-mapannounce .map$,.n$+": You all will be warped in 10 seconds back to prontera.",bc_all;
-sleep 10000;
-mapwarp .map$,"prontera.gat",150,180;
+mapannounce .map$,.n$+": You all will be warped in 5 seconds back to prontera.",bc_all;
+sleep 5000;
+mapwarp .map$,"prontera",150,180;
 end;
 
 OnPCKillEvent:
 if(strcharinfo(3) != .map$ || (.LMS_Reg && !.LMS_Eve) ) end;
 mapannounce .map$,.n$+": "+strcharinfo(0)+" has killed "+rid2name(killedrid)+"!!",bc_all;
+sleep2 1000; // Slow down the script
+if(getmapusers(.map$) == 2) 
+	mapannounce .map$,.n$+": Wuhu!! Only 2 players remain, let's see who is the better player!!",bc_all;
+else if(getmapusers(.map$) == 1) {
+	warp "SavePoint",0,0;
+	sleep2 1500; // Slowing down the script
+	percentheal 100,100;
+	announce .n$+": The winner of the Last Man Standing event is ["+strcharinfo(0)+"]!",bc_all;
+	dispbottom .n$+": You have won the event, Last Man Standing, please visit me to recieve your reward.";
+	goto OnDisable;
+} else if(getmapusers(.map$) == 0) goto OnDisable; // Shouldn't happen
 end;
 
 OnPCDieEvent:
 if(strcharinfo(3) != .map$ || (.LMS_Reg && !.LMS_Eve) ) end;
 if(killerrid != getcharid(3)) dispbottom .n$+": You have been killed by "+rid2name(killerrid)+"!!";
 set @lms,0;
-sleep2 500;
 warp "SavePoint",0,0;
 sleep2 1500; // Slowing down the script
-if(HP == 0) atcommand "@alive";
-percentheal 50,50;
-if(getmapusers(.map$) == 2) mapannounce .map$,.n$+": Wuhu!! Only 2 players remain, let's see who is the better player!!",bc_all;
-else if(getmapusers(.map$) == 1) {
-	announce .n$+": The winner of the Last Man Standing event is "+ rid2name(killerrid)+".",bc_all;
-	detachrid;
-	if(attachrid(killerrid) == 1) dispbottom .n$+": You have won the event, Last Man Standing, please visit me to recieve your reward.";
-	goto OnDisable;
-} else if(getmapusers(.map$) == 0) goto OnDisable;
+percentheal 100,100;
 end;
 
 OnPCLoadMapEvent:
 if(strcharinfo(3) != .map$ || (.LMS_Reg && !.LMS_Eve) ) end;
 if(!@lms) {
 	mes .n$;
-	mes "I'm sorry, but you didn't register for the LMS. I will warp you back to Prontera.";
-	sleep2 5000;
-	warp "prontera.gat",150,180;
+	mes "I'm sorry, but you didn't register for the LMS. I will warp you back to your Save Point.";
+	sleep2 3000;
+	warp "SavePoint",0,0;
 	close;	
 }
 if(.intra) sc_start SC_Intravision,(.dur*60*1000),1; // Enabling Intravision
-announce .n$+": The event will start soon, please wait till the registration is closed.",bc_self;
 end;
 
 OnEnable:
-announce .n$+": The event will last "+.dur+" minutes.",bc_all;
-sleep 10000;
-announce .n$+": The event will start in 30 seconds.",bc_all;
+for ( set .@e,0; .@e < getarraysize(.LMS_Queue); set .@e,.@e + 1) 
+	warp .map$,0,0,.LMS_Queue[.@e];
+while(getmapusers(.map$) < getarraysize(.LMS_Queue)) // Let's wait a bit until every player has been warped :)
+	sleep 1000;
+deletearray .LMS_Queue[0],getarraysize(.LMS_Queue);
+mapannounce .map$,.n$+": The event will last "+.dur+" minutes.",bc_all;
+sleep 5000;
+mapannounce .map$,.n$+": The event will start in 30 seconds.",bc_all;
 sleep 5000;
 mapannounce .map$,.n$+": 25 seconds left...",bc_all;
 sleep 15000;
@@ -963,12 +974,12 @@ pvpon .map$;
 end;
 
 OnInit:
-// InGame Configable? (1 = Allowed/ 0 = Forbidden)
+// InGame Configable? (1 = Enable/ 0 = Disable)
 set .conf,1;
 // NPC Name, automatically taken from the NPC Header
 set .n$,"["+strnpcinfo(1)+"]"; 
-// GM Access
-set .gm,60; 
+// GM Group ID
+set .gm,3; 
 // Map on which LMS will be executed
 set .map$,"force_3-1";
 // Initiate Type:
@@ -987,7 +998,7 @@ if(.init) {
 }
 // Automatic Event Duration in Minutes (in case GM logs off/dc when manually) (Max: 60, Default: 30)
 // Note: Do not go to below 5 mins
-set .dur,30; 
+set .dur,10; 
 // Intravision (Maya Purple Card Effect - Able to see hidden player)
 // This effect is to prevent players to cheat by using "Cloaking" and similiar skills
 // 0 = Off
@@ -1016,7 +1027,6 @@ set .zeny,200000; // Zeny to gain per .z_cost .rew_var$ (Max: 10,000,000, Defaul
 set .z_cost,20; // .rew_var$ required to gain .zeny Zeny (Max: 500, Default: 20)
 // ============== Player Access Settings =============
 // Here you can change the classes which can join the event.
-//
 // Player Limit (Min: 5, Max 100, Default: 30)
 set .limit,30;
 // Base Level Requirement:
@@ -1030,7 +1040,7 @@ set .adv,85;
 // 3rd Classes:
 set .third,120;
 // Use Job Restriction?
-set .job,1;
+set .job,0;
 // Random chosen?
 set .rand,0;
 // Rejected Upper = Job Category:

@@ -35,6 +35,7 @@
 //		- Changed the `global_reg_value` to match the new tables
 //		- Rewrote the Code about Killing Mobs again
 //		- Fixed the custom command @checkquest and changed the layout a bit
+//= 1.3 - Changed the `limit` code to use 0 as not repeatable instead of 0
 //===== Tested With =========================================
 //= rAthena 12/24/2017 Revision
 //= GIT Hash: ae69e506263f9b183c945f49b1d88c5fc2b73a6a
@@ -99,7 +100,7 @@ CREATE TABLE IF NOT EXISTS `quest_player` (
  `req_am` int(12) UNSIGNED DEFAULT '0'
  ) ENGINE=MyISAM;
  */
-prontera,163,173,4	script	Quest System	100,{
+prontera,199,162,4	script	Quest System	4W_SAILOR,{
 
 mes .n$;
 mes "Hello, "+strcharinfo(0)+"!";
@@ -353,8 +354,9 @@ switch(select("- Overview:- Quest Management:- Nothing")) {
 		}
 		next;
 		mes .n$;
+		mes .n$;
 		mes "Next is the Quest Limit, type the value it should be:";
-		mes "^FF0000Note: 0 is Unlimited and "+(.q_max_limit+1)+" is Cancel^000000";
+		mes "^FF0000Note: 0 means not repeatable and "+(.q_max_limit+1)+" is Cancel^000000";
 		if(input(.@limit,0,.q_max_limit) != 0) {
 			mes .n$;
 			mes "You have put an Invalid Limit again, aborting quest creation.";
@@ -491,8 +493,8 @@ switch(select("- Overview:- Quest Management:- Nothing")) {
 		mes .n$;
 		mes "The Quest with the ID '"+.@q_list[.@rem]+"' has been removed successfully.";
 		// Deleting Delay Variables from the database
-		query_sql "DELETE FROM `char_reg_num` WHERE `key` = 'QSys_"+.@n_id[.@npc_c]+"_"+.@q_list[.@rem]+"_Limit'";
-		query_sql "DELETE FROM `char_reg_num` WHERE `key` = 'QSys_"+.@n_id[.@npc_c]+"_"+.@q_list[.@rem]+"_QDelay'";
+		query_sql "DELETE FROM `char_reg_num_db` WHERE `key` = 'QSys_"+.@n_id[.@npc_c]+"_"+.@q_list[.@rem]+"_Limit'";
+		query_sql "DELETE FROM `char_reg_num_db` WHERE `key` = 'QSys_"+.@n_id[.@npc_c]+"_"+.@q_list[.@rem]+"_QDelay'";
 		
 		query_sql "DELETE FROM `quest_list` WHERE `npc_id` = '"+.@n_id[.@npc_c]+"' AND `quest_id` = '"+.@q_list[.@rem]+"'";
 		query_sql "DELETE FROM `quest_player` WHERE `npc_id` = '"+.@n_id[.@npc_c]+"' AND `quest_id` = '"+.@q_list[.@rem]+"'";
@@ -511,22 +513,22 @@ close;
 OnInit:
 set $@QSys,0; // Quest System not loaded yet
 set .n$,"["+strnpcinfo(1)+"]";
-set .gm,60; // GM Access Level
+set .gm,3; // GM Group ID
 // ===== Quest Settings =====
 // Maximum Quests per NPC:
 set .max_quests,20;
 // Minimum and Maximum Mob Amount
 set .mob_min,1;
-set .mob_max,10;
+set .mob_max,100;
 // Maximum Mobs you can hunt at the same time
-set .mob_ct,3;
+set .mob_ct,5;
 // Level Restriction
 set .level,MAX_LEVEL; // 0 = Off / MAX_LEVEL - Server Max Level (src/map/map.h)
 // Minimum and Maximum Item Amount
 set .item_min,1;
 set .item_max,200;
 // Maximum Items you can collect at the same time
-set .item_ct,5;
+set .item_ct,19;
 // ==== Quest Delay Settings ======
 // * Max Quest Limit:
 // (How often an quest can be done till the delay below comes active)
@@ -591,10 +593,16 @@ end;
 
 OnNPCKillEvent:
 if(!$@q_tab) end;
-set .KilledMob,killedrid;
 // Player in Party?
-if(getcharid(1) != 0)
-	addrid(2,1,getcharid(1));
+if(getcharid(1) != 0) {
+	if(getd(".pty_ct_"+getcharid(1)) == 0) {
+		getpartymember(getcharid(1),1);
+		getpartymember(getcharid(1),2);
+		setd(".pty_ct_"+getcharid(1)),$@partymembercount;
+		copyarray getd(".pty_aid_"+getcharid(1)+"[0]"),$@partymemberaid[0],getd(".pty_ct_"+getcharid(1));
+		copyarray getd(".pty_cid_"+getcharid(1)+"[0]"),$@partymembercid[0],getd(".pty_ct_"+getcharid(1));
+	}
+}
 if(getarraysize(@quest_mobid) < 1) 
 	query_sql "SELECT `mob_id` , `mob_am` , `req_am` , `npc_id` , `quest_id` FROM `quest_player` WHERE `char_id` = '"+getcharid(0)+"'",@quest_mobid,@quest_mobam,@quest_mobreq,@quest_npcid,@quest_qid;
 
@@ -603,7 +611,12 @@ for ( set .@m,0; .@m < getarraysize(@quest_mobid); set .@m,.@m + 1)
 		if(@quest_mobam[.@m] < @quest_mobreq[.@m]) {
 			set @quest_mobam[.@m],@quest_mobam[.@m] + 1;
 			query_sql "SELECT `npc_name` , `npc_map` FROM `quest_npc` WHERE `npc_id` = '"+@quest_npcid[.@m]+"'",.@n_name$,.@n_map$;
-			dispbottom .@n_name$+"@"+.@n_map$+": Monster Hunting - "+getmonsterinfo(killedrid,MOB_NAME)+" : "+@quest_mobam[.@m]+"/"+@quest_mobreq[.@m],0x00FF00;
+			if(getcharid(1) != 0) {
+				for ( set .@p,0; .@p < getd(".pty_ct_"+getcharid(1)); set .@p,.@p + 1)
+					if(isloggedin(getd(".pty_aid_"+getcharid(1)+"["+.@p+"]"),getd(".pty_cid_"+getcharid(1)+"["+.@p+"]")) == 1)
+						dispbottom .@n_name$+"@"+.@n_map$+": Monster Hunting - "+getmonsterinfo(killedrid,MOB_NAME)+" : "+@quest_mobam[.@m]+"/"+@quest_mobreq[.@m],0x00FF00,getd(".pty_cid_"+getcharid(1)+"["+.@p+"]");
+			} else if(getcharid(1) == 0)
+				dispbottom .@n_name$+"@"+.@n_map$+": Monster Hunting - "+getmonsterinfo(killedrid,MOB_NAME)+" : "+@quest_mobam[.@m]+"/"+@quest_mobreq[.@m],0x00FF00;
 		} else if(@quest_mobam[.@m] >= @quest_mobreq[.@m])
 			continue;
 end;
@@ -665,7 +678,7 @@ for ( set .@q,0; .@q < getarraysize(.@q_id); set .@q,.@q + 1) {
 	setarray .@que[.@q],.@que_id;
 	if(getd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q]+"_QDelay") <= gettimetick(2))
 		setd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q]+"_QDelay"),0;
-	set .@q_list$,.@q_list$ + "- "+.@q_name$[.@q]+" ("+ ( (.@q_type[.@q] == 1)?"Monster Hunting":"Item Collecting")+") "+( (.@q_lvl[.@q] != 0)?"("+.@q_lvl[.@q]+") ":"") + "["+( (.@que[.@q] > 0)?"^FF0000Running": ( (getd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q]+"_QDelay") == 0)?"^00FF00New":"^FF00FFQuest Delay active") )+"^000000]" + ( (.@q_id[.@q+1] != 0)?":":"");
+	set .@q_list$,.@q_list$ + "- "+.@q_name$[.@q]+" ("+ ( (.@q_type[.@q] == 1)?"Monster Hunting":"Item Collecting")+") "+( (.@q_lvl[.@q] != 0)?"("+.@q_lvl[.@q]+") ":"") + "["+( (.@que[.@q] > 0)?"^FF0000Running":( (.@limit[.@q] == 0 && getd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q]+"_Limit"))?"Locked":( (getd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q]+"_QDelay") == 0)?"^00FF00New":"^FF00FFQuest Delay active") ))+"^000000]" + ( (.@q_id[.@q+1] != 0)?":":"");
 }	
 mes .@n$;
 if(getarraysize(.@q_id) < 1) {
@@ -678,6 +691,10 @@ mes "Quest Name (Quest Type) (Level) [Quest Status]";
 next;
 set .@q_c,select(.@q_list$) - 1;
 mes .@n$;
+if(.@limit[.@q] == 0 && getd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q]+"_Limit")) {
+	mes "I'm sorry, but you have done this Quest alreasy once!";
+	close;
+}
 mes .@q_name$[.@q_c]+" - "+ ( (.@que[.@q_c] != 0)?"Progress":"Information")+":";
 mes "Type: "+( (.@q_type[.@q_c] == 1)?"Monster Hunting":"Item Collecting");
 
@@ -694,7 +711,7 @@ for ( set .@l,0; .@l < getarraysize(.@req1); set .@l,.@l + 1)
 	mes "- "+.@req2[.@l]+"x "+ ( (.@q_type[.@q_c] == 1)?getmonsterinfo(.@req1[.@l],MOB_NAME):getitemname(.@req1[.@l]) );
 mes "Reward:";
 mes .@rew_am+"x "+( (.@rew_id == 1)?"Zeny": ( (.@rew_id == 2)?"Cash Points":getitemname(.@rew_id)));
-mes "Quest Limit: "+.@limit[.@q_c]+" times";
+mes "Quest Limit: "+( (.@limit[.@q_c] == 0)?"Once":.@limit[.@q_c]+" times");
 mes " ";
 mes "What do you like to do now?";
 next;
@@ -709,6 +726,10 @@ switch(.@s) {
 	// Accept Quest 
 	case 1:
 	mes .@n$;
+	if(.@limit[.@q_c] == 0 && getd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q_c]+"_Limit")) {
+		mes "I'm sorry, but this quest is not repeatable!";
+		close;
+	}
 	if(getd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q_c]+"_QDelay") <= gettimetick(2))
 		setd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q_c]+"_QDelay"),0;
 	else {
@@ -793,18 +814,20 @@ switch(.@s) {
 	switch(.@exp_type) {
 		case 0: break;
 		case 1: 
-		getexp2 .@rew_bexp,.@rew_jexp; 
+		getexp .@rew_bexp,.@rew_jexp; 
 		dispbottom "You have recieved "+.@rew_bexp+" Base EXP and "+.@rew_jexp+" Job EXP.";
 		break;
 		
 		case 2: 
 		set .@bexp_perc,(BaseExp + NextBaseExp)*.@rew_bexp/100;
 		set .@jexp_perc,(JobExp + NextJobExp)*.@rew_jexp/100;
-		getexp2 .@bexp_perc,.@jexp_perc;
+		getexp .@bexp_perc,.@jexp_perc;
 		dispbottom "You have recieved "+.@rew_bexp+"% Base EXP ("+.@bexp_perc+") and "+.@rew_jexp+"% Job EXP ("+.@jexp_perc+").";
 		break;
 	}
-	if(.@limit[.@q_c] != 0) { // No Quest Limit
+	if(.@limit[.@q_c] == 0) // Quest not repeatable
+		setd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q_c]+"_Limit"),1;
+	else {
 		setd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q_c]+"_Limit"),getd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q_c]+"_Limit") + 1;
 		if(getd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q_c]+"_Limit") == .@limit[.@q_c]) {
 			setd("QSys_"+atoi(strnpcinfo(2))+"_"+.@q_id[.@q_c]+"_QDelay"),gettimetick(2)+getvariableofnpc(.q_delay,"Quest System");
@@ -853,4 +876,5 @@ end;
 // map,x,y,0	duplicate(QuestTemp)	NPC Name#NPC ID	100
 // Example: 
 // prontera,100,120,0	duplicate(QuestTemp)	Quest Guy#1	100
-prontera,152,174,4	duplicate(QuestTemp)	John#1	100
+//prontera,152,174,4	duplicate(QuestTemp)	John#1	1_M_LIBRARYMASTER
+prt_fild08,147,369,4	duplicate(QuestTemp)	John#2	1_M_LIBRARYMASTER

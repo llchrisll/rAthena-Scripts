@@ -4,9 +4,12 @@
 //= llchrisll
 //===== Version ==============================================
 //= 1.0 - Initial Version
+//= 1.1 - Added the feature to ignore items which aren't worth anything
+//      - Moved the sell part a bit below
+//      - Fixed an missing right curly in "Sell Items" case
 //===== Tested With ==========================================
-//= rAthena 12/24/2017 Revision
-//= GIT Hash: ae69e506263f9b183c945f49b1d88c5fc2b73a6a
+//= rAthena 10/10/2018 Revision
+//= GIT Hash: 55acdb9863382d8935d9df25e1462d5d1ebd7d54
 //===== Description ==========================================
 //= This NPC can sell every item in your inventory at once.
 //  But you can use an exception list to let it ignore certain items
@@ -16,7 +19,7 @@
 //===== Comments =============================================
 //= ...
 //============================================================
-prontera,150,180,4	script	Mass Seller	100,{
+prontera,163,174,4	script	Mass Seller	100,{
 
 mes .n$;
 mes "Welcome, "+strcharinfo(0)+"!";
@@ -28,7 +31,7 @@ switch(select("- Sell Items:- Personal Config:- Leave")) {
 	mes .n$;
 	if(!getarraysize(MS_Types)) {
 		mes "If this is your first time using my service, I would recommend you setup your personal config before proceeding.";
-		mes "Otherwise I will sell every Item in your Inventory, except Refined Equipment and Equipment with Cards.";
+		mes "Otherwise I will sell every Item in your Inventory, except Refined Equipment and Equipment with Cards and Items which are not anything of worth.";
 		mes " ";
 	} else {
 		mes "Here is the current list of your ignored items:";
@@ -36,19 +39,25 @@ switch(select("- Sell Items:- Personal Config:- Leave")) {
 				for ( set .@q,0; .@q < getarraysize(.itemtypesid); set .@q,.@q + 1)
 					if(MS_Types[.@p] == .itemtypesid[.@q])
 						mes " > "+.itemtypestxt$[.@q];
-						
+	}
 	next;
 	if(select("- Continue:- Leave") - 1) close;
 	getinventorylist;
 	for ( set .@i,0; .@i < @inventorylist_count; set .@i,.@i + 1) {
 		set .@e,0;
-		// Skip Equipment which is: Equipped, Refined and has Cards/Enchantments
+		// Skip Equipment which are/have:
+		// > Equipped
 		if(@inventorylist_equip[.@i] != 0) continue;
+		// > Refined
 		if(@inventorylist_refine[.@i] != 0) continue;
+		/// > Cards/Enchantments
 		if(@inventorylist_card1[.@i] != 0) continue;
 		if(@inventorylist_card2[.@i] != 0) continue;
 		if(@inventorylist_card3[.@i] != 0) continue;
 		if(@inventorylist_card4[.@i] != 0) continue;
+		// > No Sell Price 
+		if(getiteminfo(@inventorylist_id[.@i],1) == 0) continue;
+		// Check if the Item Type is in the ignore list
 		for ( set .@l,0; .@l < getarraysize(MS_Types); set .@l,.@l + 1)
 			if(getiteminfo(@inventorylist_id[.@i],2) == (MS_Types[.@l]-1) ) {
 				set .@e,1;
@@ -74,20 +83,30 @@ switch(select("- Sell Items:- Personal Config:- Leave")) {
 		if(.@e) continue;
 		setarray .@sellid[getarraysize(.@sellid)],@inventorylist_id[.@i];
 	}
-	for ( set .@s,0; .@s < getarraysize(.@sellid); set .@s,.@s + 1) {
-		set .@total,.@total + (getiteminfo(.@sellid[.@s],1)*countitem(.@sellid[.@s]));
-		delitem2 .@sellid[.@s],countitem(.@sellid[.@s]),1,0,0,0,0,0,0;
-	}
 	mes .n$;
 	if(getarraysize(.@sellid) > 0) {
+		for ( set .@s,0; .@s < getarraysize(.@sellid); set .@s,.@s + 1) {
+			set .@total,.@total + (getiteminfo(.@sellid[.@s],1)*countitem(.@sellid[.@s]));
+			delitem2 .@sellid[.@s],countitem(.@sellid[.@s]),1,0,0,0,0,0,0;
+		}
 		mes "Your items were sold and you recieved "+.@total+" Zeny.";
 		set Zeny,Zeny + .@total;
 	} else
 		mes "No Items were sold, therefore you don't recieve any Zeny.";
 	break;
-	
+
 	case 2:
 	mes .n$;
+	if(!getarraysize(MS_Types))
+		mes "You didn't add anything to your list yet.";
+	else {
+		mes "This are your current Item Types:";
+		for ( set .@p,0; .@p < getarraysize(MS_Types); set .@p,.@p + 1)
+			for ( set .@q,0; .@q < getarraysize(.itemtypesid); set .@q,.@q + 1)
+				if(MS_Types[.@p] == .itemtypesid[.@q])
+					mes "- "+.itemtypestxt$[.@q];
+	}
+	mes " ";
 	mes "What do you want to do?";
 	next;
 	if(select("- Add Item Type:- Remove Item Type") == 1) {

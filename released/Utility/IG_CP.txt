@@ -32,6 +32,8 @@
 //  won't work like it should.
 //  For Renewal Servers : src/common/mmo.h > #define MAX_CHARS
 //  Don't know for older servers anymore though.
+//===== ToDO =================================================
+//= Adding an feature to delete accounts
 //============================================================
 prontera,147,166,6	script	In-Game CP	110,{
 
@@ -42,7 +44,7 @@ mes "Settings, as well I can";
 mes "change them for you.";
 mes "What do you like to do?";
 next;
-if(getgmlevel() >= 40) goto GM_Menu;
+if(getgroupid() >= 40) goto GM_Menu;
 if(select("- Show my Info:- Nothing") == 1) goto CP_My;
 close;
 
@@ -53,9 +55,7 @@ switch(select("- View Players Account's:- View my Account:- View Server Statisti
 //===================== View other Player's Account =====================
 	case 1:
 	mes .n$;
-	mes "Please type the character";
-	mes "name you want and I'll find the";
-	mes "Account bounded to it.";
+	mes "Please type the character name you want and I'll find the Account bounded to it.";
 	input .@s_char$;
 	next;
 	mes .n$;

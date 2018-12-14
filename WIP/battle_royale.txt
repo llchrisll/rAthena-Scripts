@@ -1,0 +1,1583 @@
+//===== rAthena Script =======================================
+//= Battle Royale Arenas
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Initial Version
+//===== Tested With ==========================================
+//= rAthena 10/10/2018 Revision
+//= GIT Hash: 55acdb9863382d8935d9df25e1462d5d1ebd7d54
+//===== Description ==========================================
+//= Easy configurable
+//= 20 Arenas to choose from (expandable)
+//= Loot Boxes with easy setup (Loot drops on the floor)
+//= Solo, Duo or Squad Types available (random every Day, if not set otherwise)
+//= Item Restriction to equipped Costumes (Top/Middle/Lower Headgear)
+//= Battle Royale Shop (Costumes) to spend your hard earned Battle Royale Coins
+//= The items of dead players will drop around them
+//===== Comments =============================================
+//= Inspired by Battle Royale Games like PUBG
+//===== ToDO =================================================
+//= Adding feature to allow certain skills (skill_nocast_db.txt)
+//= Optional: Adding an Time Limit to matches
+//= Optional: Battleground System Integration
+//============================================================
+// Inventory Function
+function	script	BR_Inv	{
+// getarg(0) = Char ID
+// getarg(1) = Behaviour:
+//             1 > Check
+//             2 > Delete
+//			   3 > Drop (makeitem)
+getinventorylist getarg(0);
+for ( set .@l,0; .@l < @inventorylist_count; set .@l,.@l + 1) {
+	if(getiteminfo(@inventorylist_id[.@l],2) == 3 && getiteminfo(@inventorylist_id[.@l],2) != 10) continue; // Ignoring ETC Items, except Ammo 
+	if(@inventorylist_bound[.@l] == Bound_Char) continue; // Ignoring Character Bounded Items
+	// Ignore equipped Costume Top + Middle + Lower Headgear
+	if( (getiteminfo(@inventorylist_id[.@l],5) == 1024 || getiteminfo(@inventorylist_id[.@l],5) == 2048 || getiteminfo(@inventorylist_id[.@l],5) == 4096) && @inventorylist_equip[.@l] != 0) continue;
+	if(getarg(1) == 1) // Check
+		set .@i,.@i + 1;
+	else if(getarg(1) == 2) // Delete
+		delitem @inventorylist_id[.@l],@inventorylist_amount[.@l];
+	else if(getarg(1) == 3) { // Drop Item (makeitem usage)
+		getmapxy(.@map$,.@x,.@y,UNITTYPE_PC);
+		set .@m,3; // Set range of area around the Player for makeitem
+		
+		switch(getiteminfo(@inventorylist_id[.@l],2)) {
+			case 0: // Healing
+			case 10: // Ammunation
+			makeitem @inventorylist_id[.@l],@inventorylist_amount[.@l],.@map$,rand((.@x-.@m),(.@x+.@m)),rand((.@y-.@m),(.@y+.@m));
+			delitem @inventorylist_id[.@l],@inventorylist_amount[.@l];
+			break;
+			
+			case 4: // Armor
+			case 5: // Weapon
+ 			if(@inventorylist_option_id1[.@l] != 0) { // If Random Options are used
+				setarray .@OptID[0],@inventorylist_option_id1[.@l],@inventorylist_option_id2[.@l],@inventorylist_option_id3[.@l],@inventorylist_option_id4[.@l],@inventorylist_option_id5[.@l];
+				setarray .@OptVal[0],@inventorylist_option_value1[.@l],@inventorylist_option_value2[.@l],@inventorylist_option_value3[.@l],@inventorylist_option_value4[.@l],@inventorylist_option_value5[.@l];
+				setarray .@OptParam[0],@inventorylist_option_parameter1[.@l],@inventorylist_option_parameter2[.@l],@inventorylist_option_parameter3[.@l],@inventorylist_option_parameter4[.@l],@inventorylist_option_parameter5[.@l];
+				makeitem3 @inventorylist_id[.@l],@inventorylist_amount[.@l],.@map$,rand((.@x-.@m),(.@x+.@m)),rand((.@y-.@m),(.@y+.@m)),1,@inventorylist_refine[.@l],0,@inventorylist_card1[.@l],@inventorylist_card2[.@l],@inventorylist_card3[.@l],@inventorylist_card4[.@l],.@OptID,.@OptVal,.@OptParam;
+				delitem3 @inventorylist_id[.@l],@inventorylist_amount[.@l],1,@inventorylist_refine[.@l],0,@inventorylist_card1[.@l],@inventorylist_card2[.@l],@inventorylist_card3[.@l],@inventorylist_card4[.@l],.@OptID,.@OptVal,.@OptParam;
+			} else { // If no Random Option are used
+				makeitem2 @inventorylist_id[.@l],@inventorylist_amount[.@l],.@map$,rand((.@x-.@m),(.@x+.@m)),rand((.@y-.@m),(.@y+.@m)),1,@inventorylist_refine[.@l],0,@inventorylist_card1[.@l],@inventorylist_card2[.@l],@inventorylist_card3[.@l],@inventorylist_card4[.@l];
+				delitem2 @inventorylist_id[.@l],@inventorylist_amount[.@l],1,@inventorylist_refine[.@l],0,@inventorylist_card1[.@l],@inventorylist_card2[.@l],@inventorylist_card3[.@l],@inventorylist_card4[.@l];
+			}
+			break;
+		}
+	}
+}
+return .@i;
+}
+prontera,147,170,4	script	 Battle Royale	100,{
+
+mes .n$;
+mes "Welcome to the Battle Royale Arena!";
+mes "What can I do for you?";
+next;
+switch(select("- Register for Battle Royale:- Battle Royale Shop:- Information:- Nevermind")) {
+	case 1:
+	mes .n$;
+	for ( set .@c,0; .@c < getarraysize(.arena$); set .@c,.@c + 1)
+		set .@a_menu$,.@a_menu$ + ( (.BR_Status[.@c] < 2)?"- "+.arena$[.@c] + " - ["+ ( (.type[.@c] == 1)?"Solo":( (.type[.@c] == 2)?"Duo":"Squad"))+"] ("+( (!.BR_Status[.@c])?"Inactive":"Registration") +")":"")+ ( (.arena$[.@c+1] != "")?":":"");
+	mes "Please choose the Arena:";
+	set .@br,select(.@a_menu$);
+	set .@i,.@br - 1;
+	next;
+	mes .n$;
+	if(BaseLevel < .min_level[.@i] || BaseLevel > .max_level[.@i]) {
+		mes "I'm sorry, but your level doesn't meet the requirement.";
+		mes "Level Requirement: "+.min_level[.@i]+" - "+.max_level[.@i];
+		close;
+	}
+	if(.type[.@i] == 1 && getcharid(1)) {
+		mes "I'm sorry, but you need to leave your party first.";
+		close;
+	} else if(.type[.@i] == 2 && getcharid(1) == 0) {
+		mes "I'm sorry, but you need to create a party first.";
+		close;
+	}
+	if(!.BR_Status[.@i]) {
+		mes "Do you want to start an Battle Royale?";
+		if(select("- Yes:- No") - 1) close;
+		next;
+		mes .n$;
+		mes "I will now open for you your storage to put every invalid item away.";
+		mes "I will also check right before the match start about it.";
+		openstorage;
+		next;
+		mes .n$;
+		if(BR_Inv(getcharid(0),1) != 0) {
+			mes "It looks like you didn't put away every item.";
+			mes "I will register you now, but be sure to put them away before the match starts.";
+		} else
+			mes "Good, your good to go. But remember not try and trick me, I will check it again.";
+		mes "Here here we go!";
+		close2;
+		setarray getd("$@q"+.@br+"[0]"),getcharid(0);
+		announce .arena$[.@i]+": The Arena has been opened. Everybody which want to participate come to me! You have "+.Reg_Timer[.@br]+" Minutes to register!",bc_all;
+		setarray .BR_Status[.@i],1;
+		initnpctimer;
+		
+	} else if(.BR_Status[.@i] == 1) {
+		mes "Do you want to register for the Battle Royale?";
+		if(select("- Yes:- No") - 1) close;
+		next;
+		mes .n$;
+		for ( set .@c,0; .@c < getarraysize(getd("$@q"+.@br)); set .@c,.@c + 1)
+			if(getcharid(0) == getd("$@q"+.@br+"["+.@c+"]")) {
+				mes "It seems like you are registered already.";
+				close;
+			}
+		if(.type[.@i] != 1) {
+			if(!getcharid(1)) {
+				mes "I'm sorry, but you have to be in a party to register.";
+				close;
+			}
+			if(getpartyleader(getcharid(1),1) != getcharid(3)) {
+				mes "I'm sorry, but only the party leader can register the party.";
+				close;
+			}
+			getpartymember(getcharid(1),1);
+			getpartymember(getcharid(1),2);
+			set .@pty_ct,$@partymembercount;
+			copyarray .@pty_aid[0],$@partymemberaid[0],.@pty_ct;
+			copyarray .@pty_cid[0],$@partymembercid[0],.@pty_ct;
+			for ( set .@p,0; .@p < .@pty_ct; set .@p,.@p + 1)
+				if(isloggedin(.@pty_aid[.@p],.@pty_cid[.@p]) == 1) {
+					set .@online,.@online + 1;
+					dispbottom .n$+": I will now check the inventory of ["+strcharinfo(0,.@pty_cid[.@p])+"] for invalid items....";
+					if(BR_Inv(.@pty_cid[.@p],1) != 0) {
+						set .@f,.@f + 1;
+						dispbottom .n$+": It seems like you have invalid items in your Inventory. Please store every item except equipped Costumes.",.@pty_cid[.@p];
+					}
+					sleep2 1500;
+				}
+			if(.@online != .type[.@i]) {
+				mes "It seems like there are either too many or too less members in your party.";
+				mes "Please be sure to match the correct player limit.";
+				close;
+			}
+			if(.@f) {
+				mes "It seems like there are "+.@f+" players which have invalid items in their inventory.";
+				mes "I will register your party for now, but be sure that every party member put them away before the match starts.";
+			} else
+				mes "Good, your party is good to go. But remember not to try and trick me, I will check it again.";
+			for ( set .@a,0; .@a < .@pty_ct; set .@a,.@a + 1)
+				if(isloggedin(.@pty_aid[.@a],.@pty_cid[.@a]) == 1)
+					setarray getd("$@q"+.@br+"["+getarraysize(getd("$@q"+.@br))+"]"),.@pty_cid[.@a];
+				
+		} else {
+			if(getcharid(1) != 0) {
+				mes "You have to leave your party first.";
+				close;
+			}
+			mes "I will now open for you your storage to put every invalid item away.";
+			mes "I will also check right before the match start about it.";
+			openstorage;
+			next;
+			mes .n$;
+			if(BR_Inv(getcharid(0),1) != 0) {
+				mes "It looks like you didn't put away every item.";
+				mes "I will register you now, but be sure to put them away before the match starts.";
+			} else
+				mes "Good, your good to go. But remember not try and trick me, I will check it again.";
+			setarray getd("$@q"+.@br+"["+getarraysize(getd("$@q"+.@br))+"]"),getcharid(0);
+		}
+	} else {
+		mes "I'm sorry, but you can't register currently for the chosen Arena, since it's still in progress.";
+		close;
+	}
+	break;
+	
+	// Battle Royale Shop
+	case 2:
+	mes .n$;
+	mes "Your current balance of "+getvariableofnpc(.rew_vard$,"BR_Init")+" is: "+getd(""+getvariableofnpc(.rew_varn$,"BR_Init"));
+	mes " ";
+	mes "Do you want to open the Shop?";
+	if(select("- Yes:- No") - 1) close;
+	close2;
+	npcshopattach "BR_Shop";
+	callshop "BR_Shop",1;
+	break;
+	
+	// Information
+	case 3:
+	mes .n$;
+	mes "There are 3 different Types of Battle Royale, which are randomized every day per Arena:";
+	mes " > Solo: No parties allowed";
+	mes " > Duo: Only two members per Party.";
+	mes " > Squad: Up to 4 members per Party.";
+	next;
+	mes .n$;
+	mes "By choosing any of the following Arena's, I will display you every Information:";
+	for ( set .@m,0; .@m < getarraysize(.arena$); set .@m,.@m + 1)
+		set .@menu$,.@menu$ + "- "+.arena$[.@m] + ( (.arena$[.@m+1] != "")?":":"");
+		
+	set .@l,select(.@menu$) - 1;
+	set .@i,.@l + 1;
+	next;
+	mes "["+.arena$[.@l]+" - Basic]";
+	mes " > Minimum players: "+.min_players[.@l];
+	mes " > Maximum players: "+.players[.@l];
+	mes " > Registration Timer: "+.Reg_Timer[.@l];
+	mes " > Minimum Level: "+.min_level[.@l];
+	mes " > Maximum Level: "+.max_level[.@l];
+	next;
+	mes "["+.arena$[.@l]+" - Zone]";
+	mes " > Last Zone Size: "+getvariableofnpc(getd(".last_zone_size_"+.@i+"["+.@l+"]"),"BR_Init")+" Cells";
+	mes " > Minimum cells from borders: "+getvariableofnpc(getd(".zone_start_"+.@i+"["+.@l+"]"),"BR_Init")+" Cells";
+	mes " > Zone Movement: "+getvariableofnpc(getd(".zone_move_"+.@i+"["+.@l+"]"),"BR_Init")+" Cells";
+	mes " > Battle Zone Timer: "+getvariableofnpc(getd(".bzone_time_"+.@i+"["+.@l+"]"),"BR_Init")+" seconds";
+	mes " > Damage Zone Timer: "+getvariableofnpc(getd(".dzone_time_"+.@i+"["+.@l+"]"),"BR_Init")+" seconds";
+	next;
+	mes "["+.arena$[.@l]+" - Reward]";
+	mes " > Multiplier of Placements:";
+	for ( set .@p,1; .@p < getarraysize(getvariableofnpc(getd(".rew_place_"+.@i),"BR_Init")); set .@p,.@p + 1)
+		mes " - "+(.@p+1)+": x"+getvariableofnpc(getd(".rew_place_"+.@i+"["+.@p+"]"),"BR_Init");
+	mes " > Minimum Reward: "+getvariableofnpc(getd(".rew_base_"+.@i),"BR_Init")+" "+.rew_vard$;
+	next;
+	mes "["+.arena$[.@l]+" - Loot Box]";
+	mes " > Amount of Loot Boxes available: "+getvariableofnpc(getd(".loot_box_"+.@i),"BR_Init");
+	next;
+	mes .n$;
+	mes "On the battlefield you can find equipment in Lootboxes, which are hidden.";
+	mes "The Lootboxes can contain random equipment up to healing items.";
+	next;
+	mes .n$;
+	mes "The reward for participating are "+.rew_vard$+", the total amount what you can gain is affected by Kills and your Placement.";
+	mes "The placement will counted when you die or win the match.";
+	next;
+	mes .n$;
+	mes "Now I will tell you about the Match:";
+	mes "To register just select \"Register\" in the main menu. Depending on the current type, you need either a total of 2 players (Duo) or 4 players (Squad) to participate.";
+	mes "Solo should be obvious. Also you are only allowed to have equipped Costumes, which are limited to Head, Middle and Low Headgears.";
+	mes "After passing these conditions and enough player have registered, you'll be warped randomly on the battlefield.";
+	mes "@Commands and Skills are disabled. In the future classes might gain the opportunity to use basic skills.";
+	mes "There are 2 different Zones you should be aware of, the Battle Zone and the Damage Zone.";
+	mes "The battle zone is the zone, where you should be inside of to be safe from the Damage Zone, both are getting smaller after a certain time.";
+	mes "The damage zone will damage you each 5th second you are in it. Both zones are announced when they are starting to move.";
+	break;
+	
+	case 4: break;	
+}
+end;
+
+OnTimer60000: // Each Minute
+stopnpctimer;
+for ( set .@t,0; .@t < getarraysize(.BR_Status); set .@t,.@t + 1)
+	if(.BR_Status[.@t] == 1) {
+		set .@i,.@t + 1;
+		if(getarraysize(getd("$@q"+.@i)) < .min_players[.@t] && .Timer[.@t] < .Reg_Timer[.@t]) {
+			setarray .Timer[.@t],.Timer[.@t] + 1;
+			initnpctimer;
+			end;
+		} else if(getarraysize(getd("$@q"+.@i)) < .min_players[.@t] && .Timer[.@t] >= .Reg_Timer[.@t]) {
+			announce "["+strnpcinfo(0)+" - "+.arena$[.@t]+"]: The time limit to register has been reached, but not enough players have registered. Therefore I will cancel it.",bc_all;
+			setarray .BR_Status[.@t],0;
+			setarray .Timer[.@t],0;
+			deletearray getd("$@q"+.@i+"[0]"),getarraysize(getd("$@q"+.@i));
+			end;
+		}
+		setarray .BR_Status[.@t],2;
+		setarray .Timer[.@t],0;
+		donpcevent "BR_Arena#"+.@i+"::OnBRStart";
+	}
+end;
+
+OnWaitingRoom:
+while(1) {
+	set .@w,0;
+	for ( set .@p,0; .@p < getarraysize(.arena$); set .@p,.@p + 1) {
+		if(.BR_Status[.@p]) {
+			set .@w,.@w + 1;
+			if(.BR_Status[.@p] == 1)
+				set .@pub_txt$,"Registration - "+getarraysize(getd("$@q"+(.@p+1)))+"/"+.players[.@p];
+			else if(.BR_Status[.@p] == 2)
+				set .@pub_txt$,"Match in Progress";
+		
+			delwaitingroom;
+			waitingroom .arena$[.@p]+" - "+.@pub_txt$,0;
+		} else if(!.BR_Status[.@p]) // If arena is inactive, don't display it
+			continue;
+		sleep 5000; // Delay until the status of the next Arena will be displayed (5 sec) (if it's active)
+	}
+	if(!.@w) {
+		delwaitingroom;
+		waitingroom "Battle Royal - Inactive",0;
+	}
+	sleep 5000; // Delay until the above repeats (5 sec)
+}
+end;
+
+OnBRStop: // Because getvariableofnpc() doesn't find my "Battle Royale" NPC for an unknown reason
+for ( set .@p,0; .@p < getarraysize(.arena$); set .@p,.@p + 1)
+	if(.BR_Status[.@p] && getvariableofnpc(.BR_Status[.@p],"BR_Init") == 0) {
+		setarray .BR_Status[.@p],0;
+		announce .arena$[.@p]+": The match has ended. Good luck next time.",bc_all;
+	}
+end;
+	
+OnInit:
+set .n$,"["+strnpcinfo(0)+"]";
+// Map Names
+setarray .arena$[0],"Alberta","Aldebaran","Dewata","Eclage","Einbech","Einbroch","Geffen","Gonryun","Hugel","Izlude","Lasagna","Morroc","Moscovia","Niflheim","Payon","Prontera","Rachel","Splendide","Veins","Yuno";
+// Min Players to start Battle Royale per Arena
+setarray .min_players[0],2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2; 
+// Max Players per Arena
+setarray .players[0],20,15,20,15,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20; 
+// Time Limit to register for Battle Royale per Arena (in minutes)
+setarray .Reg_Timer[0],3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3;
+// Level Restriction per Arena
+set .m_level,500; // Server Max Level
+setarray .min_level[0],50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50;
+setarray .max_level[0],.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level;
+// Create waitingroom on Server Start
+waitingroom "Battle Royale - Inactive",0;
+donpcevent strnpcinfo(0)+"::OnWaitingRoom";
+OnClock0000:
+// Randomized Battle Royale Type every Day, you can optionally set the type of each Arena tho:
+// 1 = Solo, 2 = Duo, 3 = Squad
+setarray .type[0],rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3);
+end;
+}
+// Battle Royale Points Shop (only Costume Headgears!)
+-	pointshop	BR_Shop	HIDDEN_NPC,BR_Pts,18740:50,18741:50,18742:50,18743:50,18744:50,19509:50,19534:50,19537:50
+
+// Arena Script Template
+-	script	BR_Init	HIDDEN_NPC,{
+
+OnInit:
+set .n$,"[Battle Royale]";
+function BR_Reward;
+function BR_ZoneMove;
+// * Reward Settings
+// Note: If you want to change the variable name, change it also in the BR_Shop above!
+set .rew_varn$,"BR_Pts"; // Variable Name
+set .rew_vard$,"Battle Royale Points"; // Display Name
+// * Positon Check Delay
+// > How many seconds have to pass before checking the position of the player again?
+set .PosTimer,3;
+// Mapflags
+setarray .mf[0],mf_nogo,
+				mf_nowarp,
+				mf_nowarpto,
+				mf_noreturn,
+				mf_nosave,
+				mf_nomemo,
+				mf_partylock,
+				mf_noteleport,
+				mf_noskill,
+				mf_pvp;
+if(strnpcinfo(0) == "BR_Init") end;
+// ====== Battle Royale Settings ======
+// * Variable Description:
+// > .@BR_ID = ID of the Arena
+// > .area[] = Define the area where the zone will be selected from!
+// > .last_zone_size = Size of the last zone in cells (in all directions!)
+// > .zone_start = Minimum cells between centre of the zone and the corners (.area)
+//   (To avoid zones at the corners)
+// > .zone_move = How many cells should the zone move towards the centre
+// > .bzone_time = Time until the next battle zone will be announced (in seconds)
+// > .dzone_time = Time until the damage zone will move towards the battle zone (in seconds)
+// > .rew_place = Multiplier for Reward depending on Placement
+// ex: 1st place gets *10 more points, eveything after tenth place gets *1
+// > .rew_base = Minimum (Base) Points of Reward
+// > .loot_box = How many loot boxes are available?
+// Note: If you want to increase this value, you also need to add more duplicates, search for "duplicate(BR_LootBox)"
+// > .dzone_move = How many seconds have to pass until the damage zone moves by 1 (Fluent Damage Zone Movement)
+// ====================================
+set .@BR_ID,atoi(strnpcinfo(2));
+switch(.@BR_ID) {
+	
+	default:
+	debugmes "Error - BR_Init::OnInit - .@BR_ID = "+.@BR_ID;
+	end;
+	
+	case 1: // Alberta
+	setarray getd(".area_"+.@BR_ID+"[0]"),26,25,206,227;
+	setd(".last_zone_size_"+.@BR_ID),5;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+	
+	case 2: // Aldebaran
+	setarray getd(".area_"+.@BR_ID+"[0]"),35,40,236,238;
+	setd(".last_zone_size_"+.@BR_ID),15;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+	
+	case 3: // Dewata
+	setarray getd(".area_"+.@BR_ID+"[0]"),47,75,283,310;
+	setd(".last_zone_size_"+.@BR_ID),15;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+	
+	case 4: // Eclage
+	setarray getd(".area_"+.@BR_ID+"[0]"),101,31,302,257;
+	setd(".last_zone_size_"+.@BR_ID),15;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+	
+	case 5: // Einbech
+	setarray getd(".area_"+.@BR_ID+"[0]"),33,53,257,169;
+	setd(".last_zone_size_"+.@BR_ID),15;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+	
+	case 6: // Einbroch
+	setarray getd(".area_"+.@BR_ID+"[0]"),45,36,317,326;
+	setd(".last_zone_size_"+.@BR_ID),15;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+	
+	case 7: // Geffen
+	setarray getd(".area_"+.@BR_ID+"[0]"),50,50,189,189;
+	setd(".last_zone_size_"+.@BR_ID),15;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+	
+	case 8: // Gonryun
+	setarray getd(".area_"+.@BR_ID+"[0]"),35,15,271,223;
+	setd(".last_zone_size_"+.@BR_ID),15;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+	
+	case 9: // Hugel
+	setarray getd(".area_"+.@BR_ID+"[0]"),44,58,218,231;
+	setd(".last_zone_size_"+.@BR_ID),15;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+	
+	case 10: // Izlude
+	setarray getd(".area_"+.@BR_ID+"[0]"),44,89,143,262;
+	setd(".last_zone_size_"+.@BR_ID),15;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+	
+	case 11: // Lasagna
+	setarray getd(".area_"+.@BR_ID+"[0]"),0,0,0,0;
+	setd(".last_zone_size_"+.@BR_ID),15;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+	
+	case 12: // Morroc
+	setarray getd(".area_"+.@BR_ID+"[0]"),0,0,0,0;
+	setd(".last_zone_size_"+.@BR_ID),15;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+	
+	case 13: // Moscovia
+	setarray getd(".area_"+.@BR_ID+"[0]"),0,0,0,0;
+	setd(".last_zone_size_"+.@BR_ID),15;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+	
+	case 14: // Niflheim
+	setarray getd(".area_"+.@BR_ID+"[0]"),0,0,0,0;
+	setd(".last_zone_size_"+.@BR_ID),15;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+	
+	case 15: // Payon
+	setarray getd(".area_"+.@BR_ID+"[0]"),0,0,0,0;
+	setd(".last_zone_size_"+.@BR_ID),15;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+	
+	
+	case 16: // Prontera
+	setarray getd(".area_"+.@BR_ID+"[0]"),44,26,267,365;
+	setd(".last_zone_size_"+.@BR_ID),15;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+	
+	case 17: // Rachel
+	setarray getd(".area_"+.@BR_ID+"[0]"),0,0,0,0;
+	setd(".last_zone_size_"+.@BR_ID),15;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+	
+	case 18: // Splendide
+	setarray getd(".area_"+.@BR_ID+"[0]"),0,0,0,0;
+	setd(".last_zone_size_"+.@BR_ID),15;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+	
+	case 19: // Veins
+	setarray getd(".area_"+.@BR_ID+"[0]"),0,0,0,0;
+	setd(".last_zone_size_"+.@BR_ID),15;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+	
+	case 20: // Yuno
+	setarray getd(".area_"+.@BR_ID+"[0]"),0,0,0,0;
+	setd(".last_zone_size_"+.@BR_ID),15;
+	setd(".zone_start_"+.@BR_ID),25;
+	setd(".zone_move_"+.@BR_ID),15;
+	setd(".bzone_time_"+.@BR_ID),120;
+	setd(".dzone_time_"+.@BR_ID),180;
+	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
+	setd(".rew_base_"+.@BR_ID),50;
+	setd(".loot_box_"+.@BR_ID),10;
+	setd(".dzone_move_"+.@BR_ID),5;
+	break;
+}
+setd("$@q"+.@BR_ID+"$"),"";
+deletearray getd("$@q"+.@BR_ID),getarraysize(getd("$@q"+.@BR_ID));;
+// Setting Mapflags
+for ( set .@m,0; .@m < getarraysize(.mf); set .@m,.@m + 1)
+	setmapflag strnpcinfo(4),.mf[.@m];
+// * Allowing Admins(Group 99) to use @commands
+setmapflag strnpcinfo(4),mf_nocommand,99;
+// * Restricted Skills for custom Zone 8192 (db/import/skill_nocast_db.txt)
+//setmapflag strnpcinfo(4),mf_restricted,8192;
+disablenpc strnpcinfo(0);
+end;
+
+OnBRStart:
+enablenpc strnpcinfo(0);
+set .@BR_ID,atoi(strnpcinfo(2));
+// Define centre of the zone
+while(1) {
+	set .@x,0;
+	set .@y,0;
+	setd(".@zone_c_x_"+.@BR_ID),rand(getd(".area_"+.@BR_ID+"[0]"),getd(".area_"+.@BR_ID+"[2]"));
+	setd(".@zone_c_y_"+.@BR_ID),rand(.area[1],getd(".area_"+.@BR_ID+"[3]"));
+	
+///*	
+	debugmes ".@zone_c_x_"+.@BR_ID+" = "+getd(".@zone_c_x_"+.@BR_ID);
+	debugmes ".@zone_c_y_"+.@BR_ID+" = "+getd(".@zone_c_y_"+.@BR_ID);
+	
+	debugmes "("+getd(".@zone_c_x_"+.@BR_ID)+" > ("+getd(".area_"+.@BR_ID+"[0]")+" + "+getd(".zone_start_"+.@BR_ID)+")";
+	debugmes "&& "+getd(".@zone_c_x_"+.@BR_ID)+" >= ("+getd(".area_"+.@BR_ID+"[0]")+" + "+getd(".last_zone_size_"+.@BR_ID)+"))";
+	debugmes "&& ("+getd(".@zone_c_x_"+.@BR_ID)+" < ("+getd(".area_"+.@BR_ID+"[2]")+" - "+getd(".zone_start_"+.@BR_ID)+")";
+	debugmes "&& "+getd(".@zone_c_x_"+.@BR_ID)+" <= ("+getd(".area_"+.@BR_ID+"[2]")+" - "+getd(".last_zone_size_"+.@BR_ID)+"))";
+//*/
+	if( (getd(".@zone_c_x_"+.@BR_ID) > (getd(".area_"+.@BR_ID+"[0]") + getd(".zone_start_"+.@BR_ID)) && getd(".@zone_c_x_"+.@BR_ID) >= (getd(".area_"+.@BR_ID+"[0]") + getd(".last_zone_size_"+.@BR_ID))) && (getd(".@zone_c_x_"+.@BR_ID) < (getd(".area_"+.@BR_ID+"[2]") - getd(".zone_start_"+.@BR_ID)) && getd(".@zone_c_x_"+.@BR_ID) <= (getd(".area_"+.@BR_ID+"[2]") - getd(".last_zone_size_"+.@BR_ID))) )
+		set .@x,1;
+///*
+	debugmes "("+getd(".@zone_c_y_"+.@BR_ID)+" > ("+getd(".area_"+.@BR_ID+"[1]")+" + "+getd(".zone_start_"+.@BR_ID)+")";
+	debugmes "&& "+getd(".@zone_c_y_"+.@BR_ID)+" >= ("+getd(".area_"+.@BR_ID+"[1]")+" + "+getd(".last_zone_size_"+.@BR_ID)+"))";
+	debugmes "&& ("+getd(".@zone_c_y_"+.@BR_ID)+" < ("+getd(".area_"+.@BR_ID+"[3]")+" - "+getd(".zone_start_"+.@BR_ID)+")";
+	debugmes "&& "+getd(".@zone_c_y_"+.@BR_ID)+" <= ("+getd(".area_"+.@BR_ID+"[3]")+" - "+getd(".last_zone_size_"+.@BR_ID)+"))";
+//*/
+	if( (getd(".@zone_c_y_"+.@BR_ID) > (getd(".area_"+.@BR_ID+"[1]") + getd(".zone_start_"+.@BR_ID)) && getd(".@zone_c_y_"+.@BR_ID) >= (getd(".area_"+.@BR_ID+"[1]") + getd(".last_zone_size_"+.@BR_ID))) && (getd(".@zone_c_y_"+.@BR_ID) < (getd(".area_"+.@BR_ID+"[3]") - getd(".zone_start_"+.@BR_ID)) && getd(".@zone_c_y_"+.@BR_ID) <= (getd(".area_"+.@BR_ID+"[3]") - getd(".last_zone_size_"+.@BR_ID))) )
+		set .@y,1;
+	
+	debugmes ".@x = "+.@x+", .@y = "+.@y;
+	if(!.@x || !.@y) continue;
+	if(checkcell(strnpcinfo(4),getd(".@zone_c_x_"+.@BR_ID),getd(".@zone_c_y_"+.@BR_ID),cell_chkpass) == 0)
+		continue;
+	// Defining the last zone
+	// [0] + [1] = x1 + y1, [2] + [3] = x2 + y2
+	setarray getd(".zone_"+.@BR_ID+"[0]"),getd(".@zone_c_x_"+.@BR_ID) - getd(".last_zone_size_"+.@BR_ID),getd(".@zone_c_y_"+.@BR_ID) - getd(".last_zone_size_"+.@BR_ID),getd(".@zone_c_x_"+.@BR_ID) + getd(".last_zone_size_"+.@BR_ID),getd(".@zone_c_y_"+.@BR_ID) + getd(".last_zone_size_"+.@BR_ID);
+	break;
+}
+debugmes "Last Zone: X1 = "+getd(".zone_"+.@BR_ID+"[0]")+", Y1 = "+getd(".zone_"+.@BR_ID+"[1]")+", X2 = "+getd(".zone_"+.@BR_ID+"[2]")+", Y2 = "+getd(".zone_"+.@BR_ID+"[3]");	
+
+for ( set .@z,0; .@z < getarraysize(getd(".zone_"+.@BR_ID)); set .@z,.@z + 4) {
+	set .@x1,getd(".zone_"+.@BR_ID+"["+.@z+"]") - getd(".zone_move_"+.@BR_ID);
+	set .@y1,getd(".zone_"+.@BR_ID+"["+(.@z+1)+"]") - getd(".zone_move_"+.@BR_ID);
+	set .@x2,getd(".zone_"+.@BR_ID+"["+(.@z+2)+"]") + getd(".zone_move_"+.@BR_ID);
+	set .@y2,getd(".zone_"+.@BR_ID+"["+(.@z+3)+"]") + getd(".zone_move_"+.@BR_ID);
+	debugmes "X1 = "+.@x1+", Y1 = "+.@y1+", X2 = "+.@x2+", Y2 = "+.@y2;
+	
+	debugmes "!.@l_x1 && .@x1("+.@x1+") < ("+getd(".area_"+.@BR_ID+"[0]")+" + "+getd(".zone_start_"+.@BR_ID)+") = True";
+	if(!.@l_x1 && .@x1 < (getd(".area_"+.@BR_ID+"[0]") + getd(".zone_start_"+.@BR_ID))) {
+		set .@x1,getd(".zone_"+.@BR_ID+"["+.@z+"]") - (getd(".area_"+.@BR_ID+"[0]") + getd(".zone_start_"+.@BR_ID));
+		set .@l_x1,1;
+	}
+	debugmes "!.@l_y1 && .@y1("+.@y2+") < ("+getd(".area_"+.@BR_ID+"[1]")+" + "+getd(".zone_start_"+.@BR_ID)+") = True";
+	if(!.@l_y1 && .@y1 < (getd(".area_"+.@BR_ID+"[1]") + getd(".zone_start_"+.@BR_ID))) {
+		set .@y1,getd(".zone_"+.@BR_ID+"["+(.@z+1)+"]") - (getd(".area_"+.@BR_ID+"[1]") + getd(".zone_start_"+.@BR_ID));
+		set .@l_y1,1;
+	}
+	debugmes "!.@l_x2 && .@x2("+.@x2+") > ("+getd(".area_"+.@BR_ID+"[2]")+" - "+getd(".zone_start_"+.@BR_ID)+") = True";
+	if(!.@l_x2 && .@x2 > (getd(".area_"+.@BR_ID+"[2]") - getd(".zone_start_"+.@BR_ID))) {
+		set .@x2,getd(".zone_"+.@BR_ID+"["+(.@z+2)+"]") + (getd(".area_"+.@BR_ID+"[2]") + getd(".zone_start_"+.@BR_ID));
+		set .@l_x2,1;
+	}
+	debugmes "!.@l_y2 && .@y2("+.@y2+") < ("+getd(".area_"+.@BR_ID+"[3]")+" - "+getd(".zone_start_"+.@BR_ID)+") = True";
+	if(!.@l_y2 && .@y2 > (getd(".area_"+.@BR_ID+"[3]") - getd(".zone_start_"+.@BR_ID))) {
+		set .@y2,getd(".zone_"+.@BR_ID+"["+(.@z+3)+"]") + (getd(".area_"+.@BR_ID+"[3]") + getd(".zone_start_"+.@BR_ID));
+		set .@l_y2,1;
+	}
+	if(.@l_x1 && .@l_y1 && .@l_x2 && .@l_y2) 
+		break;
+
+	setarray getd(".zone_"+.@BR_ID+"["+getarraysize(getd(".zone_"+.@BR_ID))+"]"),((!.@l_x1)?.@x1:getd(".zone_"+.@BR_ID+"["+.@z+"]")),((!.@l_y1)?.@y1:getd(".zone_"+.@BR_ID+"["+(.@z+1)+"]")),((!.@l_x2)?.@x2:getd(".zone_"+.@BR_ID+"["+(.@z+2)+"]")),((!.@l_y2)?.@y2:getd(".zone_"+.@BR_ID+"["+(.@z+3)+"]"));
+}
+for ( set .@t,0; .@t < getarraysize(getd(".zone_"+.@BR_ID)); set .@t,.@t + 4)
+	debugmes "X1["+.@t+"] = "+getd(".zone_"+.@BR_ID+"["+.@t+"]")+", Y1["+(.@t+1)+"] = "+getd(".zone_"+.@BR_ID+"["+(.@t+1)+"]")+", X2["+(.@t+2)+"] = "+getd(".zone_"+.@BR_ID+"["+(.@t+2)+"]")+", Y2["+(.@t+3)+"] = "+getd(".zone_"+.@BR_ID+"["+(.@t+3)+"]");
+// Enabling Loot Boxes
+for ( set .@s,1; .@s < getd(".loot_box_"+.@BR_ID); set .@s,.@s + 1) {
+	while(1) { // Moving the Loot Boxes to random locations, which are passable/walkable
+		set .@x,rand(getd(".area_"+.@BR_ID+"[0]"),getd(".area_"+.@BR_ID+"[2]"));
+		set .@y,rand(getd(".area_"+.@BR_ID+"[1]"),getd(".area_"+.@BR_ID+"[3]"));
+		if(checkcell(strnpcinfo(4),.@x,.@y,cell_chkpass) == 1)
+			break;
+	}
+	movenpc "Chest#BR"+.@BR_ID+"_"+.@s,.@x,.@y;
+	enablenpc "Chest#BR"+.@BR_ID+"_"+.@s;
+}
+for ( set .@p,0; .@p < getarraysize(getd("$@q"+.@BR_ID)); set .@p,.@p + 1) {
+	attachrid(getcharid(3,strcharinfo(0,getd("$@q"+.@BR_ID+"["+.@p+"]"))));
+	announce .n$+": The zone has been declared, you will now be warped randomly on the battlefield!",bc_self;
+	while(BR_Inv(getcharid(0),1) != 0) {
+		mes .n$;
+		mes "I'm sorry, but you still got items equipped/in your inventory. It has to be completely empty, except equipped Costumes. Please put every item, which are not equipped costumes, into your storage.";
+		mes "By closing this window, I will repeat the check for non-valid items.";
+		openstorage;
+		close2;
+	}
+	sc_end SC_ALL; // Debuff everything
+	addtimer (.PosTimer*1000),strnpcinfo(0)+"::OnZoneCheck";
+	warp strnpcinfo(4),0,0;
+}
+// Battle Royale Start + Zone Movement
+setarray .BR_Status[.@BR_ID],1;
+setd(".nz_"+.@BR_ID),getarraysize(getd(".zone_"+.@BR_ID))-4; // Marking first zone
+while(.BR_Status[.@BR_ID]) {
+	mapannounce strnpcinfo(4),.n$+": The Battle Zone will move in "+getd(".bzone_time_"+.@BR_ID)+" seconds.",bc_all;
+	sleep (getd(".bzone_time_"+.@BR_ID)*1000);
+	BR_ZoneMove(1,getd(".zone_"+.@BR_ID+"["+getd(".nz_"+.@BR_ID)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".nz_"+.@BR_ID)+1)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".nz_"+.@BR_ID)+2)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".nz_"+.@BR_ID)+3)+"]"),getd(".zone_"+.@BR_ID+"["+getd(".cz_"+.@BR_ID)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".cz_"+.@BR_ID)+1)+"]"));
+	mapannounce strnpcinfo(4),.n$+": The Damage Zone will move in "+getd(".dzone_time_"+.@BR_ID)+" seconds.",bc_all;
+	sleep (getd(".dzone_time_"+.@BR_ID)*1000);
+	setd(".dz_"+.@BR_ID),getd(".nz_"+.@BR_ID); // Current Damage Zone for OnZoneCheck
+	setd(".@x1_"+.@BR_ID),getd(".zone_"+.@BR_ID+"["+getd(".cz_"+.@BR_ID)+"]");
+	setd(".@y1_"+.@BR_ID),getd(".zone_"+.@BR_ID+"["+(getd(".cz_"+.@BR_ID)+1)+"]");
+	setd(".@x2_"+.@BR_ID),getd(".zone_"+.@BR_ID+"["+(getd(".cz_"+.@BR_ID)+2)+"]");
+	setd(".@y2_"+.@BR_ID),getd(".zone_"+.@BR_ID+"["+(getd(".cz_"+.@BR_ID)+3)+"]");
+	// Fluent Battle Zone Movement
+	while(getd(".@x1_"+.@BR_ID) != getd(".zone_"+.@BR_ID+"["+getd(".nz_"+.@BR_ID)+"]") && getd(".@y1_"+.@BR_ID) != getd(".zone_"+.@BR_ID+"["+(getd(".nz_"+.@BR_ID)+1)+"]") && getd(".@x2_"+.@BR_ID) != getd(".zone_"+.@BR_ID+"["+(getd(".nz_"+.@BR_ID)+2)+"]") && getd(".@y2_"+.@BR_ID) != getd(".zone_"+.@BR_ID+"["+(getd(".nz_"+.@BR_ID)+3)+"]")) {
+		BR_ZoneMove(2,getd(".@x1_"+.@BR_ID),getd(".@y1_"+.@BR_ID),getd(".@x2_"+.@BR_ID),getd(".@y2_"+.@BR_ID),getd(".@x1_"+.@BR_ID)-1,getd(".@y1_"+.@BR_ID)-1);
+		sleep (getd(".dzone_move_"+.@BR_ID)*1000);
+		setd(".@x1_"+.@BR_ID),getd(".@x1_"+.@BR_ID) + 1;
+		setd(".@y1_"+.@BR_ID),getd(".@y1_"+.@BR_ID) + 1;
+		setd(".@x2_"+.@BR_ID),getd(".@x2_"+.@BR_ID) - 1;
+		setd(".@y2_"+.@BR_ID),getd(".@y2_"+.@BR_ID) - 1;
+	}
+	setd(".cz_"+.@BR_ID),getd(".nz_"+.@BR_ID); // Current Zone
+	if(getd(".cz_"+.@BR_ID) == 0) // Final Zone reached
+		break;
+	setd(".nz_"+.@BR_ID),getd(".nz_"+.@BR_ID) - 4; // Moving Index to next zone
+}
+mapannounce strnpcinfo(4),.n$+": The final zone has been reached!",bc_all;
+end;
+
+OnZoneCheck:
+deltimer strnpcinfo(0)+"::OnZoneCheck";
+set .@BR_ID,atoi(strnpcinfo(2));
+getmapxy(.@map$,.@x,.@y,UNITTYPE_PC);
+if( (.@x <= getd(".zone_"+.@BR_ID+"["+getd(".dz_"+.@BR_ID)+"]") || .@y <= getd(".zone_"+.@BR_ID+"["+(getd(".dz_"+.@BR_ID)+1)+"]") ) || (.@x >= getd(".zone_"+.@BR_ID+"["+(getd(".dz_"+.@BR_ID)+2)+"]") || .@y >= getd(".zone_"+.@BR_ID+"["+(getd(".dz_"+.@BR_ID)+3)+"]")) )
+	percentheal -5,0;
+addtimer (.PosTimer*1000),strnpcinfo(0)+"::OnZoneCheck";
+end;
+
+OnPCDieEvent:
+if(!.BR_Status[atoi(strnpcinfo(2))]) end;
+set .@BR_ID,atoi(strnpcinfo(2));
+set .@rank,getmapusers(strnpcinfo(4)) - 1;
+set @place,( (getmapusers(strnpcinfo(4)) - 1) > 10)?10:.@rank;
+BR_Inv(getcharid(0),3);
+warp "SavePoint",0,0;
+sleep2 1500;
+announce .n$+": You were killed by ["+rid2name(killerrid)+"] and was placed "+.@rank+".",bc_self;
+percentheal 100,100;
+BR_Reward(@BR_Kills,getd(".rew_place_"+.@BR_ID+"["+@place+"]"),getd(".rew_base_"+.BR_ID));
+end;
+
+OnPCKillEvent:
+if(!.BR_Status[atoi(strnpcinfo(2))]) end;
+set .@BR_ID,atoi(strnpcinfo(2));
+set @BR_Kills,@BR_Kills + 1;
+if(getmapusers(strnpcinfo(4)) > 1) 
+	end;
+BR_Inv(getcharid(0),2);
+warp "SavePoint",0,0;
+sleep2 1500;
+announce .n$+": Congratulation to ["+strcharinfo(0)+"] for winning the Battle Royale in Arena "+.@BR_ID+"!",bc_all;
+percentheal 100,100;
+BR_Reward(@BR_Kills,getd(".rew_place_"+.@BR_ID+"[1]"),getd(".rew_base_"+.BR_ID));
+
+OnBREnd: // Battle Royale Stop
+if(!.BR_Status[atoi(strnpcinfo(2))]) end;
+set .@BR_ID,atoi(strnpcinfo(2));
+for ( set .@s,1; .@s < getd(".loot_box_"+.@BR_ID); set .@s,.@s + 1)
+	disablenpc "Chest#BR"+.@BR_ID+"_"+.@s;
+setd(".cz_"+.@BR_ID),0;
+setd(".nz_"+.@BR_ID),0;
+setd(".dz_"+.@BR_ID),0;
+donpcevent "Battle Royale::OnBRStop";
+setarray .BR_Status[.@BR_ID],0;
+disablenpc strnpcinfo(0);
+end;
+
+// Battle Royale Reward Function
+function	BR_Reward	{
+// getarg(0) == Kills
+// getarg(1) == Placement Points
+// getarg(2) == Base Reward
+// Reward Formula: (Kills + Base Reward)*Placement Points
+// Example: 5 Kills, 4th Place, 50 Base Reward:
+// (5 + 50)*8 = 220 Battle Royale Points
+set .@calc,(getarg(0) + getarg(2))*getarg(1);
+setd(""+.rew_varn$),getd(""+.rew_varn$) + .@calc;
+dispbottom "[Battle Royale]: You have recieved "+.@calc+"x "+getd(""+.rew_vard$)+". Your balance is now "+getd(""+.rew_varn$)+"x "+getd(""+.rew_vard$)+".";
+return;
+}
+
+// Function for issuing Zone Movement 
+function	BR_ZoneMove	{
+// =====================================
+// getarg:
+// - 0 = Zone Type > 1 = Battle Zone / 2 = Damage Zone
+// - 1 = X 1
+// - 2 = Y 1
+// - 3 = X 2
+// - 4 = Y 2
+// - 5 = Previous X
+// - 6 = Previous Y
+// =====================================
+// Borders:  
+//  |---#4---|
+//  |        |
+// #1        #3
+//  |        |
+//  |---#2---|
+// =====================================
+addrid(5,strnpcinfo(4));
+debugmes "BR_ZoneMove - strnpcinfo(4) = "+strnpcinfo(4);
+// Border #1: x1/y1 to x1/y2 ( South West to North West )
+set .@y,getarg(2);
+set .@c,1;
+while( .@y != getarg(4) ) {
+	if(getarg(0) == 1) {
+		npcskilleffect "SA_LANDPROTECTOR",5,getarg(1),.@y;
+		viewpoint 2,getarg(1),getarg(6),.@c,0x00FF00;
+		viewpoint 1,getarg(1),.@y,.@c,0x00FF00;
+	} else if(getarg(0) == 2) {
+		npcskilleffect "MA_FIREWALL",10,getarg(1),.@y;
+		viewpoint 2,getarg(1),.@y-1,.@c,0xFF0000;
+		viewpoint 1,getarg(1),.@y,.@c,0xFF0000;
+	}
+	set .@y,.@y + 1;
+	set .@c,.@c + 1;
+	sleep2 100;
+}	
+// Border #2: x1/y1 to x2/y1 ( South West to South East )
+set .@x,getarg(1);
+while( .@x != getarg(3) ) {
+	if(getarg(0) == 1) {
+		npcskilleffect "SA_LANDPROTECTOR",5,.@x,getarg(2);
+		viewpoint 2,getarg(5),getarg(2),.@c,0x00FF00;
+		viewpoint 1,.@x,getarg(2),.@c,0x00FF00;
+	} else if(getarg(0) == 2) {
+		npcskilleffect "MA_FIREWALL",10,.@x,getarg(2);
+		viewpoint 2,.@x-1,getarg(2),.@c,0xFF0000;
+		viewpoint 1,.@x,getarg(2),.@c,0xFF0000;
+	}
+	set .@x,.@x + 1;
+	set .@c,.@c + 1;
+	sleep2 100;
+}	
+// Border #3: x2/y1 to x2/y2 ( South East to North East )
+set .@y,getarg(2);
+while( .@y != getarg(4) ) {
+	if(getarg(0) == 1) {
+		npcskilleffect "SA_LANDPROTECTOR",5,getarg(3),.@y;
+		viewpoint 2,getarg(3),getarg(6),.@c,0x00FF00;
+		viewpoint 1,getarg(3),.@y,.@c,0x00FF00;
+	} else if(getarg(0) == 2) {
+		npcskilleffect "MA_FIREWALL",10,getarg(3),.@y;
+		viewpoint 2,getarg(3),.@y-1,.@c,0xFF0000;
+		viewpoint 1,getarg(3),.@y,.@c,0xFF0000;
+	}
+	set .@y,.@y + 1;
+	set .@c,.@c + 1;
+	sleep2 100;
+}	
+// Border #4: x1/y2 to x2/y2 ( North West to North East )
+set .@x,getarg(1);
+while( .@x != getarg(3) ) {
+	if(getarg(0) == 1) {
+		npcskilleffect "SA_LANDPROTECTOR",5,.@x,getarg(4);
+		viewpoint 2,getarg(6),getarg(4),.@c,0x00FF00;
+		viewpoint 1,.@x,getarg(4),.@c,0x00FF00;
+	} else if(getarg(0) == 2) {
+		npcskilleffect "MA_FIREWALL",10,.@x,getarg(4);
+		viewpoint 2,.@x-1,getarg(4),.@c,0xFF0000;
+		viewpoint 1,.@x,getarg(4),.@c,0xFF0000;
+	}
+	set .@x,.@x + 1;
+	set .@c,.@c + 1;
+	sleep2 100;
+}
+return;
+}
+}
+
+// Arena Duplicates
+br_alberta,0,0,0	duplicate(BR_Init)	BR_Arena#1	HIDDEN_NPC
+br_aldeb,0,0,0	duplicate(BR_Init)	BR_Arena#2	HIDDEN_NPC
+br_dewata,0,0,0	duplicate(BR_Init)	BR_Arena#3	HIDDEN_NPC
+br_eclage,0,0,0	duplicate(BR_Init)	BR_Arena#4	HIDDEN_NPC
+br_einbech,0,0,0	duplicate(BR_Init)	BR_Arena#5	HIDDEN_NPC
+br_einbroch,0,0,0	duplicate(BR_Init)	BR_Arena#6	HIDDEN_NPC
+br_geffen,0,0,0	duplicate(BR_Init)	BR_Arena#7	HIDDEN_NPC
+br_gonryun,0,0,0	duplicate(BR_Init)	BR_Arena#8	HIDDEN_NPC
+br_hugel,0,0,0	duplicate(BR_Init)	BR_Arena#9	HIDDEN_NPC
+br_izlude,0,0,0	duplicate(BR_Init)	BR_Arena#10	HIDDEN_NPC
+br_lasagna,0,0,0	duplicate(BR_Init)	BR_Arena#11	HIDDEN_NPC
+br_morocc,0,0,0	duplicate(BR_Init)	BR_Arena#12	HIDDEN_NPC
+br_moscovia,0,0,0	duplicate(BR_Init)	BR_Arena#13	HIDDEN_NPC
+br_niflheim,0,0,0	duplicate(BR_Init)	BR_Arena#14	HIDDEN_NPC
+br_payon,0,0,0	duplicate(BR_Init)	BR_Arena#15	HIDDEN_NPC
+br_prontera,0,0,0	duplicate(BR_Init)	BR_Arena#16	HIDDEN_NPC
+br_rachel,0,0,0	duplicate(BR_Init)	BR_Arena#17	HIDDEN_NPC
+br_splend,0,0,0	duplicate(BR_Init)	BR_Arena#18	HIDDEN_NPC
+br_veins,0,0,0	duplicate(BR_Init)	BR_Arena#19	HIDDEN_NPC
+br_yuno,0,0,0	duplicate(BR_Init)	BR_Arena#20	HIDDEN_NPC
+
+// Loot Boxes Template
+-	script	BR_LootBox	HIDDEN_NPC,{
+
+getmapxy(.@map$,.@x,.@y,UNITTYPE_NPC,strnpcinfo(0)); // For makeitem
+set .@m,3; // Set range of area around the Loot Box for makeitem
+
+// Healing + Buff Items
+set .@loot,( (.randlimit == 1)?rand(1,.heal_limit):.heal_limit);
+set .@c,1;
+while(.@c <= .@loot) {
+	set .@p,rand(getarraysize(.heal_id));
+	if(rand(1,100) <= .heal_perc[.@p])
+		set .@h,.@p;
+		
+	makeitem .heal_id[.@h],.heal_am[.@h],.@map$,rand((.@x-.@m),(.@x+.@m)),rand((.@y-.@m),(.@y+.@m)); break;
+	set .@c,.@c + 1;
+}
+// Equipment
+set .@loot,( (.randlimit == 1)?rand(1,.eq_limit):.eq_limit);
+set .@c,1;
+while(.@c <= .@loot) {	
+	set .@p,rand(getarraysize(.eq_id));
+	if(rand(1,100) > .eq_perc[.@p]) 
+		continue;
+	set .@i,.@p;
+	
+	if(.refine[.@i]) // If refine is enabled, randomize it
+		set .@ref,rand(.ref_min[.@i],.ref_max[.@i]);
+
+	if(.card[.@i]) {
+		// Depending on the Item Type, use the correct Cards for it
+		switch(getiteminfo(.eq_id[.@i],5)) {
+			case 1: // Lower Headgear
+			case 256: // Middle Headgear
+			case 512: // Top Headgear
+			// Blue Acidus, Dark Pinguicula, Dolomedes, Elder Willow, Gibbet, King Dramoh
+			setarray .@cards[0],4379,4468,4506,4052,4278,4524;
+			break;
+		
+			case 2: // Weapon:
+			// Andre, Archer Skeleton, Armed Guard Soheon, Atroce, Banaspaty, Breeze
+			setarray .@cards[0],4043,4094,4575,4425,4518,4390;
+			break;
+			
+			case 16: // Armor
+			// Bakonawa, Bangungot, Buwaya, Cornutus, Echio, Entweihen Crothen
+			setarray .@cards[0],4591,4590,4592,4061,4410,4451;
+			break;
+			
+			case 32: // Shield
+			// Ambernite, High Orc, Horn, Khalitzburg Knight, Ogretooth, Thara Frog
+			setarray .@cards[0],4032,4322,4045,4609,4254,4058;
+			break;
+			
+			case 4: // Garment
+			// Choco, Giant Whisper, Kasa, Noxious, Orc Baby, Punk 
+			setarray .@cards[0],4285,4303,4431,4334,4375,4313;
+			break;
+			
+			case 64: // Shoes
+			// Amon Ra, Cat O' Nine Tails, Firelock Soldier, Freezer, Ice Titan, Verit
+			setarray .@cards[0],4236,4290,4160,4319,4417,4107;
+			break;
+			
+			case 8: // Accessory Right
+			case 128: // Accessory Left
+			// Alligator, Gazeti, GC109, Greatest General, Ifrit, Mantis
+			setarray .@cards[0],4252,4418,27018,4283,4430,4079;
+			break;	
+		}
+		// Define the Max Card Slots to use via
+		if(.card_slots[.@i]) // Random
+			set .@cs,rand(0,getitemslots(.eq_id[.@i]));
+		else // max slots the equipment has available
+			set .@cs,getitemslots(.eq_id[.@i]);
+		for ( set .@s,1; .@s <= .@cs; set .@s,.@s + 1)
+			setd(".@c"+.@s),.@cards[rand(getarraysize(.@cards))];
+	}
+	if(.enchants[.@i]) { // Enchants enabled?
+		if(.ench_rand[.@i]) // If random amount of Enchants is enabled
+			set .@er,rand(.ench_min[.@i],.ench_max[.@i]);
+		else // If not, set max amount
+			set .@er,.ench_max[.@i];
+
+		if(.@er) { // Check if Amount is not 0
+			// ===== Enchantment Data =====
+			// * Enchant Slot 1 (Card Slot 4) - Status Enchants (STR/AGI/VIT/INT/DEX/LUK - 1~10)
+			// > STR: 4710,4711,4712,4713,4714,4715,4706,4707,4708,4709
+			// > AGI: 4730,4731,4732,4733,4734,4735,4736,4737,4738,4739
+			// > VIT: 4740,4741,4742,4743,4744,4745,4746,4747,4748,4749
+			// > INT: 4710,4711,4712,4713,4714,4715,4716,4717,4718,4719
+			// > DEX: 4720,4721,4722,4723,4724,4725,4726,4727,4728,4729
+			// > LUK: 4750,4751,4752,4753,4754,4755,4756,4757,4758,4759
+			setarray .@enchant3[0],4700,4701,4702,4703,4704,4705,4706,4707,4708,4709,4710,4711,4712,4713,4714,4715,4716,4717,4718,4719,4720,4721,4722,4723,4724,4725,4726,4727,4728,4729,4730,4731,4732,4733,4734,4735,4736,4737,4738,4739,4740,4741,4742,4743,4744,4745,4746,4747,4748,4749,4750,4751,4752,4753,4754,4755,4756,4757,4758,4759;
+			// * Enchant Slot 2 (Card Slot 3) - ATK/MATK/FLEE/CRIT/DEF/MDEF/HP/SP/ASPD Enchants
+			// > ATK: 4882,4766,4767,4894,4895,4904,4905
+			// > MATK: 4883,4896,4897,4898,4899,4906,4907,4760,4761,4806
+			// > FLEE: 4859,4860,4762,4764,4942,4943,4944
+			// > CRIT: 4926,4939,4940,4941,4939,4940,4941,4764,4765,
+			// > DEF: 4791,4792,4793,4794,4893,4902,4903
+			// > MDEF: 4890,4786,4891,4787,4892,4788,4789,4790
+			// > HP: 4927,4795,4796,4797,4798,4799,4861,4862,4867,4868,4900
+			// > SP: 4870,4800,4871,4801,4802,4929
+			// > ASPD: 4807,4842
+			// > Regeneration: 4930,4931,4932
+			// > SP Consume: 4945,4946,4947
+			setarray .@enchant2[0],4882,4766,4767,4894,4895,4904,4905,4883,4896,4897,4898,4899,4906,4907,4760,4761,4806,4859,4860,4762,4764,4926,4939,4940,4941,4764,4765,4791,4792,4793,4794,4893,4902,4903,4890,4786,4891,4787,4892,4788,4789,4790,4927,4795,4796,4797,4798,4799,4861,4862,4867,4868,4900,4870,4800,4871,4801,4802,4929,4807,4842,4930,4931,4932,4945,4946,4947;
+			// * Enchant Slot 3 (Card Slot 2) - Special Enchants
+			// > Heal Amount: 4850,4851,4852
+			// > Fighting Spirit: 4811,4810,4809,4808,4820,4821,4822,4823,4824,4825
+			// > Spell: 4815,4814,4813,4812,4826,4827,4828,4829,4830,4831
+			// > Sharp: 4818,4817,4816,4843,4844
+			// > Expert Archer: 4832,4833,4834,4835,4836,4837,4838,4839,4840,4841
+			// > Neutral Resistance/Immune: 4933,4934,4935,4848
+			// > Cranial: 4849
+			// > Special <STAT>: 4853,4854,4855,4856,4857,4858
+			// > Fatal: 4863,4864,4865,4866
+			// > Attack Delay: 4869,4872,4873,4881
+			// > After Skill Delay: 4948,4949,4950
+			// > Conjure (Spell): 4885,4886,4887,4888,4889
+			// > Highness Heal, Coluceo Heal, Archbishop, Bear's Power, Runaway Magic, Speed of Light, Muscle Fool, Hawkeye, Lucky Day
+			// > 4803,4804,4805,4875,4876,4877,4878,4879,4880
+			// > ATK Size: 4938,4937,4936
+			// > Darklord Essence Force: 4908,4909,4910
+			// > Darklord Essence Intelligence: 4911,4912,4913
+			// > Darklord Essence Speed: 4914,4915,4916
+			// > Darklord Essence Vitality: 4917,4918,4919
+			// > Darklord Essence Concentration: 4920,4921,4922
+			// > Darklord Essence Luck: 4923,4924,4925
+			setarray .@enchant1[0],4850,4851,4852,4811,4810,4809,4808,4820,4821,4822,4823,4824,4825,4815,4814,4813,4812,4826,4827,4828,4829,4830,4831,4818,4817,4816,4843,4844,4832,4833,4834,4835,4836,4837,4838,4839,4840,4841,4933,4934,4935,4848,4849,4853,4854,4855,4856,4857,4858,863,4864,4865,4866,4869,4872,4873,4881,4948,4949,4950,4885,4886,4887,4888,4889,4803,4804,4805,4875,4876,4877,4878,4879,4880,4938,4937,4936,4908,4909,4910,4911,4912,4913,4914,4915,4916,4917,4918,4919,4920,4921,4922,4923,4924,4925;
+			
+			// If you encounter problems or you are unsure if you put every value correctly, use this to check the array sizes:
+			// Either comment the /* and */ or delete them until you don't need it anymore
+			/*
+			debugmes ".@enchant3 - "+getarraysize(.@enchant3);
+			debugmes ".@enchant2 - "+getarraysize(.@enchant2);
+			debugmes ".@enchant1 - "+getarraysize(.@enchant1);
+			*/
+			
+			set .@s,4; // Define first Card Slot for first Enchant
+			for ( set .@e,1; .@e <= .@er; set .@e,.@e + 1) {
+				if(!getd(".@c"+.@s)) // If Card Slot .@s is not used
+					setd(".@c"+.@s),getd(".@enchant"+(.@s-1)+"["+rand(getarraysize(getd(".@enchant"+(.@s-1))))+"]");
+				set .@s,.@s - 1;
+			}
+		}
+	}
+	if(!.opt[.@i]) // If the Item doesn't allow Random Options, don't continue after this
+		makeitem2 .eq_id[.@i],.eq_am[.@i],.@map$,rand((.@x-.@m),(.@x+.@m)),rand((.@y-.@m),(.@y+.@m)),1,.@ref,0,.@c1,.@c2,.@c3,.@c4;
+			
+	else if(.opt[.@i]) { // If random option is enabled, randomize it, but keeping their respective index values
+		
+		if(.opt_rand[.@i]) // If random Amount of Random Options is enabled
+			set .@or,rand(.opt_min[.@i],.opt_max[.@i]);
+		else // If not, set max amount
+			set .@or,.opt_max[.@i];
+		if(.@or) { // Check if Amount is not 0
+			switch(getiteminfo(.eq_id[.@i],2)) {
+				
+				// Random Options - Format:
+				// = Put in the ID's for the respective Random Option Slot, they will be randomly selected
+				// > .@rand = ID
+				// > .@rval = Value
+				// > .@rpar = Param
+				
+				case 4: // Armor
+				// 1st Random Option Slot - Status 
+				setarray .@rand1[0],RDMOPT_VAR_MAXHPAMOUNT,RDMOPT_VAR_MAXSPAMOUNT,RDMOPT_VAR_STRAMOUNT,RDMOPT_VAR_AGIAMOUNT,RDMOPT_VAR_VITAMOUNT,RDMOPT_VAR_INTAMOUNT,RDMOPT_VAR_DEXAMOUNT,RDMOPT_VAR_LUKAMOUNT,RDMOPT_VAR_MAXHPPERCENT,RDMOPT_VAR_MAXSPPERCENT,RDMOPT_VAR_HPACCELERATION,RDMOPT_VAR_SPACCELERATION,RDMOPT_VAR_ITEMDEFPOWER,RDMOPT_VAR_MDEFPOWER,RDMOPT_VAR_AVOIDSUCCESSVALUE,RDMOPT_VAR_PLUSAVOIDSUCCESSVALUE;
+				setarray .@rmin1[0],10,10,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
+				setarray .@rmax1[0],100,100,10,10,10,10,10,10,10,10,10,10,10,10,10,10;
+				setarray .@rpar1[0],0;
+
+				// 2nd Random Option Slot - Elemental Armor/Elemantal Resistance
+				setarray .@rand2[0],RDMOPT_BODY_ATTR_NOTHING,RDMOPT_BODY_ATTR_WATER,RDMOPT_BODY_ATTR_GROUND,RDMOPT_BODY_ATTR_FIRE,RDMOPT_BODY_ATTR_WIND,RDMOPT_BODY_ATTR_POISON,RDMOPT_BODY_ATTR_SAINT,RDMOPT_BODY_ATTR_DARKNESS,RDMOPT_BODY_ATTR_TELEKINESIS,RDMOPT_BODY_ATTR_UNDEAD,RDMOPT_ATTR_TOLERACE_NOTHING,RDMOPT_ATTR_TOLERACE_WATER,RDMOPT_ATTR_TOLERACE_GROUND,RDMOPT_ATTR_TOLERACE_FIRE,RDMOPT_ATTR_TOLERACE_WIND,RDMOPT_ATTR_TOLERACE_POISON,RDMOPT_ATTR_TOLERACE_SAINT,RDMOPT_ATTR_TOLERACE_DARKNESS,RDMOPT_ATTR_TOLERACE_TELEKINESIS,RDMOPT_ATTR_TOLERACE_UNDEAD,RDMOPT_ATTR_TOLERACE_ALL;
+				setarray .@rmin2[0],0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1;
+				setarray .@rmax2[0],0,0,0,0,0,0,0,0,0,0,10,10,10,10,10,10,10,10,10,10,10;
+				setarray .@rpar2[0],0;
+
+				// 3rd Random Option Slot - Elemental Damage Reduction
+				setarray .@rand3[0],RDMOPT_DAMAGE_PROPERTY_NOTHING_USER,RDMOPT_DAMAGE_PROPERTY_WATER_USER,RDMOPT_DAMAGE_PROPERTY_GROUND_USER,RDMOPT_DAMAGE_PROPERTY_FIRE_USER,RDMOPT_DAMAGE_PROPERTY_WIND_USER,RDMOPT_DAMAGE_PROPERTY_POISON_USER,RDMOPT_DAMAGE_PROPERTY_SAINT_USER,RDMOPT_DAMAGE_PROPERTY_DARKNESS_USER,RDMOPT_DAMAGE_PROPERTY_TELEKINESIS_USER,RDMOPT_DAMAGE_PROPERTY_UNDEAD_USER,RDMOPT_MDAMAGE_PROPERTY_NOTHING_USER,RDMOPT_MDAMAGE_PROPERTY_WATER_USER,RDMOPT_MDAMAGE_PROPERTY_GROUND_USER,RDMOPT_MDAMAGE_PROPERTY_FIRE_USER,RDMOPT_MDAMAGE_PROPERTY_WIND_USER,RDMOPT_MDAMAGE_PROPERTY_POISON_USER,RDMOPT_MDAMAGE_PROPERTY_SAINT_USER,RDMOPT_MDAMAGE_PROPERTY_DARKNESS_USER,RDMOPT_MDAMAGE_PROPERTY_TELEKINESIS_USER,RDMOPT_MDAMAGE_PROPERTY_UNDEAD_USER;
+				setarray .@rmin3[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
+				setarray .@rmax3[0],10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10;
+				setarray .@rpar3[0],0;
+				
+				// 4th Random Option Slot - Race/Class/Size Damage Reductions - Human/Medium
+				setarray .@rand4[0],RDMOPT_RACE_TOLERACE_HUMAN,RDMOPT_CLASS_DAMAGE_NORMAL_USER,RDMOPT_DAMAGE_SIZE_MIDIUM_USER;
+				setarray .@rmin4[0],1,1,1;
+				setarray .@rmax4[0],10,10,10;
+				setarray .@rpar4[0],0;
+
+				// 5th Random Option Slot - Heal/Cast/Crit Reduction
+				setarray .@rand5[0],RDMOPT_DAMAGE_CRI_USER,RDMOPT_RANGE_ATTACK_DAMAGE_USER,RDMOPT_HEAL_VALUE,RDMOPT_HEAL_MODIFY_PERCENT,RDMOPT_DEC_SPELL_CAST_TIME,RDMOPT_DEC_SPELL_DELAY_TIME,RDMOPT_DEC_SP_CONSUMPTION;
+				setarray .@rmin5[0],1,1,1,1,1,1,1;
+				setarray .@rmax5[0],5,5,5,5,5,5,5;
+				setarray .@rpar5[0],0;
+				break;
+			
+				case 5: // Weapon
+				// 1st Random Option Slot - Status 
+				setarray .@rand1[0],RDMOPT_VAR_STRAMOUNT,RDMOPT_VAR_AGIAMOUNT,RDMOPT_VAR_VITAMOUNT,RDMOPT_VAR_INTAMOUNT,RDMOPT_VAR_DEXAMOUNT,RDMOPT_VAR_LUKAMOUNT,RDMOPT_VAR_ATKPERCENT,RDMOPT_VAR_MAGICATKPERCENT,RDMOPT_VAR_PLUSASPD,RDMOPT_VAR_PLUSASPDPERCENT,RDMOPT_VAR_ATTPOWER,RDMOPT_VAR_HITSUCCESSVALUE,RDMOPT_VAR_ATTMPOWER,RDMOPT_VAR_CRITICALSUCCESSVALUE;
+				setarray .@rmin1[0],10,10,1,1,1,1,1,1,1,1,1,1,1,1;
+				setarray .@rmax1[0],100,100,10,10,10,10,10,10,10,10,10,10,10,10;
+				setarray .@rpar1[0],0;
+				
+				// 2nd Random Option Slot - Elemental Attributes
+				setarray .@rand2[0],RDMOPT_WEAPON_ATTR_NOTHING,RDMOPT_WEAPON_ATTR_WATER,RDMOPT_WEAPON_ATTR_GROUND,RDMOPT_WEAPON_ATTR_FIRE,RDMOPT_WEAPON_ATTR_WIND,RDMOPT_WEAPON_ATTR_POISON,RDMOPT_WEAPON_ATTR_SAINT,RDMOPT_WEAPON_ATTR_DARKNESS,RDMOPT_WEAPON_ATTR_TELEKINESIS,RDMOPT_WEAPON_ATTR_UNDEAD;
+				setarray .@rmin2[0],1,1,1,1,1,1,1,1,1,1;
+				setarray .@rmax2[0],10,10,10,10,10,10,10,10,10,10;
+				setarray .@rpar2[0],0;
+
+				// 3rd Random Option Slot - Elemental Damage Multipliers
+				setarray .@rand3[0],RDMOPT_DAMAGE_PROPERTY_NOTHING_TARGET,RDMOPT_DAMAGE_PROPERTY_WATER_TARGET,RDMOPT_DAMAGE_PROPERTY_GROUND_TARGET,RDMOPT_DAMAGE_PROPERTY_FIRE_TARGET,RDMOPT_DAMAGE_PROPERTY_WIND_TARGET,RDMOPT_DAMAGE_PROPERTY_POISON_TARGET,RDMOPT_DAMAGE_PROPERTY_SAINT_TARGET,RDMOPT_DAMAGE_PROPERTY_DARKNESS_TARGET,RDMOPT_DAMAGE_PROPERTY_TELEKINESIS_TARGET,RDMOPT_DAMAGE_PROPERTY_UNDEAD_TARGET,RDMOPT_MDAMAGE_PROPERTY_NOTHING_TARGET,RDMOPT_MDAMAGE_PROPERTY_WATER_TARGET,RDMOPT_MDAMAGE_PROPERTY_GROUND_TARGET,RDMOPT_MDAMAGE_PROPERTY_FIRE_TARGET,RDMOPT_MDAMAGE_PROPERTY_WIND_TARGET,RDMOPT_MDAMAGE_PROPERTY_POISON_TARGET,RDMOPT_MDAMAGE_PROPERTY_SAINT_TARGET,RDMOPT_MDAMAGE_PROPERTY_DARKNESS_TARGET,RDMOPT_MDAMAGE_PROPERTY_TELEKINESIS_TARGET,RDMOPT_MDAMAGE_PROPERTY_UNDEAD_TARGET;
+				setarray .@rmin3[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
+				setarray .@rmax3[0],10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10;
+				setarray .@rpar3[0],0;
+
+				// 4th Random Option Slot - Race/Class/Size Damage Multipliers
+				setarray .@rand4[0],RDMOPT_RACE_DAMAGE_HUMAN,RDMOPT_RACE_MDAMAGE_HUMAN,RDMOPT_RACE_CRI_PERCENT_HUMAN,RDMOPT_RACE_IGNORE_DEF_PERCENT_HUMAN,RDMOPT_RACE_IGNORE_MDEF_PERCENT_HUMAN,RDMOPT_CLASS_DAMAGE_NORMAL_TARGET,RDMOPT_CLASS_MDAMAGE_NORMAL,RDMOPT_CLASS_IGNORE_DEF_PERCENT_NORMAL,RDMOPT_CLASS_IGNORE_MDEF_PERCENT_NORMAL,RDMOPT_DAMAGE_SIZE_MIDIUM_TARGET,RDMOPT_MDAMAGE_SIZE_MIDIUM_TARGET;
+				setarray .@rmin4[0],1,1,1,1,1,1,1,1,1,1,1;
+				setarray .@rmax4[0],10,10,10,10,10,10,10,10,10,10,10;
+				setarray .@rpar4[0],0;
+
+				// 5th Random Option Slot - Crit/Range Damage Multiplier
+				setarray .@rand5[0],RDMOPT_DAMAGE_CRI_TARGET,RDMOPT_RANGE_ATTACK_DAMAGE_TARGET;
+				setarray .@rmin5[0],1,1;
+				setarray .@rmax5[0],5,5;
+				setarray .@rpar5[0],0;
+				break;
+			}
+			// If you encounter problems or you are unsure if you put every value correctly, use this to check the array sizes:
+			// Either comment the /* and */ or delete them until you don't need it anymore
+			/*
+			debugmes "rand1 - "+getarraysize(.@rand1)+", "+getarraysize(.@rmin1)+", "+getarraysize(.@rmax1)+", "+getarraysize(.@rpar1);
+			debugmes "rand2 - "+getarraysize(.@rand2)+", "+getarraysize(.@rmin2)+", "+getarraysize(.@rmax2)+", "+getarraysize(.@rpar2);
+			debugmes "rand3 - "+getarraysize(.@rand3)+", "+getarraysize(.@rmin3)+", "+getarraysize(.@rmax3)+", "+getarraysize(.@rpar3);
+			debugmes "rand4 - "+getarraysize(.@rand4)+", "+getarraysize(.@rmin4)+", "+getarraysize(.@rmax4)+", "+getarraysize(.@rpar4);
+			debugmes "rand5 - "+getarraysize(.@rand5)+", "+getarraysize(.@rmin5)+", "+getarraysize(.@rmax5)+", "+getarraysize(.@rpar5);
+			*/
+			
+			for ( set .@o,1; .@o <= .@or; set .@o,.@o + 1) {
+				set .@r,rand(getarraysize(getd(".@rand"+.@o)));
+				setarray .@OptID[getarraysize(.@OptID)],getd(".@rand"+.@o+"["+.@r+"]");
+				setarray .@OptVal[getarraysize(.@OptVal)],rand(getd(".@rmin"+.@o+"["+.@r+"]"),getd(".@rmax"+.@o+"["+.@r+"]"));
+				setarray .@OptParam[getarraysize(.@OptParam)],getd(".@rpar"+.@o+"["+.@r+"]");
+			}
+			makeitem3 .eq_id[.@i],.eq_am[.@i],.@map$,rand((.@x-.@m),(.@x+.@m)),rand((.@y-.@m),(.@y+.@m)),1,.@ref,0,.@c1,.@c2,.@c3,.@c4,.@OptID,.@OptVal,.@OptParam;
+		
+		} else
+			makeitem2 .eq_id[.@i],.eq_am[.@i],.@map$,rand((.@x-.@m),(.@x+.@m)),rand((.@y-.@m),(.@y+.@m)),1,.@ref,0,.@c1,.@c2,.@c3,.@c4;
+	}
+	// Give respective Ammo for Bow/Guns
+	switch(getiteminfo(.eq_id[.@i],11)) {
+		case 11: // Bows
+		makeitem 12007,1,.@map$,rand((.@x-.@m),(.@x+.@m)),rand((.@y-.@m),(.@y+.@m)); // 1x Oridecon Arrow Quiver
+		break;
+		
+		case 17: // Revolvers
+		case 18: // Gatling Guns
+		case 19: // Shotguns
+		makeitem 13202,200,.@map$,rand((.@x-.@m),(.@x+.@m)),rand((.@y-.@m),(.@y+.@m)); // 100x Bloody Shells
+		break;
+		
+		case 20: // Grenade Launchers
+		makeitem 13203,200,.@map$,rand((.@x-.@m),(.@x+.@m)),rand((.@y-.@m),(.@y+.@m)); // 100x Flare Spheres
+		break;
+	}
+	// Clear Variables and Arrays
+	set .@ref,0;
+	set .@c1,0;
+	set .@c2,0;
+	set .@c3,0;
+	set .@c4,0;
+	deletearray .@cards[0],getarraysize(.@cards);
+	deletearray .@rand1,getarraysize(.@rand1);
+	deletearray .@rmin1,getarraysize(.@rmin1);
+	deletearray .@rmax1,getarraysize(.@rmax1);
+	deletearray .@rpar1,getarraysize(.@rpar1);
+	
+	deletearray .@rand2,getarraysize(.@rand2);
+	deletearray .@rmin2,getarraysize(.@rmin2);
+	deletearray .@rmax2,getarraysize(.@rmax2);
+	deletearray .@rpar2,getarraysize(.@rpar2);
+	
+	deletearray .@rand3,getarraysize(.@rand3);
+	deletearray .@rmin3,getarraysize(.@rmin3);
+	deletearray .@rmax3,getarraysize(.@rmax3);
+	deletearray .@rpar3,getarraysize(.@rpar3);
+			
+	deletearray .@rand4,getarraysize(.@rand4);
+	deletearray .@rmin4,getarraysize(.@rmin4);
+	deletearray .@rmax4,getarraysize(.@rmax4);
+	deletearray .@rpar4,getarraysize(.@rpar4);
+			
+	deletearray .@rand5,getarraysize(.@rand5);
+	deletearray .@rmin5,getarraysize(.@rmin5);
+	deletearray .@rmax5,getarraysize(.@rmax5);
+	deletearray .@rpar5,getarraysize(.@rpar5);
+			
+	deletearray .@OptID[0],getarraysize(.@OptID);
+	deletearray .@OptVal[0],getarraysize(.@OptVal);
+	deletearray .@OptParam[0],getarraysize(.@OptParam);
+	
+	set .@c,.@c + 1;
+}
+if(strnpcinfo(2) != "Chest#BR_TestBox") // Preventing the disabling of the Test Box 
+	disablenpc strnpcinfo(0);
+end;
+
+OnInit:
+// ===== Loot Boxes Distribution =====
+// * Randomize the Max Amount of Items based on .heal_limit/.eq_limit
+// > 0 = No, use every item available
+// > 1 = Yes, limit the amount of the dropped items
+set .randlimit,1;
+// ===== Loot Boxes Content =====
+// Note: It's important that every item is at their correct place in the arrays
+// > _id = Item ID
+// > _am = Amount
+// > _perc = Chances to recieve in percent (1 - 100)
+// ===== Healing + Buff Items =====
+// Item Info: Condensed White Potion, Grape Juice, Condensed Yellow Potion
+setarray .heal_id[0],547,533,546;
+setarray .heal_am[0],10,10,20;
+setarray .heal_perc[0],50,50,50;
+set .heal_limit,2; // Max Heal Items per Loot Box (Default: 2)
+// ===== Equipment =====
+// Item Info: Saber, Zweihander, Damascus, Bloody Fear, Windhawk, Battle Hook, Trident, Battle Fork, Stunner, Mighty Staff, Luna Bow, Berserk Guitar, Blade Whip, Round Buckler, Mink Coat, Chain Mail, Silver Robe, Combat Boots, Captain's Manteau
+setarray .eq_id[0],1127,1171,1222,1288,1307,1371,1421,1462,1485,1532,1613,1723,1920,1969,2147,2311,2314,2332,2436,2538;
+setarray .eq_am[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
+setarray .eq_perc[0],25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25;
+set .eq_limit,2; // Max Equipments per Loot Box (Default: 2)
+// * Use Refine? randomized! (per Item)
+// > 0 = No
+// > 1 = Yes
+setarray .refine[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
+// * Min + Max Refine (per Item)
+setarray .ref_min[0],0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0;
+setarray .ref_max[0],10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10;
+// * Use Cards? randomized! (per Item)
+// > 0 = No
+// > 1 = Yes
+setarray .card[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
+// * Randomize the available card slots to use based on the slots the item has? (per Item)
+// > 0 = No
+// > 1 = Yes
+setarray .card_slots[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
+// * Use Enchants? randomized! (per Item)
+// > 0 = No
+// > 1 = Yes
+setarray .enchants[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
+// * How many Enchants should be used? (per Item) / 0 = None
+setarray .ench_min[0],0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0;
+setarray .ench_max[0],3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3;
+// * Should be the amount of Enchants be random? (per Item)
+// > 0 = No
+// > 1 = Yes
+setarray .ench_rand[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
+// * Use Random Options? (per Item)
+// > 0 = No
+// > 1 = Yes
+setarray .opt[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
+// * How many Random Options should be used? (per Item) / 0 = None
+setarray .opt_min[0],0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0;
+setarray .opt_max[0],5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5;
+// * Should be the amount of Random Options be random? (per Item)
+// > 0 = No
+// > 1 = Yes
+setarray .opt_rand[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
+if(strnpcinfo(0) != "BR_LootBox" && strnpcinfo(0) != "Chest#BR_TestBox")
+	disablenpc strnpcinfo(0);
+// If you encounter problems or you are unsure if you put every value correctly, use this to check the array sizes:
+// Either comment the /* and */ or delete them until you don't need it anymore
+/*
+else if(strnpcinfo(0) == "BR_LootBox") { // Prevents the spam on your map server, because every duplicate will trigger this otherwise!
+	debugmes "BR_LootBox - OnInit - Array sizes:";
+	debugmes "Note: If you got '0' in an array, it won't will not count as a valid value!";
+	debugmes "Heal Items: .heal_id = "+getarraysize(.heal_id)+", .heal_am = "+getarraysize(.heal_am)+", .heal_perc = "+getarraysize(.heal_perc);
+	debugmes "Equipments: .eq_id = "+getarraysize(.eq_id)+", .eq_am = "+getarraysize(.eq_am)+", .eq_perc = "+getarraysize(.eq_perc);
+	debugmes "Refine: .refine = "+getarraysize(.refine)+", .ref_min = "+getarraysize(.ref_min)+", .ref_max = "+getarraysize(.ref_max);
+	debugmes "Cards: .card = "+getarraysize(.card)+", .card_slots = "+getarraysize(.card_slots);
+	debugmes "Enchants: .enchants = "+getarraysize(.enchants)+", .ench_min = "+getarraysize(.ench_min)+", .ench_max = "+getarraysize(.ench_max)+", .ench_rand = "+getarraysize(.ench_rand);
+	debugmes "Random Options: .opt = "+getarraysize(.opt)+", .opt_min = "+getarraysize(.opt_min)+", .opt_max = "+getarraysize(.opt_max)+", .opt_rand = "+getarraysize(.opt_rand);
+}
+*/
+end;
+}
+// Loot Box Duplicates
+// Note: You can duplicate as much as you want, but edit the Chest#BR<Arena>_<LootBox#> to match the number,
+// like Chest#BR1_11 for 11 Boxes in Arena 1
+prontera,150,180,0	duplicate(BR_LootBox)	Chest#BR_TestBox	4_STEELBOX // Testing Purposes
+br_alberta,0,0,0	duplicate(BR_LootBox)	Chest#BR1_1	4_STEELBOX
+br_alberta,0,0,0	duplicate(BR_LootBox)	Chest#BR1_2	4_STEELBOX
+br_alberta,0,0,0	duplicate(BR_LootBox)	Chest#BR1_3	4_STEELBOX
+br_alberta,0,0,0	duplicate(BR_LootBox)	Chest#BR1_4	4_STEELBOX
+br_alberta,0,0,0	duplicate(BR_LootBox)	Chest#BR1_5	4_STEELBOX
+br_alberta,0,0,0	duplicate(BR_LootBox)	Chest#BR1_6	4_STEELBOX
+br_alberta,0,0,0	duplicate(BR_LootBox)	Chest#BR1_7	4_STEELBOX
+br_alberta,0,0,0	duplicate(BR_LootBox)	Chest#BR1_8	4_STEELBOX
+br_alberta,0,0,0	duplicate(BR_LootBox)	Chest#BR1_9	4_STEELBOX
+br_alberta,0,0,0	duplicate(BR_LootBox)	Chest#BR1_10	4_STEELBOX
+
+br_aldeb,0,0,0	duplicate(BR_LootBox)	Chest#BR2_1	4_STEELBOX
+br_aldeb,0,0,0	duplicate(BR_LootBox)	Chest#BR2_2	4_STEELBOX
+br_aldeb,0,0,0	duplicate(BR_LootBox)	Chest#BR2_3	4_STEELBOX
+br_aldeb,0,0,0	duplicate(BR_LootBox)	Chest#BR2_4	4_STEELBOX
+br_aldeb,0,0,0	duplicate(BR_LootBox)	Chest#BR2_5	4_STEELBOX
+br_aldeb,0,0,0	duplicate(BR_LootBox)	Chest#BR2_6	4_STEELBOX
+br_aldeb,0,0,0	duplicate(BR_LootBox)	Chest#BR2_7	4_STEELBOX
+br_aldeb,0,0,0	duplicate(BR_LootBox)	Chest#BR2_8	4_STEELBOX
+br_aldeb,0,0,0	duplicate(BR_LootBox)	Chest#BR2_9	4_STEELBOX
+br_aldeb,0,0,0	duplicate(BR_LootBox)	Chest#BR2_10	4_STEELBOX
+
+br_dewata,0,0,0	duplicate(BR_LootBox)	Chest#BR3_1	4_STEELBOX
+br_dewata,0,0,0	duplicate(BR_LootBox)	Chest#BR3_2	4_STEELBOX
+br_dewata,0,0,0	duplicate(BR_LootBox)	Chest#BR3_3	4_STEELBOX
+br_dewata,0,0,0	duplicate(BR_LootBox)	Chest#BR3_4	4_STEELBOX
+br_dewata,0,0,0	duplicate(BR_LootBox)	Chest#BR3_5	4_STEELBOX
+br_dewata,0,0,0	duplicate(BR_LootBox)	Chest#BR3_6	4_STEELBOX
+br_dewata,0,0,0	duplicate(BR_LootBox)	Chest#BR3_7	4_STEELBOX
+br_dewata,0,0,0	duplicate(BR_LootBox)	Chest#BR3_8	4_STEELBOX
+br_dewata,0,0,0	duplicate(BR_LootBox)	Chest#BR3_9	4_STEELBOX
+br_dewata,0,0,0	duplicate(BR_LootBox)	Chest#BR3_10	4_STEELBOX
+
+br_eclage,0,0,0	duplicate(BR_LootBox)	Chest#BR4_1	4_STEELBOX
+br_eclage,0,0,0	duplicate(BR_LootBox)	Chest#BR4_2	4_STEELBOX
+br_eclage,0,0,0	duplicate(BR_LootBox)	Chest#BR4_3	4_STEELBOX
+br_eclage,0,0,0	duplicate(BR_LootBox)	Chest#BR4_4	4_STEELBOX
+br_eclage,0,0,0	duplicate(BR_LootBox)	Chest#BR4_5	4_STEELBOX
+br_eclage,0,0,0	duplicate(BR_LootBox)	Chest#BR4_6	4_STEELBOX
+br_eclage,0,0,0	duplicate(BR_LootBox)	Chest#BR4_7	4_STEELBOX
+br_eclage,0,0,0	duplicate(BR_LootBox)	Chest#BR4_8	4_STEELBOX
+br_eclage,0,0,0	duplicate(BR_LootBox)	Chest#BR4_9	4_STEELBOX
+br_eclage,0,0,0	duplicate(BR_LootBox)	Chest#BR4_10	4_STEELBOX
+
+br_einbech,0,0,0	duplicate(BR_LootBox)	Chest#BR5_1	4_STEELBOX
+br_einbech,0,0,0	duplicate(BR_LootBox)	Chest#BR5_2	4_STEELBOX
+br_einbech,0,0,0	duplicate(BR_LootBox)	Chest#BR5_3	4_STEELBOX
+br_einbech,0,0,0	duplicate(BR_LootBox)	Chest#BR5_4	4_STEELBOX
+br_einbech,0,0,0	duplicate(BR_LootBox)	Chest#BR5_5	4_STEELBOX
+br_einbech,0,0,0	duplicate(BR_LootBox)	Chest#BR5_6	4_STEELBOX
+br_einbech,0,0,0	duplicate(BR_LootBox)	Chest#BR5_7	4_STEELBOX
+br_einbech,0,0,0	duplicate(BR_LootBox)	Chest#BR5_8	4_STEELBOX
+br_einbech,0,0,0	duplicate(BR_LootBox)	Chest#BR5_9	4_STEELBOX
+br_einbech,0,0,0	duplicate(BR_LootBox)	Chest#BR5_10	4_STEELBOX
+
+br_einbroch,0,0,0	duplicate(BR_LootBox)	Chest#BR6_1	4_STEELBOX
+br_einbroch,0,0,0	duplicate(BR_LootBox)	Chest#BR6_2	4_STEELBOX
+br_einbroch,0,0,0	duplicate(BR_LootBox)	Chest#BR6_3	4_STEELBOX
+br_einbroch,0,0,0	duplicate(BR_LootBox)	Chest#BR6_4	4_STEELBOX
+br_einbroch,0,0,0	duplicate(BR_LootBox)	Chest#BR6_5	4_STEELBOX
+br_einbroch,0,0,0	duplicate(BR_LootBox)	Chest#BR6_6	4_STEELBOX
+br_einbroch,0,0,0	duplicate(BR_LootBox)	Chest#BR6_7	4_STEELBOX
+br_einbroch,0,0,0	duplicate(BR_LootBox)	Chest#BR6_8	4_STEELBOX
+br_einbroch,0,0,0	duplicate(BR_LootBox)	Chest#BR6_9	4_STEELBOX
+br_einbroch,0,0,0	duplicate(BR_LootBox)	Chest#BR6_10	4_STEELBOX
+
+br_geffen,0,0,0	duplicate(BR_LootBox)	Chest#BR7_1	4_STEELBOX
+br_geffen,0,0,0	duplicate(BR_LootBox)	Chest#BR7_2	4_STEELBOX
+br_geffen,0,0,0	duplicate(BR_LootBox)	Chest#BR7_3	4_STEELBOX
+br_geffen,0,0,0	duplicate(BR_LootBox)	Chest#BR7_4	4_STEELBOX
+br_geffen,0,0,0	duplicate(BR_LootBox)	Chest#BR7_5	4_STEELBOX
+br_geffen,0,0,0	duplicate(BR_LootBox)	Chest#BR7_6	4_STEELBOX
+br_geffen,0,0,0	duplicate(BR_LootBox)	Chest#BR7_7	4_STEELBOX
+br_geffen,0,0,0	duplicate(BR_LootBox)	Chest#BR7_8	4_STEELBOX
+br_geffen,0,0,0	duplicate(BR_LootBox)	Chest#BR7_9	4_STEELBOX
+br_geffen,0,0,0	duplicate(BR_LootBox)	Chest#BR7_10	4_STEELBOX
+
+br_gonryun,0,0,0	duplicate(BR_LootBox)	Chest#BR8_1	4_STEELBOX
+br_gonryun,0,0,0	duplicate(BR_LootBox)	Chest#BR8_2	4_STEELBOX
+br_gonryun,0,0,0	duplicate(BR_LootBox)	Chest#BR8_3	4_STEELBOX
+br_gonryun,0,0,0	duplicate(BR_LootBox)	Chest#BR8_4	4_STEELBOX
+br_gonryun,0,0,0	duplicate(BR_LootBox)	Chest#BR8_5	4_STEELBOX
+br_gonryun,0,0,0	duplicate(BR_LootBox)	Chest#BR8_6	4_STEELBOX
+br_gonryun,0,0,0	duplicate(BR_LootBox)	Chest#BR8_7	4_STEELBOX
+br_gonryun,0,0,0	duplicate(BR_LootBox)	Chest#BR8_8	4_STEELBOX
+br_gonryun,0,0,0	duplicate(BR_LootBox)	Chest#BR8_9	4_STEELBOX
+br_gonryun,0,0,0	duplicate(BR_LootBox)	Chest#BR8_10	4_STEELBOX
+
+br_hugel,0,0,0	duplicate(BR_LootBox)	Chest#BR9_1	4_STEELBOX
+br_hugel,0,0,0	duplicate(BR_LootBox)	Chest#BR9_2	4_STEELBOX
+br_hugel,0,0,0	duplicate(BR_LootBox)	Chest#BR9_3	4_STEELBOX
+br_hugel,0,0,0	duplicate(BR_LootBox)	Chest#BR9_4	4_STEELBOX
+br_hugel,0,0,0	duplicate(BR_LootBox)	Chest#BR9_5	4_STEELBOX
+br_hugel,0,0,0	duplicate(BR_LootBox)	Chest#BR9_6	4_STEELBOX
+br_hugel,0,0,0	duplicate(BR_LootBox)	Chest#BR9_7	4_STEELBOX
+br_hugel,0,0,0	duplicate(BR_LootBox)	Chest#BR9_8	4_STEELBOX
+br_hugel,0,0,0	duplicate(BR_LootBox)	Chest#BR9_9	4_STEELBOX
+br_hugel,0,0,0	duplicate(BR_LootBox)	Chest#BR9_10	4_STEELBOX
+
+br_izlude,0,0,0	duplicate(BR_LootBox)	Chest#BR10_1	4_STEELBOX
+br_izlude,0,0,0	duplicate(BR_LootBox)	Chest#BR10_2	4_STEELBOX
+br_izlude,0,0,0	duplicate(BR_LootBox)	Chest#BR10_3	4_STEELBOX
+br_izlude,0,0,0	duplicate(BR_LootBox)	Chest#BR10_4	4_STEELBOX
+br_izlude,0,0,0	duplicate(BR_LootBox)	Chest#BR10_5	4_STEELBOX
+br_izlude,0,0,0	duplicate(BR_LootBox)	Chest#BR10_6	4_STEELBOX
+br_izlude,0,0,0	duplicate(BR_LootBox)	Chest#BR10_7	4_STEELBOX
+br_izlude,0,0,0	duplicate(BR_LootBox)	Chest#BR10_8	4_STEELBOX
+br_izlude,0,0,0	duplicate(BR_LootBox)	Chest#BR10_9	4_STEELBOX
+br_izlude,0,0,0	duplicate(BR_LootBox)	Chest#BR10_10	4_STEELBOX
+
+br_lasagna,0,0,0	duplicate(BR_LootBox)	Chest#BR11_1	4_STEELBOX
+br_lasagna,0,0,0	duplicate(BR_LootBox)	Chest#BR11_2	4_STEELBOX
+br_lasagna,0,0,0	duplicate(BR_LootBox)	Chest#BR11_3	4_STEELBOX
+br_lasagna,0,0,0	duplicate(BR_LootBox)	Chest#BR11_4	4_STEELBOX
+br_lasagna,0,0,0	duplicate(BR_LootBox)	Chest#BR11_5	4_STEELBOX
+br_lasagna,0,0,0	duplicate(BR_LootBox)	Chest#BR11_6	4_STEELBOX
+br_lasagna,0,0,0	duplicate(BR_LootBox)	Chest#BR11_7	4_STEELBOX
+br_lasagna,0,0,0	duplicate(BR_LootBox)	Chest#BR11_8	4_STEELBOX
+br_lasagna,0,0,0	duplicate(BR_LootBox)	Chest#BR11_9	4_STEELBOX
+br_lasagna,0,0,0	duplicate(BR_LootBox)	Chest#BR11_10	4_STEELBOX
+
+br_morocc,0,0,0	duplicate(BR_LootBox)	Chest#BR12_1	4_STEELBOX
+br_morocc,0,0,0	duplicate(BR_LootBox)	Chest#BR12_2	4_STEELBOX
+br_morocc,0,0,0	duplicate(BR_LootBox)	Chest#BR12_3	4_STEELBOX
+br_morocc,0,0,0	duplicate(BR_LootBox)	Chest#BR12_4	4_STEELBOX
+br_morocc,0,0,0	duplicate(BR_LootBox)	Chest#BR12_5	4_STEELBOX
+br_morocc,0,0,0	duplicate(BR_LootBox)	Chest#BR12_6	4_STEELBOX
+br_morocc,0,0,0	duplicate(BR_LootBox)	Chest#BR12_7	4_STEELBOX
+br_morocc,0,0,0	duplicate(BR_LootBox)	Chest#BR12_8	4_STEELBOX
+br_morocc,0,0,0	duplicate(BR_LootBox)	Chest#BR12_9	4_STEELBOX
+br_morocc,0,0,0	duplicate(BR_LootBox)	Chest#BR12_10	4_STEELBOX
+
+br_moscovia,0,0,0	duplicate(BR_LootBox)	Chest#BR13_1	4_STEELBOX
+br_moscovia,0,0,0	duplicate(BR_LootBox)	Chest#BR13_2	4_STEELBOX
+br_moscovia,0,0,0	duplicate(BR_LootBox)	Chest#BR13_3	4_STEELBOX
+br_moscovia,0,0,0	duplicate(BR_LootBox)	Chest#BR13_4	4_STEELBOX
+br_moscovia,0,0,0	duplicate(BR_LootBox)	Chest#BR13_5	4_STEELBOX
+br_moscovia,0,0,0	duplicate(BR_LootBox)	Chest#BR13_6	4_STEELBOX
+br_moscovia,0,0,0	duplicate(BR_LootBox)	Chest#BR13_7	4_STEELBOX
+br_moscovia,0,0,0	duplicate(BR_LootBox)	Chest#BR13_8	4_STEELBOX
+br_moscovia,0,0,0	duplicate(BR_LootBox)	Chest#BR13_9	4_STEELBOX
+br_moscovia,0,0,0	duplicate(BR_LootBox)	Chest#BR13_10	4_STEELBOX
+
+br_niflheim,0,0,0	duplicate(BR_LootBox)	Chest#BR14_1	4_STEELBOX
+br_niflheim,0,0,0	duplicate(BR_LootBox)	Chest#BR14_2	4_STEELBOX
+br_niflheim,0,0,0	duplicate(BR_LootBox)	Chest#BR14_3	4_STEELBOX
+br_niflheim,0,0,0	duplicate(BR_LootBox)	Chest#BR14_4	4_STEELBOX
+br_niflheim,0,0,0	duplicate(BR_LootBox)	Chest#BR14_5	4_STEELBOX
+br_niflheim,0,0,0	duplicate(BR_LootBox)	Chest#BR14_6	4_STEELBOX
+br_niflheim,0,0,0	duplicate(BR_LootBox)	Chest#BR14_7	4_STEELBOX
+br_niflheim,0,0,0	duplicate(BR_LootBox)	Chest#BR14_8	4_STEELBOX
+br_niflheim,0,0,0	duplicate(BR_LootBox)	Chest#BR14_9	4_STEELBOX
+br_niflheim,0,0,0	duplicate(BR_LootBox)	Chest#BR14_10	4_STEELBOX
+
+br_payon,0,0,0	duplicate(BR_LootBox)	Chest#BR15_1	4_STEELBOX
+br_payon,0,0,0	duplicate(BR_LootBox)	Chest#BR15_2	4_STEELBOX
+br_payon,0,0,0	duplicate(BR_LootBox)	Chest#BR15_3	4_STEELBOX
+br_payon,0,0,0	duplicate(BR_LootBox)	Chest#BR15_4	4_STEELBOX
+br_payon,0,0,0	duplicate(BR_LootBox)	Chest#BR15_5	4_STEELBOX
+br_payon,0,0,0	duplicate(BR_LootBox)	Chest#BR15_6	4_STEELBOX
+br_payon,0,0,0	duplicate(BR_LootBox)	Chest#BR15_7	4_STEELBOX
+br_payon,0,0,0	duplicate(BR_LootBox)	Chest#BR15_8	4_STEELBOX
+br_payon,0,0,0	duplicate(BR_LootBox)	Chest#BR15_9	4_STEELBOX
+br_payon,0,0,0	duplicate(BR_LootBox)	Chest#BR15_10	4_STEELBOX
+
+br_prontera,0,0,0	duplicate(BR_LootBox)	Chest#BR16_1	4_STEELBOX
+br_prontera,0,0,0	duplicate(BR_LootBox)	Chest#BR16_2	4_STEELBOX
+br_prontera,0,0,0	duplicate(BR_LootBox)	Chest#BR16_3	4_STEELBOX
+br_prontera,0,0,0	duplicate(BR_LootBox)	Chest#BR16_4	4_STEELBOX
+br_prontera,0,0,0	duplicate(BR_LootBox)	Chest#BR16_5	4_STEELBOX
+br_prontera,0,0,0	duplicate(BR_LootBox)	Chest#BR16_6	4_STEELBOX
+br_prontera,0,0,0	duplicate(BR_LootBox)	Chest#BR16_7	4_STEELBOX
+br_prontera,0,0,0	duplicate(BR_LootBox)	Chest#BR16_8	4_STEELBOX
+br_prontera,0,0,0	duplicate(BR_LootBox)	Chest#BR16_9	4_STEELBOX
+br_prontera,0,0,0	duplicate(BR_LootBox)	Chest#BR16_10	4_STEELBOX
+
+br_rachel,0,0,0	duplicate(BR_LootBox)	Chest#BR17_1	4_STEELBOX
+br_rachel,0,0,0	duplicate(BR_LootBox)	Chest#BR17_2	4_STEELBOX
+br_rachel,0,0,0	duplicate(BR_LootBox)	Chest#BR17_3	4_STEELBOX
+br_rachel,0,0,0	duplicate(BR_LootBox)	Chest#BR17_4	4_STEELBOX
+br_rachel,0,0,0	duplicate(BR_LootBox)	Chest#BR17_5	4_STEELBOX
+br_rachel,0,0,0	duplicate(BR_LootBox)	Chest#BR17_6	4_STEELBOX
+br_rachel,0,0,0	duplicate(BR_LootBox)	Chest#BR17_7	4_STEELBOX
+br_rachel,0,0,0	duplicate(BR_LootBox)	Chest#BR17_8	4_STEELBOX
+br_rachel,0,0,0	duplicate(BR_LootBox)	Chest#BR17_9	4_STEELBOX
+br_rachel,0,0,0	duplicate(BR_LootBox)	Chest#BR17_10	4_STEELBOX
+
+br_splend,0,0,0	duplicate(BR_LootBox)	Chest#BR18_1	4_STEELBOX
+br_splend,0,0,0	duplicate(BR_LootBox)	Chest#BR18_2	4_STEELBOX
+br_splend,0,0,0	duplicate(BR_LootBox)	Chest#BR18_3	4_STEELBOX
+br_splend,0,0,0	duplicate(BR_LootBox)	Chest#BR18_4	4_STEELBOX
+br_splend,0,0,0	duplicate(BR_LootBox)	Chest#BR18_5	4_STEELBOX
+br_splend,0,0,0	duplicate(BR_LootBox)	Chest#BR18_6	4_STEELBOX
+br_splend,0,0,0	duplicate(BR_LootBox)	Chest#BR18_7	4_STEELBOX
+br_splend,0,0,0	duplicate(BR_LootBox)	Chest#BR18_8	4_STEELBOX
+br_splend,0,0,0	duplicate(BR_LootBox)	Chest#BR18_9	4_STEELBOX
+br_splend,0,0,0	duplicate(BR_LootBox)	Chest#BR18_10	4_STEELBOX
+
+br_veins,0,0,0	duplicate(BR_LootBox)	Chest#BR19_1	4_STEELBOX
+br_veins,0,0,0	duplicate(BR_LootBox)	Chest#BR19_2	4_STEELBOX
+br_veins,0,0,0	duplicate(BR_LootBox)	Chest#BR19_3	4_STEELBOX
+br_veins,0,0,0	duplicate(BR_LootBox)	Chest#BR19_4	4_STEELBOX
+br_veins,0,0,0	duplicate(BR_LootBox)	Chest#BR19_5	4_STEELBOX
+br_veins,0,0,0	duplicate(BR_LootBox)	Chest#BR19_6	4_STEELBOX
+br_veins,0,0,0	duplicate(BR_LootBox)	Chest#BR19_7	4_STEELBOX
+br_veins,0,0,0	duplicate(BR_LootBox)	Chest#BR19_8	4_STEELBOX
+br_veins,0,0,0	duplicate(BR_LootBox)	Chest#BR19_9	4_STEELBOX
+br_veins,0,0,0	duplicate(BR_LootBox)	Chest#BR19_10	4_STEELBOX
+
+br_yuno,0,0,0	duplicate(BR_LootBox)	Chest#BR20_1	4_STEELBOX
+br_yuno,0,0,0	duplicate(BR_LootBox)	Chest#BR20_2	4_STEELBOX
+br_yuno,0,0,0	duplicate(BR_LootBox)	Chest#BR20_3	4_STEELBOX
+br_yuno,0,0,0	duplicate(BR_LootBox)	Chest#BR20_4	4_STEELBOX
+br_yuno,0,0,0	duplicate(BR_LootBox)	Chest#BR20_5	4_STEELBOX
+br_yuno,0,0,0	duplicate(BR_LootBox)	Chest#BR20_6	4_STEELBOX
+br_yuno,0,0,0	duplicate(BR_LootBox)	Chest#BR20_7	4_STEELBOX
+br_yuno,0,0,0	duplicate(BR_LootBox)	Chest#BR20_8	4_STEELBOX
+br_yuno,0,0,0	duplicate(BR_LootBox)	Chest#BR20_9	4_STEELBOX
+br_yuno,0,0,0	duplicate(BR_LootBox)	Chest#BR20_10	4_STEELBOX

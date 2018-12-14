@@ -24,6 +24,28 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2018/12/15
+<< == |*| Last Man Standing v1.0 [RE] - @Modified |*| == >>
+- Fixed an fatal error after someone wins the match
+- Added Queue Usage
+- Some minor adjustments
+<< == |*| Mass Seller v1.1 [RE] - @Updated to v1.1 |*| == >>
+- Added the feature to ignore items which aren't worth anything
+- Moved the sell part a bit below
+- Fixed an missing right curly in "Sell Items" case
+<< == |*| Quest System v1.2 [RE] - @Updated to v1.3 |*| == >>
+- Changed the `limit` code to use 0 as not repeatable instead of 0
+<< == |*| Battle Royale Event v1.0 [WIP] - @Added |*| == >>
+- Most of the script done, testing and bug fixing...
+<< == |*| InGame CP v1.3 [RE] - @Modified |*| == >>
+- Some minor changes
+<< == |*| Unofficial OldGlastheim Hard Mode[RE] - @Release |*| == >>
+- Unofficial OldGlastheim Hard Instance with updated NPC's
+- Khalitzburg Knight Card Trader
+- White Knight Card Trader
+<< == |*| General - @Update |*| == >>
+- Project_List.txt
+------------------------------------------------------------------------------------------------------------------------
 * 2018/10/25
 << == |*| Chris Functions v1.0 [RE] - @Modified |*| == >>
 - Split into two files according to their functions and renamed them:
