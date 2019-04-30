@@ -24,6 +24,21 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2019/04/30
+<< == |*| Battle Royale v1.0 [WIP] - @Modified |*| == >>
+- Updated "UNITTYPE_PC" to "BL_NPC"
+- Moved Fluent Zone Movement to ToDO List
+- Added an check to prevent registering on a different Arena while already registered
+- Small change to how openstorage; is used, untested
+- Added some lines to add partymembers automatically to the queue as well
+- Fixxed some typos in the Information part
+- .bzone_time renamed to .reveal_time and renamed .dzone_time to .zone_time
+- Removed nearly every debugmes
+- Recoded the Zone Management
+- Added an Player Counter per Arena
+- Modified the OnPCDieEvent Code
+- Recoded the Loot Boxes
+------------------------------------------------------------------------------------------------------------------------
 * 2018/12/15
 << == |*| Last Man Standing v1.0 [RE] - @Modified |*| == >>
 - Fixed an fatal error after someone wins the match

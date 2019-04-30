@@ -5,20 +5,21 @@
 //===== Version ==============================================
 //= 1.0 - Initial Version
 //===== Tested With ==========================================
-//= rAthena 10/10/2018 Revision
-//= GIT Hash: 55acdb9863382d8935d9df25e1462d5d1ebd7d54
+//= rAthena 04/26/2019 Revision
+//= GIT Hash: 67e1583f9fec7ac95a954634f6b7600ebe428df0
 //===== Description ==========================================
 //= Easy configurable
 //= 20 Arenas to choose from (expandable)
 //= Loot Boxes with easy setup (Loot drops on the floor)
 //= Solo, Duo or Squad Types available (random every Day, if not set otherwise)
 //= Item Restriction to equipped Costumes (Top/Middle/Lower Headgear)
-//= Battle Royale Shop (Costumes) to spend your hard earned Battle Royale Coins
+//= Battle Royale Shop (Costumes) to spend your hard earned Battle Royale Points
 //= The items of dead players will drop around them
 //===== Comments =============================================
 //= Inspired by Battle Royale Games like PUBG
 //===== ToDO =================================================
 //= Adding feature to allow certain skills (skill_nocast_db.txt)
+//= Optional: Fluent Zone Movement
 //= Optional: Adding an Time Limit to matches
 //= Optional: Battleground System Integration
 //============================================================
@@ -40,7 +41,7 @@ for ( set .@l,0; .@l < @inventorylist_count; set .@l,.@l + 1) {
 	else if(getarg(1) == 2) // Delete
 		delitem @inventorylist_id[.@l],@inventorylist_amount[.@l];
 	else if(getarg(1) == 3) { // Drop Item (makeitem usage)
-		getmapxy(.@map$,.@x,.@y,UNITTYPE_PC);
+		getmapxy(.@map$,.@x,.@y,BL_NPC);
 		set .@m,3; // Set range of area around the Player for makeitem
 		
 		switch(getiteminfo(@inventorylist_id[.@l],2)) {
@@ -77,6 +78,10 @@ next;
 switch(select("- Register for Battle Royale:- Battle Royale Shop:- Information:- Nevermind")) {
 	case 1:
 	mes .n$;
+	if(@BR_ID) {
+		mes "Please wait until the Match has started.";
+		close;
+	}
 	for ( set .@c,0; .@c < getarraysize(.arena$); set .@c,.@c + 1)
 		set .@a_menu$,.@a_menu$ + ( (.BR_Status[.@c] < 2)?"- "+.arena$[.@c] + " - ["+ ( (.type[.@c] == 1)?"Solo":( (.type[.@c] == 2)?"Duo":"Squad"))+"] ("+( (!.BR_Status[.@c])?"Inactive":"Registration") +")":"")+ ( (.arena$[.@c+1] != "")?":":"");
 	mes "Please choose the Arena:";
@@ -103,8 +108,10 @@ switch(select("- Register for Battle Royale:- Battle Royale Shop:- Information:-
 		mes .n$;
 		mes "I will now open for you your storage to put every invalid item away.";
 		mes "I will also check right before the match start about it.";
+		mes "Note: The storage will be opened after you close this window. You have 10 seconds until I continue.";
+		close2;
 		openstorage;
-		next;
+		sleep2 10000;
 		mes .n$;
 		if(BR_Inv(getcharid(0),1) != 0) {
 			mes "It looks like you didn't put away every item.";
@@ -163,8 +170,11 @@ switch(select("- Register for Battle Royale:- Battle Royale Shop:- Information:-
 			} else
 				mes "Good, your party is good to go. But remember not to try and trick me, I will check it again.";
 			for ( set .@a,0; .@a < .@pty_ct; set .@a,.@a + 1)
-				if(isloggedin(.@pty_aid[.@a],.@pty_cid[.@a]) == 1)
-					setarray getd("$@q"+.@br+"["+getarraysize(getd("$@q"+.@br))+"]"),.@pty_cid[.@a];
+				if(isloggedin(.@pty_aid[.@a],.@pty_cid[.@a]) == 1) {
+					attachrid(.@pty_aid[.@a]);
+					setarray getd("$@q"+.@br+"["+getarraysize(getd("$@q"+.@br))+"]"),getcharid(0);
+					set @BR_ID,.@br;
+				}
 				
 		} else {
 			if(getcharid(1) != 0) {
@@ -187,7 +197,8 @@ switch(select("- Register for Battle Royale:- Battle Royale Shop:- Information:-
 		mes "I'm sorry, but you can't register currently for the chosen Arena, since it's still in progress.";
 		close;
 	}
-	break;
+	set @BR_ID,.@br;
+	end;
 	
 	// Battle Royale Shop
 	case 2:
@@ -225,11 +236,11 @@ switch(select("- Register for Battle Royale:- Battle Royale Shop:- Information:-
 	mes " > Maximum Level: "+.max_level[.@l];
 	next;
 	mes "["+.arena$[.@l]+" - Zone]";
-	mes " > Last Zone Size: "+getvariableofnpc(getd(".last_zone_size_"+.@i+"["+.@l+"]"),"BR_Init")+" Cells";
-	mes " > Minimum cells from borders: "+getvariableofnpc(getd(".zone_start_"+.@i+"["+.@l+"]"),"BR_Init")+" Cells";
-	mes " > Zone Movement: "+getvariableofnpc(getd(".zone_move_"+.@i+"["+.@l+"]"),"BR_Init")+" Cells";
-	mes " > Battle Zone Timer: "+getvariableofnpc(getd(".bzone_time_"+.@i+"["+.@l+"]"),"BR_Init")+" seconds";
-	mes " > Damage Zone Timer: "+getvariableofnpc(getd(".dzone_time_"+.@i+"["+.@l+"]"),"BR_Init")+" seconds";
+	mes " > Last Zone Size: "+getvariableofnpc(getd(".last_zone_size_"+.@i),"BR_Init")+" Cells";
+	mes " > Minimum cells from borders: "+getvariableofnpc(getd(".zone_start_"+.@i),"BR_Init")+" Cells";
+	mes " > Zone Movement: "+getvariableofnpc(getd(".zone_move_"+.@i),"BR_Init")+" Cells";
+	mes " > Zone Timer: "+getvariableofnpc(getd(".zone_time_"+.@i),"BR_Init")+" seconds";
+	mes " > Reveal Timer: "+getvariableofnpc(getd(".reveal_time_"+.@i),"BR_Init")+" seconds";
 	next;
 	mes "["+.arena$[.@l]+" - Reward]";
 	mes " > Multiplier of Placements:";
@@ -254,9 +265,8 @@ switch(select("- Register for Battle Royale:- Battle Royale Shop:- Information:-
 	mes "Solo should be obvious. Also you are only allowed to have equipped Costumes, which are limited to Head, Middle and Low Headgears.";
 	mes "After passing these conditions and enough player have registered, you'll be warped randomly on the battlefield.";
 	mes "@Commands and Skills are disabled. In the future classes might gain the opportunity to use basic skills.";
-	mes "There are 2 different Zones you should be aware of, the Battle Zone and the Damage Zone.";
-	mes "The battle zone is the zone, where you should be inside of to be safe from the Damage Zone, both are getting smaller after a certain time.";
-	mes "The damage zone will damage you each 5th second you are in it. Both zones are announced when they are starting to move.";
+	mes "The zone is where you should be inside of to be safe from the damage you will recieve each 5th second while outside of it. It's also getting smaller after a certain time.";
+	mes "But that will be announced before it starts to move.";
 	break;
 	
 	case 4: break;	
@@ -329,14 +339,14 @@ setarray .players[0],20,15,20,15,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20
 // Time Limit to register for Battle Royale per Arena (in minutes)
 setarray .Reg_Timer[0],3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3;
 // Level Restriction per Arena
-set .m_level,500; // Server Max Level
+set .m_level,400; // Server Max Level
 setarray .min_level[0],50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50;
 setarray .max_level[0],.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level,.m_level;
 // Create waitingroom on Server Start
 waitingroom "Battle Royale - Inactive",0;
 donpcevent strnpcinfo(0)+"::OnWaitingRoom";
 OnClock0000:
-// Randomized Battle Royale Type every Day, you can optionally set the type of each Arena tho:
+// Randomized Battle Royale Type every Day, you can optionally set the type of each Arena too:
 // 1 = Solo, 2 = Duo, 3 = Squad
 setarray .type[0],rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3),rand(1,3);
 end;
@@ -375,17 +385,15 @@ if(strnpcinfo(0) == "BR_Init") end;
 // > .@BR_ID = ID of the Arena
 // > .area[] = Define the area where the zone will be selected from!
 // > .last_zone_size = Size of the last zone in cells (in all directions!)
-// > .zone_start = Minimum cells between centre of the zone and the corners (.area)
-//   (To avoid zones at the corners)
 // > .zone_move = How many cells should the zone move towards the centre
-// > .bzone_time = Time until the next battle zone will be announced (in seconds)
-// > .dzone_time = Time until the damage zone will move towards the battle zone (in seconds)
+// > .zone_time = Time until the zone moves (in seconds)
+// > .reveal_time = Time until the next Zone will be revealed (in seconds)
 // > .rew_place = Multiplier for Reward depending on Placement
 // ex: 1st place gets *10 more points, eveything after tenth place gets *1
+// Note: You can increase the placements by adding more values to the array. Like making 20 different multipliers.
 // > .rew_base = Minimum (Base) Points of Reward
 // > .loot_box = How many loot boxes are available?
-// Note: If you want to increase this value, you also need to add more duplicates, search for "duplicate(BR_LootBox)"
-// > .dzone_move = How many seconds have to pass until the damage zone moves by 1 (Fluent Damage Zone Movement)
+// Note: You can increase this value, but you also need to add more duplicates to match it; Search for "duplicate(BR_LootBox)"
 // ====================================
 set .@BR_ID,atoi(strnpcinfo(2));
 switch(.@BR_ID) {
@@ -397,223 +405,189 @@ switch(.@BR_ID) {
 	case 1: // Alberta
 	setarray getd(".area_"+.@BR_ID+"[0]"),26,25,206,227;
 	setd(".last_zone_size_"+.@BR_ID),5;
-	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 	
 	case 2: // Aldebaran
 	setarray getd(".area_"+.@BR_ID+"[0]"),35,40,236,238;
 	setd(".last_zone_size_"+.@BR_ID),15;
-	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 	
 	case 3: // Dewata
 	setarray getd(".area_"+.@BR_ID+"[0]"),47,75,283,310;
 	setd(".last_zone_size_"+.@BR_ID),15;
-	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 	
 	case 4: // Eclage
 	setarray getd(".area_"+.@BR_ID+"[0]"),101,31,302,257;
 	setd(".last_zone_size_"+.@BR_ID),15;
-	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 	
 	case 5: // Einbech
 	setarray getd(".area_"+.@BR_ID+"[0]"),33,53,257,169;
 	setd(".last_zone_size_"+.@BR_ID),15;
-	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 	
 	case 6: // Einbroch
 	setarray getd(".area_"+.@BR_ID+"[0]"),45,36,317,326;
 	setd(".last_zone_size_"+.@BR_ID),15;
-	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 	
 	case 7: // Geffen
 	setarray getd(".area_"+.@BR_ID+"[0]"),50,50,189,189;
 	setd(".last_zone_size_"+.@BR_ID),15;
-	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 	
 	case 8: // Gonryun
 	setarray getd(".area_"+.@BR_ID+"[0]"),35,15,271,223;
 	setd(".last_zone_size_"+.@BR_ID),15;
-	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 	
 	case 9: // Hugel
 	setarray getd(".area_"+.@BR_ID+"[0]"),44,58,218,231;
 	setd(".last_zone_size_"+.@BR_ID),15;
-	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 	
 	case 10: // Izlude
 	setarray getd(".area_"+.@BR_ID+"[0]"),44,89,143,262;
 	setd(".last_zone_size_"+.@BR_ID),15;
-	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 	
 	case 11: // Lasagna
 	setarray getd(".area_"+.@BR_ID+"[0]"),0,0,0,0;
 	setd(".last_zone_size_"+.@BR_ID),15;
-	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 	
 	case 12: // Morroc
 	setarray getd(".area_"+.@BR_ID+"[0]"),0,0,0,0;
 	setd(".last_zone_size_"+.@BR_ID),15;
-	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 	
 	case 13: // Moscovia
 	setarray getd(".area_"+.@BR_ID+"[0]"),0,0,0,0;
 	setd(".last_zone_size_"+.@BR_ID),15;
-	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 	
 	case 14: // Niflheim
 	setarray getd(".area_"+.@BR_ID+"[0]"),0,0,0,0;
 	setd(".last_zone_size_"+.@BR_ID),15;
-	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 	
 	case 15: // Payon
 	setarray getd(".area_"+.@BR_ID+"[0]"),0,0,0,0;
 	setd(".last_zone_size_"+.@BR_ID),15;
-	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 	
 	
 	case 16: // Prontera
 	setarray getd(".area_"+.@BR_ID+"[0]"),44,26,267,365;
 	setd(".last_zone_size_"+.@BR_ID),15;
-	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 	
 	case 17: // Rachel
 	setarray getd(".area_"+.@BR_ID+"[0]"),0,0,0,0;
 	setd(".last_zone_size_"+.@BR_ID),15;
-	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 	
 	case 18: // Splendide
@@ -621,40 +595,36 @@ switch(.@BR_ID) {
 	setd(".last_zone_size_"+.@BR_ID),15;
 	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 	
 	case 19: // Veins
 	setarray getd(".area_"+.@BR_ID+"[0]"),0,0,0,0;
 	setd(".last_zone_size_"+.@BR_ID),15;
-	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 	
 	case 20: // Yuno
 	setarray getd(".area_"+.@BR_ID+"[0]"),0,0,0,0;
 	setd(".last_zone_size_"+.@BR_ID),15;
-	setd(".zone_start_"+.@BR_ID),25;
 	setd(".zone_move_"+.@BR_ID),15;
-	setd(".bzone_time_"+.@BR_ID),120;
-	setd(".dzone_time_"+.@BR_ID),180;
+	setd(".zone_time_"+.@BR_ID),180;
+	setd(".reveal_time_"+.@BR_ID),30;
 	setarray getd(".rew_place_"+.@BR_ID+"[1]"),10,8,8,8,5,5,3,2,2,1;
 	setd(".rew_base_"+.@BR_ID),50;
 	setd(".loot_box_"+.@BR_ID),10;
-	setd(".dzone_move_"+.@BR_ID),5;
 	break;
 }
+setcell strnpcinfo(4),getd(".area_"+.@BR_ID+"[0]"),getd(".area_"+.@BR_ID+"[1]"),getd(".area_"+.@BR_ID+"[2]"),getd(".area_"+.@BR_ID+"[3]"),cell_landprotector,1;
 setd("$@q"+.@BR_ID+"$"),"";
 deletearray getd("$@q"+.@BR_ID),getarraysize(getd("$@q"+.@BR_ID));;
 // Setting Mapflags
@@ -662,52 +632,29 @@ for ( set .@m,0; .@m < getarraysize(.mf); set .@m,.@m + 1)
 	setmapflag strnpcinfo(4),.mf[.@m];
 // * Allowing Admins(Group 99) to use @commands
 setmapflag strnpcinfo(4),mf_nocommand,99;
-// * Restricted Skills for custom Zone 8192 (db/import/skill_nocast_db.txt)
+// * Restricted Skills for custom Zone 8192 (db/import/skill_nocast_db.txt) (WIP)
 //setmapflag strnpcinfo(4),mf_restricted,8192;
-disablenpc strnpcinfo(0);
 end;
 
 OnBRStart:
-enablenpc strnpcinfo(0);
 set .@BR_ID,atoi(strnpcinfo(2));
 // Define centre of the zone
 while(1) {
-	set .@x,0;
-	set .@y,0;
-	setd(".@zone_c_x_"+.@BR_ID),rand(getd(".area_"+.@BR_ID+"[0]"),getd(".area_"+.@BR_ID+"[2]"));
-	setd(".@zone_c_y_"+.@BR_ID),rand(.area[1],getd(".area_"+.@BR_ID+"[3]"));
+	setd(".@zone_c_x_"+.@BR_ID),rand( (getd(".area_"+.@BR_ID+"[0]")+getd(".last_zone_size_"+.@BR_ID)),(getd(".area_"+.@BR_ID+"[2]")-getd(".last_zone_size_"+.@BR_ID)) );
+	setd(".@zone_c_y_"+.@BR_ID),rand( (getd(".area_"+.@BR_ID+"[1]")+getd(".last_zone_size_"+.@BR_ID)),(getd(".area_"+.@BR_ID+"[3]")-getd(".last_zone_size_"+.@BR_ID)) );
 	
-///*	
-	debugmes ".@zone_c_x_"+.@BR_ID+" = "+getd(".@zone_c_x_"+.@BR_ID);
-	debugmes ".@zone_c_y_"+.@BR_ID+" = "+getd(".@zone_c_y_"+.@BR_ID);
-	
-	debugmes "("+getd(".@zone_c_x_"+.@BR_ID)+" > ("+getd(".area_"+.@BR_ID+"[0]")+" + "+getd(".zone_start_"+.@BR_ID)+")";
-	debugmes "&& "+getd(".@zone_c_x_"+.@BR_ID)+" >= ("+getd(".area_"+.@BR_ID+"[0]")+" + "+getd(".last_zone_size_"+.@BR_ID)+"))";
-	debugmes "&& ("+getd(".@zone_c_x_"+.@BR_ID)+" < ("+getd(".area_"+.@BR_ID+"[2]")+" - "+getd(".zone_start_"+.@BR_ID)+")";
-	debugmes "&& "+getd(".@zone_c_x_"+.@BR_ID)+" <= ("+getd(".area_"+.@BR_ID+"[2]")+" - "+getd(".last_zone_size_"+.@BR_ID)+"))";
-//*/
-	if( (getd(".@zone_c_x_"+.@BR_ID) > (getd(".area_"+.@BR_ID+"[0]") + getd(".zone_start_"+.@BR_ID)) && getd(".@zone_c_x_"+.@BR_ID) >= (getd(".area_"+.@BR_ID+"[0]") + getd(".last_zone_size_"+.@BR_ID))) && (getd(".@zone_c_x_"+.@BR_ID) < (getd(".area_"+.@BR_ID+"[2]") - getd(".zone_start_"+.@BR_ID)) && getd(".@zone_c_x_"+.@BR_ID) <= (getd(".area_"+.@BR_ID+"[2]") - getd(".last_zone_size_"+.@BR_ID))) )
-		set .@x,1;
-///*
-	debugmes "("+getd(".@zone_c_y_"+.@BR_ID)+" > ("+getd(".area_"+.@BR_ID+"[1]")+" + "+getd(".zone_start_"+.@BR_ID)+")";
-	debugmes "&& "+getd(".@zone_c_y_"+.@BR_ID)+" >= ("+getd(".area_"+.@BR_ID+"[1]")+" + "+getd(".last_zone_size_"+.@BR_ID)+"))";
-	debugmes "&& ("+getd(".@zone_c_y_"+.@BR_ID)+" < ("+getd(".area_"+.@BR_ID+"[3]")+" - "+getd(".zone_start_"+.@BR_ID)+")";
-	debugmes "&& "+getd(".@zone_c_y_"+.@BR_ID)+" <= ("+getd(".area_"+.@BR_ID+"[3]")+" - "+getd(".last_zone_size_"+.@BR_ID)+"))";
-//*/
-	if( (getd(".@zone_c_y_"+.@BR_ID) > (getd(".area_"+.@BR_ID+"[1]") + getd(".zone_start_"+.@BR_ID)) && getd(".@zone_c_y_"+.@BR_ID) >= (getd(".area_"+.@BR_ID+"[1]") + getd(".last_zone_size_"+.@BR_ID))) && (getd(".@zone_c_y_"+.@BR_ID) < (getd(".area_"+.@BR_ID+"[3]") - getd(".zone_start_"+.@BR_ID)) && getd(".@zone_c_y_"+.@BR_ID) <= (getd(".area_"+.@BR_ID+"[3]") - getd(".last_zone_size_"+.@BR_ID))) )
-		set .@y,1;
-	
-	debugmes ".@x = "+.@x+", .@y = "+.@y;
-	if(!.@x || !.@y) continue;
-	if(checkcell(strnpcinfo(4),getd(".@zone_c_x_"+.@BR_ID),getd(".@zone_c_y_"+.@BR_ID),cell_chkpass) == 0)
+	debugmes ".@zone_c_x_"+.@BR_ID+" = "+getd(".@zone_c_x_"+.@BR_ID)+", .@zone_c_y_"+.@BR_ID+" = "+getd(".@zone_c_y_"+.@BR_ID);
+	if(checkcell(strnpcinfo(4),getd(".@zone_c_x_"+.@BR_ID) - getd(".last_zone_size_"+.@BR_ID),getd(".@zone_c_y_"+.@BR_ID) - getd(".last_zone_size_"+.@BR_ID),cell_chkpass) == 0 || checkcell(strnpcinfo(4),getd(".@zone_c_x_"+.@BR_ID) + getd(".last_zone_size_"+.@BR_ID),getd(".@zone_c_y_"+.@BR_ID) + getd(".last_zone_size_"+.@BR_ID),cell_chkpass) == 0)
 		continue;
-	// Defining the last zone
+	// Last zone:
 	// [0] + [1] = x1 + y1, [2] + [3] = x2 + y2
 	setarray getd(".zone_"+.@BR_ID+"[0]"),getd(".@zone_c_x_"+.@BR_ID) - getd(".last_zone_size_"+.@BR_ID),getd(".@zone_c_y_"+.@BR_ID) - getd(".last_zone_size_"+.@BR_ID),getd(".@zone_c_x_"+.@BR_ID) + getd(".last_zone_size_"+.@BR_ID),getd(".@zone_c_y_"+.@BR_ID) + getd(".last_zone_size_"+.@BR_ID);
 	break;
 }
 debugmes "Last Zone: X1 = "+getd(".zone_"+.@BR_ID+"[0]")+", Y1 = "+getd(".zone_"+.@BR_ID+"[1]")+", X2 = "+getd(".zone_"+.@BR_ID+"[2]")+", Y2 = "+getd(".zone_"+.@BR_ID+"[3]");	
 
+// Calculating each zone away from the centre/last zone
+debugmes "Calculating each zone away from the centre:";
 for ( set .@z,0; .@z < getarraysize(getd(".zone_"+.@BR_ID)); set .@z,.@z + 4) {
 	set .@x1,getd(".zone_"+.@BR_ID+"["+.@z+"]") - getd(".zone_move_"+.@BR_ID);
 	set .@y1,getd(".zone_"+.@BR_ID+"["+(.@z+1)+"]") - getd(".zone_move_"+.@BR_ID);
@@ -715,35 +662,30 @@ for ( set .@z,0; .@z < getarraysize(getd(".zone_"+.@BR_ID)); set .@z,.@z + 4) {
 	set .@y2,getd(".zone_"+.@BR_ID+"["+(.@z+3)+"]") + getd(".zone_move_"+.@BR_ID);
 	debugmes "X1 = "+.@x1+", Y1 = "+.@y1+", X2 = "+.@x2+", Y2 = "+.@y2;
 	
-	debugmes "!.@l_x1 && .@x1("+.@x1+") < ("+getd(".area_"+.@BR_ID+"[0]")+" + "+getd(".zone_start_"+.@BR_ID)+") = True";
-	if(!.@l_x1 && .@x1 < (getd(".area_"+.@BR_ID+"[0]") + getd(".zone_start_"+.@BR_ID))) {
-		set .@x1,getd(".zone_"+.@BR_ID+"["+.@z+"]") - (getd(".area_"+.@BR_ID+"[0]") + getd(".zone_start_"+.@BR_ID));
+	// Checking if the new coordinates don't 
+	if(!.@l_x1 && .@x1 <= (getd(".area_"+.@BR_ID+"[0]") + getd(".last_zone_size_"+.@BR_ID)))
 		set .@l_x1,1;
-	}
-	debugmes "!.@l_y1 && .@y1("+.@y2+") < ("+getd(".area_"+.@BR_ID+"[1]")+" + "+getd(".zone_start_"+.@BR_ID)+") = True";
-	if(!.@l_y1 && .@y1 < (getd(".area_"+.@BR_ID+"[1]") + getd(".zone_start_"+.@BR_ID))) {
-		set .@y1,getd(".zone_"+.@BR_ID+"["+(.@z+1)+"]") - (getd(".area_"+.@BR_ID+"[1]") + getd(".zone_start_"+.@BR_ID));
+	if(!.@l_y1 && .@y1 <= (getd(".area_"+.@BR_ID+"[1]") + getd(".last_zone_size_"+.@BR_ID)))
 		set .@l_y1,1;
-	}
-	debugmes "!.@l_x2 && .@x2("+.@x2+") > ("+getd(".area_"+.@BR_ID+"[2]")+" - "+getd(".zone_start_"+.@BR_ID)+") = True";
-	if(!.@l_x2 && .@x2 > (getd(".area_"+.@BR_ID+"[2]") - getd(".zone_start_"+.@BR_ID))) {
-		set .@x2,getd(".zone_"+.@BR_ID+"["+(.@z+2)+"]") + (getd(".area_"+.@BR_ID+"[2]") + getd(".zone_start_"+.@BR_ID));
+	if(!.@l_x2 && .@x2 >= (getd(".area_"+.@BR_ID+"[2]") - getd(".last_zone_size_"+.@BR_ID)))
 		set .@l_x2,1;
-	}
-	debugmes "!.@l_y2 && .@y2("+.@y2+") < ("+getd(".area_"+.@BR_ID+"[3]")+" - "+getd(".zone_start_"+.@BR_ID)+") = True";
-	if(!.@l_y2 && .@y2 > (getd(".area_"+.@BR_ID+"[3]") - getd(".zone_start_"+.@BR_ID))) {
-		set .@y2,getd(".zone_"+.@BR_ID+"["+(.@z+3)+"]") + (getd(".area_"+.@BR_ID+"[3]") + getd(".zone_start_"+.@BR_ID));
+	if(!.@l_y2 && .@y2 >= (getd(".area_"+.@BR_ID+"[3]") - getd(".last_zone_size_"+.@BR_ID)))
 		set .@l_y2,1;
-	}
-	if(.@l_x1 && .@l_y1 && .@l_x2 && .@l_y2) 
+	
+	debugmes ".@l_x1: "+.@l_x1+" && .@x1("+.@x1+") <= ("+getd(".area_"+.@BR_ID+"[2]")+" + "+getd(".last_zone_size_"+.@BR_ID)+")";
+	debugmes ".@l_y1: "+.@l_y1+" && .@y1("+.@y1+") <= ("+getd(".area_"+.@BR_ID+"[1]")+" + "+getd(".last_zone_size_"+.@BR_ID)+")";
+	debugmes ".@l_x2: "+.@l_x2+" && .@x2("+.@x2+") >= ("+getd(".area_"+.@BR_ID+"[2]")+" - "+getd(".last_zone_size_"+.@BR_ID)+")";
+	debugmes ".@l_y2: "+.@l_y2+" && .@y2("+.@y2+") >= ("+getd(".area_"+.@BR_ID+"[3]")+" - "+getd(".last_zone_size_"+.@BR_ID)+")";
+	
+	if(.@l_x1 && .@l_y1 && .@l_x2 && .@l_y2)
 		break;
-
 	setarray getd(".zone_"+.@BR_ID+"["+getarraysize(getd(".zone_"+.@BR_ID))+"]"),((!.@l_x1)?.@x1:getd(".zone_"+.@BR_ID+"["+.@z+"]")),((!.@l_y1)?.@y1:getd(".zone_"+.@BR_ID+"["+(.@z+1)+"]")),((!.@l_x2)?.@x2:getd(".zone_"+.@BR_ID+"["+(.@z+2)+"]")),((!.@l_y2)?.@y2:getd(".zone_"+.@BR_ID+"["+(.@z+3)+"]"));
+	debugmes "Zone Counter: "+(getarraysize(getd(".zone_"+.@BR_ID))/4);
 }
 for ( set .@t,0; .@t < getarraysize(getd(".zone_"+.@BR_ID)); set .@t,.@t + 4)
 	debugmes "X1["+.@t+"] = "+getd(".zone_"+.@BR_ID+"["+.@t+"]")+", Y1["+(.@t+1)+"] = "+getd(".zone_"+.@BR_ID+"["+(.@t+1)+"]")+", X2["+(.@t+2)+"] = "+getd(".zone_"+.@BR_ID+"["+(.@t+2)+"]")+", Y2["+(.@t+3)+"] = "+getd(".zone_"+.@BR_ID+"["+(.@t+3)+"]");
 // Enabling Loot Boxes
-for ( set .@s,1; .@s < getd(".loot_box_"+.@BR_ID); set .@s,.@s + 1) {
+for ( set .@s,1; .@s <= getd(".loot_box_"+.@BR_ID); set .@s,.@s + 1) {
 	while(1) { // Moving the Loot Boxes to random locations, which are passable/walkable
 		set .@x,rand(getd(".area_"+.@BR_ID+"[0]"),getd(".area_"+.@BR_ID+"[2]"));
 		set .@y,rand(getd(".area_"+.@BR_ID+"[1]"),getd(".area_"+.@BR_ID+"[3]"));
@@ -767,83 +709,109 @@ for ( set .@p,0; .@p < getarraysize(getd("$@q"+.@BR_ID)); set .@p,.@p + 1) {
 	addtimer (.PosTimer*1000),strnpcinfo(0)+"::OnZoneCheck";
 	warp strnpcinfo(4),0,0;
 }
+setd(".PlayerCount_"+.@BR_ID),getmapusers(strnpcinfo(4));
 // Battle Royale Start + Zone Movement
 setarray .BR_Status[.@BR_ID],1;
-setd(".nz_"+.@BR_ID),getarraysize(getd(".zone_"+.@BR_ID))-4; // Marking first zone
-while(.BR_Status[.@BR_ID]) {
-	mapannounce strnpcinfo(4),.n$+": The Battle Zone will move in "+getd(".bzone_time_"+.@BR_ID)+" seconds.",bc_all;
-	sleep (getd(".bzone_time_"+.@BR_ID)*1000);
-	BR_ZoneMove(1,getd(".zone_"+.@BR_ID+"["+getd(".nz_"+.@BR_ID)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".nz_"+.@BR_ID)+1)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".nz_"+.@BR_ID)+2)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".nz_"+.@BR_ID)+3)+"]"),getd(".zone_"+.@BR_ID+"["+getd(".cz_"+.@BR_ID)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".cz_"+.@BR_ID)+1)+"]"));
-	mapannounce strnpcinfo(4),.n$+": The Damage Zone will move in "+getd(".dzone_time_"+.@BR_ID)+" seconds.",bc_all;
-	sleep (getd(".dzone_time_"+.@BR_ID)*1000);
-	setd(".dz_"+.@BR_ID),getd(".nz_"+.@BR_ID); // Current Damage Zone for OnZoneCheck
-	setd(".@x1_"+.@BR_ID),getd(".zone_"+.@BR_ID+"["+getd(".cz_"+.@BR_ID)+"]");
-	setd(".@y1_"+.@BR_ID),getd(".zone_"+.@BR_ID+"["+(getd(".cz_"+.@BR_ID)+1)+"]");
-	setd(".@x2_"+.@BR_ID),getd(".zone_"+.@BR_ID+"["+(getd(".cz_"+.@BR_ID)+2)+"]");
-	setd(".@y2_"+.@BR_ID),getd(".zone_"+.@BR_ID+"["+(getd(".cz_"+.@BR_ID)+3)+"]");
-	// Fluent Battle Zone Movement
-	while(getd(".@x1_"+.@BR_ID) != getd(".zone_"+.@BR_ID+"["+getd(".nz_"+.@BR_ID)+"]") && getd(".@y1_"+.@BR_ID) != getd(".zone_"+.@BR_ID+"["+(getd(".nz_"+.@BR_ID)+1)+"]") && getd(".@x2_"+.@BR_ID) != getd(".zone_"+.@BR_ID+"["+(getd(".nz_"+.@BR_ID)+2)+"]") && getd(".@y2_"+.@BR_ID) != getd(".zone_"+.@BR_ID+"["+(getd(".nz_"+.@BR_ID)+3)+"]")) {
-		BR_ZoneMove(2,getd(".@x1_"+.@BR_ID),getd(".@y1_"+.@BR_ID),getd(".@x2_"+.@BR_ID),getd(".@y2_"+.@BR_ID),getd(".@x1_"+.@BR_ID)-1,getd(".@y1_"+.@BR_ID)-1);
-		sleep (getd(".dzone_move_"+.@BR_ID)*1000);
-		setd(".@x1_"+.@BR_ID),getd(".@x1_"+.@BR_ID) + 1;
-		setd(".@y1_"+.@BR_ID),getd(".@y1_"+.@BR_ID) + 1;
-		setd(".@x2_"+.@BR_ID),getd(".@x2_"+.@BR_ID) - 1;
-		setd(".@y2_"+.@BR_ID),getd(".@y2_"+.@BR_ID) - 1;
-	}
-	setd(".cz_"+.@BR_ID),getd(".nz_"+.@BR_ID); // Current Zone
-	if(getd(".cz_"+.@BR_ID) == 0) // Final Zone reached
-		break;
-	setd(".nz_"+.@BR_ID),getd(".nz_"+.@BR_ID) - 4; // Moving Index to next zone
+setd(".z_"+.@BR_ID),getarraysize(getd(".zone_"+.@BR_ID))-4; // Marking first zone
+donpcevent strnpcinfo(0)+"::OnZoneRefresh";	
+while(.BR_Status[.@BR_ID] && getd(".z_"+.@BR_ID) != 0) {
+	sleep (getd(".reveal_time_"+.@BR_ID)*1000); // Timer until the next Zone will be revealed
+	// Adding the Viewpoints to the mini-map to each Player on the map
+	addrid(5,0,""+strnpcinfo(4));
+	// Border #1
+	viewpoint 1,getd(".zone_"+.@BR_ID+"["+getd(".z_"+.@BR_ID)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+1)+"]"),1,0xFF0000; // Left Bottom Corner
+	viewpoint 1,getd(".zone_"+.@BR_ID+"["+getd(".z_"+.@BR_ID)+"]"),.@m1,2,0xFF0000; // Left Middle
+	viewpoint 1,getd(".zone_"+.@BR_ID+"["+getd(".z_"+.@BR_ID)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+3)+"]"),3,0xFF0000; // Left Top Corner
+	// Border #2
+	viewpoint 1,.@m2,getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+1)+"]"),4,0xFF0000; // Middle Bottom
+	viewpoint 1,getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+2)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+1)+"]"),5,0xFF0000; // Right Bottom Corner
+	// Border #3
+	viewpoint 1,getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+2)+"]"),.@m1,6,0xFF0000; // Right Middle
+	viewpoint 1,getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+2)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+3)+"]"),7,0xFF0000; // Right Top Corner
+	// Border #4
+	viewpoint 1,.@m2,getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+3)+"]"),8,0xFF0000; // Middle Top
+	detachrid; // No RID need anymore
+	mapannounce strnpcinfo(4),.n$+": The Zone will move in "+getd(".zone_time_"+.@BR_ID)+" seconds.",bc_all;
+	sleep (getd(".zone_time_"+.@BR_ID)*1000); // Timer until the Zone actually moves
+	BR_ZoneMove(getd(".zone_"+.@BR_ID+"["+getd(".z_"+.@BR_ID)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+1)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+2)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+3)+"]"),getd(".zone_"+.@BR_ID+"["+getd(".cz_"+.@BR_ID)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".cz_"+.@BR_ID)+1)+"]"));
+	// Distance/2 of a Border
+	set .@m1,getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+1)+"]")+(distance(getd(".zone_"+.@BR_ID+"["+getd(".z_"+.@BR_ID)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+1)+"]"),getd(".zone_"+.@BR_ID+"["+getd(".z_"+.@BR_ID)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+3)+"]"))/2); // Border#1+3
+	set .@m2,getd(".zone_"+.@BR_ID+"["+getd(".z_"+.@BR_ID)+"]")+(distance(getd(".zone_"+.@BR_ID+"["+getd(".z_"+.@BR_ID)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+1)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+2)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+1)+"]"))/2); // Border#2+4
+	// Removing the cell_landprotector flag from the current cells of the zone
+	// Border #1+3
+	if(checkcell(strnpcinfo(4),getd(".zone_"+.@BR_ID+"["+getd(".z_"+.@BR_ID)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+1)+"]"),CELL_CHKLANDPROTECTOR) == 1)
+		setcell strnpcinfo(4),getd(".zone_"+.@BR_ID+"["+getd(".z_"+.@BR_ID)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+1)+"]"),getd(".zone_"+.@BR_ID+"["+getd(".z_"+.@BR_ID)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+3)+"]"),cell_landprotector,0;
+	if(checkcell(strnpcinfo(4),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+2)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+1)+"]"),CELL_CHKLANDPROTECTOR) == 1)
+		setcell strnpcinfo(4),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+2)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+1)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+2)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+3)+"]"),cell_landprotector,0;
+	// Border #2+4
+	if(checkcell(strnpcinfo(4),getd(".zone_"+.@BR_ID+"["+getd(".z_"+.@BR_ID)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+1)+"]"),CELL_CHKLANDPROTECTOR) == 1)
+		setcell strnpcinfo(4),getd(".zone_"+.@BR_ID+"["+getd(".z_"+.@BR_ID)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+1)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+2)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+1)+"]"),cell_landprotector,0;
+	if(checkcell(strnpcinfo(4),getd(".zone_"+.@BR_ID+"["+getd(".z_"+.@BR_ID)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+3)+"]"),CELL_CHKLANDPROTECTOR) == 1)
+		setcell strnpcinfo(4),getd(".zone_"+.@BR_ID+"["+getd(".z_"+.@BR_ID)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+3)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+2)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+3)+"]"),cell_landprotector,0;
+	setd(".z_"+.@BR_ID),getd(".z_"+.@BR_ID) - 4; // Moving Index to next zone
 }
 mapannounce strnpcinfo(4),.n$+": The final zone has been reached!",bc_all;
 end;
 
+OnZoneRefresh:
+while(.BR_Status[.@BR_ID]) {
+	BR_ZoneMove(getd(".zone_"+.@BR_ID+"["+getd(".z_"+.@BR_ID)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+1)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+2)+"]"),getd(".zone_"+.@BR_ID+"["+(getd(".z_"+.@BR_ID)+3)+"]"));
+	sleep 10000;
+}
+end;
+
 OnZoneCheck:
 deltimer strnpcinfo(0)+"::OnZoneCheck";
-set .@BR_ID,atoi(strnpcinfo(2));
-getmapxy(.@map$,.@x,.@y,UNITTYPE_PC);
-if( (.@x <= getd(".zone_"+.@BR_ID+"["+getd(".dz_"+.@BR_ID)+"]") || .@y <= getd(".zone_"+.@BR_ID+"["+(getd(".dz_"+.@BR_ID)+1)+"]") ) || (.@x >= getd(".zone_"+.@BR_ID+"["+(getd(".dz_"+.@BR_ID)+2)+"]") || .@y >= getd(".zone_"+.@BR_ID+"["+(getd(".dz_"+.@BR_ID)+3)+"]")) )
-	percentheal -5,0;
-addtimer (.PosTimer*1000),strnpcinfo(0)+"::OnZoneCheck";
+getmapxy(.@map$,.@x,.@y,BL_PC);
+if(checkcell(strnpcinfo(4),.@x,.@y,CELL_CHKLANDPROTECTOR) == 0)
+	percentheal -1,0;
+addtimer 5000,strnpcinfo(0)+"::OnZoneCheck";
 end;
 
 OnPCDieEvent:
-if(!.BR_Status[atoi(strnpcinfo(2))]) end;
-set .@BR_ID,atoi(strnpcinfo(2));
-set .@rank,getmapusers(strnpcinfo(4)) - 1;
-set @place,( (getmapusers(strnpcinfo(4)) - 1) > 10)?10:.@rank;
-BR_Inv(getcharid(0),3);
+// Stop when: Player isn't participating, Arena is not active, Player is not participating for the called Arena or the map is not the same as the NPC's
+if(!@BR_ID || !.BR_Status[atoi(strnpcinfo(2))] || @BR_ID != atoi(strnpcinfo(2)) || strcharinfo(3) != strnpcinfo(4)) end;
+setd(".PlayerCount_"+@BR_ID),getd(".PlayerCount_"+@BR_ID) - 1;
+set .@rank,getd(".PlayerCount_"+@BR_ID);
+// Defines the reward of the last place if its above 10 or the actual rank for the .rew_place variable
+set .@place,(getd(".PlayerCount_"+@BR_ID) > 10)?10:.@rank;
 warp "SavePoint",0,0;
 sleep2 1500;
-announce .n$+": You were killed by ["+rid2name(killerrid)+"] and was placed "+.@rank+".",bc_self;
+BR_Inv(getcharid(0),3);
+if(killerrid != getcharid(3))
+	announce .n$+": You were killed by ["+rid2name(killerrid)+"] and was placed "+.@rank+".",bc_self;
+else if(killerrid == 0)
+	announce .n$+": You have died and was placed "+.@rank+".",bc_self;
 percentheal 100,100;
-BR_Reward(@BR_Kills,getd(".rew_place_"+.@BR_ID+"["+@place+"]"),getd(".rew_base_"+.BR_ID));
+BR_Reward(@BR_Kills,getd(".rew_place_"+@BR_ID+"["+.@place+"]"),getd(".rew_base_"+@BR_ID));
+if(getd(".PlayerCount_"+@BR_ID) == 1 && killerrid != 0) {
+	detachrid;
+	addrid(5,strnpcinfo(4));
+	BR_Inv(getcharid(0),2);
+	warp "SavePoint",0,0;
+	sleep2 1500;
+	announce .n$+": Congratulation to ["+strcharinfo(0)+"] for winning the Battle Royale in Arena "+@BR_ID+"!",bc_all;
+	percentheal 100,100;
+	BR_Reward(@BR_Kills,getd(".rew_place_"+@BR_ID+"[1]"),getd(".rew_base_"+@BR_ID));
+	donpcevent strnpcinfo(0)+"::OnBREnd";
+}
+set @BR_ID,0;
 end;
 
 OnPCKillEvent:
-if(!.BR_Status[atoi(strnpcinfo(2))]) end;
-set .@BR_ID,atoi(strnpcinfo(2));
+if(@BR_ID != atoi(strnpcinfo(2))) end;
+if(!.BR_Status[@BR_ID]) end;
 set @BR_Kills,@BR_Kills + 1;
-if(getmapusers(strnpcinfo(4)) > 1) 
-	end;
-BR_Inv(getcharid(0),2);
-warp "SavePoint",0,0;
-sleep2 1500;
-announce .n$+": Congratulation to ["+strcharinfo(0)+"] for winning the Battle Royale in Arena "+.@BR_ID+"!",bc_all;
-percentheal 100,100;
-BR_Reward(@BR_Kills,getd(".rew_place_"+.@BR_ID+"[1]"),getd(".rew_base_"+.BR_ID));
+end;
 
 OnBREnd: // Battle Royale Stop
 if(!.BR_Status[atoi(strnpcinfo(2))]) end;
 set .@BR_ID,atoi(strnpcinfo(2));
 for ( set .@s,1; .@s < getd(".loot_box_"+.@BR_ID); set .@s,.@s + 1)
 	disablenpc "Chest#BR"+.@BR_ID+"_"+.@s;
-setd(".cz_"+.@BR_ID),0;
-setd(".nz_"+.@BR_ID),0;
-setd(".dz_"+.@BR_ID),0;
-donpcevent "Battle Royale::OnBRStop";
+setd(".z_"+.@BR_ID),0;
 setarray .BR_Status[.@BR_ID],0;
-disablenpc strnpcinfo(0);
+donpcevent "Battle Royale::OnBRStop";
 end;
 
 // Battle Royale Reward Function
@@ -855,8 +823,10 @@ function	BR_Reward	{
 // Example: 5 Kills, 4th Place, 50 Base Reward:
 // (5 + 50)*8 = 220 Battle Royale Points
 set .@calc,(getarg(0) + getarg(2))*getarg(1);
+debugmes "BR_Reward - Formula: ("+getarg(0)+" + "+getarg(2)+")*"+getarg(1);
+debugmes "Result: "+.@calc;
 setd(""+.rew_varn$),getd(""+.rew_varn$) + .@calc;
-dispbottom "[Battle Royale]: You have recieved "+.@calc+"x "+getd(""+.rew_vard$)+". Your balance is now "+getd(""+.rew_varn$)+"x "+getd(""+.rew_vard$)+".";
+dispbottom "[Battle Royale]: You have recieved "+.@calc+"x "+.rew_vard$+". Your balance is now "+getd(""+.rew_varn$)+"x "+.rew_vard$+".";
 return;
 }
 
@@ -864,13 +834,10 @@ return;
 function	BR_ZoneMove	{
 // =====================================
 // getarg:
-// - 0 = Zone Type > 1 = Battle Zone / 2 = Damage Zone
-// - 1 = X 1
-// - 2 = Y 1
-// - 3 = X 2
-// - 4 = Y 2
-// - 5 = Previous X
-// - 6 = Previous Y
+// - 0 = X 1
+// - 1 = Y 1
+// - 2 = X 2
+// - 3 = Y 2
 // =====================================
 // Borders:  
 //  |---#4---|
@@ -878,73 +845,30 @@ function	BR_ZoneMove	{
 // #1        #3
 //  |        |
 //  |---#2---|
-// =====================================
-addrid(5,strnpcinfo(4));
-debugmes "BR_ZoneMove - strnpcinfo(4) = "+strnpcinfo(4);
 // Border #1: x1/y1 to x1/y2 ( South West to North West )
-set .@y,getarg(2);
-set .@c,1;
-while( .@y != getarg(4) ) {
-	if(getarg(0) == 1) {
-		npcskilleffect "SA_LANDPROTECTOR",5,getarg(1),.@y;
-		viewpoint 2,getarg(1),getarg(6),.@c,0x00FF00;
-		viewpoint 1,getarg(1),.@y,.@c,0x00FF00;
-	} else if(getarg(0) == 2) {
-		npcskilleffect "MA_FIREWALL",10,getarg(1),.@y;
-		viewpoint 2,getarg(1),.@y-1,.@c,0xFF0000;
-		viewpoint 1,getarg(1),.@y,.@c,0xFF0000;
-	}
-	set .@y,.@y + 1;
-	set .@c,.@c + 1;
-	sleep2 100;
-}	
 // Border #2: x1/y1 to x2/y1 ( South West to South East )
-set .@x,getarg(1);
-while( .@x != getarg(3) ) {
-	if(getarg(0) == 1) {
-		npcskilleffect "SA_LANDPROTECTOR",5,.@x,getarg(2);
-		viewpoint 2,getarg(5),getarg(2),.@c,0x00FF00;
-		viewpoint 1,.@x,getarg(2),.@c,0x00FF00;
-	} else if(getarg(0) == 2) {
-		npcskilleffect "MA_FIREWALL",10,.@x,getarg(2);
-		viewpoint 2,.@x-1,getarg(2),.@c,0xFF0000;
-		viewpoint 1,.@x,getarg(2),.@c,0xFF0000;
-	}
-	set .@x,.@x + 1;
-	set .@c,.@c + 1;
-	sleep2 100;
-}	
 // Border #3: x2/y1 to x2/y2 ( South East to North East )
-set .@y,getarg(2);
-while( .@y != getarg(4) ) {
-	if(getarg(0) == 1) {
-		npcskilleffect "SA_LANDPROTECTOR",5,getarg(3),.@y;
-		viewpoint 2,getarg(3),getarg(6),.@c,0x00FF00;
-		viewpoint 1,getarg(3),.@y,.@c,0x00FF00;
-	} else if(getarg(0) == 2) {
-		npcskilleffect "MA_FIREWALL",10,getarg(3),.@y;
-		viewpoint 2,getarg(3),.@y-1,.@c,0xFF0000;
-		viewpoint 1,getarg(3),.@y,.@c,0xFF0000;
-	}
-	set .@y,.@y + 1;
-	set .@c,.@c + 1;
-	sleep2 100;
-}	
 // Border #4: x1/y2 to x2/y2 ( North West to North East )
-set .@x,getarg(1);
-while( .@x != getarg(3) ) {
-	if(getarg(0) == 1) {
-		npcskilleffect "SA_LANDPROTECTOR",5,.@x,getarg(4);
-		viewpoint 2,getarg(6),getarg(4),.@c,0x00FF00;
-		viewpoint 1,.@x,getarg(4),.@c,0x00FF00;
-	} else if(getarg(0) == 2) {
-		npcskilleffect "MA_FIREWALL",10,.@x,getarg(4);
-		viewpoint 2,.@x-1,getarg(4),.@c,0xFF0000;
-		viewpoint 1,.@x,getarg(4),.@c,0xFF0000;
-	}
+// =====================================
+set .@x,getarg(0);
+set .@y,getarg(1);
+// Border #1+3
+while( .@y != getarg(3) ) {
+	//Skilleffect of Firewall
+	npcskilleffect "WZ_ICEWALL",0,getarg(0),.@y;
+	npcskilleffect "WZ_ICEWALL",0,getarg(2),.@y;
+	// Increase the respective coordinate for the next loop
+	set .@y,.@y + 1;
+	sleep 100;
+}	
+// Border #2+4
+while( .@x != getarg(2) ) {
+	//Skilleffect of Firewall
+	npcskilleffect "WZ_ICEWALL",0,.@x,getarg(1);
+	npcskilleffect "WZ_ICEWALL",0,.@x,getarg(3);
+	// Increase the respective coordinate for the next loop
 	set .@x,.@x + 1;
-	set .@c,.@c + 1;
-	sleep2 100;
+	sleep 100;
 }
 return;
 }
@@ -975,35 +899,39 @@ br_yuno,0,0,0	duplicate(BR_Init)	BR_Arena#20	HIDDEN_NPC
 // Loot Boxes Template
 -	script	BR_LootBox	HIDDEN_NPC,{
 
-getmapxy(.@map$,.@x,.@y,UNITTYPE_NPC,strnpcinfo(0)); // For makeitem
+freeloop(1); // Preventing infinite loop error, sleep 100; didn't work...
+getmapxy(.@map$,.@x,.@y,BL_NPC,strnpcinfo(0)); // For makeitem
 set .@m,3; // Set range of area around the Loot Box for makeitem
 
 // Healing + Buff Items
 set .@loot,( (.randlimit == 1)?rand(1,.heal_limit):.heal_limit);
 set .@c,1;
 while(.@c <= .@loot) {
-	set .@p,rand(getarraysize(.heal_id));
-	if(rand(1,100) <= .heal_perc[.@p])
-		set .@h,.@p;
-		
-	makeitem .heal_id[.@h],.heal_am[.@h],.@map$,rand((.@x-.@m),(.@x+.@m)),rand((.@y-.@m),(.@y+.@m)); break;
+
+	// Getting the Item ID via the Array Index
+	set .@h,rand(1,.heal_size)*3-3;
+	if(rand(1,100) <= .heal[.@h+2])
+		makeitem .heal[.@h],.heal[.@h+1],.@map$,rand((.@x-.@m),(.@x+.@m)),rand((.@y-.@m),(.@y+.@m)); break;
 	set .@c,.@c + 1;
 }
 // Equipment
-set .@loot,( (.randlimit == 1)?rand(1,.eq_limit):.eq_limit);
+set .@loot,( (.randlimit == 1)?rand(1,.equip_limit):.equip_limit);
 set .@c,1;
-while(.@c <= .@loot) {	
-	set .@p,rand(getarraysize(.eq_id));
-	if(rand(1,100) > .eq_perc[.@p]) 
-		continue;
-	set .@i,.@p;
-	
-	if(.refine[.@i]) // If refine is enabled, randomize it
-		set .@ref,rand(.ref_min[.@i],.ref_max[.@i]);
+while(.@c <= .@loot) {
 
-	if(.card[.@i]) {
+	// Getting the Item ID via the Array Index
+	set .@e,rand(1,.equip_size)*15-15;
+	if(rand(1,100) > .equip[.@e+2])
+		continue;
+		
+	// ========= Refine =========
+	if(.equip[.@e+3]) // If refine is enabled, randomize it
+		set .@ref,rand(.equip[.@e+4],.equip[.@e+5]);
+	
+	// ========= Cards =========
+	if(.equip[.@e+6]) {
 		// Depending on the Item Type, use the correct Cards for it
-		switch(getiteminfo(.eq_id[.@i],5)) {
+		switch(getiteminfo(.equip[.@e],5)) {
 			case 1: // Lower Headgear
 			case 256: // Middle Headgear
 			case 512: // Top Headgear
@@ -1043,18 +971,21 @@ while(.@c <= .@loot) {
 			break;	
 		}
 		// Define the Max Card Slots to use via
-		if(.card_slots[.@i]) // Random
-			set .@cs,rand(0,getitemslots(.eq_id[.@i]));
+		if(.equip[.@e+7]) // Random
+			set .@cs,rand(0,getitemslots(.equip[.@e]));
 		else // max slots the equipment has available
-			set .@cs,getitemslots(.eq_id[.@i]);
+			set .@cs,getitemslots(.equip[.@e]);
 		for ( set .@s,1; .@s <= .@cs; set .@s,.@s + 1)
 			setd(".@c"+.@s),.@cards[rand(getarraysize(.@cards))];
 	}
-	if(.enchants[.@i]) { // Enchants enabled?
-		if(.ench_rand[.@i]) // If random amount of Enchants is enabled
-			set .@er,rand(.ench_min[.@i],.ench_max[.@i]);
-		else // If not, set max amount
-			set .@er,.ench_max[.@i];
+	// ========= Enchantments =========
+	if(.equip[.@e+8]) { // Enchants enabled?
+		
+		if(.equip[.@e+11]) // If random amount of Enchantments is enabled
+			set .@er,rand(.equip[.@e+9],.equip[.@e+10]);
+		
+		else if(!.equip[.@e+11]) // If not, set max amount
+			set .@er,.equip[.@e+10];
 
 		if(.@er) { // Check if Amount is not 0
 			// ===== Enchantment Data =====
@@ -1112,25 +1043,25 @@ while(.@c <= .@loot) {
 			*/
 			
 			set .@s,4; // Define first Card Slot for first Enchant
-			for ( set .@e,1; .@e <= .@er; set .@e,.@e + 1) {
+			for ( set .@es,1; .@es <= .@er; set .@es,.@es + 1) {
 				if(!getd(".@c"+.@s)) // If Card Slot .@s is not used
 					setd(".@c"+.@s),getd(".@enchant"+(.@s-1)+"["+rand(getarraysize(getd(".@enchant"+(.@s-1))))+"]");
 				set .@s,.@s - 1;
 			}
 		}
 	}
-	if(!.opt[.@i]) // If the Item doesn't allow Random Options, don't continue after this
-		makeitem2 .eq_id[.@i],.eq_am[.@i],.@map$,rand((.@x-.@m),(.@x+.@m)),rand((.@y-.@m),(.@y+.@m)),1,.@ref,0,.@c1,.@c2,.@c3,.@c4;
+	
+	 // ========= Random Options =========
+	if(!.equip[.@e+12]) // If the Item doesn't allow Random Options, don't continue after this
+		makeitem2 .equip[.@e],.equip[.@e+1],.@map$,rand((.@x-.@m),(.@x+.@m)),rand((.@y-.@m),(.@y+.@m)),1,.@ref,0,.@c1,.@c2,.@c3,.@c4;
 			
-	else if(.opt[.@i]) { // If random option is enabled, randomize it, but keeping their respective index values
+	else if(.equip[.@e+12]) { // If Random Options is enabled
+	
+		// Randomize the amount of Random Options
+		set .@or,rand(.equip[.@e+13],.equip[.@e+14]);
 		
-		if(.opt_rand[.@i]) // If random Amount of Random Options is enabled
-			set .@or,rand(.opt_min[.@i],.opt_max[.@i]);
-		else // If not, set max amount
-			set .@or,.opt_max[.@i];
-		if(.@or) { // Check if Amount is not 0
-			switch(getiteminfo(.eq_id[.@i],2)) {
-				
+		if(.@or) {// Check if Amount is not 0
+			switch(getiteminfo(.equip[.@e],2)) {
 				// Random Options - Format:
 				// = Put in the ID's for the respective Random Option Slot, they will be randomly selected
 				// > .@rand = ID
@@ -1217,13 +1148,13 @@ while(.@c <= .@loot) {
 				setarray .@OptVal[getarraysize(.@OptVal)],rand(getd(".@rmin"+.@o+"["+.@r+"]"),getd(".@rmax"+.@o+"["+.@r+"]"));
 				setarray .@OptParam[getarraysize(.@OptParam)],getd(".@rpar"+.@o+"["+.@r+"]");
 			}
-			makeitem3 .eq_id[.@i],.eq_am[.@i],.@map$,rand((.@x-.@m),(.@x+.@m)),rand((.@y-.@m),(.@y+.@m)),1,.@ref,0,.@c1,.@c2,.@c3,.@c4,.@OptID,.@OptVal,.@OptParam;
+			makeitem3 .equip[.@e],.equip[.@e+1],.@map$,rand((.@x-.@m),(.@x+.@m)),rand((.@y-.@m),(.@y+.@m)),1,.@ref,0,.@c1,.@c2,.@c3,.@c4,.@OptID,.@OptVal,.@OptParam;
 		
-		} else
-			makeitem2 .eq_id[.@i],.eq_am[.@i],.@map$,rand((.@x-.@m),(.@x+.@m)),rand((.@y-.@m),(.@y+.@m)),1,.@ref,0,.@c1,.@c2,.@c3,.@c4;
+		} else if(!.@or)
+			makeitem2 .equip[.@e],.equip[.@e+1],.@map$,rand((.@x-.@m),(.@x+.@m)),rand((.@y-.@m),(.@y+.@m)),1,.@ref,0,.@c1,.@c2,.@c3,.@c4;
 	}
 	// Give respective Ammo for Bow/Guns
-	switch(getiteminfo(.eq_id[.@i],11)) {
+	switch(getiteminfo(.equip[.@e],11)) {
 		case 11: // Bows
 		makeitem 12007,1,.@map$,rand((.@x-.@m),(.@x+.@m)),rand((.@y-.@m),(.@y+.@m)); // 1x Oridecon Arrow Quiver
 		break;
@@ -1276,92 +1207,84 @@ while(.@c <= .@loot) {
 	
 	set .@c,.@c + 1;
 }
-if(strnpcinfo(2) != "Chest#BR_TestBox") // Preventing the disabling of the Test Box 
+if(strnpcinfo(2) != "BR_TestBox") // Preventing the disabling of the Test Box 
 	disablenpc strnpcinfo(0);
+freeloop(0);
 end;
 
 OnInit:
-// ===== Loot Boxes Distribution =====
-// * Randomize the Max Amount of Items based on .heal_limit/.eq_limit
+// ==== Loot Boxes Distribution ====
+// * Randomize the Max Amount of Items based on .heal_limit/.equip_limit
 // > 0 = No, use every item available
 // > 1 = Yes, limit the amount of the dropped items
 set .randlimit,1;
-// ===== Loot Boxes Content =====
-// Note: It's important that every item is at their correct place in the arrays
-// > _id = Item ID
-// > _am = Amount
-// > _perc = Chances to recieve in percent (1 - 100)
-// ===== Healing + Buff Items =====
-// Item Info: Condensed White Potion, Grape Juice, Condensed Yellow Potion
-setarray .heal_id[0],547,533,546;
-setarray .heal_am[0],10,10,20;
-setarray .heal_perc[0],50,50,50;
-set .heal_limit,2; // Max Heal Items per Loot Box (Default: 2)
-// ===== Equipment =====
-// Item Info: Saber, Zweihander, Damascus, Bloody Fear, Windhawk, Battle Hook, Trident, Battle Fork, Stunner, Mighty Staff, Luna Bow, Berserk Guitar, Blade Whip, Round Buckler, Mink Coat, Chain Mail, Silver Robe, Combat Boots, Captain's Manteau
-setarray .eq_id[0],1127,1171,1222,1288,1307,1371,1421,1462,1485,1532,1613,1723,1920,1969,2147,2311,2314,2332,2436,2538;
-setarray .eq_am[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
-setarray .eq_perc[0],25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25,25;
-set .eq_limit,2; // Max Equipments per Loot Box (Default: 2)
-// * Use Refine? randomized! (per Item)
-// > 0 = No
-// > 1 = Yes
-setarray .refine[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
-// * Min + Max Refine (per Item)
-setarray .ref_min[0],0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0;
-setarray .ref_max[0],10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10;
-// * Use Cards? randomized! (per Item)
-// > 0 = No
-// > 1 = Yes
-setarray .card[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
-// * Randomize the available card slots to use based on the slots the item has? (per Item)
-// > 0 = No
-// > 1 = Yes
-setarray .card_slots[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
-// * Use Enchants? randomized! (per Item)
-// > 0 = No
-// > 1 = Yes
-setarray .enchants[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
-// * How many Enchants should be used? (per Item) / 0 = None
-setarray .ench_min[0],0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0;
-setarray .ench_max[0],3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3;
-// * Should be the amount of Enchants be random? (per Item)
-// > 0 = No
-// > 1 = Yes
-setarray .ench_rand[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
-// * Use Random Options? (per Item)
-// > 0 = No
-// > 1 = Yes
-setarray .opt[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
-// * How many Random Options should be used? (per Item) / 0 = None
-setarray .opt_min[0],0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0;
-setarray .opt_max[0],5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5;
-// * Should be the amount of Random Options be random? (per Item)
-// > 0 = No
-// > 1 = Yes
-setarray .opt_rand[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
+// ======= Loot Boxes Content =======
+// ========= Healing + Buff =========
+// > [0] = ID 
+// > [1] = Amount
+// > [2] = Percent
+// ===================================
+// Note: 1 Heal/Buff Item = 3 Values! So Index*3
+// Array [ ]:		0,	1,	2
+setarray .heal[0],	547,10,50, // Condensed White Potion
+					547,10,50, // Grape Juice
+					547,10,50; // Condensed Yellow Potion
+// Define the max healing/buff items available
+set .heal_size,getarraysize(.heal)/3;
+// Max Heal Items per Loot Box (Default: 2)
+set .heal_limit,2; 
+// ============ Equipment ============
+// > [0] = ID 
+// > [1] = Amount
+// > [2] = Percent
+// > [3] = Refine > 1=Yes/0= No
+// > [4] = Min Refine
+// > [5] = Max Refine
+// > [6] = Cards > 1=Yes/0= No
+// > [7] = Card Slots
+// > [8] = Enchantments > 1=Yes/0= No
+// > [9] = Min Enchantments
+// > [10] = Max Enchantments
+// > [11] = Random Enchantments > 1=Yes/0= No
+// > [12] = Random Options > 1=Yes/0= No
+// > [13] = Min Random Options
+// > [14] = Max Random Options
+// ===================================
+// Note: 1 Equip = 15 Values! So Index*15
+// Array [ ]:	0,	1,	2,	3,	4,	5,	6,	7,	8,	9,	10,	11,	12,	13,	14
+setarray .equip,1127,1,	25,	1,	0,	10,	1,	1,	1,	0,	3,	1,	1,	0,	5, // Saber
+				1171,1,	25,	1,	0,	10,	1,	1,	1,	0,	3,	1,	1,	0,	5, // Zweihander
+				1222,1,	25,	1,	0,	10,	1,	1,	1,	0,	3,	1,	1,	0,	5, // Damascus
+				1288,1,	25,	1,	0,	10,	1,	1,	1,	0,	3,	1,	1,	0,	5, // Bloody Fear
+				1307,1,	25,	1,	0,	10,	1,	1,	1,	0,	3,	1,	1,	0,	5, // Windhawk
+				1371,1,	25,	1,	0,	10,	1,	1,	1,	0,	3,	1,	1,	0,	5, // Doom Slayer
+				1421,1,	25,	1,	0,	10,	1,	1,	1,	0,	3,	1,	1,	0,	5, // Battle Hook
+				1462,1,	25,	1,	0,	10,	1,	1,	1,	0,	3,	1,	1,	0,	5, // Trident
+				1485,1,	25,	1,	0,	10,	1,	1,	1,	0,	3,	1,	1,	0,	5, // Battle Fork
+				1532,1,	25,	1,	0,	10,	1,	1,	1,	0,	3,	1,	1,	0,	5, // Stunner
+				1613,1,	25,	1,	0,	10,	1,	1,	1,	0,	3,	1,	1,	0,	5, // Mighty Staff
+				1723,1,	25,	1,	0,	10,	1,	1,	1,	0,	3,	1,	1,	0,	5, // Luna Bow
+				1920,1,	25,	1,	0,	10,	1,	1,	1,	0,	3,	1,	1,	0,	5, // Berserk Guitar
+				1969,1,	25,	1,	0,	10,	1,	1,	1,	0,	3,	1,	1,	0,	5, // Blade Whip
+				2147,1,	25,	1,	0,	10,	1,	1,	1,	0,	3,	1,	1,	0,	5, // Round Buckler
+				2311,1,	25,	1,	0,	10,	1,	1,	1,	0,	3,	1,	1,	0,	5, // Mink Coat
+				2314,1,	25,	1,	0,	10,	1,	1,	1,	0,	3,	1,	1,	0,	5, // Chain Mail
+				2332,1,	25,	1,	0,	10,	1,	1,	1,	0,	3,	1,	1,	0,	5, // Silver Robe
+				2436,1,	25,	1,	0,	10,	1,	1,	1,	0,	3,	1,	1,	0,	5; // Combat Boots
+
+// Define the max equipments available
+set .equip_size,getarraysize(.equip)/15;
+// Max Equipments per Loot Box (Default: 2)
+set .equip_limit,2; 
+// ===================================
 if(strnpcinfo(0) != "BR_LootBox" && strnpcinfo(0) != "Chest#BR_TestBox")
 	disablenpc strnpcinfo(0);
-// If you encounter problems or you are unsure if you put every value correctly, use this to check the array sizes:
-// Either comment the /* and */ or delete them until you don't need it anymore
-/*
-else if(strnpcinfo(0) == "BR_LootBox") { // Prevents the spam on your map server, because every duplicate will trigger this otherwise!
-	debugmes "BR_LootBox - OnInit - Array sizes:";
-	debugmes "Note: If you got '0' in an array, it won't will not count as a valid value!";
-	debugmes "Heal Items: .heal_id = "+getarraysize(.heal_id)+", .heal_am = "+getarraysize(.heal_am)+", .heal_perc = "+getarraysize(.heal_perc);
-	debugmes "Equipments: .eq_id = "+getarraysize(.eq_id)+", .eq_am = "+getarraysize(.eq_am)+", .eq_perc = "+getarraysize(.eq_perc);
-	debugmes "Refine: .refine = "+getarraysize(.refine)+", .ref_min = "+getarraysize(.ref_min)+", .ref_max = "+getarraysize(.ref_max);
-	debugmes "Cards: .card = "+getarraysize(.card)+", .card_slots = "+getarraysize(.card_slots);
-	debugmes "Enchants: .enchants = "+getarraysize(.enchants)+", .ench_min = "+getarraysize(.ench_min)+", .ench_max = "+getarraysize(.ench_max)+", .ench_rand = "+getarraysize(.ench_rand);
-	debugmes "Random Options: .opt = "+getarraysize(.opt)+", .opt_min = "+getarraysize(.opt_min)+", .opt_max = "+getarraysize(.opt_max)+", .opt_rand = "+getarraysize(.opt_rand);
-}
-*/
 end;
 }
 // Loot Box Duplicates
-// Note: You can duplicate as much as you want, but edit the Chest#BR<Arena>_<LootBox#> to match the number,
+// Note: You can duplicate as much as you want, but edit the Chest#BR<Arena>_<LootBoxID> to match the number,
 // like Chest#BR1_11 for 11 Boxes in Arena 1
-prontera,150,180,0	duplicate(BR_LootBox)	Chest#BR_TestBox	4_STEELBOX // Testing Purposes
+//prontera,150,180,0	duplicate(BR_LootBox)	Chest#BR_TestBox	4_STEELBOX // Testing Purposes
 br_alberta,0,0,0	duplicate(BR_LootBox)	Chest#BR1_1	4_STEELBOX
 br_alberta,0,0,0	duplicate(BR_LootBox)	Chest#BR1_2	4_STEELBOX
 br_alberta,0,0,0	duplicate(BR_LootBox)	Chest#BR1_3	4_STEELBOX
