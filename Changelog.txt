@@ -17,7 +17,7 @@
 // ====================================================================
 // ================= Line Indicator (since 2013/10/09) ================
 // *: Date
-// << == |*| Script Name vX.X - @Update to vX.X/Added/Release/Removed/Request/Modified |*| == >>: Which script has been changed
+// << == |*| Script Name vX.X - Update to vX.X/Added/Release/Removed/Request/Modified |*| == >>: Which script has been changed
 // -: Which part of the script
 //   >: More details
 // ?: Comment by me
@@ -25,8 +25,29 @@
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
 * 2019/05/05
-<< == |*| Gold Room Battle v1.1 [REQ] - @Modified |*| == >>
+<< == |*| Gold Room Battle v1.1 [REQ] - Modified |*| == >>
 - Updated the "cleanmap" command
+<< == |*| Battle Royale v1.0 [WIP] - Modified |*| == >>
+- Exchanged Battle Royal Points with Battle Royal Coin (Custom Item) > $@BR_RewID
+- Added "BR_AutoStorage" function
+- Removed the "check" part of the "BR_Inv" function because of "BR_AutoStorage"
+- Recoded the Arena settings
+- Renamed $@q array into $@BR_RegQ
+- Moved the Register Timer into "BR_Init" to affect the respective Arena > OnRegisterTimer
+- Removed the OnBRStop because I renamed .BR_Status to $@BR_Status_
+- Added .arena_<ID>$ to "BR_Init" for the Arena Name
+- Reduced the Base Reward Amount
+- Exchanged Eclage with Malaya Port (it sucked)
+- Added the coordinates of the missing Arenas
+- Recoded the Zone
+- Removed some more debugmes
+- Added some dynamic time display in the zone announces
+- Switched addrid with getmapunits
+- Added disablenpc into the BR_Init to only enable them on OnBRStart
+  ? Should prevent OnEvent queue full error
+- Loot Boxes - Enchants: Split the values into lines for better overview and fixed some typos
+- Fixed an minor typo at the .equip Array
+- Added "Battle Royale.rar"
 ------------------------------------------------------------------------------------------------------------------------
 * 2019/04/30
 << == |*| Battle Royale v1.0 [WIP] - @Modified |*| == >>
