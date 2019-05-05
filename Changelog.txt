@@ -47,7 +47,7 @@
   ? Should prevent OnEvent queue full error
 - Loot Boxes - Enchants: Split the values into lines for better overview and fixed some typos
 - Fixed an minor typo at the .equip Array
-- Added "Battle Royale.rar"
+- Added "BattleRoyale.rar"
 ------------------------------------------------------------------------------------------------------------------------
 * 2019/04/30
 << == |*| Battle Royale v1.0 [WIP] - @Modified |*| == >>
