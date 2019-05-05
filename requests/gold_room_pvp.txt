@@ -6,6 +6,7 @@
 //= 1.0 - Initial Version
 //= 1.1 - Fixed bugs and tested
 //        Exchanged "atcommand @cleanmap" with script command "cleanmap"
+//        Updated the "cleanmap" command
 //===== Tested With =========================================
 //= rAthena SQL 07/16-2017 Revision
 //===== Description ==========================================
@@ -101,7 +102,7 @@ close;
 OnPCLogoutEvent:
 if(getcharid(3) != $gold_acc) end;
 OnDone:
-cleanmap .gold$,88,111,168,191;
+cleanmap .gold$;
 warp "SavePoint",0,0;
 end;
 
@@ -115,7 +116,7 @@ while(getmapusers(.gold$) != 0) {
 	makeitem 969,1,.gold$,rand(88,111),rand(168,191);
 	sleep2 1000;
 }		
-cleanmap .gold$,88,111,168,191;
+cleanmap .gold$;
 end;
 
 OnPrepare:
