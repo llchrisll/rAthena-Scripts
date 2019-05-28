@@ -1,0 +1,962 @@
+db/import/instance.db:
+// Hunting Ground [llchrisll]
+100,Hunting Ground 99,3600,300,gef_fild14,365,220
+101,Hunting Ground 115,3600,300,gef_fild14,365,220
+102,Hunting Ground 130,3600,300,gef_fild14,365,220
+103,Hunting Ground 145,3600,300,gef_fild14,365,220
+104,Hunting Ground 160,7200,300,gef_fild14,365,220
+105,Hunting Ground 175,10800,300,gef_fild14,365,220
+
+db/import/quest_db.txt:
+// Hunting Grounds [llchrisll]
+160000,0,2071,100,1213,100,2154,100,0,0,0,0,0,0,0,0,0,"Hunting Ground 99 - Fire"
+160001,0,1086,1,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 99 - Fire MvP"
+160002,0,1883,100,1515,100,2417,100,0,0,0,0,0,0,0,0,0,"Hunting Ground 99 - Water"
+160003,0,1252,1,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 99 - Water MvP"
+160004,0,1376,100,1692,100,2418,100,0,0,0,0,0,0,0,0,0,"Hunting Ground 99 - Wind"
+160005,0,1059,1,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 99 - Wind MvP"
+160006,0,1881,100,1322,100,1784,100,0,0,0,0,0,0,0,0,0,"Hunting Ground 99 - Earth"
+160007,0,1190,1,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 99 - Earth MvP"
+160008,0,1256,100,1109,100,1416,100,0,0,0,0,0,0,0,0,0,"Hunting Ground 99 - Shadow"
+160009,0,1039,1,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 99 - Shadow MvP"
+160010,0,2420,100,2427,100,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 99 - Holy"
+160011,0,1096,1,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 99 - Holy MvP"
+
+160030,0,2415,100,1310,100,2182,100,0,0,0,0,0,0,0,0,0,"Hunting Ground 115 - Fire"
+160031,0,1115,1,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 115 - Fire MvP"
+160032,0,1775,100,1206,100,2204,100,0,0,0,0,0,0,0,0,0,"Hunting Ground 115 - Water"
+160033,0,1779,1,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 115 - Water MvP"
+160034,0,1259,100,1994,100,1677,100,0,0,0,0,0,0,0,0,0,"Hunting Ground 115 - Wind"
+160035,0,1688,1,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 115 - Wind MvP"
+160036,0,1995,100,1194,100,1678,100,0,0,0,0,0,0,0,0,0,"Hunting Ground 115 - Earth"
+160037,0,1511,1,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 115 - Earth MvP"
+160038,0,2314,100,1379,100,1505,100,0,0,0,0,0,0,0,0,0,"Hunting Ground 115 - Shadow"
+160039,0,1157,1,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 115 - Shadow MvP"
+160040,0,1371,100,1992,100,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 115 - Holy"
+160041,0,1388,1,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 115 - Holy MvP"
+
+160060,0,2353,200,1714,200,1837,200,0,0,0,0,0,0,0,0,0,"Hunting Ground 130 - Fire"
+160061,0,2068,2,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 130 - Fire MvP"
+160062,0,1697,200,2016,200,1671,200,0,0,0,0,0,0,0,0,0,"Hunting Ground 130 - Water"
+160063,0,2202,2,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 130 - Water MvP"
+160064,0,2313,200,1208,200,1774,200,0,0,0,0,0,0,0,0,0,"Hunting Ground 130 - Wind"
+160065,0,1251,2,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 130 - Wind MvP"
+160066,0,2013,200,1993,200,1717,200,0,0,0,0,0,0,0,0,0,"Hunting Ground 130 - Earth"
+160067,0,1885,2,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 130 - Earth MvP"
+160068,0,1866,200,1219,200,1752,200,0,0,0,0,0,0,0,0,0,"Hunting Ground 130 - Shadow"
+160069,0,1373,2,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 130 - Shadow MvP"
+160070,0,1713,200,1655,200,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 130 - Holy"
+160071,0,1685,2,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 130 - Holy MvP"
+
+160090,0,1833,200,1652,200,1634,200,0,0,0,0,0,0,0,0,0,"Hunting Ground 145 - Fire"
+160091,0,2249,2,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 145 - Fire MvP"
+160092,0,2092,200,1681,200,1636,200,0,0,0,0,0,0,0,0,0,"Hunting Ground 145 - Water"
+160093,0,2319,2,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 145 - Water MvP"
+160094,0,1716,200,1656,200,2364,200,0,0,0,0,0,0,0,0,0,"Hunting Ground 145 - Wind"
+160095,0,1630,2,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 145 - Wind MvP"
+160096,0,1654,200,2084,200,2133,200,0,0,0,0,0,0,0,0,0,"Hunting Ground 145 - Earth"
+160097,0,1312,2,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 145 - Earth MvP"
+160098,0,1867,200,2468,200,2469,200,0,0,0,0,0,0,0,0,0,"Hunting Ground 145 - Shadow"
+160099,0,1719,2,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 145 - Shadow MvP"
+160100,0,1637,200,2221,200,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 145 - Holy"
+160101,0,1765,2,0,0,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 145 - Holy MvP"
+
+160120,0,2369,300,3022,300,3023,300,0,0,0,0,0,0,0,0,0,"Hunting Ground 160 - Fire"
+160121,0,1646,2,2249,2,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 160 - Fire MvP"
+160122,0,2367,300,2020,300,2021,300,0,0,0,0,0,0,0,0,0,"Hunting Ground 160 - Water"
+160123,0,2319,2,2534,2,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 160 - Water MvP"
+160124,0,2758,300,2284,300,2365,300,0,0,0,0,0,0,0,0,0,"Hunting Ground 160 - Wind"
+160125,0,2251,2,2535,2,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 160 - Wind MvP"
+160126,0,2132,300,2019,300,2370,300,0,0,0,0,0,0,0,0,0,"Hunting Ground 160 - Earth"
+160127,0,2165,2,2253,2,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 160 - Earth MvP"
+160128,0,2282,300,2281,300,2991,300,0,0,0,0,0,0,0,0,0,"Hunting Ground 160 - Shadow"
+160129,0,1871,2,2131,2,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 160 - Shadow MvP"
+160130,0,1637,300,2221,300,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 160 - Holy"
+160131,0,1751,2,2228,2,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 160 - Holy MvP"
+
+160150,0,1634,500,2222,500,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Fire"
+160151,0,2532,3,1646,3,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Fire MvP"
+160152,0,2184,500,2224,500,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Water"
+160153,0,2534,3,2238,3,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Water MvP"
+160154,0,2477,500,2919,500,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Wind"
+160155,0,2535,3,1650,3,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Wind MvP"
+160156,0,2901,500,2916,500,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Earth"
+160157,0,2533,3,1648,3,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Earth MvP"
+160158,0,2989,500,3252,500,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Shadow"
+160159,0,1871,3,2255,3,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Shadow MvP"
+160160,0,1637,500,2221,500,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Holy"
+160161,0,1649,3,2235,3,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Holy MvP"
+
+// Delay Quests
+160200,14400,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"Master Hunter 99"
+160201,14400,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"Master Hunter 115"
+160202,14400,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"Master Hunter 130"
+160203,21600,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"Master Hunter 145"
+160204,21600,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"Master Hunter 160"
+160205,28800,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"Master Hunter 175"
+
+Clients older than 2018-06-20 or Clients which don't use the Lua files yet:
+data/questid2display.txt:
+// Hunting Grounds [llchrisll]
+160000#Hunting Grounds 99#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Fire Element Monsters#
+
+160001#Hunting Grounds 99#SG_FEEL#QUE_NOIMAGE#
+Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!#
+Fire Element MvP#
+
+160002#Hunting Grounds 99#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Water Element Monsters#
+
+160003#Hunting Grounds 99#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Water Element MvP#
+
+160004#Hunting Grounds 99#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Wind Element Monsters#
+
+160005#Hunting Grounds 99#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Wind Element MvP#
+
+160006#Hunting Grounds 99#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Earth Element Monsters#
+
+160007#Hunting Grounds 99#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Earth Element MvP#
+
+160008#Hunting Grounds 99#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Shadow Element Monsters#
+
+160009#Hunting Grounds 99#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Shadow Element MvP#
+
+160010#Hunting Grounds 99#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Holy Element Monsters#
+
+1600011#Hunting Grounds 99#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Holy Element MvP#
+
+160030#Hunting Grounds 115#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Fire Element Monsters#
+
+160031#Hunting Grounds 115#SG_FEEL#QUE_NOIMAGE#
+Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!#
+Fire Element MvP#
+
+160032#Hunting Grounds 115#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Water Element Monsters#
+
+160033#Hunting Grounds 115#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Water Element MvP#
+
+160034#Hunting Grounds 115#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Wind Element Monsters#
+
+160035#Hunting Grounds 115#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Wind Element MvP#
+
+160036#Hunting Grounds 115#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Earth Element Monsters#
+
+160037#Hunting Grounds 115#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Earth Element MvP#
+
+160038#Hunting Grounds 115#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Shadow Element Monsters#
+
+160039#Hunting Grounds 115#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Shadow Element MvP#
+
+160040#Hunting Grounds 115#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Holy Element Monsters#
+
+160041#Hunting Grounds 115#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Holy Element MvP#
+
+160060#Hunting Grounds 130#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Fire Element Monsters#
+
+160061#Hunting Grounds 130#SG_FEEL#QUE_NOIMAGE#
+Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!#
+Fire Element MvP#
+
+160062#Hunting Grounds 130#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Water Element Monsters#
+
+160063#Hunting Grounds 130#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Water Element MvP#
+
+160064#Hunting Grounds 130#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Wind Element Monsters#
+
+160065#Hunting Grounds 130#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Wind Element MvP#
+
+160066#Hunting Grounds 130#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Earth Element Monsters#
+
+160067#Hunting Grounds 130#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Earth Element MvP#
+
+160068#Hunting Grounds 130#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Shadow Element Monsters#
+
+160069#Hunting Grounds 130#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Shadow Element MvP#
+
+160070#Hunting Grounds 130#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Holy Element Monsters#
+
+160071#Hunting Grounds 130#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Holy Element MvP#
+
+160090#Hunting Grounds 145#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Fire Element Monsters#
+
+160091#Hunting Grounds 145#SG_FEEL#QUE_NOIMAGE#
+Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!#
+Fire Element MvP#
+
+160092#Hunting Grounds 145#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Water Element Monsters#
+
+160093#Hunting Grounds 145#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Water Element MvP#
+
+160094#Hunting Grounds 145#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Wind Element Monsters#
+
+160095#Hunting Grounds 145#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Wind Element MvP#
+
+160096#Hunting Grounds 145#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Earth Element Monsters#
+
+160097#Hunting Grounds 145#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Earth Element MvP#
+
+160098#Hunting Grounds 145#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Shadow Element Monsters#
+
+160099#Hunting Grounds 145#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Shadow Element MvP#
+
+160100#Hunting Grounds 145#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Holy Element Monsters#
+
+160101#Hunting Grounds 145#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Holy Element MvP#
+
+160120#Hunting Grounds 160#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Fire Element Monsters#
+
+160121#Hunting Grounds 160#SG_FEEL#QUE_NOIMAGE#
+Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!#
+Fire Element MvP#
+
+160122#Hunting Grounds 160#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Water Element Monsters#
+
+160123#Hunting Grounds 160#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Water Element MvP#
+
+160124#Hunting Grounds 160#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Wind Element Monsters#
+
+160125#Hunting Grounds 160#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Wind Element MvP#
+
+160126#Hunting Grounds 160#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Earth Element Monsters#
+
+160127#Hunting Grounds 160#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Earth Element MvP#
+
+160128#Hunting Grounds 160#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Shadow Element Monsters#
+
+160129#Hunting Grounds 160#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Shadow Element MvP#
+
+160130#Hunting Grounds 160#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Holy Element Monsters#
+
+160131#Hunting Grounds 160#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Holy Element MvP#
+
+1600150#Hunting Grounds 175#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Fire Element Monsters#
+
+160151#Hunting Grounds 175#SG_FEEL#QUE_NOIMAGE#
+Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!#
+Fire Element MvP#
+
+160152#Hunting Grounds 175#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Water Element Monsters#
+
+160153#Hunting Grounds 175#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Water Element MvP#
+
+160154#Hunting Grounds 175#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Wind Element Monsters#
+
+160155#Hunting Grounds 175#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Wind Element MvP#
+
+160156#Hunting Grounds 175#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Earth Element Monsters#
+
+160157#Hunting Grounds 175#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Earth Element MvP#
+
+160158#Hunting Grounds 175#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Shadow Element Monsters#
+
+160159#Hunting Grounds 175#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Shadow Element MvP#
+
+160160#Hunting Grounds 175#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Holy Element Monsters#
+
+160161#Hunting Grounds 175#SG_FEEL#QUE_NOIMAGE#
+Slay the requested monsters in the Hunting Ground Instance and collect the rewards!#
+Holy Element MvP#
+
+160200#Master Hunter 99#SG_FEEL#QUE_NOIMAGE#
+Re-entering the Hunting Grounds for level 99 - 114 is currently not possible. Please wait until the cooldown has passed.#
+Hunting Ground 99 Cooldown#
+
+160201#Master Hunter 115#SG_FEEL#QUE_NOIMAGE#
+Re-entering the Hunting Grounds for level 115 - 129 is currently not possible. Please wait until the cooldown has passed.#
+Hunting Ground 115 Cooldown#
+
+160202#Master Hunter 130#SG_FEEL#QUE_NOIMAGE#
+Re-entering the Hunting Grounds for level 130 - 144 is currently not possible. Please wait until the cooldown has passed.#
+Hunting Ground 130 Cooldown#
+
+160203#Master Hunter 145#SG_FEEL#QUE_NOIMAGE#
+Re-entering the Hunting Grounds for level 145 - 159 is currently not possible. Please wait until the cooldown has passed.#
+Hunting Ground 145 Cooldown#
+
+160204#Master Hunter 160#SG_FEEL#QUE_NOIMAGE#
+Re-entering the Hunting Grounds for level 160 - 174 is currently not possible. Please wait until the cooldown has passed.#
+Hunting Ground 160 Cooldown#
+
+160205#Master Hunter 175#SG_FEEL#QUE_NOIMAGE#
+Re-entering the Hunting Grounds for level 175 is currently not possible. Please wait until the cooldown has passed.#
+Hunting Ground 175 Cooldown#
+
+2018-06-20 Clients - Lua Files:
+Add in "System/OngoingQuestInfoList.lub" or "System/OngoingQuestInfoList_Sakray.lub" the following at the end:
+Note: _Sakray worked for me, not sure why the normal didn't tho.
+
+	[160000] = {
+		Title = "Hunting Grounds 99",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Fire Element Monsters"
+	},
+	[160001] = {
+		Title = "Hunting Grounds 99",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Fire Element MvP"
+	},
+	[160002] = {
+		Title = "Hunting Grounds 99",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Water Element Monsters"
+	},
+	[160003] = {
+		Title = "Hunting Grounds 99",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Water Element MvP"
+	},
+	[160004] = {
+		Title = "Hunting Grounds 99",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Wind Element Monsters"
+	},
+	[160005] = {
+		Title = "Hunting Grounds 99",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Wind Element MvP"
+	},
+	[160006] = {
+		Title = "Hunting Grounds 99",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Earth Element Monsters"
+	},
+	[160007] = {
+		Title = "Hunting Grounds 99",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Earth Element MvP"
+	},
+	[160008] = {
+		Title = "Hunting Grounds 99",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Shadow Element Monsters"
+	},
+	[160009] = {
+		Title = "Hunting Grounds 99",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Shadow Element MvP"
+	},
+	[160010] = {
+		Title = "Hunting Grounds 99",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Holy Element Monsters"
+	},
+	[160011] = {
+		Title = "Hunting Grounds 99",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Holy Element MvP"
+	},
+	[160030] = {
+		Title = "Hunting Grounds 115",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Fire Element Monsters"
+	},
+	[160031] = {
+		Title = "Hunting Grounds 115",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Fire Element MvP"
+	},
+	[160032] = {
+		Title = "Hunting Grounds 115",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Water Element Monsters"
+	},
+	[160033] = {
+		Title = "Hunting Grounds 115",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Water Element MvP"
+	},
+	[160034] = {
+		Title = "Hunting Grounds 115",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Wind Element Monsters"
+	},
+	[160035] = {
+		Title = "Hunting Grounds 115",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Wind Element MvP"
+	},
+	[160036] = {
+		Title = "Hunting Grounds 115",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Earth Element Monsters"
+	},
+	[160037] = {
+		Title = "Hunting Grounds 115",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Earth Element MvP"
+	},
+	[160038] = {
+		Title = "Hunting Grounds 115",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Shadow Element Monsters"
+	},
+	[160039] = {
+		Title = "Hunting Grounds 115",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Shadow Element MvP"
+	},
+	[160040] = {
+		Title = "Hunting Grounds 115",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Holy Element Monsters"
+	},
+	[160041] = {
+		Title = "Hunting Grounds 115",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Holy Element MvP"
+	},
+	[160060] = {
+		Title = "Hunting Grounds 130",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Fire Element Monsters"
+	},
+	[160061] = {
+		Title = "Hunting Grounds 130",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Fire Element MvP"
+	},
+	[160062] = {
+		Title = "Hunting Grounds 130",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Water Element Monsters"
+	},
+	[160063] = {
+		Title = "Hunting Grounds 130",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Water Element MvP"
+	},
+	[160064] = {
+		Title = "Hunting Grounds 130",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Wind Element Monsters"
+	},
+	[160065] = {
+		Title = "Hunting Grounds 130",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Wind Element MvP"
+	},
+	[160066] = {
+		Title = "Hunting Grounds 130",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Earth Element Monsters"
+	},
+	[160067] = {
+		Title = "Hunting Grounds 130",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Earth Element MvP"
+	},
+	[160068] = {
+		Title = "Hunting Grounds 130",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Shadow Element Monsters"
+	},
+	[160069] = {
+		Title = "Hunting Grounds 130",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Shadow Element MvP"
+	},
+	[160070] = {
+		Title = "Hunting Grounds 130",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Holy Element Monsters"
+	},
+	[160071] = {
+		Title = "Hunting Grounds 130",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Holy Element MvP"
+	},
+	[160090] = {
+		Title = "Hunting Grounds 145",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Fire Element Monsters"
+	},
+	[160091] = {
+		Title = "Hunting Grounds 145",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Fire Element MvP"
+	},
+	[160092] = {
+		Title = "Hunting Grounds 145",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Water Element Monsters"
+	},
+	[160093] = {
+		Title = "Hunting Grounds 145",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Water Element MvP"
+	},
+	[160094] = {
+		Title = "Hunting Grounds 145",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Wind Element Monsters"
+	},
+	[160095] = {
+		Title = "Hunting Grounds 145",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Wind Element MvP"
+	},
+	[160096] = {
+		Title = "Hunting Grounds 145",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Earth Element Monsters"
+	},
+	[160097] = {
+		Title = "Hunting Grounds 145",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Earth Element MvP"
+	},
+	[160098] = {
+		Title = "Hunting Grounds 145",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Shadow Element Monsters"
+	},
+	[160099] = {
+		Title = "Hunting Grounds 145",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Shadow Element MvP"
+	},
+	[160100] = {
+		Title = "Hunting Grounds 145",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Holy Element Monsters"
+	},
+	[160101] = {
+		Title = "Hunting Grounds 145",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Holy Element MvP"
+	},
+	[160120] = {
+		Title = "Hunting Grounds 160",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Fire Element Monsters"
+	},
+	[160121] = {
+		Title = "Hunting Grounds 160",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Fire Element MvP"
+	},
+	[160122] = {
+		Title = "Hunting Grounds 160",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Water Element Monsters"
+	},
+	[160123] = {
+		Title = "Hunting Grounds 160",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Water Element MvP"
+	},
+	[160124] = {
+		Title = "Hunting Grounds 160",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Wind Element Monsters"
+	},
+	[160125] = {
+		Title = "Hunting Grounds 160",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Wind Element MvP"
+	},
+	[160126] = {
+		Title = "Hunting Grounds 160",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Earth Element Monsters"
+	},
+	[160127] = {
+		Title = "Hunting Grounds 160",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Earth Element MvP"
+	},
+	[160128] = {
+		Title = "Hunting Grounds 160",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Shadow Element Monsters"
+	},
+	[160129] = {
+		Title = "Hunting Grounds 160",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Shadow Element MvP"
+	},
+	[160130] = {
+		Title = "Hunting Grounds 160",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Holy Element Monsters"
+	},
+	[160131] = {
+		Title = "Hunting Grounds 160",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Holy Element MvP"
+	},
+	[160150] = {
+		Title = "Hunting Grounds 175",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Fire Element Monsters"
+	},
+	[160151] = {
+		Title = "Hunting Grounds 175",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Fire Element MvP"
+	},
+	[160152] = {
+		Title = "Hunting Grounds 175",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Water Element Monsters"
+	},
+	[160153] = {
+		Title = "Hunting Grounds 175",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Water Element MvP"
+	},
+	[160154] = {
+		Title = "Hunting Grounds 175",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Wind Element Monsters"
+	},
+	[160155] = {
+		Title = "Hunting Grounds 175",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Wind Element MvP"
+	},
+	[160156] = {
+		Title = "Hunting Grounds 175",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Earth Element Monsters"
+	},
+	[160157] = {
+		Title = "Hunting Grounds 175",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Earth Element MvP"
+	},
+	[160158] = {
+		Title = "Hunting Grounds 175",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Shadow Element Monsters"
+	},
+	[160159] = {
+		Title = "Hunting Grounds 175",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Shadow Element MvP"
+	},
+	[160160] = {
+		Title = "Hunting Grounds 175",
+		Description = {
+			"Slay the requested monsters in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Holy Element Monsters"
+	},
+	[160161] = {
+		Title = "Hunting Grounds 175",
+		Description = {
+			"Slay the requested MvP(s) in the Hunting Ground Instance and collect the rewards!"
+		},
+		Summary = "Holy Element MvP"
+	},
+	[160200] = {
+		Title = "Master Hunter 99",
+		Description = {
+			"Re-entering the Hunting Grounds for level 99 - 114 is currently not possible. Please wait until the cooldown has passed."
+		},
+		Summary = "Hunting Ground 99 Cooldown"
+	},
+	[160201] = {
+		Title = "Master Hunter 115",
+		Description = {
+			"Re-entering the Hunting Grounds for level 115 - 129 is currently not possible. Please wait until the cooldown has passed."
+		},
+		Summary = "Hunting Ground 115 Cooldown"
+	},
+	[160202] = {
+		Title = "Master Hunter 130",
+		Description = {
+			"Re-entering the Hunting Grounds for level 130 - 144 is currently not possible. Please wait until the cooldown has passed."
+		},
+		Summary = "Hunting Ground 130 Cooldown"
+	},
+	[160203] = {
+		Title = "Master Hunter 145",	
+		Description = {
+			"Re-entering the Hunting Grounds for level 145 - 159 is currently not possible. Please wait until the cooldown has passed."
+		},
+		Summary = "Hunting Ground 145 Cooldown"
+	},
+	[160204] = {
+		Title = "Master Hunter 160",
+		Description = {
+			"Re-entering the Hunting Grounds for level 160 - 174 is currently not possible. Please wait until the cooldown has passed."
+		},
+		Summary = "Hunting Ground 160 Cooldown"
+	},
+	[160205] = {
+		Title = "Master Hunter 175",
+		Description = {
+			"Re-entering the Hunting Grounds for level 175 is currently not possible. Please wait until the cooldown has passed."
+		},
+		Summary = "Hunting Ground 175 Cooldown"
+	},

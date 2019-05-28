@@ -126,7 +126,7 @@ switch(select("- Enchant Costumes:- Reset Enchantment:- Nevermind")) {
 	mes "Proceed?";
 	if(select("- Yes:- No") - 1) close;
 	next;
-	if(.enchant_r) 
+	if(.enchant_reset[0]) 
 		delitem .enchant_reset[0],.enchant_reset[1];
 	delequip .@part;
 	getitem2 .@hg,1,1,.@ref,0,.@card1,0,0,0;

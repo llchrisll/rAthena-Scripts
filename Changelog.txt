@@ -24,6 +24,31 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2019/05/28
+<< == |*| Battle Royale v1.0 [RE] - Release |*| == >>
+- Required File: BattleRoyale.rar
+<< == |*| Hunting Grounds v1.0 [RE] - Release |*| == >>
+- Required File: HuntingGrounds_install.txt
+<< == |*| Broadcaster v1.3 [RE] - Removed |*| == >>
+- Removed duo unnecessarity > Channel System
+<< == |*| Unofficial Nightmare Bio Lab  v1.0 [RE] - Removed |*| == >>
+- Removed duo official implementation.
+<< == |*| Unofficial Instances by Alayne - Removed |*| == >>
+- Morse Cave
+<< == |*| Mob Invasion v1.0 [RE] - Update to v1.1 |*| == >>
+- Exchanged the Custom Variable Settings for the Reward NPC with the forgotten Cash Points reward (ups..)
+- Removed the idea about using an Shop
+- Added some missing 'if(.debug)' lines
+- Added custom Commands for GM's to start/end the invasion manually: @invastart & @invaend
+<< == |*| Costume Enchanter v1.2 [REQ] - Modified |*| == >>
+- Fixed an small typo: .enchant_r > .enchant_reset[0]
+<< == |*| Gold Room Battle v1.1 [REQ] - Modified |*| == >>
+- Fixed the "cleanmap" command for it's updated use
+- Changed the OnPCDieEvent code a bit
+<< == |*| General - Update |*| == >>
+- Project_List.txt
+- Headers.txt
+------------------------------------------------------------------------------------------------------------------------
 * 2019/05/05
 << == |*| Gold Room Battle v1.1 [REQ] - Modified |*| == >>
 - Updated the "cleanmap" command

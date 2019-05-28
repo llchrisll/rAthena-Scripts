@@ -6,9 +6,10 @@
 //= 1.0 - Initial Version
 //= 1.1 - Fixed bugs and tested
 //        Exchanged "atcommand @cleanmap" with script command "cleanmap"
-//        Updated the "cleanmap" command
-//===== Tested With =========================================
-//= rAthena SQL 07/16-2017 Revision
+//        Fixed the "cleanmap" command for it's updated use
+//===== Tested With ==========================================
+//= rAthena 04/26/2019 Revision
+//= GIT Hash: 67e1583f9fec7ac95a954634f6b7600ebe428df0
 //===== Description ==========================================
 //= A battle over an gold room, which occures on every ".delay" days.
 //  Players can visit their gold room for ".dur" minutes, there is no delay restriction.
@@ -248,13 +249,11 @@ end;
 
 OnPCDieEvent:
 if(strcharinfo(3) != .pvp$ || !@gold ) end;
-if(killerrid != getcharid(3)) dispbottom .n$+": You have been killed by "+rid2name(killerrid)+"!!";
 set @gold,0;
-sleep2 500;
 warp "SavePoint",0,0;
 sleep2 1500; // Slowing down the script
-if(HP == 0) atcommand "@alive";
-percentheal 50,50;
+percentheal 100,100;
+if(killerrid != getcharid(3)) dispbottom .n$+": You have been killed by "+rid2name(killerrid)+"!!";
 if(getmapusers(.pvp$) == 2) mapannounce .pvp$,.n$+": Wuhu!! Only 2 players remain, let's see who is the better player!!",bc_all;
 else if(getmapusers(.pvp$) == 1) {
 	announce .n$+": The winner of the Gold Room Battle is "+ rid2name(killerrid)+".",bc_all;
@@ -262,8 +261,8 @@ else if(getmapusers(.pvp$) == 1) {
 	set $gold_n$,rid2name($gold_acc);
 	detachrid;
 	if(attachrid($gold_acc) == 1) dispbottom .n$+": You have won the Gold Room Battle, if you want to enter your Gold Room, please talk to me.";
-	goto OnDisable;
-} else if(getmapusers(.pvp$) == 0) goto OnDisable;
+	donpcevent strnpcinfo(0)+"::OnDisable";
+} else if(getmapusers(.pvp$) == 0) donpcevent strnpcinfo(0)+"::OnDisable";
 end;
 
 

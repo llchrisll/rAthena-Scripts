@@ -4,10 +4,13 @@
 //= llchrisll
 //===== Version ==============================================
 //= 1.0 - Initial Release
-//===== Compatible With ======================================
-//= Every Athena SQL SVN 
+//  1.1 - Added custom Commands for GM's to start/end the invasion manually.
+//      - Exchanged the Custom Variable Settings for the Reward NPC with
+//        the forgotten Cash Points reward (ups..)
+//      - Removed the idea about using an Invasion Shop
 //===== Tested With ==========================================
-//= rAthena 17267 SQL Trunk 
+//= rAthena 04/26/2019 Revision
+//= GIT Hash: 67e1583f9fec7ac95a954634f6b7600ebe428df0
 //===== Description ==========================================
 //= There are 2 Invasion Types:
 //  - Single
@@ -21,8 +24,6 @@
 //= See "OnInit:" for the main settings
 //===== Comments =============================================
 //= None yet... 
-//===== ToDo List ============================================
-//= Adding an Custom Shop for the Invasion Points in the Invasion Rewarder
 //===========================================================
 -	script	MobInvaInit	-1,{
 function	DELAY;
@@ -296,9 +297,7 @@ switch(.MobSKilled) {
 	mapannounce strcharinfo(3),.n$+": LAST "+.MobSKilled+"!!!! We can do it!!!",bc_yellow;
 	break;
 	
-	default:
-	mapannounce strcharinfo(3),.n$+": "+.MobSKilled+" monsters are left!!!! Good work !!!",bc_yellow;
-	break;
+	default: break;
 }
 end;
 
@@ -328,7 +327,8 @@ switch( @loc ) {
 	
 	case 1: 
 	setd(".Mob_"+.map_post_b$[@map]+"_Killed"),getd(".Mob_"+.map_post_b$[@map]+"_Killed") - 1; 
-	debugmes .n$+": Mobs: "+mobcount(.map_b$[@map],strnpcinfo(0)+"::OnMobMultiKilled")+", Variable: "+getd(".Mob_"+.map_post_b$[@map]+"_Killed");
+	if(.debug)
+		debugmes .n$+": Mobs: "+mobcount(.map_b$[@map],strnpcinfo(0)+"::OnMobMultiKilled")+", Variable: "+getd(".Mob_"+.map_post_b$[@map]+"_Killed");
 	if(getd(".Mob_"+.map_post_b$[@map]+"_Killed") > 0) 
 		mapannounce strcharinfo(3),.n$+": The player ["+strcharinfo(0)+"] has killed another monster, "+getd(".Mob_"+.map_post_b$[@map]+"_Killed")+" monsters are left!!!! Good work !!!",0;
 	else {
@@ -339,7 +339,8 @@ switch( @loc ) {
 	
 	case 2: 
 	setd(".Mob_"+.map_post_s$[@map]+"_Killed"),getd(".Mob_"+.map_post_s$[@map]+"_Killed") - 1; 
-	debugmes .n$+": Mobs: "+mobcount(.map_s$[@map],strnpcinfo(0)+"::OnMobMultiKilled")+", Variable: "+getd(".Mob_"+.map_post_s$[@map]+"_Killed");
+	if(.debug) 
+		debugmes .n$+": Mobs: "+mobcount(.map_s$[@map],strnpcinfo(0)+"::OnMobMultiKilled")+", Variable: "+getd(".Mob_"+.map_post_s$[@map]+"_Killed");
 	if(getd(".Mob_"+.map_post_s$[@map]+"_Killed") > 0) 
 		mapannounce strcharinfo(3),.n$+": The player ["+strcharinfo(0)+"] has killed another monster, "+getd(".Mob_"+.map_post_s$[@map]+"_Killed")+" monsters are left!!!! Good work !!!",0;
 	else {
@@ -599,6 +600,9 @@ if(.debug)
 
 if(.inva_statusinit == 1) // Starting Invasion on Server Start
 	donpcevent strnpcinfo(0)+"::OnInvaInit";
+// Custom Commands for GM's
+bindatcmd "invastart",strnpcinfo(0)+"::OnInvaInit",1,99;
+bindatcmd "invaend",strnpcinfo(0)+"::OnInvaForceEnd",1,99;
 end;
 
 function	DELAY	{
@@ -649,11 +653,8 @@ if(.rew_type == 1) {
 	mes "You have recieved "+.@total+"x "+( (.rew_bonus == 1)?"(Bonus: +"+.@rew_bonus+") ":"") + getitemname(.rew_id)+".";
 	getitem .rew_id,.@total;
 } else if(.rew_type == 2) {
-	mes "You have recieved "+.@total+"x "+( (.rew_bonus == 1)?"(Bonus: +"+.@rew_bonus+") ":"") + .rew_vname$+".";
-	if(.rew_bound == 0) // Character Based
-		setd(""+.rew_var$),getd(""+.rew_var$) + (.rew_am+.rew_bonus);
-	else if(.rew_bound == 1) // Account Based
-		setd("#"+.rew_var$),getd("#"+.rew_var$) + (.rew_am+.rew_bonus);
+	mes "You have recieved "+.@total+"x "+( (.rew_bonus == 1)?"(Bonus: +"+.@rew_bonus+") ":"") + "Cash Points.";
+	set #CASHPOINTS,#CASHPOINTS + (.rew_am+.rew_bonus);
 }
 set InvaKill,0;
 close;
@@ -664,8 +665,7 @@ set .n$,"["+strnpcinfo(0)+"]";
 // * Reward Type:
 // - 0: None
 // - 1: Item
-// - 2: Variable
-// - 3: Cash Points
+// - 2: Cash Points
 set .rew_type,1;
 
 // * Reward Bonus
@@ -675,22 +675,12 @@ set .rew_type,1;
 set .rew_bonus,0;
 // ----- Item -----
 if(.rew_type == 1) 
-	set .rew_id,512; // Item ID
-// ----- Variable Name -----
-else if(.rew_type == 2) {
-	set .rew_var$,"InvaPoints";
-	set .rew_vname$,"Invasion Points";
-
-	// Variable Type:
-	// 0: Character Based
-	// 1: Account Based
-	set .rew_bound,0;
-}	
+	set .rew_id,7929; // Item ID	
 // ----- Reward Quantity -----
 set .rew_am,10; // Amount per Kill
 // ----- NPC Auto Disable -----
 // After how many minutes will the NPC be disabled again:
-set .rew_dis,5;
+set .rew_dis,3;
 disablenpc strnpcinfo(0);
 end;
 }
