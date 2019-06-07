@@ -24,6 +24,11 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2019/06/07
+<< == |*| Mystic Enchanter v1.0 [WIP] - Added |*| == >>
+- Merge of my Armor Enchanter and Costume Enchanter with additional features
+- The shop part was inspired by Stolao's Enchanter, but not copy pasted!
+------------------------------------------------------------------------------------------------------------------------
 * 2019/05/28
 << == |*| Battle Royale v1.0 [RE] - Release |*| == >>
 - Required File: BattleRoyale.rar

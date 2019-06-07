@@ -1,5 +1,5 @@
 Changelog + Script Headers:
-<< == |*| Script Name vX.X - @Update to vX.X/Release/Removed/Request |*| == >>
+<< == |*| Script Name vX.X - Update to vX.X/Release/Removed/Request |*| == >>
 - Changes/Description
 
 NPC Header:
