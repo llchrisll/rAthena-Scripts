@@ -24,6 +24,22 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2019/06/10
+<< == |*| Mystic Enchanter v1.0 [RE] - Release |*| == >>
+- Changed the Chances to affect Upgrade only
+- Changed the check for cards to use compare(), didn't check in time that enchants are also Item Type Card
+- Made the Information section cleaner
+- Added Equipment Limitations - Limit enchant slots per Item or forbid them entirely
+- Added some Item ID's for example to Equipment Restriction
+- Renamed .shadow_garment... to .costume_garment... etc
+- Added Glastheim Item's (Boots) + Gigant Snake Skin to Equipment Limitation
+- Added support to enable/disable Enchantments respectivly; .attr_e[0], .stats_e[0] + .special_e[0]
+- Fixed a bug about Attribute Enchants having the wrong id .attr1-.attr6 as it should
+- Added some colorization to some texts
+- Added Randomization Option, choose what kind of randomizer you want
+- Fixed & tested, I hope I didn't miss anything
+- Added a version without Random Option Support > mystic_enchanter_no_ropt.txt
+------------------------------------------------------------------------------------------------------------------------
 * 2019/06/07
 << == |*| Mystic Enchanter v1.0 [WIP] - Added |*| == >>
 - Merge of my Armor Enchanter and Costume Enchanter with additional features
