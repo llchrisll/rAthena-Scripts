@@ -55,9 +55,10 @@
 //      - Changed `hscore` to `hstreak` (confused people)
 //      - Fixed typo at PvP Deathmatch warp "$dmpvp$" > "$@dmpvp$"
 //		- Added some lines for the dynamic Map setting
+//		- Fixed a typo in mapannounce (Thanks to Questune09 for the bug report)
 //===== Tested With ==========================================
-//= rAthena 02/16/2018 Revision
-//= GIT Hash: f6e0a0a3442d6bebcab6fbbfb35bd381a7ff386c
+//= rAthena 06/29/2019 Revision
+//= GIT Hash: c1975d7ea3729c1f5deec2e0dcf04841c4b96969
 //===== Description ==========================================
 //= PvP / GvG Arenas with ranking ladder & MvP Ranker.
 //= PvP Types:
@@ -640,8 +641,8 @@ if($@bty_type) { // If Bounty is enabled
 	// - Per formula
 	// - Per Array
 	// You can determine for each currency the way of calculation and prices.
-	// If you want to use the formula, set ".arena_pay" to 1.
-	// If you wanna use the array, set ".arena_pay" to 2, 
+	// If you want to use the formula, set ".@arena_pay" to 1.
+	// If you wanna use the array, set ".@arena_pay" to 2, 
 	// but remember to put the prices for all items, also there is no multiplier added for this.
 	set .@arena_pay,1;
 	
@@ -1056,7 +1057,7 @@ if(.pvp_map == 2) {
 	
 		if(!getd("$"+.@pre$[.@l]+"pvp_last") || getd("$"+.@pre$[.@l]+"pvp_last") != getd("$"+.@pre$[.@l]+"pvp_map")) { 
 			setd("$"+.@pre$[.@l]+"pvp_last"),getd("$"+.@pre$[.@l]+"pvp_map");
-			mapannounce getd("$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_last")+"]"),"[Arena Master]: Duo the map change I will move every player from the current map to the new map in 3 seconds!",bc_map|bc_red;
+			mapannounce getd("$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_last")+"]"),"[Arena Master]: Duo the map change I will move every player from the current map to the new map in 3 seconds!",bc_all,0xFF0000;
 			sleep 3000;
 			mapwarp getd("$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_last")+"]"),getd("$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_map")+"]"),0,0;
 		}
@@ -1064,7 +1065,7 @@ if(.pvp_map == 2) {
 	}
 } else if(.pvp_map == 3) {
 	if($arena_debug) debugmes "Specific Day an Specific Map:";
-	mapannounce "[Arena Master]: New Day, new Battlefield!!! Map selection depending on the day has been loaded!",bc_all;
+	announce "[Arena Master]: New Day, new Battlefield!!! Map selection depending on the day has been loaded!",bc_all;
 	for ( set .@l,0; .@l < getarraysize(.@pre$); set .@l,.@l + 1) {
 		if($arena_debug) debugmes ".@pre$ = "+.@pre$[.@l];
 		if($arena_debug) debugmes "Previous Map: "+getd("$"+.@pre$[.@l]+"pvp_map");
@@ -1077,7 +1078,7 @@ if(.pvp_map == 2) {
 			if(getd("$@"+.@pre$[.@l]+"pvp_day["+.@t+"]") == gettime(DT_DAYOFWEEK)) {
 				setd("$"+.@pre$[.@l]+"pvp_map"),.@t;
 				if($arena_debug) debugmes "Day Check passed: "+getd("$"+.@pre$[.@l]+"pvp_map")+" == "+.@t;
-				mapannounce getd("$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_last")+"]"),"[Arena Master]: Duo the map change I will move every player from the current map to the new map in 3 seconds!",bc_map|bc_red;
+				mapannounce getd("$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_last")+"]"),"[Arena Master]: Duo the map change I will move every player from the current map to the new map in 3 seconds!",bc_all,0xFF0000;
 				sleep 3000;
 				mapwarp getd("$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_last")+"]"),getd("$@"+.@pre$[.@l]+"pvp$["+getd("$"+.@pre$[.@l]+"pvp_map")+"]"),0,0;
 			}

@@ -698,7 +698,6 @@ end;
 OnHuntMobDeath:
 if('Mobs_CT < 'Max_Mobs)
 	set 'C_Mobs,'C_Mobs + 1;
-debugmes "'C_Mobs = "+'C_Mobs;
 if('C_Mobs == (('Max_Mobs/'Max_MvP) - 50)) 
 	instance_announce instance_id(),"[Hunting Ground]: The MvP ["+getmonsterinfo('mvp_id['MvP_Cur],MOB_NAME)+"] will be spawned after the next 50 monsters!",bc_all;
 	

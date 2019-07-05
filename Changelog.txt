@@ -24,6 +24,15 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2019/07/05
+<< == |*| Arena Master v1.7 [RE] - Modified |*| == >>
+- Fixed a typo in mapannounce
+<< == |*| Hunting Grounds v1.0 [RE] - Modified |*| == >>
+- Removed some debugmes I forgot to delete
+<< == |*| General - Update |*| == >>
+- Headers.txt
+- Project_List.txt
+------------------------------------------------------------------------------------------------------------------------
 * 2019/06/10
 << == |*| Mystic Enchanter v1.0 [RE] - Release |*| == >>
 - Changed the Chances to affect Upgrade only
@@ -184,7 +193,7 @@
 * 2018/04/09
 << == |*| General - @Update |*| == >>
 - Headers.txt
-- Project_list.txt
+- Project_List.txt
 << == |*| Costume Enchanter v1.1 [REQ] - @Request |*| == >>
 - This NPC allows players to enchant Costumes.
 - Selectable Enchants and reseting the Enchantments.

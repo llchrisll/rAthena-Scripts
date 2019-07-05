@@ -10,7 +10,6 @@ Scripts currently in work-in-progress:
 	
 Scripts currently in testing phase:
 	- Dynamic Battleground Arena
-	- In-Game CP v1.4 (Delete Account Feature)
 	
 Scripts currently in update phase:
 	- 
