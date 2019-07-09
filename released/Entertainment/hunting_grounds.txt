@@ -4,9 +4,11 @@
 //= llchrisll
 //===== Version ==============================================
 //= 1.0 - Initial Version
+//      - Fixed an issue with turning in quests from the previous level range
+//       (Thanks Polly for the report)
 //===== Tested With ==========================================
-//= rAthena 04/26/2019 Revision
-//= GIT Hash: 67e1583f9fec7ac95a954634f6b7600ebe428df0
+//= rAthena 06/29/2019 Revision
+//= GIT Hash: c1975d7ea3729c1f5deec2e0dcf04841c4b96969
 //===== Description ==========================================
 //= Based on the idea of Gramps.
 //= Instance based with 6 different element rotations
@@ -240,14 +242,6 @@ switch(select("Enter Hunting Grounds:Hunting Quests")) {
 	mes " ";
 	mes "EXP Reward:";
 	mes "You will gain the same EXP for each Mob you had to kill for the Quest again!";
-	if(getgroupid() < 1) // testing purposes
-	if(BaseLevel < .HG_MinLvL[.@h] || BaseLevel > .HG_MaxLvL[.@h]) {
-		next;
-		mes .n$;
-		mes "I'm sorry, but you can't accept quests of this level range.";
-		mes "Please choose the respective option for your level.";
-		close;
-	}
 	while(1) {
 		next;
 		mes .n$;
@@ -258,6 +252,12 @@ switch(select("Enter Hunting Grounds:Hunting Quests")) {
 		mes .n$;
 		set .@q_status,checkquest(.@m_quest[.@q_id],HUNTING);
 		if(.@q_status < 0) {
+			if(getgroupid() < 1) // testing purposes
+			if(BaseLevel < .HG_MinLvL[.@h] || BaseLevel > .HG_MaxLvL[.@h]) {
+				mes "I'm sorry, but you can't accept this quest of this level range.";
+				mes "Please choose the respective option for your level.";
+				close;
+			}
 			setquest .@m_quest[.@q_id];
 			mes "Quest accepted.";
 			
