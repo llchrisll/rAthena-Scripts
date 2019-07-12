@@ -9,7 +9,7 @@ Scripts currently in work-in-progress:
 	-
 	
 Scripts currently in testing phase:
-	- Dynamic Battleground Arena
+	-
 	
 Scripts currently in update phase:
 	- 

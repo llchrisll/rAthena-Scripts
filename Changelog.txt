@@ -24,6 +24,14 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2019/07/12
+<< == |*| Dynamic Battleground Arena v1.0 [RE] - Release |*| == >>
+- Finished testing
+- Updated BattlegroundArena.rar
+- Modifications here and there
+<< == |*| General - Update |*| == >>
+- Project_List.txt
+------------------------------------------------------------------------------------------------------------------------
 * 2019/07/09
 << == |*| Hunting Grounds [RE] - Modified |*| == >>
 - Fixed an issue with turning in quests from the previous level range

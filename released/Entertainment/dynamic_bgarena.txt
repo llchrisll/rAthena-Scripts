@@ -5,10 +5,10 @@
 //===== Version ==============================================
 //= 1.0 - Initial Version
 //===== Tested With ==========================================
-//= rAthena 01/24/2018 Revision
-//= GIT Hash: bb0dd7b8dc05f7791b1a23d60dc0585db579da82
+//= rAthena 06/29/2019 Revision
+//= GIT Hash: c1975d7ea3729c1f5deec2e0dcf04841c4b96969
 //===== Description ==========================================
-//= This battleground arena can be configured anyway you like.
+//= This battleground arena can be configured however you like.
 //  You could compare it with an Call of Duty game.
 //  Which consists of Domination, Capture the Flag and so on
 //= The config is per Game Mode dynamically changeable.
@@ -18,10 +18,8 @@
 //= You need the following file: Battleground_Arena.rar
 //  Inside the GRF you find instructions how to install the maps:
 //  dbg_readme.txt
-//===== Credits ==============================================
-//= ...
 //===== ToDO =================================================
-//= ...
+//= Capture the Flag: Change effect for Flag Holder to a better one!
 //============================================================
 -	script	DBGArena_Core	-1,{
 
@@ -29,7 +27,8 @@ OnInit:
 // BG Modes
 setarray $@DBG_Mode$[1],"Team Deathmatch","Search & Destroy","Domination","Rush","Capture the Flag";
 // BG Maps for each Mode
-setarray $@DBG_Map$[1],"dbg_arena","dbg_arena","dbg_dom","dbg_arena","dbg_arena";
+// Note: [0] = is to prevent errors when $@DBG_Status is reseted by Arena Ending mid-way like by a player leaving
+setarray $@DBG_Map$[0],"dbg_arena","dbg_arena","dbg_arena","dbg_dom","dbg_arena","dbg_arena";
 // BG Announce Colors per Mode
 setarray $@DBG_Anno$[1],"0x8CFFFB","0xA4CC2D","0xEAC2EB","0xB97A56","0xEB1E33";
 // BG Announce Type
@@ -53,7 +52,7 @@ setarray .DBG_TLimit[1],10,10,10,10,10;
 // Note: Client can only display up to 100 points
 setarray .DBG_MPTS[1],75,2,100,2,3;
 // Battleground Join Timer in minutes
-set .BG_JoinTime,1;
+set .BG_JoinTime,3;
 // WoE Restriction
 // 0 = Ignore WoE Status
 // 1 = When WoE is active, no BG
@@ -62,7 +61,9 @@ set .DBG_WoE,1;
 // For the actual Happy Hour time look for "OnClock"
 // 0 = Disable
 // 1 = Enable
-set .DBG_HH,1;				   
+set .DBG_HH,1;
+// Don't touch this value below, to adjust the rate itself go to "OnClock2000:" 
+set .DBG_HH_Rate,1;			   
 // Custom Commands
 bindatcmd "joinbgarena",strnpcinfo(0)+"::OnBGJoin";
 bindatcmd "leavebgarena",strnpcinfo(0)+"::OnBGLeave";
@@ -76,14 +77,14 @@ end;
 
 // Happy Hour Starting Time
 OnClock2000:
-if(!.DBG_HH || .DBG_WoE && (agitcheck() || agitcheck2() || agitcheck3()) || !$@DBG_Status) end;
+if(!.DBG_HH || .DBG_WoE && (agitcheck() || agitcheck2() || agitcheck3())) end;
 set .DBG_HH_Rate,2; // Happy Hour Rate
 announce "Battleground Arena: Battleground Happy Hour has started. Rewards will be x"+.DBG_HH_Rate+" for the next hour!",bc_all;
 end;
 
 // Happy Hour Ending Time
 OnClock2100:
-if(!.DBG_HH || !$@DBG_Status) end;
+if(!.DBG_HH) end;
 announce "Battleground Arena: Battleground Happy Hour has ended!",bc_all;
 set .DBG_HH_Rate,1; // Reset to normal reward
 end;
@@ -133,11 +134,11 @@ if(!$@DBG_Status) {
 // Creating BG Group ID's
 set $@DBG_T1,bg_create($@DBG_Map$[$@DBG_Status],.team1_x[$@DBG_Status],.team1_y[$@DBG_Status],strnpcinfo(0)+"::OnBGLeave",strnpcinfo(0)+"::OnBGArenaDeath");
 set $@DBG_T2,bg_create($@DBG_Map$[$@DBG_Status],.team2_x[$@DBG_Status],.team2_y[$@DBG_Status],strnpcinfo(0)+"::OnBGLeave",strnpcinfo(0)+"::OnBGArenaDeath");
+sleep 2000;
+announce "Battleground Arena: You have "+.BG_JoinTime+" Minute"+( (.BG_JoinTime > 1)?"s":"")+" to join by using \"@joinbgarena\" - Mode: "+$@DBG_Mode$[$@DBG_Status],$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
 // Check if there are existing players in the queue
 if(getarraysize(.Team1) > 0 || getarraysize(.Team2) > 0) 
 	announce "Battleground Arena: "+$@DBG_Mode$[$@DBG_Status]+" - Team 1: "+getarraysize(.Team1)+"/"+.DBG_PlayersMax[$@DBG_Status]+" : Team 2: "+getarraysize(.Team2)+"/"+.DBG_PlayersMax[$@DBG_Status],$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
-sleep 2000;
-announce "Battleground Arena: You have "+.BG_JoinTime+" Minute"+( (.BG_JoinTime > 1)?"s":"")+" to join by using \"@joinbgarena\".",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
 set .BGJoin,1;
 sleep (.BG_JoinTime*60*1000);
 set .BGJoin,0;
@@ -149,9 +150,6 @@ if( (getarraysize(.Team1) + getarraysize(.Team2) ) < .DBG_PlayersMin[$@DBG_Statu
 for ( set .@t,0; .@t < getarraysize(.Team1); set .@t,.@t + 1) 
 	if(isloggedin(.Team1[.@t])) {
 		if(attachrid(.Team1[.@t]) == 0) continue;
-		if(@DBG_Team)
-			bg_leave;
-		set @DBG_Team,1;
 		bg_join($@DBG_T1);
 		detachrid;
 	}
@@ -159,9 +157,6 @@ for ( set .@t,0; .@t < getarraysize(.Team1); set .@t,.@t + 1)
 for ( set .@t,0; .@t < getarraysize(.Team2); set .@t,.@t + 1)
 	if(isloggedin(.Team2[.@t])) {
 		if(attachrid(.Team2[.@t]) == 0) continue;
-		if(@DBG_Team)
-			bg_leave;
-		set @DBG_Team,2;
 		bg_join($@DBG_T2);
 		detachrid;
 	}
@@ -240,13 +235,19 @@ switch($@DBG_Status) {
 	
 	case 2: // Search & Destroy
 	if(!@Has_Bomb) end;
-	getmapxy(.@map$,.@bomb_x,.@bomb_y,UNITTYPE_PC);
+	getmapxy(.@map$,.@bomb_x,.@bomb_y,BL_NPC);
 	movenpc "Bomb#SAD",.@bomb_x,.@bomb_y;
 	mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": The bomb has been dropped!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
 	set @Has_Bomb,0;
 	enablenpc "Bomb#SAD";
-	addrid(5,0,strcharinfo(3));
-	viewpoint 0,.@bomb_x,.@bomb_y,3,0xFF0000;
+	
+	set .@bg_pl,bg_get_data($@DBG_T1,1);
+	copyarray .@bg_ids[getarraysize(.@bg_ids)],$@arenamembers[0],.@bg_pl;
+	set .@bg_pl,bg_get_data($@DBG_T2,1);
+	copyarray .@bg_ids[getarraysize(.@bg_ids)],$@arenamembers[0],.@bg_pl;
+	for ( set .@p,0; .@p < getarraysize(.@bg_ids); set .@p,.@p + 1) 
+		if(attachrid(.@bg_ids[.@p]))
+			viewpoint 0,.@bomb_x,.@bomb_y,3,0xFF0000;
 	end;
 	
 	case 4: // Rush
@@ -267,14 +268,19 @@ switch($@DBG_Status) {
 	
 	case 5: // Capture the Flag
 	if(!@Has_Flag) end;
-	getmapxy(.@map$,.@flag_x,.@flag_y,UNITTYPE_PC);
+	getmapxy(.@map$,.@flag_x,.@flag_y,BL_NPC);
 	set .@npc$,"Team "+@Has_Flag+" Flag#"+@Has_Flag;
 	movenpc .@npc$,.@flag_x,.@flag_y;
 	mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": The Flag of Team "+@DBG_Team+" has been dropped!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
 	set @Has_Flag,0;
 	enablenpc .@npc$;
-	addrid(5,0,strcharinfo(3));
-	viewpoint 0,.@flag_x,.@flag_y,1,0xFF0000;
+	set .@bg_pl,bg_get_data($@DBG_T1,1);
+	copyarray .@bg_ids[getarraysize(.@bg_ids)],$@arenamembers[0],.@bg_pl;
+	set .@bg_pl,bg_get_data($@DBG_T2,1);
+	copyarray .@bg_ids[getarraysize(.@bg_ids)],$@arenamembers[0],.@bg_pl;
+	for ( set .@p,0; .@p < getarraysize(.@bg_ids); set .@p,.@p + 1) 
+		if(attachrid(.@bg_ids[.@p])) 
+			viewpoint 0,.@flag_x,.@flag_y,3,0xFF0000;
 	end;
 }
 donpcevent strnpcinfo(0)+"::OnBGArenaScore";
@@ -282,7 +288,7 @@ end;
 
 OnBGArenaScore:
 bg_updatescore $@DBG_Map$[$@DBG_Status],$@DBG_T1Score,$@DBG_T2Score;
-if($@DBG_T1Score >= .DBG_MPTS[$@DBG_Status] || $@DBG_T2Score >= .DBG_MPTS[$@DBG_Status])
+if($@DBG_T1Score >= .DBG_MPTS[$@DBG_Status] || $@DBG_T2Score >= .DBG_MPTS[$@DBG_Status] || .DBG_End)
 	donpcevent strnpcinfo(0)+"::OnBGMatchEnd";
 end;
 
@@ -293,7 +299,7 @@ OnBGMatchEnd:
 // [1] = War Badges
 // [2] = Valor Badges
 // [3] = Bravery Badges
-// Note: If you add more rewards, you have to edit the DBG_Reward function too
+// Note: If you add more rewards, you have to edit the DBG_Reward function too > .@rew_item[]
 stopnpctimer;
 set .t,0;
 switch($@DBG_Status) {
@@ -326,23 +332,24 @@ switch($@DBG_Status) {
 donpcevent "DBG_Init::OnBGDisable"; // Disable NPC's
 // Decide Winners and reset score
 if($@DBG_T1Score < $@DBG_T2Score) {
-	DBG_Reward($@DBG_T2,.@rew_win[0],.@rew_win[1],.@rew_win[2],.@rew_win[3],.DBG_HH_Rate);
-	DBG_Reward($@DBG_T1,.@rew_lose[0],.@rew_lose[1],.@rew_lose[2],.@rew_lose[3],.DBG_HH_Rate);
+	DBG_Reward($@DBG_T2,.DBG_HH_Rate,.@rew_win[0],.@rew_win[1],.@rew_win[2],.@rew_win[3]);
+	DBG_Reward($@DBG_T1,.DBG_HH_Rate,.@rew_lose[0],.@rew_lose[1],.@rew_lose[2],.@rew_lose[3]);
 	announce "Battleground Arena: Team 2 has won this match!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
 	
 } else if($@DBG_T2Score < $@DBG_T1Score) {
-	DBG_Reward($@DBG_T1,.@rew_win[0],.@rew_win[1],.@rew_win[2],.@rew_win[3],.DBG_HH_Rate);
-	DBG_Reward($@DBG_T2,.@rew_lose[0],.@rew_lose[1],.@rew_lose[2],.@rew_lose[3],.DBG_HH_Rate);
+	DBG_Reward($@DBG_T1,.DBG_HH_Rate,.@rew_win[0],.@rew_win[1],.@rew_win[2],.@rew_win[3]);
+	DBG_Reward($@DBG_T2,.DBG_HH_Rate,.@rew_lose[0],.@rew_lose[1],.@rew_lose[2],.@rew_lose[3]);
 	announce "Battleground Arena: Team 1 has won this match!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
 	
 } else {
-	DBG_Reward($@DBG_T1,.@rew_lose[0],.@rew_lose[1],.@rew_lose[2],.@rew_lose[3],.DBG_HH_Rate);
-	DBG_Reward($@DBG_T2,.@rew_lose[0],.@rew_lose[1],.@rew_lose[2],.@rew_lose[3],.DBG_HH_Rate);
+	DBG_Reward($@DBG_T1,.DBG_HH_Rate,.@rew_lose[0],.@rew_lose[1],.@rew_lose[2],.@rew_lose[3]);
+	DBG_Reward($@DBG_T2,.DBG_HH_Rate,.@rew_lose[0],.@rew_lose[1],.@rew_lose[2],.@rew_lose[3]);
 	announce "Battleground Arena: It's an draw ! Nobody has won this match!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
 }
 mapwarp $@DBG_Map$[$@DBG_Status],"prontera",156,191;
-sleep 5000; // Let the players finish warping
-donpcevent strnpcinfo(0)+"::OnBGArenaPrepare";
+sleep 2500; // Let the players finish warping
+if(.DBG_End) donpcevent strnpcinfo(0)+"::OnBGArenaEnd";
+else donpcevent strnpcinfo(0)+"::OnBGArenaPrepare";
 end;
 
 // Battleground Arena - Arena ended
@@ -360,6 +367,8 @@ if($@DBG_T1) {
 		if(isloggedin($@arenamembers[.@t]) == 1 && attachrid($@arenamembers[.@t]) == 1) {
 			bg_leave;
 			set @DBG_Team,0;
+			pcblockmove getcharid(3),0;
+			pcblockskill getcharid(3),0;
 			detachrid;
 		}
 }
@@ -371,15 +380,16 @@ if($@DBG_T2) {
 		if(isloggedin($@arenamembers[.@t]) == 1 && attachrid($@arenamembers[.@t]) == 1) {
 			bg_leave;
 			set @DBG_Team,0;
+			pcblockmove getcharid(3),0;
+			pcblockskill getcharid(3),0;
 			detachrid;
 		}
 }
-set $@DBG_T1,0;
-set $@DBG_T2,0;
 set $@DBG_Status,0;
 set .DBG_Match,0;
 set .DBG_Prepare,0;
 set .DBG_Reset,0;
+set .DBG_End,0;
 set .BGJoin,0;
 announce "[Server]: Battleground Arena has ended! Good luck next time!",$@DBG_Anno_T;
 end;
@@ -387,21 +397,23 @@ end;
 // Battleground Arena - @joinbgarena command
 OnBGJoin:
 if(!.BGJoin) {
-	message strcharinfo(0),"Joining the Battleground Arena is currently not possible.";
+	message strcharinfo(0),"Battleground Arena: Joining the Arena is currently not possible.";
 	end;
 }
 if(@DBG_Team) {
-	message strcharinfo(0),"You are already registered for the Battleground Arena.";
+	message strcharinfo(0),"Battleground Arena: You are already registered for the Arena.";
 	end;
 }
-if(getarraysize(.Team1) <= getarraysize(.Team2) && getarraysize(.Team1) < .DBG_PlayersMax[$@DBG_Status])
+if(getarraysize(.Team1) <= getarraysize(.Team2) && getarraysize(.Team1) < .DBG_PlayersMax[$@DBG_Status]) {
 	setarray .Team1[getarraysize(.Team1)],getcharid(3);
+	set @DBG_Team,1;
 
-else if(getarraysize(.Team2) <= getarraysize(.Team1) && getarraysize(.Team2) < .DBG_PlayersMax[$@DBG_Status])
+} else if(getarraysize(.Team2) <= getarraysize(.Team1) && getarraysize(.Team2) < .DBG_PlayersMax[$@DBG_Status]) {
 	setarray .Team2[getarraysize(.Team2)],getcharid(3);
-
-else {
-	message strcharinfo(0),"I'm sorry, but every Team is full already. Please try again later.";
+	set @DBG_Team,2;
+	
+} else {
+	message strcharinfo(0),"Battleground Arena: I'm sorry, but every Team is full already. Please try again later.";
 	end;
 }
 announce "Battleground Arena: "+$@DBG_Mode$[$@DBG_Status]+" - Team 1: "+getarraysize(.Team1)+"/"+.DBG_PlayersMax[$@DBG_Status]+" : Team 2: "+getarraysize(.Team2)+"/"+.DBG_PlayersMax[$@DBG_Status],$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
@@ -409,8 +421,8 @@ end;
 
 // Battleground Arena - @leavebgarena command & Quit Event
 OnBGLeave:
-if(!$@DBG_Status || !@DBG_Team || !.DBG_Match) {
-	message strcharinfo(0),"From what are you running away?";
+if(!$@DBG_Status || !@DBG_Team) {
+	message strcharinfo(0),"Battleground Arena: From what are you running away? You didn't register yet!";
 	end;
 }
 if(.BGJoin) {
@@ -426,10 +438,13 @@ if(.BGJoin) {
 
 } else if(.DBG_Match) {
 	bg_leave;
-	warp "SavePoint",0,0;
+	warp "prontera",156,191;
+	pcblockmove getcharid(3),0;
+	pcblockskill getcharid(3),0;
 	if(getmapusers($@DBG_Map$[$@DBG_Status]) < .DBG_PlayersMin[$@DBG_Status]) {
 		announce "Battleground Arena: There are not enough participants to continue the match.",$@DBG_Anno_T;
-		donpcevent strnpcinfo(0)+"::OnBGArenaEnd";
+		set .DBG_End,1;
+		donpcevent strnpcinfo(0)+"::OnBGArenaScore";
 	}
 }
 set @DBG_Team,0;
@@ -451,52 +466,58 @@ end;
 
 // Battleground Arena - Unblock players and put markers on minimap
 OnBGPlayerBlock:
-addrid(5,0,$@DBG_Map$[$@DBG_Status]); // Add every player on the battelfield
-pcblockmove getcharid(3),0; // Enable Movement
-pcblockskill getcharid(3),0; // Enable Skills
-if($@DBG_Status == 2) { // S&D
-	getmapxy(.@map_a$,.@targeta_x,.@targeta_y,UNITTYPE_NPC,"Target A#1");
-	getmapxy(.@map_b$,.@targetb_x,.@targetb_y,UNITTYPE_NPC,"Target B#2");
-	viewpoint 1,.@targeta_x,.@targeta_y,1,0xFF0000;
-	viewpoint 1,.@targetb_x,.@targetb_y,2,0x00FF00;
-} else if($@DBG_Status == 3) { // Domination
-	getmapxy(.@map_a$,.@flaga_x,.@flaga_y,UNITTYPE_NPC,"Flag A#1");
-	getmapxy(.@map_b$,.@flagb_x,.@flagb_y,UNITTYPE_NPC,"Flag B#2");
-	getmapxy(.@map_c$,.@flagc_x,.@flagc_y,UNITTYPE_NPC,"Flag C#3");
-	viewpoint 1,.@flaga_x,.@flaga_y,1,0xFF0000;
-	viewpoint 1,.@flagb_x,.@flagb_y,2,0x00FF00;
-	viewpoint 1,.@flagc_x,.@flagc_y,3,0x0000FF;
-} else if($@DBG_Status == 4) { // Rush
-	getmapxy(.@map$,.@def_x,.@def_y,UNITTYPE_NPC,"Defend Crystal");
-	viewpoint 1,.@def_x,.@def_y,1,0xFF0000;
-}
+set .@bg_pl,bg_get_data($@DBG_T1,1);
+copyarray .@bg_ids[getarraysize(.@bg_ids)],$@arenamembers[0],.@bg_pl;
+set .@bg_pl,bg_get_data($@DBG_T2,1);
+copyarray .@bg_ids[getarraysize(.@bg_ids)],$@arenamembers[0],.@bg_pl;
+for ( set .@p,0; .@p < getarraysize(.@bg_ids); set .@p,.@p + 1) 
+	if(attachrid(.@bg_ids[.@p])) {
+		pcblockmove getcharid(3),0; // Enable Movement
+		pcblockskill getcharid(3),0; // Enable Skills
+		if($@DBG_Status == 2) { // S&D
+			getmapxy(.@map_a$,.@targeta_x,.@targeta_y,BL_NPC,"Target A#1");
+			getmapxy(.@map_b$,.@targetb_x,.@targetb_y,BL_NPC,"Target B#2");
+			viewpoint 1,.@targeta_x,.@targeta_y,1,0xFF0000;
+			viewpoint 1,.@targetb_x,.@targetb_y,2,0x00FF00;
+		} else if($@DBG_Status == 3) { // Domination
+			getmapxy(.@map_a$,.@flaga_x,.@flaga_y,BL_NPC,"Flag A#1");
+			getmapxy(.@map_b$,.@flagb_x,.@flagb_y,BL_NPC,"Flag B#2");
+			getmapxy(.@map_c$,.@flagc_x,.@flagc_y,BL_NPC,"Flag C#3");
+			viewpoint 1,.@flaga_x,.@flaga_y,1,0xFF0000;
+			viewpoint 1,.@flagb_x,.@flagb_y,2,0x00FF00;
+			viewpoint 1,.@flagc_x,.@flagc_y,3,0x0000FF;
+		} else if($@DBG_Status == 4) { // Rush
+			getmapxy(.@map$,.@def_x,.@def_y,BL_NPC,"Defend Crystal");
+			viewpoint 1,.@def_x,.@def_y,1,0xFF0000;
+		}
+	}
 end;
 
 // Battleground Arena - Reward Function
 function	DBG_Reward	{
 // getarg(0) = Group ID
-// getarg(1) = BGArenaPts
-// getarg(2) = War Badges (7773)
-// getarg(3) = Valor Badges (7829)
-// getarg(4) = Bravery Badges (7828)
-// getarg(5) = Happy Hour Rate
+// getarg(1) = Happy Hour Rate
+// getarg(2) = BGArenaPts
+// getarg(3) = War Badges (7773)
+// getarg(4) = Valor Badges (7829)
+// getarg(5) = Bravery Badges (7828)
+
+	// Item ID of Rewards:
+	// Change this values to adjust the reward ids!
+	setarray .@rew_item[0],7773,7829,7828;
+		
 	set .@grp_count,bg_get_data(getarg(0),1);
-	// Check if Happy Hour is active
-	if(getarg(5) == 0) // HH is not active, put 1 as multiplier
-		set .@hhr,1;
-	else // HH is active, put the getarg(5) as multiplier
-		set .@hhr,getarg(5);
-	
+		
 	// Loop through the players and give them the reward
 	for ( set .@b,0; .@b < .@grp_count; set .@b,.@b + 1) {
 		attachrid($@arenamembers[.@b]);
-		set BGArenaPts,BGArenaPts + (getarg(1)*.@hhr);
-		getitem 7773,getarg(2)*.@hhr;
-		getitem 7829,getarg(3)*.@hhr;
-		getitem 7828,getarg(4)*.@hhr;
+		set BGArenaPts,BGArenaPts + (getarg(2)*getarg(1));
+		dispbottom "Battleground Arena: You have recieved "+(getarg(2)*getarg(1))+"x Battleground Arena Points.";
+		for ( set .@r,0; .@r < getarraysize(.@rew_item); set .@r,.@r + 1)
+			getitem .@rew_item[.@r],getarg(.@r+3)*getarg(1);
 		detachrid;
 	}
-return;
+	return;
 }
 }
 // Battleground Arena - Vote NPC
@@ -599,13 +620,13 @@ end;
 -	script	#DBG_Heal	-1,{
 
 if(@DBG_Team != atoi(charat(strnpcinfo(2),2)) ) {
-	message strcharinfo(0),"You don't belong to Team "+charat(strnpcinfo(2),2)+"!";
+	npctalk "You don't belong to Team "+charat(strnpcinfo(2),2)+"!",strnpcinfo(0),bc_self;
 } else {
 	if(@Heal_Delay > gettimetick(2)) {
-		message strcharinfo(0),"You can't be healed yet, please wait a few seconds.";
+		npctalk "You can't be healed yet, please wait a few seconds.",strnpcinfo(0),bc_self;
 		end;
 	}
-	message strcharinfo(0),"You have been fully healed! Good luck!";
+	npctalk "You have been fully healed! Good luck!",strnpcinfo(0),bc_self;
 	specialeffect 911;
 	percentheal 100,100;
 	set @Heal_Delay,gettimetick(2) + .HDelay;
@@ -623,7 +644,7 @@ enablenpc strnpcinfo(0);
 if($@DBG_Map$[$@DBG_Status] == "dbg_arena") {
 	enablenpc "Healer#1-1";
 	enablenpc "Healer#1-2";
-} else if($@DBG_Map$[$DBG_Status] == "dbg_dom") {
+} else if($@DBG_Map$[$@DBG_Status] == "dbg_dom") {
 	enablenpc "Healer#2-1";
 	enablenpc "Healer#2-2";
 }
@@ -633,7 +654,7 @@ OnDisable:
 if($@DBG_Map$[$@DBG_Status] == "dbg_arena") {
 	disablenpc "Healer#1-1";
 	disablenpc "Healer#1-2";
-} else if($@DBG_Map$[$DBG_Status] == "dbg_dom") {
+} else if($@DBG_Map$[$@DBG_Status] == "dbg_dom") {
 	disablenpc "Healer#2-1";
 	disablenpc "Healer#2-2";
 }
@@ -649,7 +670,7 @@ dbg_dom,349,100,4	duplicate(#DBG_Heal)	Healer#2-2	4_F_NURSE
 -	script	DBG_Init	-1,{
 
 OnBGPrepare:
-sleep 5000; // Let the players be warped to the map before starting
+sleep 2500; // Let the players be warped to the map before starting
 mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": The Match will start shortly.",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
 sleep 3000;
 mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": Until 10 seconds before the start of the match, you won't be able to move or use skills.",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
@@ -663,14 +684,16 @@ switch($@DBG_Status) {
 	enablenpc "Target A#1";
 	enablenpc "Target B#2";
 	enablenpc "Bomb#SAD";
-	set getvariableofnpc(.Planting_1,"DBG_Init"),0;
-	set getvariableofnpc(.Planting_2,"DBG_Init"),0;
-	set getvariableofnpc(.Bomb_Active_T1,"DBG_Init"),0;
-	set getvariableofnpc(.Bomb_Active_T2,"DBG_Init"),0;
-	mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": Team 1 has to destroy one of the targets by using the bomb, which can be picked up!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
-	sleep 3000;
-	mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": Team 2 has to defend both targets and defuse the bomb, if it was planted.",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
-	sleep 3000;
+	set .Planting_1,0;
+	set .Planting_2,0;
+	set .Bomb_Active_T1,0;
+	set .Bomb_Active_T2,0;
+	if(!.NoAnno) {
+		mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": Team 1 has to destroy one of the targets by using the bomb, which can be picked up!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
+		sleep 3000;
+		mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": Team 2 has to defend both targets and defuse the bomb, if it was planted.",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
+		sleep 3000;
+	}
 	break;
 	
 	case 3: // Domination
@@ -686,19 +709,23 @@ switch($@DBG_Status) {
 	donpcevent "Flag A#1::OnDisplayBox";
 	donpcevent "Flag B#2::OnDisplayBox";
 	donpcevent "Flag C#3::OnDisplayBox";
-	mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": There are 3 Flags to take, if one team has more members at a flag than the other, then the first team will get the flag!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
-	sleep 3000;
-	mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": Holding Flags gives Points every 5 seconds. The more flags your team holds the more points you will get!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
-	sleep 3000;
+	if(!.NoAnno) {
+		mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": There are 3 Flags to take, if one team has more members at a flag than the other, then the first team will get the flag!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
+		sleep 3000;
+		mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": Holding Flags gives Points every 5 seconds. The more flags your team holds the more points you will get!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
+		sleep 3000;
+	}
 	break;
 	
 	case 4: // Rush
 	// How many Lifes does the Attacker Team has in Rush?
 	set getvariableofnpc(.Rush_Life,"DBGArena_Core"),45;
-	mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": Team 1 has to attack the other Team's Crystal to win, while they have to defend until the time limit has been reached!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
-	sleep 3000;
-	mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": Team 1 has "+getvariableofnpc(.Rush_Life,"DBGArena_Core")+" Lifes. If they hit \"0\" Team 2 wins!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
-	sleep 3000;
+	if(!.NoAnno) {
+		mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": Team 1 has to attack the other Team's Crystal to win, while they have to defend until the time limit has been reached!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
+		sleep 3000;
+		mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": Team 1 has "+getvariableofnpc(.Rush_Life,"DBGArena_Core")+" Lifes. If they hit \"0\" Team 2 wins!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
+		sleep 3000;
+	}
 	break;
 
 	case 5: // Capture the Flag
@@ -712,13 +739,16 @@ switch($@DBG_Status) {
 	// Effect for Flag Holder
 	set .f_effect,409; // Meteor Assault
 	set .f_effect_t,1500; // Timer in milliseconds, when the effect will shown again
-	mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": Each Team has a flag to protect while stealing the enemies flag!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
-	sleep 3000;
-	mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": The first team to bring the enemies flag to their own wins the round!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
-	sleep 3000;
+	if(!.NoAnno) {
+		mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": Each Team has a flag to protect while stealing the enemies flag!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
+		sleep 3000;
+		mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": The first team to bring the enemies flag to their own wins the round!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
+		sleep 3000;
+	}
 	break;
 
 }
+set .NoAnno,0;
 mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": The Match will start in 1 Minute!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
 sleep 50000; // 50 sec
 mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": 10 Seconds left, you can now move and buff your members!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
@@ -757,11 +787,12 @@ sleep 2000;
 donpcevent strnpcinfo(0)+"::OnBGDisable";
 donpcevent strnpcinfo(0)+"::OnBGRoundScore";
 set .rounds,.rounds + 1;
-mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": Round "+.rounds+" of "+getd("."+.@RS$+"_RoundSwap")+" has finished!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
+mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": Round "+.rounds+" has finished!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
 sleep 2000;
-if(.rounds <= getd("."+.@RS$+"_RoundSwap")) {
+if(.rounds < getd("."+.@RS$+"_RoundSwap")) {
 	mapannounce $@DBG_Map$[$@DBG_Status],$@DBG_Mode$[$@DBG_Status]+": Starting Round "+(.rounds+1)+" in a few seconds!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
 	set getvariableofnpc(.DBG_Reset,"DBGArena_Core"),1;
+	set .NoAnno,1; // To prevent repeating the Announcements in the next round
 	donpcevent "DBGArena_Core::OnBGArenaReset";
 	
 } else {
@@ -866,7 +897,7 @@ end;
 OnInit:
 // ======= Search and Destroy =====
 // Saving original coordiantes of the bomb
-getmapxy(.@map$,.SAD_x,.SAD_y,UNITTYPE_NPC,"Bomb#SAD");
+getmapxy(.@map$,.SAD_x,.SAD_y,BL_NPC,"Bomb#SAD");
 // How many rounds until the teams are swapped?
 // Note: First round has the value 0
 set .SAD_RoundSwap,2; 
@@ -886,8 +917,8 @@ set .Rush_RoundSwap,2;
 setarray .mob[0],328,150;
 // ======= Rush =====
 // Saving original coordiantes of the flags
-getmapxy(.@map$,.CTF1_x,.CTF1_y,UNITTYPE_NPC,"Team 1 Flag#1");
-getmapxy(.@map$,.CTF2_x,.CTF2_y,UNITTYPE_NPC,"Team 2 Flag#2");
+getmapxy(.@map$,.CTF1_x,.CTF1_y,BL_NPC,"Team 1 Flag#1");
+getmapxy(.@map$,.CTF2_x,.CTF2_y,BL_NPC,"Team 2 Flag#2");
 // How many rounds until the teams are swapped?
 // Note: First round has the value 0
 set .CTF_RoundSwap,2;
@@ -912,7 +943,7 @@ if(getd(".Bomb_Active_T"+strnpcinfo(2)) && @DBG_Team == 2) {
 	
 	else if(getd(".Planting_"+strnpcinfo(2)) == 0) {
 		addtimer 1000,strnpcinfo(0)+"::OnBombPlant";
-		getmapxy(.@map$,@x,@y,UNITTYPE_PC);
+		getmapxy(.@map$,@x,@y,BL_PC);
 		setd(".Planting_"+strnpcinfo(2)),1;
 	}
 }
@@ -920,11 +951,13 @@ end;
 
 OnBombPlant:
 deltimer strnpcinfo(0)+"::OnBombPlant";
-getmapxy(.@map$,.@x,.@y,UNITTYPE_PC);
+getmapxy(.@map$,.@x,.@y,BL_PC);
 if(.@x != @x && .@y != @y) {
 	message strcharinfo(0),"Search & Destroy: You are not allowed to move!";
 	set .plant_t,0;
 	setd(".Planting_"+strnpcinfo(2)),0;
+	set @x,0;
+	set @y,0;
 	end;
 }
 if(.plant_t < .plant) {
@@ -933,6 +966,8 @@ if(.plant_t < .plant) {
 	set .plant_t,.plant_t + 1;
 	end;
 }
+set @x,0;
+set @y,0;
 mapannounce strnpcinfo(4),"Search & Destroy: Team 1 has planted the Bomb at "+strnpcinfo(1)+". "+.bomb+" seconds unil it explodes!",$@DBG_Anno_T,$@DBG_Anno$[$@DBG_Status];
 setd(".Bomb_Active_T"+strnpcinfo(2)),1;
 set @Has_Bomb,0;
@@ -949,6 +984,7 @@ misceffect 54;
 initnpctimer strnpcinfo(0);
 if(getd(".b_T"+strnpcinfo(2)) < .bomb || getd(".Bomb_Active_T"+strnpcinfo(2)) == 0) end;
 stopnpctimer strnpcinfo(0);
+setd(".Bomb_Active_T"+strnpcinfo(2)),0;
 specialeffect .explode;
 set getvariableofnpc(.SAD_Win,"DBG_Init"),1;
 donpcevent "DBG_Init::OnRoundReset";
@@ -996,7 +1032,7 @@ while( .@t < .flag_timer) {
 	sleep 1000;
 }
 setd(".TakeOver_F"+strnpcinfo(2)),0;
-getmapxy(.@map$,.@flag_x,.@flag_y,UNITTYPE_NPC);
+getmapxy(.@map$,.@flag_x,.@flag_y,BL_NPC);
 set .@F_T1,bg_getareausers($@DBG_T1,strnpcinfo(4),(.@flag_x-3),(.@flag_y-3),(.@flag_x+3),(.@flag_y+3));
 set .@F_T2,bg_getareausers($@DBG_T2,strnpcinfo(4),(.@flag_x-3),(.@flag_y-3),(.@flag_x+3),(.@flag_y+3));
 if(!getd(".Flag"+strnpcinfo(2)+"_Group")) { // Neutral Flag
@@ -1088,7 +1124,7 @@ end;
 OnInit:
 // Saving original coordiantes and Names of the flags
 if(strnpcinfo(2) != "") {
-	getmapxy(.@map$,getd(".CTF"+strnpcinfo(2)+"_x"),getd(".CTF"+strnpcinfo(2)+"_y"),UNITTYPE_NPC);
+	getmapxy(.@map$,getd(".CTF"+strnpcinfo(2)+"_x"),getd(".CTF"+strnpcinfo(2)+"_y"),BL_NPC);
 	setd(".npc_F"+strnpcinfo(2)+"$"),strnpcinfo(0);
 }
 disablenpc strnpcinfo(0);
@@ -1097,7 +1133,7 @@ end;
 dbg_arena,62,150,4	duplicate(DBG_CTF_Flag)	Team 1 Flag#1	1912
 dbg_arena,328,150,4	duplicate(DBG_CTF_Flag)	Team 2 Flag#2	1913
 
-prontera,150,180,4	script	Battleground Arena	100,{
+prontera,147,175,4	script	Battleground Arena	100,{
 
 mes .n$;
 mes "Welcome, "+strcharinfo(0)+"!";
@@ -1264,16 +1300,16 @@ close;
 
 OnBuyItem:
 for ( set .@b,0; .@b < getarraysize(@bought_nameid); set .@b,.@b + 1)
-	for ( set .@s,0; .@s < getarraysize(.bg_shop); set .@s,.@s + 1) 
+	for ( set .@s,0; .@s < getarraysize(.bg_shop); set .@s,.@s + 2) 
 		if(@bought_nameid[.@b] == .bg_shop[.@s]) {
 			if(checkweight(@bought_nameid[.@b],@bought_nameid[.@b]) == 0) {
-				dispbottom "Battleground Shop: You can't buy this many items, you would be overweight!!";
+				npctalk "Battleground Shop: You can't buy this many items, you would be overweight!!",strnpcinfo(0),bc_self;
 				end;
 			}
-			set .@total,.@total + (.bg_price[.@s]*@bought_quantity[.@b]);
+			set .@total,.@total + (.bg_shop[.@s+1]*@bought_quantity[.@b]);
 		}
 if(.@total > BGArenaPts) {
-	dispbottom "Battleground Shop: I'm sorry, but you don't have the required Arena Points. You are missing "+(.@total-BGArenaPts)+" Points.";
+	npctalk "Battleground Shop: I'm sorry, but you don't have the required Arena Points. You are missing "+(.@total-BGArenaPts)+" Points.",strnpcinfo(0),bc_self;;
 	end;
 }
 for ( set .@i,0; .@i < getarraysize(@bought_nameid); set .@i,.@i + 1)
@@ -1285,79 +1321,45 @@ end;
 
 OnInit:
 set .n$,"["+strnpcinfo(0)+"]";
-setarray .bg_shop[0],12020, // [0] == Cursed Water
-					 12028, // [1] == Box of Thunder
-					 12029, // [2] == Box of Gloom
-					 12030, // [3] == Box of Resentment
-					 12031, // [4] == Box of Drowsiness
-					 12032, // [5] == Box of Stroms
-					 12033, // [6] == Box of Sunlight
-					 12034, // [7] == Box of Panting
-					 12108, // [8] == Scroll Package
-					 12215, // [9] == LV 10 Blessing Scroll
-					 12216, // [10] == LV 10 Agi Scroll
-					 12217, // [11] == LV 5 Aspersio Scroll
-					 12218, // [12] == LV 5 Assumptio Scroll
-					 12219, // [13] == LV 10 Wind Walker Scroll
-					 12075, // [14] == Steamed Tongue
-					 12080, // [15] == Dragon Breath Cocktail
-					 12085, // [16] == Immortal Stew
-					 12090, // [17] == Steamed Desert Scorpions
-					 12095, // [18] == Hwergelmir's Tonic
-					 12100, // [19] == Cooked Nice Tail's Tails
-					 12114, // [20] == Elemental Converter[Fire]
-					 12115, // [21] == Elemental Converter[Water]
-					 12116, // [22] == Elemental Converter[Earth]
-					 12117, // [23] == Elemental Converter[Wind]
-					 12118, // [24] == Fireproof Potion
-					 12119, // [25] == Coldproof Potion
-					 12120, // [26] == Earthproof Potion
-					 12121, // [27] == Thunderproof Potion
-					 13543, // [28] == Chemical Protection Helm Scroll Box
-					 13544, // [29] == Chemical Protection Shield Scroll Box
-					 13545, // [30] == Chemical Protection Armor Scroll Box
-					 13546, // [31] == Chemical Protection Weapon Scroll Box
-					  7139, // [32] == Glistening Coat
-					 13547, // [33] == Repair Weapon Scroll Box
-					 14593; // [34] == Mystical Amplification Scroll
-setarray .bg_price[0],2, // [0]
-					  2, // [1]
-					  2, // [2]
-					  2, // [3]
-					  2, // [4]
-					  2, // [5]
-					  2, // [6]
-					  2, // [7]
-					  5, // [8]
-					  5, // [9]
-					  5, // [10]
-					  5, // [11]
-					  5, // [12]
-					  5, // [13]
-					 10, // [14]
-					 10, // [15]
-					 10, // [16]
-					 10, // [17]
-					 10, // [18]
-					 10, // [19]
-					  4, // [20]
-					  4, // [21]
-					  4, // [22]
-					  4, // [23]
-					  3, // [24]
-					  3, // [25]
-					  3, // [26]
-					  3, // [27]
-					 10, // [28]
-					 10, // [29]
-					 10, // [30]
-					 10, // [31]
-					  1, // [32]
-					 10, // [33]
-					  5; // [34]
+//                   Item ID,Price
+setarray .bg_shop[0],12020,2, // [0] == Cursed Water
+					 12028,2, // [1] == Box of Thunder
+					 12029,2, // [2] == Box of Gloom
+					 12030,2, // [3] == Box of Resentment
+					 12031,2, // [4] == Box of Drowsiness
+					 12032,2, // [5] == Box of Stroms
+					 12033,2, // [6] == Box of Sunlight
+					 12034,2, // [7] == Box of Panting
+					 12108,5, // [8] == Scroll Package
+					 12215,5, // [9] == LV 10 Blessing Scroll
+					 12216,5, // [10] == LV 10 Agi Scroll
+					 12217,5, // [11] == LV 5 Aspersio Scroll
+					 12218,5, // [12] == LV 5 Assumptio Scroll
+					 12219,5, // [13] == LV 10 Wind Walker Scroll
+					 12075,10, // [14] == Steamed Tongue
+					 12080,10, // [15] == Dragon Breath Cocktail
+					 12085,10, // [16] == Immortal Stew
+					 12090,10, // [17] == Steamed Desert Scorpions
+					 12095,10, // [18] == Hwergelmir's Tonic
+					 12100,10, // [19] == Cooked Nice Tail's Tails
+					 12114,4, // [20] == Elemental Converter[Fire]
+					 12115,4, // [21] == Elemental Converter[Water]
+					 12116,4, // [22] == Elemental Converter[Earth]
+					 12117,4, // [23] == Elemental Converter[Wind]
+					 12118,3, // [24] == Fireproof Potion
+					 12119,3, // [25] == Coldproof Potion
+					 12120,3, // [26] == Earthproof Potion
+					 12121,3, // [27] == Thunderproof Potion
+					 13543,10, // [28] == Chemical Protection Helm Scroll Box
+					 13544,10, // [29] == Chemical Protection Shield Scroll Box
+					 13545,10, // [30] == Chemical Protection Armor Scroll Box
+					 13546,10, // [31] == Chemical Protection Weapon Scroll Box
+					  7139,1, // [32] == Glistening Coat
+					 13547,10, // [33] == Repair Weapon Scroll Box
+					 14593,5; // [34] == Mystical Amplification Scroll
 npcshopdelitem "DBG_Shop",501;
-for ( set .@s,0; .@s < getarraysize(.bg_shop); set .@s,.@s + 1)
-	npcshopadditem "DBG_Shop",.bg_shop[.@s],.bg_price[.@s];
+for ( set .@s,0; .@s < getarraysize(.bg_shop); set .@s,.@s + 2)
+	npcshopadditem "DBG_Shop",.bg_shop[.@s],.bg_shop[.@s+1];
 end;
 }
 -	pointshop	DBG_Shop	-1,BGArenaPts,501:-1
