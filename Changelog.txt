@@ -24,6 +24,12 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2019/07/15
+<< == |*| Unofficial OldGlastheim Hard Mode[RE] - Modified |*| == >>
+- Fixed a bug about the variable 'OGH_Mode not being set correctly, since the NPC
+  is outside of the instance, preventing to get into Hard Mode.
+- Optimized the differences between the Modes better
+------------------------------------------------------------------------------------------------------------------------
 * 2019/07/12
 << == |*| Dynamic Battleground Arena v1.0 [RE] - Release |*| == >>
 - Finished testing
