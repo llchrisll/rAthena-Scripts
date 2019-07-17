@@ -24,6 +24,10 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2019/07/17
+<< == |*| Hunting Grounds [RE] - Modified |*| == >>
+- Fixed a typo with exp rewards
+------------------------------------------------------------------------------------------------------------------------
 * 2019/07/15
 << == |*| Unofficial OldGlastheim Hard Mode[RE] - Modified |*| == >>
 - Fixed a bug about the variable 'OGH_Mode not being set correctly, since the NPC

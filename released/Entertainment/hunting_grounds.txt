@@ -6,6 +6,7 @@
 //= 1.0 - Initial Version
 //      - Fixed an issue with turning in quests from the previous level range
 //       (Thanks Polly for the report)
+//      - Fixed a typo with exp rewards (Thanks Polly for pointing it out)
 //===== Tested With ==========================================
 //= rAthena 06/29/2019 Revision
 //= GIT Hash: c1975d7ea3729c1f5deec2e0dcf04841c4b96969
@@ -249,7 +250,7 @@ switch(select("Enter Hunting Grounds:Hunting Quests")) {
 		next;
 		set .@q_id,prompt(.@q_m$) - 1;
 		if(.@q_id == 254) break;
-		mes .n$;
+		mes .n$;		
 		set .@q_status,checkquest(.@m_quest[.@q_id],HUNTING);
 		if(.@q_status < 0) {
 			if(getgroupid() < 1) // testing purposes
@@ -271,9 +272,9 @@ switch(select("Enter Hunting Grounds:Hunting Quests")) {
 			erasequest .@m_quest[.@q_id];
 			
 		} else if(.@q_status == 2) {
-			for ( set .@q,0; .@q < getarraysize(getd(".Hunt_QID_"+.@m_quest[.@q_id])); set .@q,.@q + 1) {
-				set .@mob_bexp,.@mob_bexp + (strmobinfo(6,getd(".Hunt_QID_"+.@m_quest[.@q_id]+"["+.@q+"]")*getd(".Hunt_QID_"+.@m_quest[.@q_id]+"["+(.@q+1)+"]")));
-				set .@mob_jexp,.@mob_jexp + (strmobinfo(7,getd(".Hunt_QID_"+.@m_quest[.@q_id]+"["+.@q+"]")*getd(".Hunt_QID_"+.@m_quest[.@q_id]+"["+(.@q+1)+"]")));
+			for ( set .@q,0; .@q < getarraysize(getd(".Hunt_QID_"+.@m_quest[.@q_id])); set .@q,.@q + 2) {
+				set .@mob_bexp,.@mob_bexp + (strmobinfo(6,getd(".Hunt_QID_"+.@m_quest[.@q_id]+"["+.@q+"]"))*getd(".Hunt_QID_"+.@m_quest[.@q_id]+"["+(.@q+1)+"]"));
+				set .@mob_jexp,.@mob_jexp + (strmobinfo(7,getd(".Hunt_QID_"+.@m_quest[.@q_id]+"["+.@q+"]"))*getd(".Hunt_QID_"+.@m_quest[.@q_id]+"["+(.@q+1)+"]"));
 			}
 			mes "You have finished the quest, here is your reward.";
 			getexp .@mob_bexp,.@mob_jexp;
@@ -712,10 +713,10 @@ if('C_Mobs == ('Max_Mobs/'Max_MvP) && mobcount('map$,'mvp_label$) < 1) {
 	end;
 }
 if(!killedrid && getgroupid() > 0) {
-	announce "Dear GM, don't use @killmonster in a instance! Gratulation you broke the instance!",bc_self;
+	instance_announce 0,"Dear GM, don't use @killmonster in a instance! Gratulation you broke the instance!",bc_self;
 	end;
 } else if(!killedrid && getgroupid() < 1) {
-	announce "An error has occured, monster has died without any player causing it's death (not sure why), please report this immediatly!",bc_self;
+	instance_announce 0,"An error has occured, monster has died without any player causing it's death (not sure why), please report this immediatly!",bc_map;
 	end;
 }
 monster 'map$,0,0,getmonsterinfo(killedrid,MOB_NAME),killedrid,1,'label$;
