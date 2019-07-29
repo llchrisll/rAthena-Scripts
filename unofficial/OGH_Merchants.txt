@@ -377,7 +377,7 @@ glast_01,188,273,5	script	White Knight#1a	4_WHITEKNIGHT,{
 	set .@price,.@cost[.@i];
 	if (countitem(.@item) < .@price) {
 		mes "[White Knight]";
-		mes "Requires "+.@cost+"x ^0000FF"+getitemname(.@item)+"^000000.";
+		mes "Requires "+.@price+"x ^0000FF"+getitemname(.@item)+"^000000.";
 		close;
 	}
 	delitem .@item, .@price;
@@ -406,7 +406,7 @@ glast_01,192,273,3	script	Khalitzburg Knight#1a	4_F_KHALITZBURG,{
 	set .@price,.@cost[.@i];
 	if (countitem(.@item) < .@price) {
 		mes "[Khalitzburg Knight]";
-		mes "Requires "+.@cost+"x ^0000FF"+getitemname(.@item)+"^000000.";
+		mes "Requires "+.@price+"x ^0000FF"+getitemname(.@item)+"^000000.";
 		close;
 	}
 	delitem .@item, .@price;

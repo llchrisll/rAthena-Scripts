@@ -8,6 +8,7 @@
 //      - Exchanged the Custom Variable Settings for the Reward NPC with
 //        the forgotten Cash Points reward (ups..)
 //      - Removed the idea about using an Invasion Shop
+//      - Fixed reward announcer to display correct lines
 //===== Tested With ==========================================
 //= rAthena 04/26/2019 Revision
 //= GIT Hash: 67e1583f9fec7ac95a954634f6b7600ebe428df0
@@ -403,16 +404,18 @@ end;
 
 // Auto Disable Reward NPC
 OnRewardDisable:
-while( .m < getvariableofnpc(.rew_dis,"Invasion Rewarder") ) {
+set .m,getvariableofnpc(.rew_dis,"Invasion Rewarder");
+while( .m != 0 ) {
 	switch(.m) {
-		case 1: announce .n$+": The \"Invasion Rewarder\" will disappear in 4 minutes.",0; break;
-		case 2: announce .n$+": The \"Invasion Rewarder\" will disappear in 3 minutes.",0; break;
-		case 3: announce .n$+": The \"Invasion Rewarder\" will disappear in 2 minutes.",0; break;
-		case 4: announce .n$+": HURRY, the \"Invasion Rewarder\" will disappear in 1 minute.",0; break;
+		case 4: 
+		case 3:
+		case 2:
+		announce .n$+": The \"Invasion Rewarder\" will disappear in "+.m+" minutes.",bc_all; break;
+		case 1: announce .n$+": HURRY, the \"Invasion Rewarder\" will disappear in 1 minute.",bc_all; break;
 	}
-	set .m,.m + 1;
+	set .m,.m - 1;
 	sleep 60000;
-}	
+}		
 announce "Invasion Rewarder: Okay, I'm done here. See ya next time!!!",0;
 set .m,0;
 disablenpc "Invasion Rewarder";

@@ -24,6 +24,20 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2019/07/29
+<< == |*| Unofficial Old Glastheim Instance v1.0 [RE] - Modified |*| == >>
+- Fixed an typo with the White Knight and Khalitzburg Knight Card Traders
+<< == |*| Monster Invasion [RE] v1.1 - Modified |*| == >>
+- Fixed reward announcer to display correct lines
+<< == |*| Hunting Grounds v1.0 [RE] - Modified |*| == >>
+- Fixed a bug about the Quest Delay
+- Optimized the Dimension Gate Texts a bit
+- Optimized the Reward Display of the actual Quest
+- Optimized Spawn Behaviour of the Mobs
+- Fixed an typo with the MvP Spawn
+<< == |*| General - Update |*| == >>
+- Headers.txt
+------------------------------------------------------------------------------------------------------------------------
 * 2019/07/17
 << == |*| Hunting Grounds [RE] - Modified |*| == >>
 - Fixed a typo with exp rewards
