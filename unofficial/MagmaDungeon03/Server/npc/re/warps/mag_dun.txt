@@ -1,0 +1,26 @@
+//===== rAthena Script =======================================
+//= Magma Dungeon F3 Warp Script
+//===== By: ==================================================
+//= llchrisll (1.0)
+//===== Current Version: =====================================
+//= 1.0
+//===== Compatible With: =====================================
+//= rAthena
+//===== Description: =========================================
+//= Warp Point for Magma Dungeon F3
+//===== Additional Comments: =================================
+//= No Comment!
+//============================================================
+
+//= Magma Dungeon F3 ============================================
+mag_dun02,247,67,0	script	mag02-03	45,1,1,{
+
+OnTouch_:
+if(BaseLevel < 175) {
+	dispbottom "System: You are not strong enough for the next area. You need at least Base Level 175!";
+	end;
+}
+warp "mag_dun03",120,121;
+end;
+}
+mag_dun03,124,121,0	warp	mag03-02	1,1,mag_dun02,245,67

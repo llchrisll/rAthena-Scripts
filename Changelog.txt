@@ -24,8 +24,37 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2019/09/01
+<< == |*| Hunting Grounds v1.0 [RE] - Modified |*| == >>
+- Fixed a bug about the Quest Delay
+- Optimized the Dimension Gate Texts a bit
+- Optimized the Reward Display of the actual Quest
+- Optimized Spawn Behaviour of the Mobs
+- Fixed an typo with the MvP Spawn
+<< == |*| Monster Invasion v1.1 [RE] - Modified |*| == >>
+- Fixed reward announcer to display correct lines
+<< == |*| Card Coin Exchanger v1.0 [RE] - Added |*| == >>
+- Alternate Version of the npc/re/merchants/card_exchange.txt
+<< == |*| Mystic Enchanter v1.0 [RE] - Modified |*| == >>
+- Added an check to prevent enchanting, if every available Enchantment Type is already in usage
+- Changed the Slot selection to be fixed slot
+<< == |*| Unofficial Abyss Glast Heim v1.0 [RE] - Added |*| == >>
+- No Mob Skills included, as well as the Maps
+<< == |*| Unofficial Magma Dungeon F3 v1.0 [RE] - Added |*| == >>
+- No Mob Skills included, as well as the Maps
+<< == |*| Unofficial Mysterious Combination Book Bundle v1.0 [RE] - Added |*| == >>
+- Same content as the Pull-Request on Git
+<< == |*| Unofficial Old Glast Heim Hard Mode v1.0 [RE] - Modified |*| == >>
+- Merged both Card Traders to 1 NPC. (Based on Nova RO Info)
+- Split entries for server and client from OldGlastHeim.txt into their correct files
+- Added an unofficial Reset feature to Temporal Boots enchanter, disabled by default
+<< == |*| Unofficial Instances by Alayne - Added |*| == >>
+- Fixed Infinite Space Instance:
+  > Warps are now correctly disabled on Start
+  > Added missing Treasure Box after each Boss fight
+------------------------------------------------------------------------------------------------------------------------
 * 2019/07/29
-<< == |*| Unofficial Old Glastheim Instance v1.0 [RE] - Modified |*| == >>
+<< == |*| Unofficial Old Glast Heim Hard Mode v1.0 [RE] - Modified |*| == >>
 - Fixed an typo with the White Knight and Khalitzburg Knight Card Traders
 << == |*| Monster Invasion [RE] v1.1 - Modified |*| == >>
 - Fixed reward announcer to display correct lines
@@ -43,7 +72,7 @@
 - Fixed a typo with exp rewards
 ------------------------------------------------------------------------------------------------------------------------
 * 2019/07/15
-<< == |*| Unofficial OldGlastheim Hard Mode[RE] - Modified |*| == >>
+<< == |*| Unofficial Old Glast Heim Hard Mode[RE] - Modified |*| == >>
 - Fixed a bug about the variable 'OGH_Mode not being set correctly, since the NPC
   is outside of the instance, preventing to get into Hard Mode.
 - Optimized the differences between the Modes better

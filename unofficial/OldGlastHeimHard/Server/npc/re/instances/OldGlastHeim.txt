@@ -18,62 +18,6 @@
 //=     TODO: Confirm Hugin NPC's code flow.
 //= 1.6 Cleaned up the dialogue. [Aleos]
 //= 1.7 Unofficial Old Glastheim Hard Mode [llchrisll]
-/*
-> db/import/mob_db.txt
-// Old Glast Heim Hard
-3139,MG_ZOMBIE_H,Corrupted Steward,Corrupted Steward,160,271200,1,53332,55998,1,3986,5877,15,15,44,22,77,25,88,22,10,12,1,1,29,0x3885,400,2612,912,288,0,0,0,0,0,0,0,6609,1000,6610,1000,6608,10,938,1000,727,500,6755,10,0,0,0,0,0,0,0,0
-3140,MG_WRAITH_H,Corrupted Monk,Corrupted Monk,163,200336,1,53998,56796,1,1777,2576,80,200,16,26,30,115,79,5,10,12,2,1,89,0x3695,350,1816,576,240,0,0,0,0,0,0,0,6609,1000,6610,1000,6608,10,2206,100,731,100,747,500,6755,10,0,0,0,0,0,0
-3141,MG_GHOUL_H,Grand Chamberlain in pain,Grand Chamberlain in pain,162,416200,1,54222,57066,1,4994,7366,30,30,88,44,88,21,95,44,10,12,1,1,49,0x3885,300,2456,912,504,0,0,0,0,0,0,0,6609,1000,6610,1000,6608,10,756,100,2609,100,7751,1000,6755,10,0,0,0,0,0,0
-3142,MG_ARCLOUSE_H,Maggot,Maggot,163,161622,1,62,66,1,2216,3213,121,36,60,103,45,35,172,15,10,12,0,4,42,0x2003095,100,960,500,480,0,0,0,0,0,0,0,6609,1000,6610,1000,6608,10,1096,3000,997,100,6755,10,0,0,0,0,0,0,0,0
-3143,MG_RAYDRIC_H,Corrupted Palace Guard,Corrupted Palace Guard,165,368160,1,56306,10944,2,5390,7923,89,15,159,87,66,33,106,27,10,12,1,1,47,0x3095,150,824,780,420,0,0,0,0,0,0,0,6609,1000,6610,1000,6608,10,7054,3000,985,50,2316,200,6755,10,0,0,0,0,0,0
-3144,MG_RAYDRIC_ARCHER_H,Wandering Archer,Wandering Archer,166,288740,1,54248,13378,14,6444,9557,63,40,53,24,40,15,156,30,10,12,1,1,47,0x2002085,200,1152,1152,480,0,0,0,0,0,0,0,6609,1000,6610,1000,6608,10,7054,3000,985,50,2330,200,6755,10,0,0,0,0,0,0
-3145,MG_KNIGHT_OF_ABYSS_H,Corrupted Knight of Abyss,Corrupted Abysmal Knight,172,451578,1,58584,56576,2,5413,7973,102,50,121,55,99,70,126,37,10,12,2,1,87,0x6203695,300,1000,500,1000,0,0,0,0,0,0,0,6609,3000,6610,2000,6608,50,1064,5000,1004,10,2341,200,6755,10,0,0,0,0,0,0
-3146,MG_KHALITZBURG_H,Suffering Khalitzburg,Suffering Khalitzburg,173,473702,1,57542,54662,2,4774,7014,125,10,121,142,55,81,105,32,10,12,2,1,29,0x6203695,350,0,1000,396,0,0,0,0,0,0,0,6609,3000,6610,2000,6608,50,985,50,1004,10,1110,300,6755,10,0,0,0,0,0,0
-3147,MG_BLOODY_KNIGHT_H,Bloody Knight,Bloody Knight,173,493502,1,60448,61882,2,3314,4819,122,300,132,55,89,151,137,45,10,12,2,1,87,0x6203695,250,828,528,192,0,0,0,0,0,0,0,6609,3000,6610,2000,6608,50,7054,5000,1160,100,1157,100,6755,10,0,0,0,0,0,0
-3148,MG_M_UNDEAD_KNIGHT_H,Agony of Royal Knight,Agony of Royal Knight,175,1900070,1,560018,535184,2,5653,8310,80,150,165,82,110,122,154,52,10,12,1,1,49,0x6203695,130,350,864,480,0,0,0,0,0,0,0,6609,5000,6610,5000,6608,50,1191,10,1163,100,1463,200,6755,10,0,0,0,0,4605,1
-3149,MG_F_UNDEAD_KNIGHT_H,Grudge of Royal Knight,Grudge of Royal Knight,175,1696020,1,559672,520398,2,5274,7746,80,180,155,88,110,135,154,59,10,12,1,1,49,0x6203695,120,350,768,480,0,0,0,0,0,0,0,6609,5000,6610,5000,6608,50,1163,100,1145,50,6755,10,0,0,0,0,0,0,4606,1
-3150,MG_AMDARAIS_H,Amdarias,Amdarias,180,42900000,1,5291324,5197024,3,8899,13131,30,40,255,39,90,169,166,20,10,12,2,1,89,0x6283695,120,312,1200,432,0,0,0,0,0,0,0,616,5000,617,10000,6607,5000,607,10000,1186,1000,1004,10000,6755,100,0,0,0,0,4602,1
-3151,MG_CORRUPTION_ROOT_H,Corruption Root,Corruption Root,180,18200000,1,2199906,2008478,3,6887,9774,333,333,201,20,90,201,201,20,10,12,2,6,62,0x6280084,2000,576,672,480,0,0,0,0,0,0,0,616,5000,617,10000,6607,5000,607,10000,2854,1000,7566,10000,6755,100,0,0,0,0,4604,1
-
-Note: I don't have the mob_skill_db.txt
-
-> db/import/quest_db.txt:
-Note: They exits in db/re/quest_db.txt, but are commented!
-// Old Glast Heim Hard Mode
-12336,0,3151,1,0,0,0,0,0,0,0,0,0,0,0,0,0,"Corrupted Soul Hunt"
-12337,0,3150,1,0,0,0,0,0,0,0,0,0,0,0,0,0,"Amdarais Soul Hunt"
-
-> db/import/instance_db.txt:
-35,Old Glast Heim Hard,3600,300,1@gl_k,150,20,2@gl_k
-
-> data/questid2display.txt:
-Note: They exist already, but not translated. You don't have to replace them tho.
-Note2: Copy & Paste the Normal Mode and added Hard Mode where needed
-
-12334#Trace of Time Travel#SG_FEEL#QUE_NOIMAGE#
-Time travel to Old Glast Heim Hard Mode has been prohibited for 23hours.#
-Dimension distorted.#
-
-12338#Corrupted Soul (Hard) Hunt#SG_FEEL#QUE_NOIMAGE#
-Find and destroy the Corrupted Soul (Hard) located in Old Glast Heim Hard Mode 1F.#
-#
-
-12337#Amdarais (Hard) Hunt#SG_FEEL#QUE_NOIMAGE#
-Proceed to the 2nd floor of Old Glast Heim Hard Mode and destroy Amdarais (Hard)#
-#
-
-12338#Time Traveler#SG_FEEL#QUE_NOIMAGE#
-Time travel to Old Glastheim Hard Mode has been partially finished.#
-Old castle time travel#
-
-12339#Time Conqueror#SG_FEEL#QUE_NOIMAGE#
-Time travel to Old Glastheim Hard Mode has been completely finished.#
-Old castle time travel#
-
-12355#Space Distortion#SG_FEEL#QUE_NOIMAGE#
-Inside of Glastheim has been distorted by Hugin. Anything can happen inside of this castle. #
-Space distorted#
-*/
 //============================================================
 
 glast_01,204,273,5	script	Hugin	4_M_SAGE_C,{
@@ -1288,39 +1232,6 @@ OnBossDead:
 	end;
 }
 
-// Emergency Spawner - until I managed to completely fix the Hard Mode Support
-2@gl_k,130,118,0	script	Emergency Spawner	4_SYSTEM_BOX,{
-
-mes "["+strnpcinfo(0)+"]";
-mes "Are you stuck? Monsters won't spawn anymore?";
-mes "Then I can help you!";
-mes " ";
-mes "Debug: If this is '0' contact an GM with an screenshot: "+'OGH_Mode;
-next;
-mes "["+strnpcinfo(0)+"]";
-if(mobcount(strnpcinfo(4),instance_npcname("#ghmemorialmob05") + "::OnMyMobDead") < 5) {
-	donpcevent instance_npcname("#ogh_2-1") + "::OnTimer30000";
-	donpcevent instance_npcname("#ogh_2-2") + "::OnTimer30000";
-	donpcevent instance_npcname("#ogh_2-3") + "::OnTimer30000";
-	donpcevent instance_npcname("#ogh_2-4") + "::OnTimer30000";
-	donpcevent instance_npcname("#ogh_2-5") + "::OnTimer30000";
-	donpcevent instance_npcname("#ogh_2-6") + "::OnTimer30000";
-	donpcevent instance_npcname("#ogh_2-7") + "::OnTimer30000";
-	mes "I have retriggered the Monster Spawns!";
-	
-} else
-	mes "There are "+ mobcount(strnpcinfo(4),instance_npcname("#ghmemorialmob05") + "::OnMyMobDead")+" Monsters left. Kill them before talking to me please!";
-
-close3;
-
-OnInit:
-disablenpc strnpcinfo(0);
-end;
-
-OnInstanceInit:
-enablenpc instance_npcname(strnpcinfo(0));
-end;
-}
 // Commander 2
 2@gl_k,1,1,0	script	#ghmemorialmob06	HIDDEN_WARP_NPC,{
 	end;

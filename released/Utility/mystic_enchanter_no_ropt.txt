@@ -4,6 +4,9 @@
 //= llchrisll
 //===== Version ==============================================
 //= 1.0 - Initial Version
+//      - Added an check to prevent enchanting,
+//        if every available Enchantment Type is already in usage
+//      - Changed the Slot selection to be fixed slot
 //===== Tested With ==========================================
 //= rAthena 04/26/2019 Revision
 //= GIT Hash: 67e1583f9fec7ac95a954634f6b7600ebe428df0
@@ -143,8 +146,13 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 			else if(.@c_slot == 2) set .@e_max,2;
 			else if(.@c_slot == 3) set .@e_max,1;
 		}
-			
-		if(.@e_cnt >= .@e_max) {
+		
+		// Define the max available enchantment types based on the settings
+		if(.slot[.@e+2]) set .@enc_max,.@enc_max + 1;
+		if(.slot[.@e+5]) set .@enc_max,.@enc_max + 1;
+		if(.slot[.@e+8]) set .@enc_max,.@enc_max + 1;
+		
+		if(.@e_cnt >= .@e_max || .@e_cnt >= .@enc_max) {
 			mes .n$;
 			mes "I'm sorry, but this item has already reached the maximum amount of enchants.";
 			close;
@@ -165,6 +173,7 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 			if(.slot[.@e+5]) set .@e_c2,1;
 			if(.slot[.@e+8]) set .@e_c3,1;
 		}
+		mes .n$;
 		// Attribute Enchants:
 		if(.@e_c1 && !.@c4) {
 			if(.slot[.@e+3] == 0) { // Random Attribute Enchantment
@@ -187,6 +196,7 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 				mes "Please select which Attribute Enchantment you want:";
 				set .@a,select(.attr_m$) - 1;
 				next;
+				mes .n$;
 			}
 			if(.slot[.@e+4] == 0) // Attribute Enchant Upgrade: Disabled = Random selected Level
 				set .@r,rand(getarraysize(getd("."+.attr_v$[.@a])));
@@ -197,10 +207,6 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 
 		// Status Enchants:
 		if(.@e_c2) {
-			// Defining in which slot the Status Enchant goes
-			if(!.@e_id4 && !.@c4) set .@s,4;
-			else if(!.@e_id3 && !.@c3) set .@s,3;
-			
 			if(.slot[.@e+6] == 0) { // Random Status Enchantment
 				
 				if(!.enchant_rand) // Simple Randomizer
@@ -229,17 +235,12 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 			if(.slot[.@e+7] == 0) // Status Enchant Upgrade: Disabled = Random selected Level
 				set .@r,rand(getarraysize(getd("."+.stats_v$[.@a])));
 		
-			setd(".@e_id"+.@s),getd("."+.stats_v$[.@a]+"["+.@r+"]"); // Saving Enchant ID for the actual process
+			set .@e_id3,getd("."+.stats_v$[.@a]+"["+.@r+"]"); // Saving Enchant ID for the actual process
 			set .@e_c2,0;
-			set .@s,0;
 		}
 		
 		// Special Enchants:
 		if(.@e_c3) {
-			// Defining in which slot the Special Enchant goes
-			if(!.@e_id4 && !.@c4) set .@s,4;
-			else if(!.@e_id3 && !.@c3) set .@s,3;
-			else if(!.@e_id2 && !.@c2) set .@s,2;
 			
 			if(.slot[.@e+9] == 0) { // Random Special Enchantment
 				if(!.enchant_rand) // Simple Randomizer
@@ -271,9 +272,8 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 			// Randomized Special Enchant Level
 			set .@r,rand(getarraysize(getd("."+.special_v$[.@a])));
 
-			setd(".@e_id"+.@s),getd("."+.special_v$[.@a]+"["+.@r+"]"); // Saving Enchant ID for the actual process
+			set .@e_id2,getd("."+.special_v$[.@a]+"["+.@r+"]"); // Saving Enchant ID for the actual process
 			set .@e_c3,0;
-			set .@s,0;
 		}
 		delequip .@part;
 		getitem2 .@id,1,1,.@ref,0,.@c1,( (.@c2)?.@c2:.@e_id2),( (.@c3)?.@c3:.@e_id3),( (.@c4)?.@c4:.@e_id4);

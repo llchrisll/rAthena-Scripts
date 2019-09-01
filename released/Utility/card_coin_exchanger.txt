@@ -1,0 +1,167 @@
+//===== rAthena Script =======================================
+//= Card to Coin Trader
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Initial Version
+//===== Tested With ==========================================
+//= rAthena 07/29/2019 Revision
+//= GIT Hash: 3dd388ac66580e72f56826d142ef69d2525188b7
+//===== Description ==========================================
+//= Exchanges Cards into Coins
+//= Adjustable Exchange Rate 
+//= Exchanges Coins into random Cards from List or every card
+//= Blacklist (if enabled)
+//===== Comments =============================================
+//= Alternate Version of the npc/re/merchants/card_exchange.txt
+//============================================================
+prontera,150,180,4	script	Card to Coin Trader	2_VENDING_MACHINE1,{
+
+mes .n$;
+mes "How can I help you?";
+next;
+switch(select("- Cards into Coins:- Coins into Cards:- Information:- Leave")) {
+	case 1: // Cards into Coins
+	getinventorylist;
+	for ( .@c = 0; .@c < @inventorylist_count; .@c++)
+		if(getiteminfo(@inventorylist_id[.@c],2) == 6) {
+			if(.bl)
+				for ( .@b = 0; .@b < getarraysize(.bl_cards); .@b++)
+					if(@inventorylist_id[.@c] == .bl_cards[.@b]) {
+						.@f = 1;
+						break;
+					}
+			if(!.@f)
+				setarray .@cards[getarraysize(.@cards)],@inventorylist_id[.@c];
+		}
+	if(getarraysize(.@cards) == 0) {
+		mes .n$;
+		mes "You don't have any cards in your inventory!";
+		mes "Please come back when you do!";
+		close;
+	}
+	 for ( .@e = 0; .@e < getarraysize(.@cards); .@e++) {
+		mes .n$;
+		mes "Do you want to exchange your "+getitemname(.@cards[.@e]) + ( (countitem(.@cards[.@e]) > 1)?"s":"")+" into "+getitemname(.coin) + ( (countitem(.@cards[.@e]) > 1)?"s":"")+"?";
+		if(!.rate) mes "^FF0000I will exchange 1 Card for 1 "+getitemname(.coin)+"!^000000";
+		else mes "^FF0000I will exchange "+countitem(.@cards[.@e])+" "+getitemname(.@cards[.@e]) + ( (countitem(.@cards[.@e]) > 1)?"s":"")+" for "+countitem(.@cards[.@e])+" " + getitemname(.coin) + ( (countitem(.@cards[.@e]) > 1)?"s":"")+"!^000000";
+		next;
+		if(select("- Yes:- No") - 1) continue;
+		
+		.@ct = ( (.rate)?countitem(.@cards[.@e]):1);
+		delitem .@cards[.@e],.@ct;
+		getitem .coin,.@ct;
+		mes .n$;
+		mes "The exchange has been completed for "+getitemname(.@cards[.@e])+".";
+		if(.@e != (getarraysize(.@cards)-1))
+			next;
+	}
+	break;
+	
+	case 2: // Coins into Cards
+	mes .n$;
+	if(.LoadCards) {
+		mes "I'm sorry, but I'm still sorting my collection, please come back later.";
+		close;
+	}
+	mes "I can exchange "+.price+" "+getitemname(.coin) + ( (.price > 1)?"s":"")+" for a random Card from my collection.";
+	mes "Do you want to try your luck?";
+	if(select("- Yes:- No") - 1) break;
+	next;
+	mes .n$;
+	if(countitem(.coin) < .price) {
+		mes "You don't have enough "+getitemname(.coin)+"s.";
+		mes "You need at least "+.price+"!";
+		close;
+	}
+	mes "You have "+countitem(.coin)+"x "+getitemname(.coin)+"s available.";
+	.@e = countitem(.coin)/.price;
+	if( .@e > 1) {
+		mes "You can trade maximum of "+.@e+" times, please type how often you want to trade:";
+		getinventorylist;
+		.@max_slot = MAX_INVENTORY - @inventorylist_count;
+		mes "^FF0000Note: You have "+.@max_slot+" free slots available in your inventory!";
+		mes "So you can only recieve up to "+.@max_slot+" Cards at once.^000000";
+		next;
+		if(input(.@c,1,.@e) != 0) {
+			mes .n$;
+			mes "Invalid Amount, you either put less than 1 or more than "+.@e+".";
+			close;
+		}
+		mes .n$;
+		if(.@c > .@max_slot) {
+			mes "I'm sorry, but you can't recieve "+.@c+" Cards. You only have "+.@max_slot+" free slots in your inventory.";
+			close;
+		}
+	} else
+		.@c = 1;
+	mes "Okay, lets see what you get!";
+	next;
+	delitem .coin,(.price*.@c);
+	while( .@ct < .@c ) {
+		getitem .card_tc[rand(getarraysize(.card_tc))],1;
+		.@ct++;
+	}
+	mes .n$;
+	mes "Exchange completed.";
+	break;
+	
+	case 3: // Information
+	mes .n$;
+	mes "I can exchange your Cards what you don't need into "+getitemname(.coin)+"s.";
+	mes "But I also exchange these "+getitemname(.coin)+"s back into a random card.";
+	mes "For this process I require "+.price+" "+getitemname(.coin)+"s.";
+	break;
+	
+	case 4:
+	break;
+}
+end;
+
+OnInit:
+.n$ = "["+strnpcinfo(0)+"]";
+// Coin Item ID
+.coin = 6379; // Card Coin
+// ===== Cards into Coins Settings =====
+// > Exchange Rate:
+// 1 = Every Amount of the same card exchanges into the same amount of Coins
+// 0 = 1:1 per Usage (means lots of clicking)
+.rate = 1;
+// > Blacklist: Cards to be ignored
+// 1 = Enabled / 0 = Disabled
+.bl = 0;
+if(.bl)
+	setarray .bl_cards[0],0;
+// ===== Coins into random Card Settings =====
+// > Coin Price per Exchange:
+.price = 5;
+// > Card List
+// 0 = Every Card
+// 1 = Certain Cards, see .card_tc
+.card_tc_type = 0;
+
+// Automatic Card adding						
+if(!.card_tc_type) {
+	.LoadCards = 1;
+	.card_lastid = 31023; // Last known Card ID in item_db.txt
+	for ( .@c = 4001; .@c <= .card_lastid; .@c++) {
+		freeloop(1);
+		// Check if the Item exists
+		if(getitemname(.@c) == "" || getitemname(.@c) == "null") continue;
+		// Check if the Item is a Card by type
+		if(getiteminfo(.@c,2) != 6) continue;
+		// Check if the Item is an Card by name
+		if(compare(getitemname(.@c),"Card") == 0) continue;
+		// Add the Card to the array and select an random chance
+		setarray .card_tc[getarraysize(.card_tc)],.@c;
+	}
+	freeloop(0);
+	.LoadCards = 0;
+// Certain Cards only:
+} else
+	setarray .card_tc[0],
+//     				 Card ID       
+						4001, // Poring Card
+						4002; // Fabre Card
+end;
+}

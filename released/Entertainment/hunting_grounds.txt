@@ -68,11 +68,6 @@ switch(select("Enter Hunting Grounds:Hunting Quests:Leave")) {
 			case -1: break;
 			case 0:
 			case 1:
-			if(getgroupid() > 0) {
-				completequest .Hunt_QDelay[.@h];
-				erasequest .Hunt_QDelay[.@h];
-				break;
-			}
 			mes "The "+.HG_Name$[.@h]+" hasn't stabilized yet.";
 			mes "Please come back later.";
 			close;
@@ -124,11 +119,6 @@ switch(select("Enter Hunting Grounds:Hunting Quests:Leave")) {
 			case -1: break;
 			case 0:
 			case 1:
-			if(getgroupid() > 0) {
-				completequest .Hunt_QDelay[.@h];
-				erasequest .Hunt_QDelay[.@h];
-				break;
-			}
 			mes "The "+.HG_Name$[.@h]+" hasn't stabilized yet.";
 			mes "Please come back later.";
 			close;
@@ -671,6 +661,7 @@ setmapflag 'map$,mf_nochat;
 setmapflag 'map$,mf_novending;
 setmapflag 'map$,mf_nobranch;
 setmapflag 'map$,mf_partylock;
+setmapflag 'map$,mf_noloot;
 sleep 2000;
 if(getarraysize('mob_id) < 1) {
 	copyarray 'mob_id[0],$@mob_id[0],getarraysize($@mob_id);
