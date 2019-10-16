@@ -32,7 +32,7 @@
 	},
 	-- Royal Knight's Lance (26016) is already translated in itemInfo_true_v5.lua
 	[26138] = {
-		unidentifiedDisplayName = "¡ˆ∆Œ¿Ã",
+		unidentifiedDisplayName = "Unidentified Staff",
 		unidentifiedResourceName = "∑‘µÂ",
 		unidentifiedDescriptionName = { "Can be identified by using a ^990099Magnifier^000000." },
 		identifiedDisplayName = "Hellfire Staff",
@@ -70,7 +70,7 @@
 		costume = false
 	},
 	[26139] = {
-		unidentifiedDisplayName = "¡ˆ∆Œ¿Ã",
+		unidentifiedDisplayName = "Unidentified Staff",
 		unidentifiedResourceName = "∑‘µÂ",
 		unidentifiedDescriptionName = { "Can be identified by using a ^990099Magnifier^000000." },
 		identifiedDisplayName = "Icicle Staff",

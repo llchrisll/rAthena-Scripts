@@ -34,22 +34,23 @@ switch(select("- Enchant Costumes:- Reset Enchantment:- Nevermind")) {
 	mes "Please select the Costume you want me to enchant:";
 	for ( set .@s,0; .@s < getarraysize(.enchant_slot); set .@s,.@s + 1) {
 		switch(.enchant_slot[.@s]) {
-			case EQI_COSTUME_HEAD_TOP: set .@c_slot$,"Costume Top Headgear"; break;
-			case EQI_COSTUME_HEAD_MID: set .@c_slot$,"Costume Mid Headgear"; break;
-			case EQI_COSTUME_HEAD_LOW: set .@c_slot$,"Costume Low Headgear"; break;
-			case EQI_COSTUME_GARMENT: set .@c_slot$,"Costume Garment"; break;
-			case EQI_SHADOW_ARMOR: set .@c_slot$,"Shadow Armor"; break;
-			case EQI_SHADOW_WEAPON: set .@c_slot$,"Shadow Weapon"; break;
-			case EQI_SHADOW_SHIELD: set .@c_slot$,"Shadow Shield"; break;
-			case EQI_SHADOW_SHOES: set .@c_slot$,"Shadow Shoes"; break;
-			case EQI_SHADOW_ACC_R: set .@c_slot$,"Shadow Accessory Right"; break;
-			case EQI_SHADOW_ACC_L: set .@c_slot$,"Shadow Accessory Left"; break;
+			case EQI_COSTUME_HEAD_TOP: set .@c_slot$,"Top Headgear"; break;
+			case EQI_COSTUME_HEAD_MID: set .@c_slot$,"Mid Headgear"; break;
+			case EQI_COSTUME_HEAD_LOW: set .@c_slot$,"Low Headgear"; break;
+			case EQI_COSTUME_GARMENT: set .@c_slot$,"Garment"; break;
+			case EQI_SHADOW_ARMOR: set .@c_slot$,"Armor"; break;
+			case EQI_SHADOW_WEAPON: set .@c_slot$,"Weapon"; break;
+			case EQI_SHADOW_SHIELD: set .@c_slot$,"Shield"; break;
+			case EQI_SHADOW_SHOES: set .@c_slot$,"Shoes"; break;
+			case EQI_SHADOW_ACC_R: set .@c_slot$,"Accessory Right"; break;
+			case EQI_SHADOW_ACC_L: set .@c_slot$,"Accessory Left"; break;
 		}
 		set .@c_m$,.@c_m$ + ((getequipid(.enchant_slot[.@s]) != -1)?.@c_slot$ + " - "+getitemname(getequipid(.enchant_slot[.@s])):"") + ( (.enchant_slot[.@s+1] != 0)?":":"");
 	}
 	set .@c_m$,.@c_m$ + ":- Cancel";
-	set .@part,.enchant_slot[select(.@c_m$) - 1];
-	if(.@part >= getarraysize(.enchant_slot)) close;
+	set .@c,select(.@c_m$);
+	if(.@c >= getarraysize(.enchant_slot)) close;
+	set .@part,.enchant_slot[.@c-1];
 	next;
 	mes .n$;
 	if(getequipid(.@part) == -1) {
@@ -93,22 +94,23 @@ switch(select("- Enchant Costumes:- Reset Enchantment:- Nevermind")) {
 	mes "Please select the Costume you want me to reset the enchantment!";
 	for ( set .@s,0; .@s < getarraysize(.enchant_slot); set .@s,.@s + 1) {
 		switch(.enchant_slot[.@s]) {
-			case EQI_COSTUME_HEAD_TOP: set .@c_slot$,"Costume Top Headgear"; break;
-			case EQI_COSTUME_HEAD_MID: set .@c_slot$,"Costume Mid Headgear"; break;
-			case EQI_COSTUME_HEAD_LOW: set .@c_slot$,"Costume Low Headgear"; break;
-			case EQI_COSTUME_GARMENT: set .@c_slot$,"Costume Garment"; break;
-			case EQI_SHADOW_ARMOR: set .@c_slot$,"Shadow Armor"; break;
-			case EQI_SHADOW_WEAPON: set .@c_slot$,"Shadow Weapon"; break;
-			case EQI_SHADOW_SHIELD: set .@c_slot$,"Shadow Shield"; break;
-			case EQI_SHADOW_SHOES: set .@c_slot$,"Shadow Shoes"; break;
-			case EQI_SHADOW_ACC_R: set .@c_slot$,"Shadow Accessory Right"; break;
-			case EQI_SHADOW_ACC_L: set .@c_slot$,"Shadow Accessory Left"; break;
+			case EQI_COSTUME_HEAD_TOP: set .@c_slot$,"Top Headgear"; break;
+			case EQI_COSTUME_HEAD_MID: set .@c_slot$,"Mid Headgear"; break;
+			case EQI_COSTUME_HEAD_LOW: set .@c_slot$,"Low Headgear"; break;
+			case EQI_COSTUME_GARMENT: set .@c_slot$,"Garment"; break;
+			case EQI_SHADOW_ARMOR: set .@c_slot$,"Armor"; break;
+			case EQI_SHADOW_WEAPON: set .@c_slot$,"Weapon"; break;
+			case EQI_SHADOW_SHIELD: set .@c_slot$,"Shield"; break;
+			case EQI_SHADOW_SHOES: set .@c_slot$,"Shoes"; break;
+			case EQI_SHADOW_ACC_R: set .@c_slot$,"Accessory Right"; break;
+			case EQI_SHADOW_ACC_L: set .@c_slot$,"Accessory Left"; break;
 		}
 		set .@c_m$,.@c_m$ + ((getequipid(.enchant_slot[.@s]) != -1)?.@c_slot$ + " - "+getitemname(getequipid(.enchant_slot[.@s])):"") + ( (.enchant_slot[.@s+1] != 0)?":":"");
 	}
 	set .@c_m$,.@c_m$ + ":- Cancel";
-	set .@part,.enchant_slot[select(.@c_m$) - 1];
-	if(.@part >= getarraysize(.enchant_slot)) close;
+	set .@c,select(.@c_m$);
+	if(.@c >= getarraysize(.enchant_slot)) close;
+	set .@part,.enchant_slot[.@c-1];
 	next;
 	mes .n$;
 	if(getequipcardid(.@part,3) == 0) {

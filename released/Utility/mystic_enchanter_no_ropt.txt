@@ -231,6 +231,7 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 				mes "Please select which Status Enchantment you want:";
 				set .@a,select(.stats_m$) - 1;
 				next;
+				mes .n$;
 			}
 			if(.slot[.@e+7] == 0) // Status Enchant Upgrade: Disabled = Random selected Level
 				set .@r,rand(getarraysize(getd("."+.stats_v$[.@a])));
@@ -268,6 +269,7 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 				mes "Please select which Special Enchantment you want:";
 				set .@a,select(.special_m$) - 1;
 				next;
+				mes .n$;
 			}
 			// Randomized Special Enchant Level
 			set .@r,rand(getarraysize(getd("."+.special_v$[.@a])));
@@ -284,7 +286,6 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 			case 2: set #CASHPOINTS,#CASHPOINTS - .slot[.@e+11]; break;
 			default: delitem .slot[.@e+10],.slot[.@e+11]; break;
 		}
-		mes .n$;
 		mes "The Enchantment was successfull.";
 		break;
 		

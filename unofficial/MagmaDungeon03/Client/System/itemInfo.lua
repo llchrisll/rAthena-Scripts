@@ -122,7 +122,7 @@
 		identifiedDisplayName = "Lava Leather Manteau",
 		identifiedResourceName = "Lava_Leather_Manteau",
 		identifiedDescriptionName = {
-			"Manteau  that combines the skin of the creatures that live in the lava dungeon.",
+			"Manteau that combines the skin of the creatures that live in the lava dungeon.",
 			"It seems to be still in heat.",
 			"________________________",
 			"HIT +10",

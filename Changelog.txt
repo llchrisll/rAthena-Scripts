@@ -24,6 +24,18 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2019/10/16
+<< == |*| Mystic Enchanter v1.0 [RE] - Modified |*| == >>
+- Fixed some minor text bug
+<< == |*| Costume Enchanter v1.2 [REQ] - Modified |*| == >>
+- Fixed an menu bug
+- Shortened the Equipment Menu Display
+<< == |*| Unofficial Abyss Glast Heim and Magma Dungeon F3 v1.0 [RE] - Modified |*| == >>
+- Fixed some ItemInfo related mistakes
+- Added the forgotten "same map" check in the Party Drop script
+<< == |*| Unofficial Mysterious Combination Book Bundle v1.0 [RE] - Modified |*| == >>
+- Updated the ItemInfo to match it with Zackdreaver's Translation Project better
+------------------------------------------------------------------------------------------------------------------------
 * 2019/09/01
 << == |*| Hunting Grounds v1.0 [RE] - Modified |*| == >>
 - Fixed a bug about the Quest Delay

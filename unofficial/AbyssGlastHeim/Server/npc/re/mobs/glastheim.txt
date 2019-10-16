@@ -224,14 +224,17 @@ gl_cas01_,0,0,0	script	#AbyssGlast_Drop	-1,{
 
 OnAGHMobDead:
 if(getcharid(1)) {
-	getpartymember getcharid(1),1;
-	getpartymember getcharid(1),2;
-	
-	for ( .@p = 0; .@p < $@partymembercount; .@p++)
-		if(attachrid($@partymemberaid[.@p],$@partymembercid[.@p]) == 1) 
-			if(rand(1,10000) >= (10000 - .chance)) 
-				getitem .drop_id[rand(getarraysize(.drop_id))],1;
-				
+	if(getcharid(1)) {
+    getpartymember getcharid(1),1;
+    getpartymember getcharid(1),2;
+    
+    for ( .@p = 0; .@p < $@partymembercount; .@p++)
+        if(attachrid($@partymemberaid[.@p],$@partymembercid[.@p]) == 1) {
+            if(strcharinfo(3) != strnpcinfo(4)) continue;
+            if(rand(1,10000) >= (10000 - .chance)) 
+                getitem .drop_id[rand(getarraysize(.drop_id))],1;
+        }
+
 } else {
 	if(rand(1,10000) >= (10000 - .chance)) 
 		getitem .drop_id[rand(getarraysize(.drop_id))],1;
