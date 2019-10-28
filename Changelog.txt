@@ -29,10 +29,16 @@
 - Added enable_items; and disable_items;
 << == |*| Costume Enchanter v1.2 [REQ] - Modified |*| == >>
 - Added enable_items; and disable_items;
+<< == |*| Unofficial Abyss Glast Heim v1.0 [RE] - Modified |*| == >>
+- Fixed a bug with the quest, thanks to @kianzack
+- Added EXP Values in the variables (unconfirmed)
+<< == |*| Unofficial Old Glast Heim Hard Mode v1.0 [RE] - Modified |*| == >>
+- Adjusted Mob Drops to match divine-pride.net Database
 << == |*| Unofficial Abyss Glast Heim and Magma Dungeon F3 v1.0 [RE] - Modified |*| == >>
-- Abyss Glast Heim:
-  > Fixed a bug with the quest, thanks to @kianzack
-  > Added EXP Values in the variables
+- Updated Mob Drops to be empty again, except Shadowdecon/Zelunium and their Cards
+- Updated Mob Stats according to Divine-Pride.net Database
+<< == |*| Unofficial Sky Fortress Instance by Alayne v1.0 [RE] - Modified |*| == >>
+- Updated Mob Stats and Drops according to Divine-Pride.net (still don't drop with Random Options)
 ------------------------------------------------------------------------------------------------------------------------
 * 2019/10/16
 << == |*| Mystic Enchanter v1.0 [RE] - Modified |*| == >>
