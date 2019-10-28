@@ -24,6 +24,16 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2019/10/28
+<< == |*| Mystic Enchanter v1.0 and Mystic Enchanter without Random Options v1.0 [RE] - Modified |*| == >>
+- Added enable_items; and disable_items;
+<< == |*| Costume Enchanter v1.2 [REQ] - Modified |*| == >>
+- Added enable_items; and disable_items;
+<< == |*| Unofficial Abyss Glast Heim and Magma Dungeon F3 v1.0 [RE] - Modified |*| == >>
+- Abyss Glast Heim:
+  > Fixed a bug with the quest, thanks to @kianzack
+  > Added EXP Values in the variables
+------------------------------------------------------------------------------------------------------------------------
 * 2019/10/16
 << == |*| Mystic Enchanter v1.0 [RE] - Modified |*| == >>
 - Fixed some minor text bug

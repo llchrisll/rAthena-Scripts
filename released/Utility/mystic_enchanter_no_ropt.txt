@@ -24,6 +24,7 @@
 //============================================================
 prontera,150,180,4	script	Mystic Enchanter	4_M_MOCASS1,{
 
+disable_items;
 mes .n$;
 mes "Welcome, "+strcharinfo(0)+"!";
 mes "I can enchant, based on my powers, various Equipments with my Enchantments, as well as upgrade and clear Enchantments,but only those I enchanted myself.";
@@ -428,6 +429,7 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 		}
 		break;
 	}
+	enable_items;
 	break;
 
 	case 2:

@@ -21,6 +21,7 @@
 //============================================================
 prontera,150,160,4	script	Costume Enchanter	101,{
 
+disable_items;
 mes .n$;
 mes "Hello, "+strcharinfo(0)+"!";
 mes "If you like I can enchant your costume equipment with any enchantment I have in store";
@@ -87,6 +88,7 @@ switch(select("- Enchant Costumes:- Reset Enchantment:- Nevermind")) {
 	mes .n$;
 	mes "The enchantment was a success.";
 	mes "See ya next time.";
+	enable_items;
 	break;
 		
 	case 2:

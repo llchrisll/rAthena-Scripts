@@ -127,66 +127,23 @@ switch(select("Let's go!:I need an explanation:Share discoveries:I don't want to
 		mes "Don't overdo it ~ <3";
 		close;
 	}
-	if(checkquest(.abyss_delay[.@q]) > -1)
-		if(checkquest(.abyss_delay[.@q]) == 2) {
-			completequest .abyss_delay[.@q];
-			erasequest .abyss_delay[.@q];
-			mes "You are free to share you discoveries with me again ~ <3.";
-			next;
-			mes .n$;
-		} else {
-			mes "Hmm... I don't need any informations about this currently....";
-			close;
-		}
+	switch(checkquest(.abyss_delay[.@q],PLAYTIME)) {
+		case 0:
+		case 1:
+		mes "You are still exhausted from the past discoveries. Kindly rest first..";
+		close;
 	
-	if(checkquest(.abyss_quest[.@q],HUNTING) == 2) {
-		// Need more Info...., doing 10% of total exp meanwhile
-		mes "Oohh! Well done, that's exactly what I'm looking for.";
-		mes "Very interesting...";
-		mes "Oh yeah, here is your reward for your hard work.";
-		mes "See you again next time ~ <3";
-		.@bexp = (BaseExp + NextBaseExp)*10/100;
-		.@jexp = (JobExp + NextJobExp)*10/100;
-		getexp .@bexp,.@jexp;
-		//getexp .abyss_bexp[.@q],.abyss_jexp[.@q];
-		completequest .abyss_quest[.@q];
-		erasequest .abyss_quest[.@q];
-		setquest .abyss_delay[.@q];
-		
-	} else if(checkquest(.abyss_quest[.@q],HUNTING) > -1) {
-		switch(.@q) {
-			case 0:
-			mes "^0000FF20 Contaminated Raydrics,";
-			mes "Contaminated Raydric Archers.^000000";
-			mes "Do you thing they're influenced by";
-			mes "the emptiness?";
-			break;
-			
-			case 1:
-			mes "^0000FF5 Frozen Gargyoles,";
-			mes "5 Prison Breakers.^000000 It's not a";
-			mes "freezing temperature, but if you're";
-			mes "freezing, come see me.";
-			break;
-			
-			case 2:
-			mes "^0000FF10 Ice Ghosts,";
-			mes "10 Flame Ghosts.^000000 I don't thing they";
-			mes" are actually on the other side of";
-			mes "the mirror, but they are on another dimensional gap..."; 
-			next;
-			mes .n$;
-			mes "I'll leave it up to you to find";
-			mes "more information ~ <3";
-			break;
-		}
-		
-		
-	} else if(checkquest(.abyss_quest[.@q],HUNTING) == -1){
-		
+		case 2:
+		completequest .abyss_delay[.@q];
+		erasequest .abyss_delay[.@q];
+		mes "You are free to share you discoveries with me again ~ <3.";
+		close;
+	}
+	switch(checkquest(.abyss_quest[.@q],HUNTING)) {
+		case -1:
 		mes "Beyond the gap, there are empty-like entities.";
 		switch(.@q) {
-		
+
 			case 0: // Quest: Nothing to see
 			mes "^0000FFContaminated Raydrics^000000 and ^0000FFContaminated Raydric Archers^000000...";
 			mes "It's about their contamination...";
@@ -196,7 +153,7 @@ switch(select("Let's go!:I need an explanation:Share discoveries:I don't want to
 			mes "^0000FF20 Contaminated Raydrics,";
 			mes "Contaminated Raydric Archers.^000000";
 			break;
-			
+				
 			case 1: // Quest: High Freezing Point
 			mes "^0000FFFrozen Gargyoles^000000 and ^0000FFPrison Breakers^000000...";
 			next;
@@ -204,7 +161,7 @@ switch(select("Let's go!:I need an explanation:Share discoveries:I don't want to
 			mes "^0000FF5 Frozen Gargyoles,";
 			mes "5 Prison Breakers.^000000";
 			break;
-			
+					
 			case 2: // Quest: A Mirror
 			mes "^0000FFIce Ghosts^000000 and ^0000FFFlame Ghosts^000000...";
 			mes "They look totally different in this dimension.";
@@ -229,8 +186,47 @@ switch(select("Let's go!:I need an explanation:Share discoveries:I don't want to
 		mes "If you need to escape the gap, talk to me at the entrance ~ <3";
 		setquest .abyss_quest[.@q];
 		break;
+		
+		case 0:
+		case 1:
+		switch(.@q) {
+			case 0:
+			mes "You're not finished yet on the discovery.";
+			mes "Do you thing they're influenced by";
+			mes "the emptiness?";
+			close;
+			
+			case 1:
+			mes "You're not finished yet on the discovery.";
+			mes "It's not a freezing";
+			mes "temperature, but if you're";
+			mes "freezing, come see me.";
+			close;
+			
+			case 2:
+			mes "You're not finished yet on the discovery.";
+			mes "I don't think they";
+			mes" are actually on the other side of";
+			mes "the mirror, but they are on another dimensional gap..."; 
+			close;
+		}
+		case 2:
+		switch(.@q) {
+			case 0:
+			case 1:
+			case 2:
+			mes "Oohh! Well done, that's exactly what I'm looking for.";
+			mes "Very interesting...";
+			mes "Oh yeah, here is your reward for your hard work.";
+			mes "See you again next time ~ <3";
+			getexp .abyss_bexp[.@q],.abyss_jexp[.@q];
+			completequest .abyss_quest[.@q];
+			erasequest .abyss_quest[.@q];
+			setquest .abyss_delay[.@q];
+			close;
+		}
 	}
-	break;
+	close;
 	
 	case 4:
 	mes .n$;
@@ -244,8 +240,8 @@ OnInit:
 .n$ = "[Nillem]";
 setarray .abyss_quest[0],8541,8544,8547;
 setarray .abyss_delay[0],8542,8545,8548;
-setarray .abyss_bexp[0],0,0,0;
-setarray .abyss_jexp[0],0,0,0;
+setarray .abyss_bexp[0],2000000,2000000,2000000;
+setarray .abyss_jexp[0],2000000,2000000,2000000;
 end;
 }
 gl_cas01_,205,36,4	script	Mage Nillem#abyss_gl	4_M_JOB_WIZARD,{
