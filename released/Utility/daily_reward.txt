@@ -4,9 +4,11 @@
 //= llchrisll
 //===== Version ==============================================
 //= 1.0 - Initial Version
+//      - Modified the way the timer works
+//      - Added checkidle
 //===== Tested With ==========================================
-//= rAthena 12/24/2017 Revision
-//= GIT Hash: ae69e506263f9b183c945f49b1d88c5fc2b73a6a
+//= rAthena 04/29/2020 Revision
+//= GIT Hash: 4829f3775d5371e65d6648cf05b6f0c2810bb664
 //===== Description ==========================================
 //= Simple Daily Reward Script
 //= Config:
@@ -22,34 +24,51 @@ if(#DailyReward > gettimetick(2)) {
 	end;
 }
 set #DailyReward,0;
-announce .n$+": Stay active for "+( (.rew_login%3600 == 0)?.rew_login/3600+" Hour(s)":.rew_login/60+" Minute(s)")+" to recieve the Daily Reward.",bc_self;
-attachnpctimer;
-initnpctimer;
+announce .n$+": Stay active for "+( (.rew_login%60 == 0)?.rew_login/60+" hour(s)":.rew_login+" Minute(s)")+" to recieve the Daily Reward.",bc_self;
+addtimer .rew_timer,"DailyLogin::OnTimeCheck";
 end;
 
-OnTimer60000: // Every Minute
-stopnpctimer;
-set @daily,@daily + 60;
-if(@daily == .rew_login) {
-	set @daily,0;
-	if(.rew_type == 2)
-		set @DailyReward,DT_DAYOFMONTH;
-	else 
-		set @DailyReward,Daily + 1;
-	announce .n$+": You can now recieve your Daily Reward. Please visit me for that.",.bc_self;
-	end;
+OnTimeCheck:
+deltimer "DailyLogin::OnTimeCheck";
+if(checkidle() <= .idle) {
+	if(@CheckIdle) 
+		set @CheckIdle,0;
+	set @daily,@daily + .rew_count;
+	
+	//if(getgroupid()) // Testing purposes
+	//	dispbottom "Daily Timer: "+@daily;
+	
+	if(@daily == .rew_login) {
+		set @daily,0;
+		if(.rew_type == 2)
+			set @DailyReward,DT_DAYOFMONTH;
+		else 
+			set @DailyReward,Daily + 1;
+		announce .n$+": You can now recieve your Daily Reward. Please visit me for that.",bc_self;
+		end;
+	}
+	
+} else {
+	if(!@CheckIdle) {
+		announce .n$+": You need to stay active for your Daily Reward. I will check again in "+.rew_count+" minute(s).",bc_self;
+		set @CheckIdle,1;
+	}
 }
-attachnpctimer;
-initnpctimer;
+addtimer .rew_timer,"DailyLogin::OnTimeCheck";
 end;
 
 OnInit:
 set .n$,"[Daily Reward]";
 set .rew_time,86400; // Timer until next Reward in seconds
-// How long does someone have to stay online to recieve the reward in seconds
-// Default: 3600 = 1 Hour
-// Minimum: 60 = 1 Minute, because the Timer checks every Minute
-set .rew_login,3600;
+// Check in seconds how long the player can be "idle"
+set .idle,5;
+// How long does someone have to stay online to recieve the reward in minutes
+// Default: 60 = 1 Hour
+set .rew_login,60;
+// How many minutes should pass for the counter to increase > OnTimeCheck
+set .rew_count,1;
+// Dynamic Timer - Don't touch this please
+set .rew_timer,.rew_count*60*1000;
 // Reward Type:
 // 1 = Continues Reward
 // 2 = Depending on day
@@ -60,8 +79,10 @@ prontera,150,175,4	script	Daily Reward	100,{
 
 mes .n$;
 mes "Welcome, "+strcharinfo(0)+"!";
+set .@d_login,getvariableofnpc(.rew_login,"DailyLogin")-@daily;
 if(!@DailyReward) {
-	mes "I'm sorry, but you can't recieve your Daily Reward yet. You still have to wait for "+callfunc("Time2Str",(getvariableofnpc(.rew_login,"DailyLogin")-@daily)+gettimetick(2));
+	mes "I'm sorry, but you can't recieve your Daily Reward yet.";
+	mes "You still have to wait "+( (.@d_login%60 == 0)?.@d_login/60+" hour(s)":.@d_login+" minute(s)")+".";
 	close;
 }
 mes "The reward for today is:";

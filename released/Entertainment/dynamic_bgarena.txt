@@ -5,8 +5,8 @@
 //===== Version ==============================================
 //= 1.0 - Initial Version
 //===== Tested With ==========================================
-//= rAthena 06/29/2019 Revision
-//= GIT Hash: c1975d7ea3729c1f5deec2e0dcf04841c4b96969
+//= rAthena 04/29/2020 Revision
+//= GIT Hash: 4829f3775d5371e65d6648cf05b6f0c2810bb664
 //===== Description ==========================================
 //= This battleground arena can be configured however you like.
 //  You could compare it with an Call of Duty game.

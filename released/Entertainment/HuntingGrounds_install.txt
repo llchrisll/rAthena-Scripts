@@ -7,6 +7,58 @@ db/import/instance.db:
 104,Hunting Ground 160,7200,300,gef_fild14,365,220
 105,Hunting Ground 175,10800,300,gef_fild14,365,220
 
+for YAML:
+db/import/instance_db.yml
+# Hunting Grounds [llchris]
+ - Id: 100
+   Name: Hunting Ground 99
+   TimeLimit: 3600
+   IdleTimeOut: 300
+   Enter:
+     Map: gef_fild14
+     X: 365
+     Y: 220
+ - Id: 101
+   Name: Hunting Ground 115
+   TimeLimit: 3600
+   IdleTimeOut: 300
+   Enter:
+     Map: gef_fild14
+     X: 365
+     Y: 220
+ - Id: 102
+   Name: Hunting Ground 130
+   TimeLimit: 3600
+   IdleTimeOut: 300
+   Enter:
+     Map: gef_fild14
+     X: 365
+     Y: 220
+ - Id: 103
+   Name: Hunting Ground 45
+   TimeLimit: 3600
+   IdleTimeOut: 300
+   Enter:
+     Map: gef_fild14
+     X: 365
+     Y: 220
+ - Id: 104
+   Name: Hunting Ground 160
+   TimeLimit: 7200
+   IdleTimeOut: 300
+   Enter:
+     Map: gef_fild14
+     X: 365
+     Y: 220
+ - Id: 105
+   Name: Hunting Ground 175
+   TimeLimit: 10800
+   IdleTimeOut: 300
+   Enter:
+     Map: gef_fild14
+     X: 365
+     Y: 220
+
 db/import/quest_db.txt:
 // Hunting Grounds [llchrisll]
 160000,0,2071,100,1213,100,2154,100,0,0,0,0,0,0,0,0,0,"Hunting Ground 99 - Fire"
@@ -94,6 +146,533 @@ db/import/quest_db.txt:
 160203,21600,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"Master Hunter 145"
 160204,21600,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"Master Hunter 160"
 160205,28800,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"Master Hunter 175"
+
+for YAML:
+# Hunting Grounds [llchrisll]
+  - Id: 160000
+    Title: Hunting Ground 99 - Fire
+    Targets:
+      - Mob: HEADLESS_MULE
+        Count: 100
+      - Mob: HIGH_ORC
+        Count: 100
+      - Mob: BANASPATY
+        Count: 100
+  - Id: 160001
+    Title: Hunting Ground 99 - Fire MvP
+    Targets:
+      - Mob: GOLDEN_BUG
+        Count: 1
+  - Id: 160002
+    Title: Hunting Ground 99 - Water
+    Targets:
+      - Mob: UZHAS
+        Count: 100
+      - Mob: GARM_BABY
+        Count: 100
+      - Mob: L_HARWORD
+        Count: 100
+  - Id: 160003
+    Title: Hunting Ground 99 - Water MvP
+    Targets:
+      - Mob: GARM
+        Count: 1
+  - Id: 160004
+    Title: Hunting Ground 99 - Wind
+    Targets:
+      - Mob: HARPY
+        Count: 100
+      - Mob: BREEZE
+        Count: 100
+      - Mob: L_SHECIL
+        Count: 100
+  - Id: 160005
+    Title: Hunting Ground 99 - Wind MvP
+    Targets:
+      - Mob: MISTRESS
+        Count: 1
+  - Id: 160006
+    Title: Hunting Ground 99 - Earth
+    Targets:
+      - Mob: LES
+        Count: 100
+      - Mob: SPRING_RABBIT
+        Count: 100
+      - Mob: STAPO
+        Count: 100
+  - Id: 160007
+    Title: Hunting Ground 99 - Earth MvP
+    Targets:
+      - Mob: ORC_LORD
+        Count: 1
+  - Id: 160008
+    Title: Hunting Ground 99 - Shadow
+    Targets:
+      - Mob: PEST
+        Count: 100
+      - Mob: DEVIRUCHI
+        Count: 100
+      - Mob: WICKED_NYMPH
+        Count: 100
+  - Id: 160009
+    Title: Hunting Ground 99 - Shadow MvP
+    Targets:
+      - Mob: BAPHOMET
+        Count: 1
+  - Id: 160010
+    Title: Hunting Ground 99 - Holy
+    Targets:
+      - Mob: L_MAGALETA
+        Count: 100
+      - Mob: L_EREND
+        Count: 100
+  - Id: 160011
+    Title: Hunting Ground 99 - Holy MvP
+    Targets:
+      - Mob: ANGELING
+        Count: 1
+  - Id: 160030
+    Title: Hunting Ground 115 - Fire
+    Targets:
+      - Mob: L_SEYREN
+        Count: 100
+      - Mob: MAJORUROS
+        Count: 100
+      - Mob: MD_MARC
+        Count: 100
+  - Id: 160031
+    Title: Hunting Ground 115 - Fire MvP
+    Targets:
+      - Mob: EDDGA
+        Count: 1
+  - Id: 160032
+    Title: Hunting Ground 115 - Water
+    Targets:
+      - Mob: SNOWIER
+        Count: 100
+      - Mob: ANOLIAN
+        Count: 100
+      - Mob: SEDORA
+        Count: 100
+  - Id: 160033
+    Title: Hunting Ground 115 - Water MvP
+    Targets:
+      - Mob: KTULLANUX
+        Count: 1
+  - Id: 160034
+    Title: Hunting Ground 115 - Wind
+    Targets:
+      - Mob: GRYPHON
+        Count: 100
+      - Mob: LUCIOLA_VESPA
+        Count: 100
+      - Mob: VENATU_2
+        Count: 100
+  - Id: 160035
+    Title: Hunting Ground 115 - Wind MvP
+    Targets:
+      - Mob: LADY_TANEE
+        Count: 1
+  - Id: 160036
+    Title: Hunting Ground 115 - Earth
+    Targets:
+      - Mob: PINGUICULA
+        Count: 100
+      - Mob: ARCLOUSE
+        Count: 100
+      - Mob: VENATU_3
+        Count: 100
+  - Id: 160037
+    Title: Hunting Ground 115 - Earth MvP
+    Targets:
+      - Mob: AMON_RA
+        Count: 1
+  - Id: 160038
+    Title: Hunting Ground 115 - Shadow
+    Targets:
+      - Mob: TIYANAK
+        Count: 100
+      - Mob: NIGHTMARE_TERROR
+        Count: 100
+      - Mob: LOLI_RURI
+        Count: 100
+  - Id: 160039
+    Title: Hunting Ground 115 - Shadow MvP
+    Targets:
+      - Mob: PHARAOH
+        Count: 1
+  - Id: 160040
+    Title: Hunting Ground 115 - Holy
+    Targets:
+      - Mob: FAKE_ANGEL
+        Count: 100
+      - Mob: CORNUS
+        Count: 100
+  - Id: 160041
+    Title: Hunting Ground 115 - Holy MvP
+    Targets:
+      - Mob: ARCHANGELING
+        Count: 1
+  - Id: 160060
+    Title: Hunting Ground 130 - Fire
+    Targets:
+      - Mob: N_MINOROUS
+        Count: 200
+      - Mob: FERUS
+        Count: 200
+      - Mob: IMP
+        Count: 200
+  - Id: 160061
+    Title: Hunting Ground 130 - Fire MvP
+    Targets:
+      - Mob: BOITATA
+        Count: 2
+  - Id: 160062
+    Title: Hunting Ground 130 - Water
+    Targets:
+      - Mob: PLASMA_B
+        Count: 200
+      - Mob: AQUA_ELEMENTAL
+        Count: 200
+      - Mob: DIMIK_2
+        Count: 200
+  - Id: 160063
+    Title: Hunting Ground 130 - Water MvP
+    Targets:
+      - Mob: KRAKEN
+        Count: 2
+  - Id: 160064
+    Title: Hunting Ground 130 - Wind
+    Targets:
+      - Mob: TIKBALANG
+        Count: 200
+      - Mob: WANDER_MAN
+        Count: 200
+      - Mob: SEEKER
+        Count: 200
+  - Id: 160065
+    Title: Hunting Ground 130 - Wind MvP
+    Targets:
+      - Mob: KNIGHT_OF_WINDSTORM
+        Count: 2
+  - Id: 160066
+    Title: Hunting Ground 130 - Earth
+    Targets:
+      - Mob: DRACO
+        Count: 200
+      - Mob: NAGA
+        Count: 200
+      - Mob: FERUS_
+        Count: 200
+  - Id: 160067
+    Title: Hunting Ground 130 - Earth MvP
+    Targets:
+      - Mob: GOPINICH
+        Count: 2
+  - Id: 160068
+    Title: Hunting Ground 130 - Shadow
+    Targets:
+      - Mob: HELL_POODLE
+        Count: 200
+      - Mob: KNIGHT_OF_ABYSS
+        Count: 200
+      - Mob: SKOGUL
+        Count: 200
+  - Id: 160069
+    Title: Hunting Ground 130 - Shadow MvP
+    Targets:
+      - Mob: LORD_OF_DEATH
+        Count: 2
+  - Id: 160070
+    Title: Hunting Ground 130 - Holy
+    Targets:
+      - Mob: ACIDUS
+        Count: 200
+      - Mob: EREND
+        Count: 200
+  - Id: 160071
+    Title: Hunting Ground 130 - Holy MvP
+    Targets:
+      - Mob: APOCALIPS_H
+        Count: 2
+  - Id: 160090
+    Title: Hunting Ground 145 - Fire
+    Targets:
+      - Mob: KASA
+        Count: 200
+      - Mob: YGNIZEM
+        Count: 200
+      - Mob: SEYREN
+        Count: 200
+  - Id: 160091
+    Title: Hunting Ground 145 - Fire MvP
+    Targets:
+      - Mob: PYURIEL
+        Count: 2
+  - Id: 160092
+    Title: Hunting Ground 145 - Water
+    Targets:
+      - Mob: DOLOMEDES
+        Count: 200
+      - Mob: GEMINI
+        Count: 200
+      - Mob: HARWORD
+        Count: 200
+  - Id: 160093
+    Title: Hunting Ground 145 - Water MvP
+    Targets:
+      - Mob: BUWAYA
+        Count: 2
+  - Id: 160094
+    Title: Hunting Ground 145 - Wind
+    Targets:
+      - Mob: ACIDUS_
+        Count: 200
+      - Mob: KAVAC
+        Count: 200
+      - Mob: PETAL
+        Count: 200
+  - Id: 160095
+    Title: Hunting Ground 145 - Wind MvP
+    Targets:
+      - Mob: BACSOJIN_
+        Count: 2
+  - Id: 160096
+    Title: Hunting Ground 145 - Earth
+    Targets:
+      - Mob: ARMAIA
+        Count: 200
+      - Mob: HORN_SCARABA2
+        Count: 200
+      - Mob: ANGRA_MANTIS
+        Count: 200
+  - Id: 160097
+    Title: Hunting Ground 145 - Earth MvP
+    Targets:
+      - Mob: TURTLE_GENERAL
+        Count: 2
+  - Id: 160098
+    Title: Hunting Ground 145 - Shadow
+    Targets:
+      - Mob: BANSHEE
+        Count: 200
+      - Mob: MG_RAYDRIC
+        Count: 200
+      - Mob: MG_RAYDRIC_ARCHER
+        Count: 200
+  - Id: 160099
+    Title: Hunting Ground 145 - Shadow MvP
+    Targets:
+      - Mob: DETALE
+        Count: 2
+  - Id: 160100
+    Title: Hunting Ground 145 - Holy
+    Targets:
+      - Mob: MAGALETA
+        Count: 200
+      - Mob: RANDEL
+        Count: 200
+  - Id: 160101
+    Title: Hunting Ground 145 - Holy MvP
+    Targets:
+      - Mob: G_RANDGRIS
+        Count: 2
+  - Id: 160120
+    Title: Hunting Ground 160 - Fire
+    Targets:
+      - Mob: LICHTERN_R
+        Count: 300
+      - Mob: FIRE_FRILLDORA
+        Count: 300
+      - Mob: FIRE_GOLEM
+        Count: 300
+  - Id: 160121
+    Title: Hunting Ground 160 - Fire MvP
+    Targets:
+      - Mob: B_SEYREN
+        Count: 2
+      - Mob: PYURIEL
+        Count: 2
+  - Id: 160122
+    Title: Hunting Ground 160 - Water
+    Targets:
+      - Mob: LICHTERN_B
+        Count: 300
+      - Mob: RHYNCHO
+        Count: 300
+      - Mob: PHYLLA
+        Count: 300
+  - Id: 160123
+    Title: Hunting Ground 160 - Water MvP
+    Targets:
+      - Mob: BUWAYA
+        Count: 2
+      - Mob: FACEWORM_QUEEN_B
+        Count: 2
+  - Id: 160124
+    Title: Hunting Ground 160 - Wind
+    Targets:
+      - Mob: C5_MENBLATT
+        Count: 300
+      - Mob: GLD_KOBOLD_1
+        Count: 300
+      - Mob: CENERE
+        Count: 300
+  - Id: 160125
+    Title: Hunting Ground 160 - Wind MvP
+    Targets:
+      - Mob: GIOIA
+        Count: 2
+      - Mob: FACEWORM_QUEEN_Y
+        Count: 2
+  - Id: 160126
+    Title: Hunting Ground 160 - Earth
+    Targets:
+      - Mob: POM_SPIDER
+        Count: 300
+      - Mob: ANCIENT_TREE
+        Count: 300
+      - Mob: LICHTERN_G
+        Count: 300
+  - Id: 160127
+    Title: Hunting Ground 160 - Earth MvP
+    Targets:
+      - Mob: I_QUEEN_SCARABA
+        Count: 2
+      - Mob: DAEHYON
+        Count: 2
+  - Id: 160128
+    Title: Hunting Ground 160 - Shadow
+    Targets:
+      - Mob: GLD_DARK_FRAME
+        Count: 300
+      - Mob: GLD_DARK_SHADOW
+        Count: 300
+      - Mob: XM_MYSTCASE
+        Count: 300
+  - Id: 160129
+    Title: Hunting Ground 160 - Shadow MvP
+    Targets:
+      - Mob: FALLINGBISHOP
+        Count: 2
+      - Mob: LOST_DRAGON
+        Count: 2
+  - Id: 160130
+    Title: Hunting Ground 160 - Holy
+    Targets:
+      - Mob: MAGALETA
+        Count: 300
+      - Mob: RANDEL
+        Count: 300
+  - Id: 160131
+    Title: Hunting Ground 160 - Holy MvP
+    Targets:
+      - Mob: RANDGRIS
+        Count: 2
+      - Mob: G_RANDEL
+        Count: 2
+  - Id: 160150
+    Title: Hunting Ground 175 - Fire
+    Targets:
+      - Mob: SEYREN
+        Count: 500
+      - Mob: FLAMEL
+        Count: 500
+  - Id: 160151
+    Title: Hunting Ground 175 - Fire MvP
+    Targets:
+      - Mob: FACEWORM_QUEEN_R
+        Count: 3
+      - Mob: B_SEYREN
+        Count: 3
+  - Id: 160152
+    Title: Hunting Ground 175 - Water
+    Targets:
+      - Mob: MD_OBEAUNE
+        Count: 500
+      - Mob: CHEN
+        Count: 500
+  - Id: 160153
+    Title: Hunting Ground 175 - Water MvP
+    Targets:
+      - Mob: FACEWORM_QUEEN_B
+        Count: 3
+      - Mob: B_CHEN
+        Count: 3
+  - Id: 160154
+    Title: Hunting Ground 175 - Wind
+    Targets:
+      - Mob: NG_WANDER_MAN
+        Count: 500
+      - Mob: NEO_PUNK
+        Count: 500
+  - Id: 160155
+    Title: Hunting Ground 175 - Wind MvP
+    Targets:
+      - Mob: FACEWORM_QUEEN_Y
+        Count: 3
+      - Mob: B_SHECIL
+        Count: 3
+  - Id: 160156
+    Title: Hunting Ground 175 - Earth
+    Targets:
+      - Mob: C1_ANGRA_MANTIS
+        Count: 500
+      - Mob: BIG_BEN
+        Count: 500
+  - Id: 160157
+    Title: Hunting Ground 175 - Earth MvP
+    Targets:
+      - Mob: FACEWORM_QUEEN_G
+        Count: 3
+      - Mob: B_HARWORD
+        Count: 3
+  - Id: 160158
+    Title: Hunting Ground 175 - Shadow
+    Targets:
+      - Mob: XM_COOKIE
+        Count: 500
+      - Mob: DR815
+        Count: 500
+  - Id: 160159
+    Title: Hunting Ground 175 - Shadow MvP
+    Targets:
+      - Mob: FALLINGBISHOP
+        Count: 3
+      - Mob: KADES
+        Count: 3
+  - Id: 160160
+    Title: Hunting Ground 175 - Holy
+    Targets:
+      - Mob: MAGALETA
+        Count: 500
+      - Mob: RANDEL
+        Count: 500
+  - Id: 160161
+    Title: Hunting Ground 175 - Holy MvP
+    Targets:
+      - Mob: B_MAGALETA
+        Count: 3
+      - Mob: B_RANDEL
+        Count: 3
+  - Id: 160200
+    Title: Master Hunter 99
+    TimeLimit: +4h
+  - Id: 160201
+    Title: Master Hunter 115
+    TimeLimit: +4h
+  - Id: 160202
+    Title: Master Hunter 130
+    TimeLimit: +4h
+  - Id: 160203
+    Title: Master Hunter 145
+    TimeLimit: +6h
+  - Id: 160204
+    Title: Master Hunter 160
+    TimeLimit: +6h
+  - Id: 160205
+    Title: Master Hunter 175
+    TimeLimit: +8h
 
 Clients older than 2018-06-20 or Clients which don't use the Lua files yet:
 data/questid2display.txt:
