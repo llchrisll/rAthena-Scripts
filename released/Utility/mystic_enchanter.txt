@@ -7,9 +7,12 @@
 //      - Added an check to prevent enchanting,
 //        if every available Enchantment Type is already in usage
 //      - Changed the Slot selection to be fixed slot
+//= 1.1 - Added Random Option Enchanting
+//      - Added support to reset selected enchantments as well
+//      - Changed the Price Code into a function
 //===== Tested With ==========================================
-//= rAthena 04/26/2019 Revision
-//= GIT Hash: 67e1583f9fec7ac95a954634f6b7600ebe428df0
+//= rAthena 04/29/2020 Revision
+//= GIT Hash: 4829f3775d5371e65d6648cf05b6f0c2810bb664
 //===== Description ==========================================
 //= All-in-one Enchanter
 //= Price for Enchanting and Resetting seperatly configurable
@@ -22,7 +25,8 @@
 //= The idea about the shop display is inspired by sader's enchanter.
 //= There is also a version without Random Options Support available > mystic_enchanter_no_ropt.txt
 //============================================================
-prontera,150,180,4	script	Mystic Enchanter	4_M_MOCASS1,{
+prontera,147,174,4	script	Mystic Enchanter	4_M_MOCASS1,{
+function ME_Price;
 
 disable_items;
 mes .n$;
@@ -41,13 +45,13 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 	mes "Please select the equipment you want to enchant/upgrade the enchantments or reset the enchantments:";
 	mes "^FF0000Note: If you can't see an equipment, you can't either enchant it or you don't have anything equipped on it.^000000";
 	next;
-	for ( set .@l,0; .@l < getarraysize(.slot); set .@l,.@l + 15)
-		set .@i_menu$,.@i_menu$+ ( (.slot[.@l+1] == 1 && getequipid(.slot[.@l]) != -1)?"["+getequipname(.slot[.@l])+"]":"") + ( ((.@l+15) < (getarraysize(.slot)-1))?":":"");
-	set .@e,select(.@i_menu$)*15-15;
+	for ( set .@l,0; .@l < getarraysize(.slot); set .@l,.@l + 24)
+		set .@i_menu$,.@i_menu$+ ( (.slot[.@l+1] == 1 && getequipid(.slot[.@l]) != -1)?"["+getequipname(.slot[.@l])+"]":"") + ( ((.@l+24) < (getarraysize(.slot)-1))?":":"");
+	set .@e,select(.@i_menu$)*24-24;
 	
 	if(.enchant_restrict) {
-		for ( set .@c,0; .@c < getarraysize(getd("."+.restrict_v$[.@e/15])); set .@c,.@c + 1)
-			if(getequipid(.slot[.@e]) == getd("."+.restrict_v$[.@e/15]+"["+.@c+"]")) {
+		for ( set .@c,0; .@c < getarraysize(getd("."+.restrict_v$[.@e/24])); set .@c,.@c + 1)
+			if(getequipid(.slot[.@e]) == getd("."+.restrict_v$[.@e/24]+"["+.@c+"]")) {
 				set .@f,0;
 				break;
 			} else
@@ -61,14 +65,14 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 		}
 	}
 	// Specific Equipment Enchantable Restriction (.<Type>_enc)
-	for ( set .@c,0; .@c < getarraysize(getd("."+.limit_v$[.@e/15])); set .@c,.@c + 2)
-		if(getequipid(.slot[.@e]) == getd("."+.limit_v$[.@e/15]+"["+.@c+"]")) 
-			if(getd("."+.limit_v$[.@e/15]+"["+(.@c+1)+"]") == 0) {
+	for ( set .@c,0; .@c < getarraysize(getd("."+.limit_v$[.@e/24])); set .@c,.@c + 2)
+		if(getequipid(.slot[.@e]) == getd("."+.limit_v$[.@e/24]+"["+.@c+"]")) 
+			if(getd("."+.limit_v$[.@e/24]+"["+(.@c+1)+"]") == 0) {
 				set .@f,1;
 				break;
 				
-			} else if(getd("."+.limit_v$[.@e/15]+"["+(.@c+1)+"]") > 0)
-				set .@e_max,getd("."+.limit_v$[.@e/15]+"["+(.@c+1)+"]");
+			} else if(getd("."+.limit_v$[.@e/24]+"["+(.@c+1)+"]") > 0)
+				set .@e_max,getd("."+.limit_v$[.@e/24]+"["+(.@c+1)+"]");
 
 	// Item found in Equipment Slot Limitation Arrays and 0 enchantable slots
 	if(.@f) {
@@ -111,36 +115,10 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 		}
 	}
 	next;
-	switch(select("- Enchant:- Upgrade Enchant:"+ ( (.slot[.@e+12])?"- Reset Enchants":""))) {
+	switch(select("- Enchant:- Upgrade Enchant:"+ ( (.slot[.@e+12])?"- Reset Enchants":"")+":"+( (.slot[.@e+16])?"- Random Option Enchantment":""))) {
 		
 		case 1:
-		// Price Check
-		switch(.slot[.@e+10]) {
-			case 0: break;
-			case 1:
-			if(Zeny < .slot[.@e+11]) {
-				mes .n$;
-				mes "You don't have enough Zeny for the Enchantment! You need "+.slot[.@e+11]+" Zeny.";
-				close;
-			}
-			break;
-			
-			case 2:
-			if(#CASHPOINTS < .slot[.@e+11]) {
-				mes .n$;
-				mes "You don't have enough Cash Points for the Enchantment! You need "+.slot[.@e+11]+" Cash Points.";
-				close;
-			}
-			break;
-			
-			default:
-			if(countitem(.slot[.@e+10]) < .slot[.@e+11]) {
-				mes .n$;
-				mes "You don't have enough "+getitemname(.slot[.@e+10])+" for the Enchantment! You need "+.slot[.@e+11]+" "+getitemname(.slot[.@e+10])+".";
-				close;
-			}
-			break;
-		}
+		ME_Price .slot[.@e+10],.slot[.@e+11],1;
 		if(!.@e_max) {
 			// Define the max enchantable slots based on the available card slots
 			if(.@c_slot <= 1) set .@e_max,3;
@@ -204,7 +182,7 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 			set .@e_c1,0;
 		}
 		// Status Enchants:
-		if(.@e_c2) {
+		if(.@e_c2 && !.@c3) {
 			if(.slot[.@e+6] == 0) { // Random Status Enchantment
 				
 				if(!.enchant_rand) // Simple Randomizer
@@ -239,7 +217,7 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 		}
 		
 		// Special Enchants:
-		if(.@e_c3) {
+		if(.@e_c3  && !.@c2) {
 			if(.slot[.@e+9] == 0) { // Random Special Enchantment
 				if(!.enchant_rand) // Simple Randomizer
 					set .@a,rand(getarraysize(.special_v$));
@@ -285,13 +263,7 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 			getitem3 .@id,1,1,.@ref,0,.@c1,( (.@c2)?.@c2:.@e_id2),( (.@c3)?.@c3:.@e_id3),( (.@c4)?.@c4:.@e_id4),.@OptID,.@OptVal,.@OptParam;
 		else 
 			getitem2 .@id,1,1,.@ref,0,.@c1,( (.@c2)?.@c2:.@e_id2),( (.@c3)?.@c3:.@e_id3),( (.@c4)?.@c4:.@e_id4);
-		
-		switch(.slot[.@e+10]) {
-			case 0: break;
-			case 1: set Zeny,Zeny - .slot[.@e+11]; break;
-			case 2: set #CASHPOINTS,#CASHPOINTS - .slot[.@e+11]; break;
-			default: delitem .slot[.@e+10],.slot[.@e+11]; break;
-		}
+		ME_Price .slot[.@e+10],.slot[.@e+11],2;
 		mes "The Enchantment was successfull.";
 		break;
 		
@@ -307,32 +279,7 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 			close;
 		}
 		// Price Check
-		switch(.slot[.@e+10]) {
-			case 0: break;
-			case 1:
-			if(Zeny < .slot[.@e+11]) {
-				mes .n$;
-				mes "You don't have enough Zeny for an Upgrade! You need "+.slot[.@e+11]+" Zeny.";
-				close;
-			}
-			break;
-			
-			case 2:
-			if(#CASHPOINTS < .slot[.@e+11]) {
-				mes .n$;
-				mes "You don't have enough Cash Points for an Upgrade! You need "+.slot[.@e+11]+" Cash Points.";
-				close;
-			}
-			break;
-			
-			default:
-			if(countitem(.slot[.@e+10]) < .slot[.@e+11]) {
-				mes .n$;
-				mes "You don't have enough "+getitemname(.slot[.@e+10])+" for an Upgrade! You need "+.slot[.@e+11]+" "+getitemname(.slot[.@e+10])+".";
-				close;
-			}
-			break;
-		}
+		ME_Price .slot[.@e+10],.slot[.@e+11],1;
 		mes "Please choose which Enchant Slot you want to Upgrade:";
 		mes "^FF0000Note: Special Enchants can't be upgraded.^000000";
 		next;
@@ -385,12 +332,7 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 						case 3: getitem2 .@id,1,1,.@ref,0,.@c1,.@c2,.@upg_id,.@c4; break;
 					}
 				
-				switch(.slot[.@e+10]) {
-					case 0: break;
-					case 1: set Zeny,Zeny - .slot[.@e+11]; break;
-					case 2: set #CASHPOINTS,#CASHPOINTS - .slot[.@e+11]; break;
-					default: delitem .slot[.@e+10],.slot[.@e+11]; break;
-				}
+				ME_Price .slot[.@e+10],.slot[.@e+11],2;
 				mes "The Upgrade was successfully.";
 			} else 
 				mes "The Upgrade has failed.";
@@ -406,36 +348,28 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 		case 3:
 		mes .n$;
 		// Price Check
-		switch(.slot[.@e+13]) {
-			case 0: break;
-			case 1:
-			if(Zeny < .slot[.@e+14]) {
-				mes "You don't have enough Zeny for the Reset! You need "+.slot[.@e+11]+" Zeny.";
-				close;
-			}
-			break;
-			
-			case 2:
-			if(#CASHPOINTS < .slot[.@e+14]) {
-				mes "You don't have enough Cash Points for the Reset! You need "+.slot[.@e+11]+" Cash Points.";
-				close;
-			}
-			break;
-			
-			default:
-			if(countitem(.slot[.@e+13]) < .slot[.@e+14]) {
-				mes "You don't have enough "+getitemname(.slot[.@e+13])+" for the Reset! You need "+.slot[.@e+14]+" "+getitemname(.slot[.@e+13])+".";
-				close;
-			}
-			break;
-		}
+		ME_Price .slot[.@e+13],.slot[.@e+14],1;
 		if(!.@e_cnt) { // No Enchantments
 			mes "It seems like there are no enchantments on this item to reset.";
 			close;
 		}
-		mes "Do you really want to reset the enchantments on this item?";
-		if(select("- Yes:- No") - 1) close;
-		next;
+		// Enchant Reset Type
+		if(.slot[.@e+15] == 1) {
+			mes "How do you want to reset your enchantments?";
+			next;
+			if(select("- All at once:- Select one") == 2) {
+				mes .n$;
+				mes "Please choose which Enchant Slot you want to reset:";
+				next;
+				set .@s,5 - (select( ((.@c4 && compare(getitemname(.@c4),"Card") != 1)?"Enchant Slot 1":"")+":"+ ( (.@c3 && compare(getitemname(.@c3),"Card") != 1)?"Enchant Slot 2":"")+":"+ ( (.@c2 && compare(getitemname(.@c2),"Card") != 1)?"Enchant Slot 3":"")));
+			}
+			mes .n$;
+			mes "Do you really want to reset the enchantments on this item?";
+			if(select("- Yes:- No") - 1) close;
+			setd(".@c"+.@s),0;
+			next;
+			mes .n$;
+		}
 		// Saving Random Options
 		if(getequiprandomoption(.@part,0,ROA_ID) != 0) {
 			setarray .@OptID[0],getequiprandomoption(.@part,0,ROA_ID),getequiprandomoption(.@part,1,ROA_ID),getequiprandomoption(.@part,2,ROA_ID),getequiprandomoption(.@part,3,ROA_ID),getequiprandomoption(.@part,4,ROA_ID);
@@ -444,16 +378,284 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 		}
 		delequip .@part;
 		
-		if(getarraysize(.@OptID) > 0) 
-			getitem3 .@id,1,1,.@ref,0,.@c1,( (.@c2 && compare(getitemname(.@c2),"Card") == 1)?.@c2:0),( (.@c3 && compare(getitemname(.@c3),"Card") == 1)?.@c3:0),0,.@OptID,.@OptVal,.@OptParam;
-		else 
-			getitem2 .@id,1,1,.@ref,0,.@c1,( (.@c2 && compare(getitemname(.@c2),"Card") == 1)?.@c2:0),( (.@c3 && compare(getitemname(.@c3),"Card") == 1)?.@c3:0),0;
+		// Reset Enchantment Slot Selection
+		if(!.@s) { // All Enchantments at once
+			if(getarraysize(.@OptID) > 0) 
+				getitem3 .@id,1,1,.@ref,0,.@c1,( (.@c2 && compare(getitemname(.@c2),"Card") == 1)?.@c2:0),( (.@c3 && compare(getitemname(.@c3),"Card") == 1)?.@c3:0),0,.@OptID,.@OptVal,.@OptParam;
+			else 
+				getitem2 .@id,1,1,.@ref,0,.@c1,( (.@c2 && compare(getitemname(.@c2),"Card") == 1)?.@c2:0),( (.@c3 && compare(getitemname(.@c3),"Card") == 1)?.@c3:0),0;
+		
+		} else { // Only reset a selected enchantment
+			if(getarraysize(.@OptID) > 0) 
+				getitem3 .@id,1,1,.@ref,0,.@c1,.@c2,.@c3,.@c4,.@OptID,.@OptVal,.@OptParam;
+			else 
+				getitem2 .@id,1,1,.@ref,0,.@c1,.@c2,.@c3,.@c4;
+		}
+		ME_Price .slot[.@e+13],.slot[.@e+14],2;
+		mes "You're Enchantments has been reset.";
+		break;
+		
+		// Random Option Enchantment
+		case 4:
+		mes .n$;
+		mes "Please select what you want to do:";
+		mes "Price for Random Option Enchanting:";
+		switch(.slot[.@e+20]) {
+			case 0: mes "None"; break;
+			case 1: mes .slot[.@e+21]+" Zeny"; break;
+			case 2: mes .slot[.@e+21]+" Cash Points"; break;
+			default: mes .slot[.@e+21]+"x "+getitemname(.slot[.@e+20]); break;
+		}
+		mes "Price for Random Option Reset:";
+		switch(.slot[.@e+22]) {
+			case 0: mes "None"; break;
+			case 1: mes .slot[.@e+23]+" Zeny"; break;
+			case 2: mes .slot[.@e+23]+" Cash Points"; break;
+			default: mes .slot[.@e+23]+"x "+getitemname(.slot[.@e+22]); break;
+		}
+		next;
+		if(select("- Enchant Random Options:- Reset Random Options") == 1) {
+			
+			mes .n$;
+			// Price Check
+			ME_Price .slot[.@e+20],.slot[.@e+21],1;
+			// Define how many Random Options Slots are free and also pre-define the first free slot
+			for ( set .@o,0; .@o < 5; set .@o,.@o + 1)
+				if(getequiprandomoption(.@part,.@o,ROA_ID) != 0) {
+					setarray .@OptID[.@o],getequiprandomoption(.@part,.@o,ROA_ID);
+					setarray .@OptVal[.@o],getequiprandomoption(.@part,.@o,ROA_VALUE);
+					set .@ropt_slot,.@ropt_slot + 1;
+				}
+			if(.slot[.@e+17] > 0 && .@ropt_slot >= .slot[.@e+17] || !.@ropt_slot && .@ropt_slot == 5) {
+				mes "I'm sorry, but every Random Option Slot is used.";
+				close;
+			}
+			mes "Please select what kind of Random Option you want to enchant:";
+			set .@ropt_ct,( (.slot[.@e+17] == 0)?5:( (.slot[.@e+17] >= 5)?5:.slot[.@e+17]));
+			mes "^FF0000You can apply "+(.@ropt_ct - .@ropt_slot)+" Random Options.^000000";
 
-		switch(.slot[.@e+13]) {
-			case 0: break;
-			case 1: set Zeny,Zeny - .slot[.@e+14]; break;
-			case 2: set #CASHPOINTS,#CASHPOINTS - .slot[.@e+14]; break;
-			default: delitem .slot[.@e+13],.slot[.@e+14]; break;
+			// Checking if the equipment is a weapon and already has an element
+			if(getiteminfo(.@id,2) == 5) 
+				set .@ropt_weap,1;
+				if( (getequiprandomoption(.@part,0,ROA_ID) > RDMOPT_WEAPON_ATTR_NOTHING && getequiprandomoption(.@part,0,ROA_ID) <= RDMOPT_WEAPON_ATTR_UNDEAD) ||
+				(getequiprandomoption(.@part,1,ROA_ID) > RDMOPT_WEAPON_ATTR_NOTHING && getequiprandomoption(.@part,1,ROA_ID) <= RDMOPT_WEAPON_ATTR_UNDEAD) ||
+				(getequiprandomoption(.@part,2,ROA_ID) > RDMOPT_WEAPON_ATTR_NOTHING && getequiprandomoption(.@part,2,ROA_ID) <= RDMOPT_WEAPON_ATTR_UNDEAD) ||
+				(getequiprandomoption(.@part,3,ROA_ID) > RDMOPT_WEAPON_ATTR_NOTHING && getequiprandomoption(.@part,3,ROA_ID) <= RDMOPT_WEAPON_ATTR_UNDEAD) ||
+				(getequiprandomoption(.@part,4,ROA_ID) > RDMOPT_WEAPON_ATTR_NOTHING && getequiprandomoption(.@part,4,ROA_ID) <= RDMOPT_WEAPON_ATTR_UNDEAD))
+					set .@ropt_wele,1;
+			
+			// Checking if the equipment is a armor and already has an element
+			if(getiteminfo(.@id,2) == 4) {
+				set .@ropt_arm,1;
+				if(getiteminfo(.@id,5) != 16) set .@ropt_aele,1; // Define for other armor types (Garment, etc) that it can't have an element
+				if( (getequiprandomoption(.@part,0,ROA_ID) > RDMOPT_BODY_ATTR_NOTHING && getequiprandomoption(.@part,0,ROA_ID) <= RDMOPT_BODY_ATTR_UNDEAD) ||
+				(getequiprandomoption(.@part,1,ROA_ID) > RDMOPT_BODY_ATTR_NOTHING && getequiprandomoption(.@part,1,ROA_ID) <= RDMOPT_BODY_ATTR_UNDEAD) ||
+				(getequiprandomoption(.@part,2,ROA_ID) > RDMOPT_BODY_ATTR_NOTHING && getequiprandomoption(.@part,2,ROA_ID) <= RDMOPT_BODY_ATTR_UNDEAD) ||
+				(getequiprandomoption(.@part,3,ROA_ID) > RDMOPT_BODY_ATTR_NOTHING && getequiprandomoption(.@part,3,ROA_ID) <= RDMOPT_BODY_ATTR_UNDEAD) ||
+				(getequiprandomoption(.@part,4,ROA_ID) > RDMOPT_BODY_ATTR_NOTHING && getequiprandomoption(.@part,4,ROA_ID) <= RDMOPT_BODY_ATTR_UNDEAD))
+					set .@ropt_aele,1;
+			}
+			while(.@ropt < .@ropt_ct) {
+				if(getequiprandomoption(.@part,.@ropt,ROA_ID) != 0) {
+					set .@ropt,.@ropt + 1;
+					continue;
+				}
+				next;
+				switch(select( ( (.@ropt_weap && !.@ropt_wele)?"Weapon Element":"")+":"+ ( (.@ropt_arm && !.@ropt_aele)?"Armor Element":"")+":Attribute:"+( (.@ropt_weap)?"Increase Damage":"")+":"+( (.@ropt_arm)?"Defensive":"")+":Special")) {
+					
+					// Weapon Element
+					case 1:
+					mes .n$;
+					if(getiteminfo(.@id,9) >= 5) { // Checking for ranged Weapons
+						mes "I'm sorry, but you can't enchant ranged weapons with an Weapon Element.";
+						continue;
+					}
+					if(.slot[.@e+19] == 1) { // Selectable Enchantment
+						mes "Please select the Weapon Element you want to use:";
+						next;
+						for ( set .@l,0; .@l < getarraysize(.RandOpt_Ele_M$); set .@l,.@l + 1)
+							set .@ropt_m$,.@ropt_m$ + "- "+.RandOpt_Ele_M$[.@l] + ( (.RandOpt_Ele_M$[.@l+1] != "")?":":"");
+							
+						set .@i,select(.@ropt_m$)-1;
+					
+					} else // Random Selection
+						set .@i,rand(getarraysize(.RandOpt_Ele_M$));
+					
+					mes "Weapon Element: "+.RandOpt_Ele_M$[.@i];
+					set .@ropt_id,.RandOpt_WEle[.@i];
+					set .@ropt_wele,1; // Define that an element was selected already
+					break;
+					
+					// Armor Element
+					case 2:
+					mes .n$;
+					if(.slot[.@e+19] == 1) { // Selectable Enchantment
+						mes "Please select the Armor Element you want to use:";
+						next;
+						for ( set .@l,0; .@l < getarraysize(.RandOpt_Ele_M$); set .@l,.@l + 1)
+							set .@ropt_m$,.@ropt_m$ + "- "+.RandOpt_Ele_M$[.@l] + ( (.RandOpt_Ele_M$[.@l+1] != "")?":":"");
+							
+						set .@i,select(.@ropt_m$) - 1;
+						
+					} else // Random Selection
+						set .@i,rand(getarraysize(.RandOpt_Ele_M$));
+					
+					mes "Armor Element: "+.RandOpt_Ele_M$[.@i];
+					set .@ropt_id,.RandOpt_AEle[.@i];
+					set .@ropt_aele,1; // Define that an element was selected already
+					break;
+					
+					// Attributes
+					case 3:
+					mes .n$;
+					if(.slot[.@e+19] == 1) { // Selectable Enchantment
+						mes "Please select the Attribute you want to use:";
+						next;
+						for ( set .@l,0; .@l < getarraysize(.RandOpt_ATT_M$); set .@l,.@l + 1)
+							set .@ropt_m$,.@ropt_m$ + "- "+.RandOpt_ATT_M$[.@l] + ( (.RandOpt_ATT_M$[.@l+1] != "")?":":"");
+							
+						set .@t,select(.@ropt_m$);
+						
+					} else // Random Selection
+						set .@t,rand(1,getarraysize(.RandOpt_ATT_M$));
+					
+					set .@i,.@t*3-3;
+					mes "Attribute: "+.RandOpt_ATT_M$[.@t-1];
+					set .@ropt_id,.RandOpt_ATT[.@i];
+					set .@ropt_val,rand(.RandOpt_ATT[.@i+1],.RandOpt_ATT[.@i+2]);
+					break;
+					
+					// Increase Damage
+					case 4:
+					mes .n$;
+					if(.slot[.@e+18] == 1) { // Selectable Damage Type (Physical/Magical)
+						mes "Please select the damage type for your Random Option:";
+						next;
+						set .@dmg_t$,( (select("- Physical:- Magical") == 1)?"PDMG":"MDMG");
+						mes .n$;
+					
+					} else 
+						set .@dmg_t$,(rand(100) <= 50)?"PDMG":"MDMG";
+					
+					mes "Please select the damage category for your Random Option:";
+					next;
+					// Damage Category
+					switch(select("- Damage vs Element:- Damage vs Race:- Damage vs Size/Class")) {
+						case 1: set .@cat_t$,"Ele"; break;
+						case 2: set .@cat_t$,"RC"; break;
+						case 3: set .@cat_t$,"SC"; break;
+					}
+					mes .n$;
+					if(.slot[.@e+19] == 1) { // Selectable Enchantment
+						mes "Please select the Enchantment you want to use:";
+						next;
+						for ( set .@l,0; .@l < getarraysize(getd(".RandOpt_"+.@dmg_t$+"_"+.@cat_t$+"_M$")); set .@l,.@l + 1)
+							set .@ropt_m$,.@ropt_m$ + "- "+getd(".RandOpt_"+.@dmg_t$+"_"+.@cat_t$+"_M$["+.@l+"]") + ( (getd(".RandOpt_"+.@dmg_t$+"_"+.@cat_t$+"_M$["+(.@l+1)+"]") != "")?":":"");
+							
+						set .@t,select(.@ropt_m$);
+						
+					} else // Random Selection
+						set .@t,rand(1,getarraysize(getd(".RandOpt_"+.@dmg_t$+"_"+.@cat_t$+"_M$")));
+						
+					set .@i,.@t*3-3;
+					mes "Damage Option: "+getd(".RandOpt_"+.@dmg_t$+"_"+.@cat_t$+"_M$["+(.@t-1)+"]");
+					set .@ropt_id,getd(".RandOpt_"+.@dmg_t$+"_"+.@cat_t$+"["+.@i+"]");
+					set .@ropt_val,rand(getd(".RandOpt_"+.@dmg_t$+"_"+.@cat_t$+"["+(.@i+1)+"]"),getd(".RandOpt_"+.@dmg_t$+"_"+.@cat_t$+"["+(.@i+2)+"]"));
+					break;
+					
+					// Defensive
+					case 5:
+					mes .n$;
+					if(.slot[.@e+18] == 1) { // Selectable Defensive Type (Physical/Magical)
+						mes "Please select the defensive type for your Random Option:";
+						next;
+						switch(select("- Physical:- Magical:- Race/Size/Class")) {
+							case 1: set .@def_t$,"RES_P"; break;
+							case 2: set .@def_t$,"RES_M"; break;
+							case 3: set .@def_t$,"RES_ETC"; break;
+						}
+						mes .n$;
+						
+					} else {
+						set .@ropt_r,rand(100);
+						if(.@ropt_r <= 33) set .@def_t$,"RES_P";
+						else if(.@ropt_r <= 66) set .@def_t$,"RES_M";
+						else if(.@ropt_r <= 99) set .@def_t$,"RES_ETC";
+					}
+					if(.slot[.@e+19] == 1) { // Selectable Enchantment
+						mes "Please select the Enchantment you want to use:";
+						next;
+						for ( set .@l,0; .@l < getarraysize(getd(".RandOpt_"+.@def_t$+"_M$")); set .@l,.@l + 1)
+							set .@ropt_m$,.@ropt_m$ + "- "+getd(".RandOpt_"+.@def_t$+"_M$["+.@l+"]") + ( (getd(".RandOpt_"+.@def_t$+"_M$["+(.@l+1)+"]") != "")?":":"");
+							
+						set .@t,select(.@ropt_m$);
+					
+					} else // Random Selection
+						set .@t,rand(1,getarraysize(getd(".RandOpt_"+.@def_t$+"_M$")));
+					
+					set .@i,.@t*3-3;
+					mes "Defensive Option: "+getd(".RandOpt_"+.@def_t$+"_M$["+(.@t-1)+"]");
+					set .@ropt_id,getd(".RandOpt_"+.@def_t$+"["+.@i+"]");
+					set .@ropt_val,rand(getd(".RandOpt_"+.@def_t$+"["+(.@i+1)+"]"),getd(".RandOpt_"+.@def_t$+"["+(.@i+2)+"]"));
+					break;
+					
+					// Special
+					case 6:
+					mes .n$;
+					if(.slot[.@e+19] == 1) { // Selectable Enchantment
+						mes "Please select the Enchantment you want to use:";
+						next;
+						for ( set .@l,0; .@l < getarraysize(.RandOpt_Spec_M$); set .@l,.@l + 1)
+							set .@ropt_m$,.@ropt_m$ + "- "+ ( ((.RandOpt_Spec[.@l*3-3] == RDMOPT_BODY_INDESTRUCTIBLE && getiteminfo(.@id,2) == 4) || (.RandOpt_Spec[.@l*3-3] == RDMOPT_WEAPON_INDESTRUCTIBLE && getiteminfo(.@id,2) == 5) )?.RandOpt_Spec_M$[.@l]:"") + ( (.RandOpt_Spec_M$[.@l+1] != "")?":":"");
+							
+						set .@t,select(.@ropt_m$);
+						
+					} else { // Random Selection
+						set .@t,rand(1,getarraysize(.RandOpt_Spec_M$));
+						// Be sure that "Instructible in Battle" will be used on weapons or armors depening on the item type 
+						while( (.RandOpt_Spec[.@t*3-3] == RDMOPT_BODY_INDESTRUCTIBLE && getiteminfo(.@id,2) != 4) || (.RandOpt_Spec[.@t*3-3] == RDMOPT_WEAPON_INDESTRUCTIBLE && getiteminfo(.@id,2) != 5) )
+							set .@t,rand(1,getarraysize(.RandOpt_Spec_M$));
+					}
+					set .@i,.@t*3-3;
+					mes "Defensive Option: "+.RandOpt_Spec_M$[.@t-1];
+					set .@ropt_id,.RandOpt_Spec[.@i];
+					set .@ropt_val,rand(.RandOpt_Spec[.@i+1],.RandOpt_Spec[.@i+2]);
+					break;
+				}
+				// Creating values for the respective random option ID
+				setarray .@OptID[.@ropt],.@ropt_id;
+				setarray .@OptVal[.@ropt],.@ropt_val;
+				set .@ropt,.@ropt + 1; // Increase the Random Option Slot
+				// Resetting Values just in case
+				set .@ropt_id,0;
+				set .@ropt_val,0;
+				set .@i,0;
+				set .@t,0;
+			}
+			next;
+			ME_Price .slot[.@e+20],.slot[.@e+21],2;
+			delequip .@part;
+			getitem3 .@id,1,1,.@ref,0,.@c1,.@c2,.@c3,.@c4,.@OptID,.@OptVal,.@OptParam;
+			mes .n$;
+			mes "Your Random Options has been applied.";
+			break;
+
+		// Reset Random Options
+		} else {
+			for ( set .@o,0; .@o < 5; set .@o,.@o + 1)
+				if(getequiprandomoption(.@part,.@o,ROA_ID) != 0) 
+					set .@ropt_ct,.@ropt_ct + 1;
+			mes .n$;
+			if(.@ropt_ct) {
+				// Price Check
+				ME_Price .slot[.@e+22],.slot[.@e+23],1;
+				delequip .@part;
+				ME_Price .slot[.@e+22],.slot[.@e+23],2;
+				getitem2 .@id,1,1,.@ref,0,.@c1,.@c2,.@c3,.@c4;
+				mes "You're Random Options has been reset.";
+				
+			} else 
+				mes "I'm sorry, but there is nothing to reset.";
 		}
 		break;
 	}
@@ -464,7 +666,7 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 	mes .n$;
 	mes "Please select about what you want to know more:";
 	next;
-	switch(select("- Equipment:- Enchantment List:- Nevermind")) {
+	switch(select("- Equipment:- Enchantment List:- Random Options List:- Nevermind")) {
 	
 		case 1: // Equipment
 		mes .n$;
@@ -472,7 +674,7 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 		mes "Please select an Equipment Slot for further options:";
 		next;		
 		set .@c,select(.eq_menu$);
-		set .@e,.@c*15-15;
+		set .@e,.@c*24-24;
 		
 		mes .n$;
 		mes "Do you want to see the equipment settings or if there are limitations?";
@@ -497,6 +699,17 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 			mes "Price for Resetting: "+ ( (.slot[.@e+13] == 0)?"None":( (.slot[.@e+13] == 1)?.slot[.@e+14]+"x Zeny":( (.slot[.@e+13] == 2)?.slot[.@e+14]+"x Cash Points":"Item:")));
 			if(.slot[.@e+13] >= 501 && getitemname(.slot[.@e+13]) != "null") // To prevent an warning in getitemname with invalid ID
 				mes " > "+.slot[.@e+14]+"x  "+getitemname(.slot[.@e+13]);
+			mes "Enchant Reset Type: "+( (.slot[.@e+15] == 0)?"All at once":"Selectable");
+			mes "Random Option Enchantment: "+( (.slot[.@e+16] == 0)?"Disabled":"Enabled");
+			mes "Random Option Slots: "+( (.slot[.@e+17] == 0)?"Use every Slot":.slot[.@e+17]+"x Slots available");
+			mes "Random Option Type Options: "+( (.slot[.@e+18] == 0)?"Random":"Selectable");
+			mes "Random Option Type Enchantments: "+( (.slot[.@e+19] == 0)?"Random":"Selectable");
+			mes "Random Option Enchant Price: "+ ( (.slot[.@e+20] == 0)?"None":( (.slot[.@e+20] == 1)?.slot[.@e+21]+"x Zeny":( (.slot[.@e+20] == 2)?.slot[.@e+21]+"x Cash Points":"Item:")));
+			if(.slot[.@e+20] >= 501 && getitemname(.slot[.@e+20]) != "null") // To prevent an warning in getitemname with invalid ID
+				mes " > "+.slot[.@e+21]+"x  "+getitemname(.slot[.@e+20]);
+			mes "Random Option Reset Price: "+ ( (.slot[.@e+22] == 0)?"None":( (.slot[.@e+22] == 1)?.slot[.@e+23]+"x Zeny":( (.slot[.@e+22] == 2)?.slot[.@e+23]+"x Cash Points":"Item:")));
+			if(.slot[.@e+22] >= 501 && getitemname(.slot[.@e+22]) != "null") // To prevent an warning in getitemname with invalid ID
+				mes " > "+.slot[.@e+23]+"x  "+getitemname(.slot[.@e+22]);
 			break;
 		
 			case 2: // Equipment Limitation
@@ -534,7 +747,64 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 			if(.special_e[.@l]) mes " - "+.special_n$[.@l];
 		break;
 		
-		case 3: // Nevermind
+		// Random Options List
+		case 3:
+		mes .n$;
+		mes "Please select the Random Options you want the list of:";
+		next;
+		switch(select("- Damage:- Defensive:- Attributes + Special")) {
+		
+			case 1:
+			mes "[- Weapon Elements]:";
+			for ( set .@l,0; .@l < getarraysize(.RandOpt_Ele_M$); set .@l,.@l + 1)
+				mes "> "+.RandOpt_Ele_M$[.@l];
+			mes " ";
+			mes "[- Physical/Magical Damage vs Element]:";
+			for ( set .@l,0; .@l < getarraysize(.RandOpt_PDMG_Ele_M$); set .@l,.@l + 1)
+				mes "> "+.RandOpt_PDMG_Ele_M$[.@l];
+			next;
+			mes "[- Physical Race]:";
+			for ( set .@l,0; .@l < getarraysize(.RandOpt_PDMG_RC_M$); set .@l,.@l + 1)
+				mes "> "+.RandOpt_PDMG_RC_M$[.@l];
+			mes " ";
+			mes "[- Magical Race]:";
+			for ( set .@l,0; .@l < getarraysize(.RandOpt_MDMG_RC_M$); set .@l,.@l + 1)
+				mes "> "+.RandOpt_MDMG_RC_M$[.@l];
+			next;
+			mes "[- Physical Size/Class]:";
+			for ( set .@l,0; .@l < getarraysize(.RandOpt_PDMG_SC_M$); set .@l,.@l + 1)
+				mes "> "+.RandOpt_PDMG_SC_M$[.@l];
+			mes " ";
+			mes "[- Magical Size/Class]:";
+			for ( set .@l,0; .@l < getarraysize(.RandOpt_MDMG_SC_M$); set .@l,.@l + 1)
+				mes "> "+.RandOpt_MDMG_SC_M$[.@l];
+			break;
+			
+			case 2:
+			mes "[Physical Defensive]:";
+			for ( set .@l,0; .@l < getarraysize(.RandOpt_RES_P_M$); set .@l,.@l + 1)
+				mes "- "+.RandOpt_RES_P_M$[.@l];
+			mes " ";
+			mes "[Magical Defensive]:";
+			for ( set .@l,0; .@l < getarraysize(.RandOpt_RES_M_M$); set .@l,.@l + 1)
+				mes "- "+.RandOpt_RES_M_M$[.@l];
+			mes " ";
+			mes "[Race/Size/Class Defensive]:";
+			for ( set .@l,0; .@l < getarraysize(.RandOpt_RES_ETC_M$); set .@l,.@l + 1)
+				mes "- "+.RandOpt_RES_ETC_M$[.@l];
+			break;
+			
+			case 3:
+			mes "[Attributes]:";
+			for ( set .@l,0; .@l < getarraysize(.RandOpt_ATT_M$); set .@l,.@l + 1)
+				mes "- "+.RandOpt_ATT_M$[.@l];
+			mes " ";
+			mes "[Special]:";
+			for ( set .@l,0; .@l < getarraysize(.RandOpt_Spec_M$); set .@l,.@l + 1)
+				mes "- "+.RandOpt_Spec_M$[.@l];
+			break;
+		}
+		case 4: // Nevermind
 		break;
 	}
 	break;
@@ -556,6 +826,46 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 }
 end;
 
+	function	ME_Price	{
+	// getarg(0) > Identifier
+	// getarg(1) > Amount
+	// getarg(2) > 1 = Check, 2 = Pay
+	if(getarg(2) == 1) {
+		switch(getarg(0)) {
+			case 0: break;
+			case 1:
+			if(Zeny < getarg(1)) {
+				mes "You don't have enough Zeny for the Random Option Enchantment! You need "+getarg(1)+" Zeny.";
+				close;
+			}
+			break;
+
+			case 2:
+			if(#CASHPOINTS < getarg(1)) {
+				mes "You don't have enough Cash Points for the Random Option Enchantment! You need "+getarg(1)+" Cash Points.";
+				close;
+			}
+			break;
+
+			default:
+			if(countitem(getarg(0)) < getarg(1)) {
+				mes "You don't have enough "+getitemname(getarg(0))+" for the Random Option Enchantment! You need "+getarg(1)+" "+getitemname(getarg(0))+".";
+				close;
+			}
+			break;
+		}
+		
+	} else if(getarg(2) == 2) {
+		switch(getarg(0)) {
+			case 0: break;
+			case 1: set Zeny,Zeny - getarg(1); break;
+			case 2: set #CASHPOINTS,#CASHPOINTS - getarg(1); break;
+			default: delitem getarg(0),getarg(1); break;
+		}
+	}
+	return;
+	}
+
 OnInit:
 set .n$,"["+strnpcinfo(0)+"]";
 // ======= Settings =======
@@ -575,32 +885,41 @@ set .n$,"["+strnpcinfo(0)+"]";
 // [12] = Enchants Reset: 0 = Disabled, 1 = Enabled
 // [13] = Price for Resetting: 0 = None, 1 = Zeny, 2 = Cash Points, 501+ = Item ID
 // [14] = Amount of Price
+// [15] = Enchant Reset Type: 0 = All at once, 1 = Selectable
+// [16] = Random Option Enchantment? 0 = Disable, 1 = Enable
+// [17] = Random Option Slots: 0 = Use every slot, 1+ = Limited Slot Usage
+// [18] = Random Option Type Options: 0 = Random, 1 = Selectable (Physical and Magical)
+// [19] = Random Option Type Enchantments: 0 = Random, 1 = Selectable (Damage against x target as example)
+// [20] = Random Option Enchant Price: 0 = None, 1 = Zeny, 2 = Cash Points, 501+ = Item ID
+// [21] = Amount of Price
+// [22] = Random Option Reset Price: 0 = None, 1 = Zeny, 2 = Cash Points, 501+ = Item ID
+// [23] = Amount of Price
 setarray .slot[0],
-// Index: 	0				1	2 3 4	5 6 7 	8 9    10 	 11    12 	13	14
-	EQI_HEAD_TOP,			1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0, // Top Headgear
-	EQI_HEAD_MID,			1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0, // Middle Headgear
-	EQI_HEAD_LOW,			1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0, // Lower Headgear
-	EQI_ARMOR,				1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0, // Armor
-	EQI_HAND_R,				1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0, // Weapon
-	EQI_HAND_L,				1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0, // Shield
-	EQI_GARMENT,			1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0, // Garment
-	EQI_SHOES,				1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0, // Shoes
-	EQI_ACC_R,				1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0, // Accessory Right
-	EQI_ACC_L,				1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0, // Accessory Left
-	EQI_COSTUME_HEAD_TOP,	1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0, // Costume Top Headgear
-	EQI_COSTUME_HEAD_MID,	1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0, // Costume Middle Headgear
-	EQI_COSTUME_HEAD_LOW,	1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0, // Costume Lower Headgear
-	EQI_COSTUME_GARMENT,	1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0, // Costume Garment
-	EQI_SHADOW_ARMOR,		1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0, // Shadow Armor
-	EQI_SHADOW_WEAPON,		1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0, // Shadow Weapon
-	EQI_SHADOW_SHIELD,		1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0, // Shadow Shield
-	EQI_SHADOW_SHOES,		1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0, // Shadow Shoes
-	EQI_SHADOW_ACC_R,		1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0, // Shadow Accessory Right
-	EQI_SHADOW_ACC_L,		1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0; // Shadow Accessory Left
+// Index: 	0				1	2 3 4	5 6 7 	8 9    10 	 11    12 	13	14	15	16	17	18	19	20	  21	22		23
+	EQI_HEAD_TOP,			1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	0,	1,	10000,	1,	50000, // Top Headgear
+	EQI_HEAD_MID,			1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	0,	1,	10000,	1,	50000, // Middle Headgear
+	EQI_HEAD_LOW,			1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	0,	1,	10000,	1,	50000, // Lower Headgear
+	EQI_ARMOR,				1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	0,	1,	10000,	1,	50000, // Armor
+	EQI_HAND_R,				1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0,	1,	1,	0,	1,	0,	1,	10000,	1,	50000, // Weapon
+	EQI_HAND_L,				1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	0,	1,	10000,	1,	50000, // Shield
+	EQI_GARMENT,			1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	0,	1,	10000,	1,	50000, // Garment
+	EQI_SHOES,				1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	0,	1,	10000,	1,	50000, // Shoes
+	EQI_ACC_R,				1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	0,	1,	10000,	1,	50000, // Accessory Right
+	EQI_ACC_L,				1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	0,	1,	10000,	1,	50000, // Accessory Left
+	EQI_COSTUME_HEAD_TOP,	1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	0,	1,	10000,	1,	50000, // Costume Top Headgear
+	EQI_COSTUME_HEAD_MID,	1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	0,	1,	10000,	1,	50000, // Costume Middle Headgear
+	EQI_COSTUME_HEAD_LOW,	1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	0,	1,	10000,	1,	50000, // Costume Lower Headgear
+	EQI_COSTUME_GARMENT,	1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	0,	1,	10000,	1,	50000, // Costume Garment
+	EQI_SHADOW_ARMOR,		1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	0,	1,	10000,	1,	50000, // Shadow Armor
+	EQI_SHADOW_WEAPON,		1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	0,	1,	10000,	1,	50000, // Shadow Weapon
+	EQI_SHADOW_SHIELD,		1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	0,	1,	10000,	1,	50000, // Shadow Shield
+	EQI_SHADOW_SHOES,		1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	0,	1,	10000,	1,	50000, // Shadow Shoes
+	EQI_SHADOW_ACC_R,		1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	0,	1,	10000,	1,	50000, // Shadow Accessory Right
+	EQI_SHADOW_ACC_L,		1,	1,0,1,	1,0,1,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	0,	1,	10000,	1,	50000; // Shadow Accessory Left
 
-// If you put [2], [5] + [8] on '0', it gets disabled automatically:
-for ( set .@e,0; .@e < getarraysize(.slot); set .@e,.@e + 15)
-	if(!.slot[.@e+2] && !.slot[.@e+5] && !.slot[.@e+8])
+// If you put [2], [5], [8] and [16] on '0', it gets disabled automatically:
+for ( set .@e,0; .@e < getarraysize(.slot); set .@e,.@e + 24)
+	if(!.slot[.@e+2] && !.slot[.@e+5] && !.slot[.@e+8] && !.slot[.@e+16])
 		setarray .slot[.@e+1],0;
 // ==== Enchant Randomizer ====
 // * Defines how the Enchantments will be randomized
@@ -805,41 +1124,282 @@ setarray .spec_atksize[0],4938,4937,4936;
 // Note2: You can enable/disable Enchantments in the _e arrays respectively!
 // * === Equipment === *
 setarray .EQ_Name$[0],"Top Headgear","Middle Headgear","Lower Headgear","Armor","Weapon","Shield","Garment","Shoes","Acc L.","Acc R.","Costume Top","Costume Middle","Costume Lower","Costume Garment","Shadow Armor","Shadow Weapon","Shadow Shield","Shadow Shoes","Shadow Acc L.","Shadow Acc R.";
-// > Menu Creation
-for ( set .@l,0; .@l < getarraysize(.EQ_Name$); set .@l,.@l + 1)
-			set .eq_menu$,.eq_menu$+"- "+.EQ_Name$[.@l] + ( (.EQ_Name$[.@l+1] != "")?":":"");
 setarray .restrict_v$[0],"headgear_rct","headgear_rct","headgear_rct","armor_rct","weapon_rct","shield_rct","garment_rct","shoes_rct","acc_rct","acc_rct","costume_headgear_rct","costume_headgear_rct","costume_headgear_rct","costume_garment_rct","shadow_armor_rct","shadow_weapon_rct","shadow_shield_rct","shadow_shoes_rct","shadow_acc_rct","shadow_acc_rct";
 setarray .limit_v$[0],"headgear_enc","headgear_enc","headgear_enc","armor_enc","weapon_enc","shield_enc","garment_enc","shoes_enc","acc_enc","acc_enc","costume_headgear_enc","costume_headgear_enc","costume_headgear_enc","costume_garment_enc","shadow_armor_enc","shadow_weapon_enc","shadow_shield_enc","shadow_shoes_enc","shadow_acc_enc","shadow_acc_enc";
 // * === Shop === *
 setarray .shop_name$[0],"EShop_Headgear","EShop_Armor","EShop_Weapon","EShop_Shield","EShop_Garment","EShop_Shoes","EShop_Acc","EShop_Costume_Headgear","EShop_Costume_Garment","EShop_Shadow_Armor","EShop_Shadow_Weapon","EShop_Shadow_Shield","EShop_Shadow_Shoes","EShop_Shadow_Acc";
 setarray .shop_t$[0],"Headgear","Armor","Weapon","Shield","Garment","Shoes","Accessory","Costume Headgear","Costume Garment","Shadow Armor","Shadow Weapon","Shadow Shield","Shadow Shoes","Shadow Accessory";
-// > Menu Creation
-for ( set .@a,0; .@a < getarraysize(.shop_t$); set .@a,.@a + 1) 
-	set .shop_m$,.shop_m$ + "- "+.shop_t$[.@a] + ( (.shop_t$[.@a+1] != "")?":":"");
+
 // * === Attribute Enchants === *
 setarray .attr_n$[0],"STR","AGI","VIT","INT","DEX","LUK";
 setarray .attr_v$[0],"attr1","attr2","attr3","attr4","attr5","attr6";
 // Enable(1) or Disable(0) Enchantments
 setarray .attr_e[0],1,1,1,1,1,1;
-// > Menu creation
-for ( set .@a,0; .@a < getarraysize(.attr_n$); set .@a,.@a + 1) 
-	set .attr_m$,.attr_m$ + ( (.attr_e[.@a] == 1)?"- "+.attr_n$[.@a]:"") + ( (.attr_n$[.@a+1] != "")?":":"");
+
 // * === Status Enchants === *
 setarray .stats_n$[0],"ATK","MATK","FLEE","CRIT","DEF","MDEF","HP","SP","ASPD","Regeneration","SP Consume";
 setarray .stats_v$[0],"stats_atk","stats_matk","stats_flee","stats_crit","stats_def","stats_mdef","stats_hp","stats_sp","stats_aspd","stats_reg","stats_spc";
 // Enable(1) or Disable(0) Enchantments
 setarray .stats_e[0],1,1,1,1,1,1,1,1,1,1,1;
-// > Menu creation
-for ( set .@a,0; .@a < getarraysize(.stats_n$); set .@a,.@a + 1) 
-	set .stats_m$,.stats_m$ + ( (.stats_e[.@a] == 1)?"- "+.stats_n$[.@a]:"") + ( (.stats_n$[.@a+1] != "")?":":"");
+
 // * === Special Enchants === *
 setarray .special_n$[0],"Heal Amount","Fighting Spirit","Spell","Sharp","Expert Archer","Neutral Resistance","Cranial","Special <STAT>","Fatal","Attack Delay","After Skill Delay","Conjure","Glastheim Enchants","ATK Size";
 setarray .special_v$[0],"spec_heal","spec_spirit","spec_spell","spec_sharp","spec_expert","spec_resist","spec_cran","spec_spec","spec_fatal","spec_atkd","spec_skilld","spec_conju","spec_glasth","spec_atksize";
 // Enable(1) or Disable(0) Enchantments
 setarray .special_e[0],1,1,1,1,1,1,1,1,1,1,1,1,0,1;
-// > Menu creation
+
+// * === Menu Creation === *
+// - Equipment Menu
+for ( set .@l,0; .@l < getarraysize(.EQ_Name$); set .@l,.@l + 1)
+	set .eq_menu$,.eq_menu$+"- "+.EQ_Name$[.@l] + ( (.EQ_Name$[.@l+1] != "")?":":"");
+			
+// - Shop Menu
+for ( set .@a,0; .@a < getarraysize(.shop_t$); set .@a,.@a + 1) 
+	set .shop_m$,.shop_m$ + "- "+.shop_t$[.@a] + ( (.shop_t$[.@a+1] != "")?":":"");
+	
+// - Attribute Enchants
+for ( set .@a,0; .@a < getarraysize(.attr_n$); set .@a,.@a + 1) 
+	set .attr_m$,.attr_m$ + ( (.attr_e[.@a] == 1)?"- "+.attr_n$[.@a]:"") + ( (.attr_n$[.@a+1] != "")?":":"");
+
+// - Status Enchants
+for ( set .@a,0; .@a < getarraysize(.stats_n$); set .@a,.@a + 1) 
+	set .stats_m$,.stats_m$ + ( (.stats_e[.@a] == 1)?"- "+.stats_n$[.@a]:"") + ( (.stats_n$[.@a+1] != "")?":":"");
+
+// - Special Enchants
 for ( set .@a,0; .@a < getarraysize(.special_n$); set .@a,.@a + 1) 
 	set .special_m$,.special_m$ + ( (.special_e[.@a] == 1)?"- "+.special_n$[.@a]:"") + ( (.special_n$[.@a+1] != "")?":":"");
+
+// ========= Random Option Database =========
+// Format: RandomOption_ID,MinValue,MaxValue,
+// Note: You are free to add/remove Random Options, but be sure the remove the respective values in each array, otherwise you'll break it
+
+// - Physical Damage vs Element
+setarray .RandOpt_PDMG_Ele[0],
+		RDMOPT_DAMAGE_PROPERTY_NOTHING_TARGET,1,50,	 	// Physical Damage to Neutral Element
+		RDMOPT_DAMAGE_PROPERTY_GROUND_TARGET,1,50,	 	// Physical Damage to Earth Element
+		RDMOPT_DAMAGE_PROPERTY_FIRE_TARGET,1,50,		// Physical Damage to Fire Element
+		RDMOPT_DAMAGE_PROPERTY_WATER_TARGET,1,50,	 	// Physical Damage to Water Element
+		RDMOPT_DAMAGE_PROPERTY_WIND_TARGET,1,50,		// Physical Damage to Wind Element
+		RDMOPT_DAMAGE_PROPERTY_POISON_TARGET,1,50,	 	// Physical Damage to Poison Element
+		RDMOPT_DAMAGE_PROPERTY_SAINT_TARGET,1,50,	 	// Physical Damage to Holy Element
+		RDMOPT_DAMAGE_PROPERTY_DARKNESS_TARGET,1,50,	// Physical Damage to Shadow Element
+		RDMOPT_DAMAGE_PROPERTY_TELEKINESIS_TARGET,1,50,	// Physical Damage to Ghost Element
+		RDMOPT_DAMAGE_PROPERTY_UNDEAD_TARGET,1,50;		// Physical Damage to Undead Element
+setarray .RandOpt_PDMG_Ele_M$[0],"Damage vs Neutral element","Damage vs Earth element","Damage vs Fire element","Damage vs Water element","Damage vs Wind element","Damage vs Poison element","Damage vs Holy element","Damage vs Shadow element","Damage vs Ghost element","Damage vs Undead element";
+		
+// - Physical Damage vs Race
+setarray .RandOpt_PDMG_RC[0],
+		RDMOPT_RACE_DAMAGE_NOTHING,1,50,				// Physical Damage to Formless Race
+		RDMOPT_RACE_DAMAGE_UNDEAD,1,50,					// Physical Damage to Undead Race
+		RDMOPT_RACE_DAMAGE_ANIMAL,1,50,					// Physical Damage to Animal Race
+		RDMOPT_RACE_DAMAGE_PLANT,1,50,					// Physical Damage to Plant Race
+		RDMOPT_RACE_DAMAGE_INSECT,1,50,					// Physical Damage to Insect Race
+		RDMOPT_RACE_DAMAGE_FISHS,1,50,					// Physical Damage to Fish Race
+		RDMOPT_RACE_DAMAGE_DEVIL,1,50,					// Physical Damage to Demon Race
+		RDMOPT_RACE_DAMAGE_HUMAN,1,50,					// Physical Damage to Human Race
+		RDMOPT_RACE_DAMAGE_ANGEL,1,50,					// Physical Damage to Angel Race
+		RDMOPT_RACE_DAMAGE_DRAGON,1,50,					// Physical Damage to Dragon Race
+		RDMOPT_RACE_IGNORE_DEF_PERCENT_NOTHING,1,10,	// Bypass DEF of Formless Race
+		RDMOPT_RACE_IGNORE_DEF_PERCENT_UNDEAD,1,10,		// Bypass DEF of Undead Race
+		RDMOPT_RACE_IGNORE_DEF_PERCENT_ANIMAL,1,10,		// Bypass DEF of Animal Race
+		RDMOPT_RACE_IGNORE_DEF_PERCENT_PLANT,1,10,		// Bypass DEF of Plant Race
+		RDMOPT_RACE_IGNORE_DEF_PERCENT_INSECT,1,10,		// Bypass DEF of Insect Race
+		RDMOPT_RACE_IGNORE_DEF_PERCENT_FISHS,1,10,		// Bypass DEF of Fish Race
+		RDMOPT_RACE_IGNORE_DEF_PERCENT_DEVIL,1,10,		// Bypass DEF of Demon Race
+		RDMOPT_RACE_IGNORE_DEF_PERCENT_HUMAN,1,10,		// Bypass DEF of Human Race
+		RDMOPT_RACE_IGNORE_DEF_PERCENT_ANGEL,1,10,		// Bypass DEF of Angel Race
+		RDMOPT_RACE_IGNORE_DEF_PERCENT_DRAGON,1,10,		// Bypass DEF of Dragon Race
+		RDMOPT_RACE_CRI_PERCENT_NOTHING,1,10,			// Crit Chance against Formless Race
+		RDMOPT_RACE_CRI_PERCENT_UNDEAD,1,10,			// Crit Chance against Undead Race
+		RDMOPT_RACE_CRI_PERCENT_ANIMAL,1,10,			// Crit Chance against Animal Race
+		RDMOPT_RACE_CRI_PERCENT_PLANT,1,10,				// Crit Chance against Plant Race
+		RDMOPT_RACE_CRI_PERCENT_INSECT,1,10,			// Crit Chance against Insect Race
+		RDMOPT_RACE_CRI_PERCENT_FISHS,1,10,				// Crit Chance against Fish Race
+		RDMOPT_RACE_CRI_PERCENT_DEVIL,1,10,				// Crit Chance against Demon Race
+		RDMOPT_RACE_CRI_PERCENT_HUMAN,1,10,				// Crit Chance against Human Race
+		RDMOPT_RACE_CRI_PERCENT_ANGEL,1,10,				// Crit Chance against Angel Race
+		RDMOPT_RACE_CRI_PERCENT_DRAGON,1,10;			// Crit Chance against Dragon Race
+setarray .RandOpt_PDMG_RC_M$[0],"Damage vs Formless","Damage vs Undead","Damage vs Animal","Damage vs Plant","Damage vs Insect","Damage vs Fish","Damage vs Demon","Damage vs Human","Damage vs Angel","Damage vs Dragon",
+								"Bypass DEF of Formless","Bypass DEF of Undead","Bypass DEF of Animal","Bypass DEF of Plant","Bypass DEF of Insect","Bypass DEF of Fish","Bypass DEF of Demon","Bypass DEF of Human","Bypass DEF of Angel","Bypass DEF of Dragon",
+								"Crit Chance vs Formless","Crit Chance vs Undead","Crit Chance vs Animal","Crit Chance vs Plant","Crit Chance vs Insect","Crit Chance vs Fish","Crit Chance vs Demon","Crit Chance vs Human","Crit Chance vs Angel","Crit Chance vs Dragon";
+
+// - Physical Damage vs Size/Class
+setarray .RandOpt_PDMG_SC[0],
+		RDMOPT_DAMAGE_SIZE_SMALL_TARGET,1,50,			// Physical Damage to Small Targets
+		RDMOPT_DAMAGE_SIZE_MIDIUM_TARGET,1,50,			// Physical Damage to Medium Targets
+		RDMOPT_DAMAGE_SIZE_LARGE_TARGET,1,50,			// Physical Damage to Large Targets
+		RDMOPT_CLASS_DAMAGE_NORMAL_TARGET,1,50,			// Physical Damage to Normal Targets
+		RDMOPT_CLASS_DAMAGE_BOSS_TARGET,1,50,			// Physical Damage to Boss Targets
+		RDMOPT_CLASS_IGNORE_DEF_PERCENT_NORMAL,1,50,	// Bypass DEF of Normal Targets
+		RDMOPT_CLASS_IGNORE_DEF_PERCENT_BOSS,1,50; 		// Bypass DEF of Boss Targets
+setarray .RandOpt_PDMG_SC_M$[0],"Damage vs Small Size","Damage vs Medium Size","Damage vs Large Size","Damage vs Normal class","Damage vs Boss class","Bypass DEF of Normal class","Bypass DEF of Boss class";
+
+// - Magical Damage vs Element
+setarray .RandOpt_MDMG_Ele[0],
+		RDMOPT_MDAMAGE_PROPERTY_NOTHING_TARGET,1,20,	// Magical Damage to Neutral Element
+		RDMOPT_MDAMAGE_PROPERTY_GROUND_TARGET,1,20,	 	// Magical Damage to Earth Element
+		RDMOPT_MDAMAGE_PROPERTY_FIRE_TARGET,1,20,	 	// Magical Damage to Fire Element
+		RDMOPT_MDAMAGE_PROPERTY_WATER_TARGET,1,20,	 	// Magical Damage to Water Element
+		RDMOPT_MDAMAGE_PROPERTY_WIND_TARGET,1,20,	 	// Magical Damage to Wind Element
+		RDMOPT_MDAMAGE_PROPERTY_POISON_TARGET,1,20,		// Magical Damage to Poison Element
+		RDMOPT_MDAMAGE_PROPERTY_SAINT_TARGET,1,20,		// Magical Damage to Holy Element
+		RDMOPT_MDAMAGE_PROPERTY_DARKNESS_TARGET,1,20,	// Magical Damage to Dark Element
+		RDMOPT_MDAMAGE_PROPERTY_TELEKINESIS_TARGET,1,20,// Magical Damage to Ghost Element
+		RDMOPT_MDAMAGE_PROPERTY_UNDEAD_TARGET,1,20;	 	// Magical Damage to Undead Element
+setarray .RandOpt_MDMG_Ele_M$[0],"Damage vs Neutral element","Damage vs Earth element","Damage vs Fire element","Damage vs Water element","Damage vs Wind element","Damage vs Poison element","Damage vs Holy element","Damage vs Shadow element","Damage vs Ghost element","Damage vs Undead element";
+
+// - Magical Damage vs Race
+setarray .RandOpt_MDMG_RC[0],
+		RDMOPT_RACE_MDAMAGE_NOTHING,1,50,				// Magical Damage to Neutral Race
+		RDMOPT_RACE_MDAMAGE_UNDEAD,1,50,				// Magical Damage to Undead Race
+		RDMOPT_RACE_MDAMAGE_ANIMAL,1,50,				// Magical Damage to Animal Race
+		RDMOPT_RACE_MDAMAGE_PLANT,1,50,					// Magical Damage to Plant Race
+		RDMOPT_RACE_MDAMAGE_INSECT,1,50,				// Magical Damage to Insect Race
+		RDMOPT_RACE_MDAMAGE_FISHS,1,50,					// Magical Damage to Fish Race
+		RDMOPT_RACE_MDAMAGE_DEVIL,1,50,					// Magical Damage to Devil Race
+		RDMOPT_RACE_MDAMAGE_HUMAN,1,50,					// Magical Damage to Human Race
+		RDMOPT_RACE_MDAMAGE_ANGEL,1,50,					// Magical Damage to Angel Race
+		RDMOPT_RACE_MDAMAGE_DRAGON,1,50,				// Magical Damage to Dragon Race
+		RDMOPT_RACE_IGNORE_MDEF_PERCENT_NOTHING,1,10,	// Bypass MDEF of Neutral Race
+		RDMOPT_RACE_IGNORE_MDEF_PERCENT_UNDEAD,1,10,	// Bypass MDEF of Undead Race
+		RDMOPT_RACE_IGNORE_MDEF_PERCENT_ANIMAL,1,10,	// Bypass MDEF of Animal Race
+		RDMOPT_RACE_IGNORE_MDEF_PERCENT_PLANT,1,10,		// Bypass MDEF of Plant Race
+		RDMOPT_RACE_IGNORE_MDEF_PERCENT_INSECT,1,10,	// Bypass MDEF of Insect Race
+		RDMOPT_RACE_IGNORE_MDEF_PERCENT_FISHS,1,10,		// Bypass MDEF of Fish Race
+		RDMOPT_RACE_IGNORE_MDEF_PERCENT_DEVIL,1,10,		// Bypass MDEF of Demon Race
+		RDMOPT_RACE_IGNORE_MDEF_PERCENT_HUMAN,1,10,		// Bypass MDEF of Human Race
+		RDMOPT_RACE_IGNORE_MDEF_PERCENT_ANGEL,1,10,		// Bypass MDEF of Angel Race
+		RDMOPT_RACE_IGNORE_MDEF_PERCENT_DRAGON,1,10;	// Bypass MDEF of Dragon Race
+setarray .RandOpt_MDMG_RC_M$[0],"Damage vs Formless","Damage vs Undead","Damage vs Animal","Damage vs Plant","Damage vs Insect","Damage vs Fish","Damage vs Demon","Damage vs Human","Damage vs Angel","Damage vs Dragon",
+								"Bypass MDEF of Formless","Bypass MDEF of Undead","Bypass MDEF of Animal","Bypass MDEF of Plant","Bypass MDEF of Insect","Bypass MDEF of Fish","Bypass MDEF of Demon","Bypass MDEF of Human","Bypass MDEF of Angel","Bypass MDEF of Dragon";
+
+// - Magical Damage vs Size/Class
+setarray .RandOpt_MDMG_SC[0],
+		RDMOPT_MDAMAGE_SIZE_SMALL_TARGET,1,50,			// Magical damage to Small Targets
+		RDMOPT_MDAMAGE_SIZE_MIDIUM_TARGET,1,50,			// Magical damage to Medium Targets
+		RDMOPT_MDAMAGE_SIZE_LARGE_TARGET,1,50,			// Magical damage to Large Targets
+		RDMOPT_CLASS_MDAMAGE_NORMAL,1,50,				// Magical Damage to Normal Targets
+		RDMOPT_CLASS_MDAMAGE_BOSS,1,50,					// Magical Damage to Boss Targets
+		RDMOPT_CLASS_IGNORE_MDEF_PERCENT_NORMAL,1,50,	// Bypass MDEF of Normal Targets
+		RDMOPT_CLASS_IGNORE_MDEF_PERCENT_BOSS,1,50;		// Bypass MDEF of Boss Targets
+setarray .RandOpt_MDMG_SC_M$[0],"Damage vs Small Size","Damage vs Medium Size","Damage vs Large Size","Damage vs Normal class","Damage vs Boss class","Bypass MDEF of Normal class","Bypass MDEF of Boss class";
+
+// - Physical Resistances
+setarray .RandOpt_RES_P[0],
+		RDMOPT_DAMAGE_PROPERTY_NOTHING_USER,1,20,	 	// Physical Damage Reduction from Neutral Element
+		RDMOPT_DAMAGE_PROPERTY_GROUND_USER,1,20,	 	// Physical Damage Reduction from Earth Element
+		RDMOPT_DAMAGE_PROPERTY_FIRE_USER,1,20,			// Physical Damage Reduction from Fire Element
+		RDMOPT_DAMAGE_PROPERTY_WATER_USER,1,20,	 		// Physical Damage Reduction from Water Element
+		RDMOPT_DAMAGE_PROPERTY_WIND_USER,1,20,			// Physical Damage Reduction from Wind Element
+		RDMOPT_DAMAGE_PROPERTY_POISON_USER,1,20,	 	// Physical Damage Reduction from Poison Element
+		RDMOPT_DAMAGE_PROPERTY_SAINT_USER,1,20,	 		// Physical Damage Reduction from Holy Element
+		RDMOPT_DAMAGE_PROPERTY_DARKNESS_USER,1,20,		// Physical Damage Reduction from Shadow Element
+		RDMOPT_DAMAGE_PROPERTY_TELEKINESIS_USER,1,20,	// Physical Damage Reduction from Ghost Element
+		RDMOPT_DAMAGE_PROPERTY_UNDEAD_USER,1,20;		// Physical Damage Reduction from Undead Element
+setarray .RandOpt_RES_P_M$[0],"Reduction from Neutral Element","Reduction from Earth Element","Reduction from Fire Element","Reduction from Water Element","Reduction from Wind Element","Reduction from Poison Element","Reduction from Holy Element","Reduction from Shadow Element","Reduction from Ghost Element","Reduction from Undead";
+
+// - Magical Resistances
+setarray .RandOpt_RES_M[0],
+		RDMOPT_MDAMAGE_PROPERTY_NOTHING_USER,1,20,		// Magical Damage Reduction from Neutral Element
+		RDMOPT_MDAMAGE_PROPERTY_GROUND_USER,1,20,	 	// Magical Damage Reduction from Earth Element
+		RDMOPT_MDAMAGE_PROPERTY_FIRE_USER,1,20,	 		// Magical Damage Reduction from Fire Element
+		RDMOPT_MDAMAGE_PROPERTY_WATER_USER,1,20,	 	// Magical Damage Reduction from Water Element
+		RDMOPT_MDAMAGE_PROPERTY_WIND_USER,1,20,	 		// Magical Damage Reduction from Wind Element
+		RDMOPT_MDAMAGE_PROPERTY_POISON_USER,1,20,		// Magical Damage Reduction from Poison Element
+		RDMOPT_MDAMAGE_PROPERTY_SAINT_USER,1,20,		// Magical Damage Reduction from Holy Element
+		RDMOPT_MDAMAGE_PROPERTY_DARKNESS_USER,1,20,		// Magical Damage Reduction from Shadow Element
+		RDMOPT_MDAMAGE_PROPERTY_TELEKINESIS_USER,1,20,	// Magical Damage Reduction from Ghost Element
+		RDMOPT_MDAMAGE_PROPERTY_UNDEAD_USER,1,20;	 	// Magical Damage Reduction from Undead Element
+setarray .RandOpt_RES_M_M$[0],"Reduction from Neutral Element","Reduction from Earth Element","Reduction from Fire Element","Reduction from Water Element","Reduction from Wind Element","Reduction from Poison Element","Reduction from Holy Element","Reduction from Shadow Element","Reduction from Ghost Element","Reduction from Undead";
+
+// - Resistances vs Race, Size, Class, Ranged and Critical Attacks
+setarray .RandOpt_RES_ETC[0],
+		RDMOPT_RACE_TOLERACE_NOTHING,1,20,				// Damage Reduction from Formless Race
+		RDMOPT_RACE_TOLERACE_UNDEAD,1,20,				// Damage Reduction from Undead Race
+		RDMOPT_RACE_TOLERACE_ANIMAL,1,20,				// Damage Reduction from Animal Race
+		RDMOPT_RACE_TOLERACE_PLANT,1,20,				// Damage Reduction from Plant Race
+		RDMOPT_RACE_TOLERACE_INSECT,1,20,				// Damage Reduction from Insect Race
+		RDMOPT_RACE_TOLERACE_FISHS,1,20,				// Damage Reduction from Fish Race
+		RDMOPT_RACE_TOLERACE_DEVIL,1,20,				// Damage Reduction from Demon Race
+		RDMOPT_RACE_TOLERACE_HUMAN,1,20,				// Damage Reduction from Human Race
+		RDMOPT_RACE_TOLERACE_ANGEL,1,20,				// Damage Reduction from Angel Race
+		RDMOPT_RACE_TOLERACE_DRAGON,1,20,				// Damage Reduction from Dragon Race
+		RDMOPT_CLASS_DAMAGE_NORMAL_USER,1,20,			// Damage Reduction from Normal Targets
+		RDMOPT_CLASS_DAMAGE_BOSS_USER,1,20,				// Damage Reduction from Boss Targets
+		RDMOPT_DAMAGE_SIZE_SMALL_USER,1,20,				// Damage Reduction from Small Targets
+		RDMOPT_DAMAGE_SIZE_MIDIUM_USER,1,20,			// Damage Reduction from Medium Targets
+		RDMOPT_DAMAGE_SIZE_LARGE_USER,1,20,				// Damage Reduction from Large Targets
+		RDMOPT_RANGE_ATTACK_DAMAGE_USER,1,20,			// Damage Reduction from Ranged Attacks
+		RDMOPT_DAMAGE_CRI_USER,1,20;					// Damage Reduction from Critical Attacks
+setarray .RandOpt_RES_ETC_M$[0],"Reduction from Formless Race","Reduction from Undead Race","Reduction from Animal Race","Reduction from Plant Race","Reduction from Insect Race","Reduction from Fish Race","Reduction from Demon Race","Reduction from Human Race","Reduction from Angel Race","Reduction from Dragon Race","Reduction from Normal Targets","Reduction from Boss Targets","Reduction from Small Targets","Damage Reduction from Medium Targets","Reduction from Large Targets","Reduction from Ranged Attacks","Reduction from Critical Attacks";
+
+// - Weapon Elements
+setarray .RandOpt_WEle[0],
+		RDMOPT_WEAPON_ATTR_NOTHING, 	// Neutral
+		RDMOPT_WEAPON_ATTR_WATER,		// Water
+		RDMOPT_WEAPON_ATTR_GROUND,		// Earth
+		RDMOPT_WEAPON_ATTR_FIRE,		// Fire
+		RDMOPT_WEAPON_ATTR_WIND,		// Wind
+		RDMOPT_WEAPON_ATTR_POISON,		// Poison
+		RDMOPT_WEAPON_ATTR_SAINT,		// Holy
+		RDMOPT_WEAPON_ATTR_DARKNESS,	// Shadow
+		RDMOPT_WEAPON_ATTR_TELEKINESIS,	// Ghost
+		RDMOPT_WEAPON_ATTR_UNDEAD;		// Undead
+
+// - Armor Elements
+setarray .RandOpt_AEle[0],
+		RDMOPT_BODY_ATTR_NOTHING,		// Neutral
+		RDMOPT_BODY_ATTR_WATER,			// Water
+		RDMOPT_BODY_ATTR_GROUND,		// Earth
+		RDMOPT_BODY_ATTR_FIRE,			// Fire
+		RDMOPT_BODY_ATTR_WIND,			// Wind
+		RDMOPT_BODY_ATTR_POISON,		// Poison
+		RDMOPT_BODY_ATTR_SAINT,			// Holy
+		RDMOPT_BODY_ATTR_DARKNESS,		// Shadow
+		RDMOPT_BODY_ATTR_TELEKINESIS,	// Ghost
+		RDMOPT_BODY_ATTR_UNDEAD;		// Undead
+		
+setarray .RandOpt_Ele_M$[0],"Neutral","Water","Earth","Fire","Wind","Poison","Holy","Shadow","Ghost","Undead";
+
+// - Attributes
+setarray .RandOpt_ATT[0],
+		RDMOPT_VAR_STRAMOUNT,1,100,				// STR
+		RDMOPT_VAR_AGIAMOUNT,1,100,				// AGI
+		RDMOPT_VAR_VITAMOUNT,1,100,				// VIT
+		RDMOPT_VAR_INTAMOUNT,1,100,				// INT
+		RDMOPT_VAR_DEXAMOUNT,1,100,				// DEX
+		RDMOPT_VAR_LUKAMOUNT,1,100,				// LUK
+		RDMOPT_VAR_ATTPOWER,1,100,				// ATK
+		RDMOPT_VAR_ATKPERCENT,1,100,			// ATK %
+		RDMOPT_VAR_ATTMPOWER,1,100,				// MATK
+		RDMOPT_VAR_MAGICATKPERCENT,1,100,		// MATK %
+		RDMOPT_VAR_CRITICALSUCCESSVALUE,1,100,	// Crit Chance
+		RDMOPT_DAMAGE_CRI_TARGET,1,100,			// Crit Damage %
+		RDMOPT_VAR_PLUSASPD,1,100,				// ASPD Flat
+		RDMOPT_VAR_PLUSASPDPERCENT,1,100,		// ASPD %
+		RDMOPT_VAR_MAXHPPERCENT,1,100,			// Max HP %
+		RDMOPT_VAR_MAXSPPERCENT,1,100,			// Max SP %
+		RDMOPT_VAR_HPACCELERATION,1,100,		// HP Recovery %
+		RDMOPT_VAR_SPACCELERATION,1,100,		// SP Recovery %
+		RDMOPT_VAR_HITSUCCESSVALUE,1,100,		// HIT
+		RDMOPT_VAR_AVOIDSUCCESSVALUE,1,100,		// FLEE
+		RDMOPT_VAR_PLUSAVOIDSUCCESSVALUE,1,100,	// Perfect Dodge
+		RDMOPT_VAR_ITEMDEFPOWER,1,100,			// DEF
+		RDMOPT_VAR_MDEFPOWER,1,100,				// MDEF
+		RDMOPT_RANGE_ATTACK_DAMAGE_TARGET,1,100;// Ranged Damage +%
+setarray .RandOpt_ATT_M$[0],"STR","AGI","VIT","INT","DEX","LUK","ATK","ATK %","MATK","MATK %","Critical Chance","Critical Damage","ASPD","ASPD %","Max HP %","Max SP %","HP Recovery %","SP Recovery %","HIT","FLEE","Perfect Dodge","DEF","MDEF","Ranged Damage %";
+
+// - Special
+setarray .RandOpt_Spec[0],
+		RDMOPT_HEAL_VALUE,1,100, 			// Outgoing Heal Power
+		RDMOPT_HEAL_MODIFY_PERCENT,1,100, 	// Incoming Heal Power
+		RDMOPT_WEAPON_INDESTRUCTIBLE,0,0, 	// Weapon Instructible
+		RDMOPT_BODY_INDESTRUCTIBLE,0,0, 	// Armor Instructible
+		RDMOPT_DAMAGE_SIZE_PERFECT,0,0, 	// Size will be ignored
+		RDMOPT_DEC_SPELL_CAST_TIME,1,20,	// Variable Cast Time -%
+		RDMOPT_DEC_SPELL_DELAY_TIME,1,20,	// Cast Delay -%
+		RDMOPT_DEC_SP_CONSUMPTION,1,20;		// Skill SP Cost -%
+setarray .RandOpt_Spec_M$[0],"Outgoing Heal Power ","Incoming Heal Power","Weapon Instructible","Armor Instructible","Ignore Size Penalty","Variable Cast Time","Cast Delay","SP Cost";
 end;
 }
 
