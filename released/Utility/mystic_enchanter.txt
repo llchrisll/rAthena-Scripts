@@ -10,9 +10,11 @@
 //= 1.1 - Added Random Option Enchanting
 //      - Added support to reset selected enchantments as well
 //      - Changed the Price Code into a function
+//      - Fixed a bug regarding Special Random Options
+//      - Added a limitation for Special Random Options
 //===== Tested With ==========================================
-//= rAthena 04/29/2020 Revision
-//= GIT Hash: 4829f3775d5371e65d6648cf05b6f0c2810bb664
+//= rAthena 05/13/2020 Revision
+//= GIT Hash: 5154e078999ea8b0ae8680126933fe11a2506dd9
 //===== Description ==========================================
 //= All-in-one Enchanter
 //= Price for Enchanting and Resetting seperatly configurable
@@ -477,7 +479,8 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 							set .@ropt_m$,.@ropt_m$ + "- "+.RandOpt_Ele_M$[.@l] + ( (.RandOpt_Ele_M$[.@l+1] != "")?":":"");
 							
 						set .@i,select(.@ropt_m$)-1;
-					
+						mes .n$;
+						
 					} else // Random Selection
 						set .@i,rand(getarraysize(.RandOpt_Ele_M$));
 					
@@ -496,6 +499,7 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 							set .@ropt_m$,.@ropt_m$ + "- "+.RandOpt_Ele_M$[.@l] + ( (.RandOpt_Ele_M$[.@l+1] != "")?":":"");
 							
 						set .@i,select(.@ropt_m$) - 1;
+						mes .n$;
 						
 					} else // Random Selection
 						set .@i,rand(getarraysize(.RandOpt_Ele_M$));
@@ -515,6 +519,7 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 							set .@ropt_m$,.@ropt_m$ + "- "+.RandOpt_ATT_M$[.@l] + ( (.RandOpt_ATT_M$[.@l+1] != "")?":":"");
 							
 						set .@t,select(.@ropt_m$);
+						mes .n$;
 						
 					} else // Random Selection
 						set .@t,rand(1,getarraysize(.RandOpt_ATT_M$));
@@ -553,6 +558,7 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 							set .@ropt_m$,.@ropt_m$ + "- "+getd(".RandOpt_"+.@dmg_t$+"_"+.@cat_t$+"_M$["+.@l+"]") + ( (getd(".RandOpt_"+.@dmg_t$+"_"+.@cat_t$+"_M$["+(.@l+1)+"]") != "")?":":"");
 							
 						set .@t,select(.@ropt_m$);
+						mes .n$;
 						
 					} else // Random Selection
 						set .@t,rand(1,getarraysize(getd(".RandOpt_"+.@dmg_t$+"_"+.@cat_t$+"_M$")));
@@ -589,6 +595,7 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 							set .@ropt_m$,.@ropt_m$ + "- "+getd(".RandOpt_"+.@def_t$+"_M$["+.@l+"]") + ( (getd(".RandOpt_"+.@def_t$+"_M$["+(.@l+1)+"]") != "")?":":"");
 							
 						set .@t,select(.@ropt_m$);
+						mes .n$;
 					
 					} else // Random Selection
 						set .@t,rand(1,getarraysize(getd(".RandOpt_"+.@def_t$+"_M$")));
@@ -606,16 +613,33 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 						mes "Please select the Enchantment you want to use:";
 						next;
 						for ( set .@l,0; .@l < getarraysize(.RandOpt_Spec_M$); set .@l,.@l + 1)
-							set .@ropt_m$,.@ropt_m$ + "- "+ ( ((.RandOpt_Spec[.@l*3-3] == RDMOPT_BODY_INDESTRUCTIBLE && getiteminfo(.@id,2) == 4) || (.RandOpt_Spec[.@l*3-3] == RDMOPT_WEAPON_INDESTRUCTIBLE && getiteminfo(.@id,2) == 5) )?.RandOpt_Spec_M$[.@l]:"") + ( (.RandOpt_Spec_M$[.@l+1] != "")?":":"");
+							set .@ropt_m$,.@ropt_m$ + ( ((.RandOpt_Spec[(.@l+1)*3-3] == RDMOPT_BODY_INDESTRUCTIBLE && getiteminfo(.@id,2) != 4) || (.RandOpt_Spec[(.@l+1)*3-3] == RDMOPT_WEAPON_INDESTRUCTIBLE && getiteminfo(.@id,2) != 5) || (.RandOpt_Spec[(.@l+1)*3-3] == RDMOPT_DAMAGE_SIZE_PERFECT && getiteminfo(.@id,2) != 5) )?"":"- "+.RandOpt_Spec_M$[.@l]) + ( (.RandOpt_Spec_M$[.@l+1] != "")?":":"");
 							
 						set .@t,select(.@ropt_m$);
+						mes .n$;
+						if(.RandOpt_Spec_Limit && .@ropt_spec_l[.@t-1] == 1) {
+							mes "I'm sorry, but you already chose this Random Option. Please select a different one.";
+							continue;
+						}
 						
 					} else { // Random Selection
-						set .@t,rand(1,getarraysize(.RandOpt_Spec_M$));
-						// Be sure that "Instructible in Battle" will be used on weapons or armors depening on the item type 
-						while( (.RandOpt_Spec[.@t*3-3] == RDMOPT_BODY_INDESTRUCTIBLE && getiteminfo(.@id,2) != 4) || (.RandOpt_Spec[.@t*3-3] == RDMOPT_WEAPON_INDESTRUCTIBLE && getiteminfo(.@id,2) != 5) )
+						while(1) {
 							set .@t,rand(1,getarraysize(.RandOpt_Spec_M$));
+							// Checking if certain Enchantments are suited for the Item Type and if they are in use already or not:
+							
+							// "Armor - Instructible in Battle" and can only be used on Armors, so no Shoes, Garments, Headgears and Shields
+							if(.RandOpt_Spec[.@t*3-3] == RDMOPT_BODY_INDESTRUCTIBLE && (getiteminfo(.@id,2) != 4 || getiteminfo(.@id,5) != 16) ) continue;
+							// Weapon - "Instructible in Battle"
+							if(.RandOpt_Spec[.@t*3-3] == RDMOPT_WEAPON_INDESTRUCTIBLE && getiteminfo(.@id,2) != 5 ) continue;
+							if(.RandOpt_Spec[.@t*3-3] == RDMOPT_DAMAGE_SIZE_PERFECT && getiteminfo(.@id,2) != 5) continue;
+							// Check if they are already used
+							if(.@ropt_spec_l[.@t-1] == 1) continue;
+							break;
+						}
 					}
+					// Save current Random Option for it's usage, if the Limitation is enabled
+					if(.RandOpt_Spec_Limit)
+						setarray .@ropt_spec_l[.@t-1],1;
 					set .@i,.@t*3-3;
 					mes "Defensive Option: "+.RandOpt_Spec_M$[.@t-1];
 					set .@ropt_id,.RandOpt_Spec[.@i];
@@ -1400,6 +1424,10 @@ setarray .RandOpt_Spec[0],
 		RDMOPT_DEC_SPELL_DELAY_TIME,1,20,	// Cast Delay -%
 		RDMOPT_DEC_SP_CONSUMPTION,1,20;		// Skill SP Cost -%
 setarray .RandOpt_Spec_M$[0],"Outgoing Heal Power ","Incoming Heal Power","Weapon Instructible","Armor Instructible","Ignore Size Penalty","Variable Cast Time","Cast Delay","SP Cost";
+// Limits the Special Random Options Enchantments on one Equipment to once only
+// 1 = Enabled
+// 0 = Disable
+setarray .RandOpt_Spec_Limit,1;
 end;
 }
 
