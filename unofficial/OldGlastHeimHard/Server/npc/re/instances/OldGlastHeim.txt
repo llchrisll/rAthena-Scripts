@@ -1822,14 +1822,20 @@ OnTimer10000:
 	case 2:
 		for ( .@i = 1; .@i <= .@random; ++.@i )
 			makeitem 719,1,"this",165,138;
-		makeitem 6608,1,"this",165,138;
+		if('OGH_Mode == 1) // Normal Mode: Coagulated_Spell
+			makeitem 6608,1,"this",165,138;
+		else if('OGH_Mode == 2) // Hard Mode: Contaminated_Magic
+			makeitem 6755,1,"this",165,138;
 		break;
 	case 3:
 		for ( .@i = 1; .@i <= .@random; ++.@i )
 			makeitem 720,1,"this",159,138;
 		if (rand(1,4) == 4)
 			makeitem2 15066,1,"this",159,138,0,0,0,0,0,0,0;
-		makeitem 6608,1,"this",159,138;
+		if('OGH_Mode == 1) // Normal Mode: Coagulated_Spell
+			makeitem 6608,1,"this",159,138;
+		else if('OGH_Mode == 2) // Hard Mode: Contaminated_Magic
+			makeitem 6755,1,"this",159,138;
 		makeitem 7229,1,"this",159,138;
 		break;
 	case 4:
@@ -1837,7 +1843,10 @@ OnTimer10000:
 			makeitem 721,1,"this",153,138;
 		if (rand(1,4) == 4)
 			makeitem2 13086,1,"this",153,138,0,0,0,0,0,0,0;
-		makeitem 6608,1,"this",153,138;
+		if('OGH_Mode == 1) // Normal Mode: Coagulated_Spell
+			makeitem 6608,1,"this",153,138;
+		else if('OGH_Mode == 2) // Hard Mode: Contaminated_Magic
+			makeitem 6755,1,"this",153,138;
 		makeitem 7230,1,"this",153,138;
 		break;
 	case 5:
@@ -1847,7 +1856,10 @@ OnTimer10000:
 			makeitem2 2949,1,"this",147,138,0,0,0,0,0,0,0;
 		makeitem 6612,1,"this",147,138;
 		makeitem 6613,1,"this",147,138;
-		makeitem 6608,1,"this",147,138;
+		if('OGH_Mode == 1) // Normal Mode: Coagulated_Spell
+			makeitem 6608,1,"this",147,138;
+		else if('OGH_Mode == 2) // Hard Mode: Contaminated_Magic
+			makeitem 6755,1,"this",147,138;
 		break;
 	case 6:
 		for ( .@i = 1; .@i <= .@random; ++.@i )
@@ -1855,21 +1867,30 @@ OnTimer10000:
 		makeitem 7228,1,"this",141,138;
 		if (rand(1,4) == 4)
 			makeitem2 13440,1,"this",141,138,0,0,0,0,0,0,0;
-		makeitem 6608,1,"this",141,138;
+		if('OGH_Mode == 1) // Normal Mode: Coagulated_Spell
+			makeitem 6608,1,"this",141,138;
+		else if('OGH_Mode == 2) // Hard Mode: Contaminated_Magic
+			makeitem 6755,1,"this",141,138;
 		break;
 	case 7:
 		for ( .@i = 1; .@i <= .@random; ++.@i )
 			makeitem 726,1,"this",135,138;
 		if (rand(1,4) == 4)
 			makeitem2 2022,1,"this",135,138,0,0,0,0,0,0,0;
-		makeitem 6608,1,"this",135,138;
+		if('OGH_Mode == 1) // Normal Mode: Coagulated_Spell
+			makeitem 6608,1,"this",135,138;
+		else if('OGH_Mode == 2) // Hard Mode: Contaminated_Magic
+			makeitem 6755,1,"this",135,138;
 		break;
 	case 8:
 		for ( .@i = 1; .@i <= .@random; ++.@i )
 			makeitem 727,1,"this",129,138;
 		if (rand(1,4) == 4)
 			makeitem2 21007,1,"this",129,138,0,0,0,0,0,0,0;
-		makeitem 6608,1,"this",129,138;
+		if('OGH_Mode == 1) // Normal Mode: Coagulated_Spell
+			makeitem 6608,1,"this",129,138;
+		else if('OGH_Mode == 2) // Hard Mode: Contaminated_Magic
+			makeitem 6755,1,"this",129,138;
 		break;
 	}
 	disablenpc instance_npcname( strnpcinfo(0) );
