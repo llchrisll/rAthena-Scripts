@@ -12,9 +12,13 @@
 //      - Optimized the Reward Display of the actual Quest
 //      - Optimized Spawn Behaviour of the Mobs
 //      - Fixed an typo with the MvP Spawn
+//      - Optimized the start of the instance by adding an extra NPC
+//      - Changed the getgroupid check to 99
+//      - Added custom atcommand @hgstatus to check the progress
+//      - Decreased the mob amount of 175+ quests to 350
 //===== Tested With ==========================================
-//= rAthena 07/29/2019 Revision
-//= GIT Hash: 3dd388ac66580e72f56826d142ef69d2525188b7
+//= rAthena 11/01/2020 Revision
+//= GIT Hash: d158603424959805ba26f22ad6ba0237915c9acc
 //===== Description ==========================================
 //= Based on the idea of Gramps.
 //= Instance based with 6 different element rotations
@@ -77,7 +81,7 @@ switch(select("Enter Hunting Grounds:Hunting Quests:Leave")) {
 			erasequest .Hunt_QDelay[.@h];
 			break;
 		}
-		if(getgroupid() < 1) // testing purposes
+		if(getgroupid() < 99) // testing purposes
 		if(instance_check_party(getcharid(1),.HG_Players[.@h],.HG_MinLvL[.@h],.HG_MaxLvL[.@h]) == 0) {
 			mes "You're party doesn't meet the conditions:";
 			mes "Level "+.HG_MinLvL[.@h]+" - "+.HG_MaxLvL[.@h]+", at least "+.HG_Players[.@h]+" players";
@@ -136,6 +140,8 @@ switch(select("Enter Hunting Grounds:Hunting Quests:Leave")) {
 			
 			case IE_OK:
 			mes "You'll now enter the "+.HG_Name$[.@h]+".";
+			mes "I'll be waiting inside, just talk to me when you are ready.";
+			close2;
 			if(!@HG_ID || @HG_ID != .@h)
 				set @HG_ID,.@h;
 			announce "["+strcharinfo(0)+"] from the party ["+getpartyname(getcharid(1))+"] is entering the "+.HG_Name$[.@h]+".", bc_all,0x00FF99;
@@ -254,7 +260,7 @@ switch(select("Enter Hunting Grounds:Hunting Quests:Leave")) {
 		mes .n$;		
 		set .@q_status,checkquest(.@m_quest[.@q_id],HUNTING);
 		if(.@q_status < 0) {
-			if(getgroupid() < 1) // testing purposes
+			if(getgroupid() < 99) // testing purposes
 			if(BaseLevel < .HG_MinLvL[.@h] || BaseLevel > .HG_MaxLvL[.@h]) {
 				mes "I'm sorry, but you can't accept this quest of this level range.";
 				mes "Please choose the respective option for your level.";
@@ -491,32 +497,32 @@ setarray .Hunt_QID_160131[0],1751,2,2228,2;
 // = Fire
 setarray .Hunt_MobQ_I6_E1[0],160150;
 setarray .Hunt_MvPQ_I6_E1[0],160151;
-setarray .Hunt_QID_160150[0],1634,500,2222,500;
+setarray .Hunt_QID_160150[0],1634,350,2222,350;
 setarray .Hunt_QID_160151[0],2532,3,1646,3;
 // = Water
 setarray .Hunt_MobQ_I6_E2[0],160152;
 setarray .Hunt_MvPQ_I6_E2[0],160153;
-setarray .Hunt_QID_160152[0],2184,500,2224,500;
+setarray .Hunt_QID_160152[0],2184,350,2224,350;
 setarray .Hunt_QID_160153[0],2534,3,2238,3;
 // = Wind
 setarray .Hunt_MobQ_I6_E3[0],160154;
 setarray .Hunt_MvPQ_I6_E3[0],160155;
-setarray .Hunt_QID_160154[0],2477,500,2919,500;
+setarray .Hunt_QID_160154[0],2477,350,2919,350;
 setarray .Hunt_QID_160155[0],2535,3,1650,3;
 // = Earth
 setarray .Hunt_MobQ_I6_E4[0],160156;
 setarray .Hunt_MvPQ_I6_E4[0],160157;
-setarray .Hunt_QID_160156[0],2901,500,2916,500;
+setarray .Hunt_QID_160156[0],2901,350,2916,350;
 setarray .Hunt_QID_160157[0],2533,3,1648,3;
 // = Shadow
 setarray .Hunt_MobQ_I6_E5[0],160158;
 setarray .Hunt_MvPQ_I6_E5[0],160159;
-setarray .Hunt_QID_160158[0],2989,500,3252,500;
+setarray .Hunt_QID_160158[0],2989,350,3252,350;
 setarray .Hunt_QID_160159[0],1871,3,2255,3;
 // = Holy
 setarray .Hunt_MobQ_I6_E6[0],160160;
 setarray .Hunt_MvPQ_I6_E6[0],160161;
-setarray .Hunt_QID_160160[0],1637,500,2221,500;
+setarray .Hunt_QID_160160[0],1637,350,2221,350;
 setarray .Hunt_QID_160161[0],1649,3,2235,3;
 
 // ======= Reward Settings =======
@@ -644,6 +650,7 @@ disablenpc 'npc$;
 end;
 
 OnInstanceInit:
+bindatcmd "hgstatus",instance_npcname(strnpcinfo(0))+"::OnHGStatus";
 set 'npc$,instance_npcname("#HuntGround_Instance");
 set 'map$,instance_mapname(strnpcinfo(4));
 set 'label$,instance_npcname(strnpcinfo(0))+"::OnHuntMobDeath";
@@ -662,6 +669,7 @@ setmapflag 'map$,mf_novending;
 setmapflag 'map$,mf_nobranch;
 setmapflag 'map$,mf_partylock;
 setmapflag 'map$,mf_noloot;
+enablenpc instance_npcname("Exiled Warrior#HG");
 sleep 2000;
 if(getarraysize('mob_id) < 1) {
 	copyarray 'mob_id[0],$@mob_id[0],getarraysize($@mob_id);
@@ -673,13 +681,10 @@ if(getarraysize('mob_id) < 1) {
 deletearray $@mob_id[0],getarraysize($@mob_id);
 deletearray $@mvp_id[0],getarraysize($@mvp_id);
 deletearray $@mvp_am[0],getarraysize($@mvp_am);
+end;
 
 OnHuntMobSpawn:
-if('Max_Mobs%100 == 0)
-	set 'spawn,('Max_Mobs/100)*2;
-else
-	set 'spawn,10;
-	
+set 'spawn,('Max_Mobs/2)/10;
 for ( set .@s,0; .@s < getarraysize('mob_id); set .@s,.@s + 1) {
 	set .@r,0;
 	while(.@r < 'spawn) {
@@ -690,14 +695,21 @@ for ( set .@s,0; .@s < getarraysize('mob_id); set .@s,.@s + 1) {
 }
 end;
 
+OnHGStatus:
+dispbottom "[Hunting Ground - Status:]";
+dispbottom "> Mobs Killed: "+('C_Mobs+'Mobs_CT)+"/"+'Max_Mobs;
+dispbottom "> MvP Spawn after each "+('Max_Mobs/'Max_MvP)+" killed Mobs";
+dispbottom "> MvPs Killed: "+'MvP_Cur+"/"+'Max_MvP;
+end;
+
 OnHuntMvPDeath:
 set 'MvP_CT,'MvP_CT + 1;
 if('mvp_am['MvP_Cur] > 'MvP_CT) {
-	instance_announce instance_id(),"[Hunting Ground]: Congratulation, now prepare for the next ["+getmonsterinfo('mvp_id['MvP_Cur],MOB_NAME)+"]! You have 10 seconds to do so!",bc_all;
+	instance_announce instance_id(),"[Exiled Warrior]: Congratulation, now prepare for the next ["+getmonsterinfo('mvp_id['MvP_Cur],MOB_NAME)+"]! You have 10 seconds to do so!",bc_all;
 	getmapxy(.@map$,.@x,.@y,BL_PC);
 	sleep 10000;
-	areamonster 'map$,(.@x-5),(.@y-5),(.@x+5),(.@y+5),getmonsterinfo('mvp_id['MvP_Cur],MOB_NAME),'mvp_id['MvP_Cur],1,'mvp_label$;
-	instance_announce instance_id(),"[Hunting Ground]: The MvP ["+getmonsterinfo('mvp_id['MvP_Cur],MOB_NAME)+"] has been re-spawned near you!",bc_all;
+	areamonster 'map$,(.@x-10),(.@y-10),(.@x+10),(.@y+10),getmonsterinfo('mvp_id['MvP_Cur],MOB_NAME),'mvp_id['MvP_Cur],1,'mvp_label$;
+	instance_announce instance_id(),"[Exiled Warrior]: The MvP ["+getmonsterinfo('mvp_id['MvP_Cur],MOB_NAME)+"] has been re-spawned near you!",bc_all;
 	end;
 }
 if('MvP_Cur < 'Max_MvP)
@@ -710,14 +722,14 @@ OnHuntMobDeath:
 if('Mobs_CT < 'Max_Mobs)
 	set 'C_Mobs,'C_Mobs + 1;
 if('C_Mobs == (('Max_Mobs/'Max_MvP) - 50)) 
-	instance_announce instance_id(),"[Hunting Ground]: The MvP ["+getmonsterinfo('mvp_id['MvP_Cur],MOB_NAME)+"] will be spawned after the next 50 monsters!",bc_all;
+	instance_announce instance_id(),"[Exiled Warrior]: The MvP ["+getmonsterinfo('mvp_id['MvP_Cur],MOB_NAME)+"] will appear after the next 50 monsters!",bc_all;
 	
 if('C_Mobs == ('Max_Mobs/'Max_MvP) && mobcount('map$,'mvp_label$) < 1) {
 	getmapxy(.@map$,.@x,.@y,BL_PC);
-	sleep 2000;
-	areamonster 'map$,(.@x-5),(.@y-5),(.@x+5),(.@y+5),getmonsterinfo('mvp_id['MvP_Cur],MOB_NAME),'mvp_id['MvP_Cur],1,'mvp_label$;
+	instance_announce instance_id(),"[Exiled Warrior]: The MvP ["+getmonsterinfo('mvp_id['MvP_Cur],MOB_NAME)+"] will appear in 10 seconds near you!",bc_all;
+	sleep 10000;
+	areamonster 'map$,(.@x-10),(.@y-10),(.@x+10),(.@y+10),getmonsterinfo('mvp_id['MvP_Cur],MOB_NAME),'mvp_id['MvP_Cur],1,'mvp_label$;
 	killmonster 'map$,'label$;
-	instance_announce instance_id(),"[Hunting Ground]: The MvP ["+getmonsterinfo('mvp_id['MvP_Cur],MOB_NAME)+"] has been spawned near you!",bc_all;
 	set 'Mobs_CT,'Mobs_CT + 'C_Mobs;
 	set 'C_Mobs,0;
 	end;
@@ -733,12 +745,45 @@ monster 'map$,0,0,getmonsterinfo(killedrid,MOB_NAME),killedrid,1,'label$;
 end;
 	
 }
+gef_fild14,356,220,6	script	Exiled Warrior#HG	4_F_VALKYRIE2,{
+
+mes .n$;
+mes "Welcome to the Hunting Grounds!";
+if(is_party_leader() == false) {
+	mes "But I'm sorry, only the party leader can talk to me.";
+	close;
+}
+mes "Are you ready to hunt some mobs?";
+next;
+if(select("- Yes:- No") - 1) {
+	mes .n$;
+	mes "Okay, talk to me again whenever you are ready!";
+	close;
+}
+mes .n$;
+mes "Let the Hunting begin!!!";
+close2;
+instance_announce instance_id(),"[Exiled Warrior]: You have 10 seconds to prepare!",bc_all;
+sleep2 10000;
+instance_announce instance_id(),"[Exiled Warrior]: Info: You can type \"@hgstatus\" to recieve the current status of your hunt!",bc_all;
+donpcevent 'npc$+"::OnHuntMobSpawn";
+disablenpc instance_npcname(strnpcinfo(0));
+end;
+
+OnInit:
+set .n$,"["+strnpcinfo(1)+"]";
+disablenpc strnpcinfo(0);
+end;
+
+OnInstanceDestroy:
+disablenpc instance_npcname(strnpcinfo(0));
+end;
+}
 gef_fild14,371,219,0	script	#HG_Exit	45,3,3,{
 mes "[HG Exit]";
 mes "Do you really want to leave the Hunting Ground?";
 mes "Be warned, that you can't re-enter until the time gap has stabilized itself again!";
 if(select("> Yes:> Nevermind") - 1) close;
-close2;
 setquest getvariableofnpc(.Hunt_QDelay[@HG_ID],"Exiled Warrior");
 warp "SavePoint",0,0;
 set @HG_ID,0;
@@ -749,6 +794,7 @@ disablenpc strnpcinfo(0);
 end;
 
 OnInstanceDestroy:
+unbindatcmd "hgstatus";
 disablenpc instance_npcname(strnpcinfo(0));
 end;
 }

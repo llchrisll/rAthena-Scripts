@@ -126,17 +126,17 @@ db/import/quest_db.txt:
 160130,0,1637,300,2221,300,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 160 - Holy"
 160131,0,1751,2,2228,2,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 160 - Holy MvP"
 
-160150,0,1634,500,2222,500,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Fire"
+160150,0,1634,350,2222,350,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Fire"
 160151,0,2532,3,1646,3,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Fire MvP"
-160152,0,2184,500,2224,500,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Water"
+160152,0,2184,350,2224,350,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Water"
 160153,0,2534,3,2238,3,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Water MvP"
-160154,0,2477,500,2919,500,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Wind"
+160154,0,2477,350,2919,350,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Wind"
 160155,0,2535,3,1650,3,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Wind MvP"
-160156,0,2901,500,2916,500,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Earth"
+160156,0,2901,350,2916,350,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Earth"
 160157,0,2533,3,1648,3,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Earth MvP"
-160158,0,2989,500,3252,500,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Shadow"
+160158,0,2989,350,3252,350,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Shadow"
 160159,0,1871,3,2255,3,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Shadow MvP"
-160160,0,1637,500,2221,500,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Holy"
+160160,0,1637,350,2221,350,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Holy"
 160161,0,1649,3,2235,3,0,0,0,0,0,0,0,0,0,0,0,"Hunting Ground 175 - Holy MvP"
 
 // Delay Quests
@@ -575,9 +575,9 @@ for YAML:
     Title: Hunting Ground 175 - Fire
     Targets:
       - Mob: SEYREN
-        Count: 500
+        Count: 350
       - Mob: FLAMEL
-        Count: 500
+        Count: 350
   - Id: 160151
     Title: Hunting Ground 175 - Fire MvP
     Targets:
@@ -589,9 +589,9 @@ for YAML:
     Title: Hunting Ground 175 - Water
     Targets:
       - Mob: MD_OBEAUNE
-        Count: 500
+        Count: 350
       - Mob: CHEN
-        Count: 500
+        Count: 350
   - Id: 160153
     Title: Hunting Ground 175 - Water MvP
     Targets:
@@ -603,9 +603,9 @@ for YAML:
     Title: Hunting Ground 175 - Wind
     Targets:
       - Mob: NG_WANDER_MAN
-        Count: 500
+        Count: 350
       - Mob: NEO_PUNK
-        Count: 500
+        Count: 350
   - Id: 160155
     Title: Hunting Ground 175 - Wind MvP
     Targets:
@@ -617,9 +617,9 @@ for YAML:
     Title: Hunting Ground 175 - Earth
     Targets:
       - Mob: C1_ANGRA_MANTIS
-        Count: 500
+        Count: 350
       - Mob: BIG_BEN
-        Count: 500
+        Count: 350
   - Id: 160157
     Title: Hunting Ground 175 - Earth MvP
     Targets:
@@ -631,9 +631,9 @@ for YAML:
     Title: Hunting Ground 175 - Shadow
     Targets:
       - Mob: XM_COOKIE
-        Count: 500
+        Count: 350
       - Mob: DR815
-        Count: 500
+        Count: 350
   - Id: 160159
     Title: Hunting Ground 175 - Shadow MvP
     Targets:
@@ -645,9 +645,9 @@ for YAML:
     Title: Hunting Ground 175 - Holy
     Targets:
       - Mob: MAGALETA
-        Count: 500
+        Count: 350
       - Mob: RANDEL
-        Count: 500
+        Count: 350
   - Id: 160161
     Title: Hunting Ground 175 - Holy MvP
     Targets:

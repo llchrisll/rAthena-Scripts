@@ -24,6 +24,21 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2020/11/06
+<< == |*| Unofficial Mysterious Combination Book Bundle v1.0 [RE] - Removed |*| == >>
+- Removed because it's an Lapine UI feature
+<< == |*| Unofficial Excellion Gear v1.0 [RE] - Removed |*| == >>
+- Removed duo official implementation.
+<< == |*| Unofficial Old Glast Heim Hard Mode v1.0 [RE] - Modified |*| == >>
+- Added missing check for cooldown quest
+<< == |*| Quest System v1.3 - Update to v1.4 [RE] |*| == >>
+- Fixed getmapxy error (was still using an old syntax)
+<< == |*| Hunting Grounds v1.0 [RE] - Modified |*| == >>
+- Optimized the start of the instance by adding an extra NPC
+- Changed the getgroupid check to 99
+- Added custom atcommand @hgstatus to check the progress
+- Decreased the mob amount of 175+ quests to 350
+------------------------------------------------------------------------------------------------------------------------
 * 2019/10/28
 << == |*| Mystic Enchanter v1.0 and Mystic Enchanter without Random Options v1.0 [RE] - Modified |*| == >>
 - Added enable_items; and disable_items;

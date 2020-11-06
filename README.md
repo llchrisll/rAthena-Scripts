@@ -11,13 +11,8 @@ My Scripts free of usage for everyone.
 In case bugs should appear, pm me on the board mentioned above or send me an mail.
 If you should have made modifications by yourself, like adding snippets which isn't part of the original code
 I will NOT provide any support. But you are allowed to request that I'm making the modifications.
-### ========= Requests =========
-I can take private requests for free, but in exchange I'm allowed to release them as I like.
-I'm also allowed to decline requests in case, I'm sure I won't be able to script them.
-I also accept payment, but mostly I'm doing it for free which depends on the script difficulty as well.
+## ========= END =========
 
-In case you're thinking that I'm making big scripts in exchange for an GM Position on your Server, then you're wrong.
-This is up to you to decide, since there are enough good scripters out there, which are better than me and are scripting longer than myself.
-### ========= Payment =========
-Since my scripts are all free to use, you don't have to pay me for them.
-If you really want to give me some money, I don't mind it (I'm a human too, so...), just pm me about it.
+Note: As of August 2019, I continued the Translation Project started by zackdreaver.
+So I stopped making scripts so I can focus on that, since it's benefits the community more.
+Also I don't have any ideas currently what to script anyway, as I don't deal with official content.

@@ -36,9 +36,10 @@
 //		- Rewrote the Code about Killing Mobs again
 //		- Fixed the custom command @checkquest and changed the layout a bit
 //= 1.3 - Changed the `limit` code to use 0 as not repeatable instead of 0
+//= 1.4 - Fixed getmapxy error (was still using an old syntax)
 //===== Tested With =========================================
-//= rAthena 12/24/2017 Revision
-//= GIT Hash: ae69e506263f9b183c945f49b1d88c5fc2b73a6a
+//= rAthena 11/01/2020 Revision
+//= GIT Hash: d158603424959805ba26f22ad6ba0237915c9acc
 //===== Description ==========================================
 //= Every NPC has an unique ID and can hold up unlimited Quests
 //  You can put as many as you want Quest NPC's on one map.
@@ -100,7 +101,7 @@ CREATE TABLE IF NOT EXISTS `quest_player` (
  `req_am` int(12) UNSIGNED DEFAULT '0'
  ) ENGINE=MyISAM;
  */
-prontera,199,162,4	script	Quest System	4W_SAILOR,{
+prontera,147,171,4	script	Quest System	4W_SAILOR,{
 
 mes .n$;
 mes "Hello, "+strcharinfo(0)+"!";
@@ -353,7 +354,6 @@ switch(select("- Overview:- Quest Management:- Nothing")) {
 			}
 		}
 		next;
-		mes .n$;
 		mes .n$;
 		mes "Next is the Quest Limit, type the value it should be:";
 		mes "^FF0000Note: 0 means not repeatable and "+(.q_max_limit+1)+" is Cancel^000000";
@@ -861,7 +861,7 @@ while($@QSys == 0) sleep 5000;
 if($@q_tab == 0) end;
 if(strnpcinfo(3) == "QuestTemp") end;
 if(query_sql("SELECT `npc_name` FROM `quest_npc` WHERE `npc_id` = '"+atoi(strnpcinfo(2))+"' AND `npc_map` = '"+strnpcinfo(4)+"'",.@npc) == 0) {
-	getmapxy(.@n_map$,.@n_x,.@n_y,1);
+	getmapxy(.@n_map$,.@n_x,.@n_y,BL_NPC);
 	query_sql "INSERT INTO `quest_npc` ( `npc_id` , `npc_name` , `npc_map` , `npc_x` , `npc_y` ) VALUES ( '"+atoi(strnpcinfo(2))+"' , '"+escape_sql(strnpcinfo(1))+"' , '"+escape_sql(strnpcinfo(4))+"' , '"+.@n_x+"' , '"+.@n_y+"' )"; 
 }
 if(query_sql("SELECT `map` FROM `quest_map` WHERE `map` = '"+strnpcinfo(4)+"'",.@m) != 0)

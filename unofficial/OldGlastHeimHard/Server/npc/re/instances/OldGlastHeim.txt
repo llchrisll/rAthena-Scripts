@@ -76,6 +76,8 @@ glast_01,204,273,5	script	Hugin	4_M_SAGE_C,{
 		mes "Umm? Did you see me at another place? I don't think so. What about this time?";
 		if (isbegin_quest(12322) == 1)
 			erasequest 12322;
+		if (isbegin_quest(12335) == 1)
+			erasequest 12335;
 	}
 	next;
 	mes "[Hugin]";
