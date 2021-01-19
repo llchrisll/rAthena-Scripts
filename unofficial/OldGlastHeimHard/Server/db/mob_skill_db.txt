@@ -1,0 +1,158 @@
+3139,Corrupted Steward@NPC_UNDEADATTACK,chase,347,3,5000,0,5000,no,target,always,0,,,,,,,
+3139,Corrupted Steward@AL_HEAL,idle,28,1,5000,1000,3000,no,self,always,0,,,,,,26,
+3139,Corrupted Steward@NPC_UNDEADATTACK,attack,347,3,5000,500,3000,no,target,always,0,,,,,,28,
+3139,Corrupted Steward@NPC_BLOODDRAIN,attack,199,1,5000,500,5000,no,target,always,0,,,,,,47,
+3140,Corrupted Monk@NPC_CURSEATTACK,chase,181,5,5000,800,5000,no,target,always,0,,,,,,9,
+3140,Corrupted Monk@NPC_BLINDATTACK,attack,177,5,5000,0,5000,no,target,always,0,,,,,,,
+3140,Corrupted Monk@NPC_CURSEATTACK,attack,181,5,5000,800,5000,no,target,always,0,,,,,,9,
+3140,Corrupted Monk@NPC_ENERGYDRAIN,attack,200,1,5000,0,5000,no,target,always,0,,,,,,,
+3141,Grand Chamberlain in pain@NPC_UNDEADATTACK,chase,347,4,5000,0,5000,no,target,always,0,,,,,,,
+3141,Grand Chamberlain in pain@AL_HEAL,idle,28,1,5000,1000,3000,no,self,always,0,,,,,,26,
+3141,Grand Chamberlain in pain@NPC_BLEEDING,attack,660,4,500,900,5000,no,target,always,0,,,,,,9,
+3141,Grand Chamberlain in pain@NPC_UNDEADATTACK,attack,347,4,5000,500,3000,no,target,always,0,,,,,,28,
+3141,Grand Chamberlain in pain@NPC_BLOODDRAIN,attack,199,2,5000,500,5000,no,target,always,0,,,,,,47,
+3142,Maggot@NPC_GROUNDATTACK,attack,185,5,2000,0,5000,no,target,always,0,,,,,,,
+3142,Maggot@NPC_EMOTION,chase,197,1,200,0,5000,no,self,always,0,19,0x81,,,,,
+3142,Maggot@NPC_EMOTION,idle,197,1,2000,0,5000,no,self,always,0,7,0x3095,,,,,
+3143,Corrupted Palace Guard@SM_BASH,chase,5,8,5000,1000,5000,no,target,always,0,,,,,,,
+3143,Corrupted Palace Guard@BS_MAXIMIZE,chase,114,5,5000,1000,5000,no,self,always,0,,,,,,,
+3143,Corrupted Palace Guard@CR_AUTOGUARD,chase,249,2,2000,0,300000,no,self,always,0,,,,,,,
+3143,Corrupted Palace Guard@SM_MAGNUM,attack,7,9,5000,1000,5000,no,self,always,0,,,,,,,
+3143,Corrupted Palace Guard@NPC_DARKNESSATTACK,attack,190,5,5000,500,5000,no,target,always,0,,,,,,,
+3144,Wandering Archer@AC_DOUBLE,chase,46,5,5000,1000,1000,no,target,always,0,,,,,,,
+3144,Wandering Archer@AC_CHARGEARROW,attack,148,1,5000,0,50000,no,target,always,0,,,,,,,
+3144,Wandering Archer@NPC_DARKNESSATTACK,attack,190,5,5000,1000,5000,no,target,always,0,,,,,,,
+3144,Wandering Archer@AC_DOUBLE,attack,46,9,5000,1800,5000,no,target,always,0,,,,,,,
+3145,Corrupted Knight of Abyss@NPC_DARKSTRIKE,idle,340,3,5000,0,10000,no,target,rudeattacked,,,,,,,,
+3145,Corrupted Knight of Abyss@CR_AUTOGUARD,chase,249,10,2000,0,300000,no,self,longrangeattacked,,,,,,,,
+3145,Corrupted Knight of Abyss@AC_CHARGEARROW,chase,148,1,500,0,5000,no,target,always,0,,,,,,,
+3145,Corrupted Knight of Abyss@KN_BRANDISHSPEAR,attack,57,10,500,2000,5000,no,target,always,0,,,,,,9,
+3145,Corrupted Knight of Abyss@NPC_DARKNESSATTACK,attack,190,9,500,1500,10000,no,target,always,0,,,,,,7,
+3145,Corrupted Knight of Abyss@NPC_CRITICALSLASH,attack,170,1,500,0,5000,no,target,always,0,,,,,,,
+3147,Bloody Knight@WZ_METEOR,chase,83,7,2000,0,10000,no,target,myhpltmaxrate,50,,,,,,,
+3147,Bloody Knight@WZ_METEOR,attack,83,7,2000,0,5000,no,target,myhpltmaxrate,30,,,,,,,
+3147,Bloody Knight@KN_BRANDISHSPEAR,attack,57,7,500,1000,5000,no,target,always,0,,,,,,9,
+3147,Bloody Knight@NPC_DARKNESSATTACK,attack,190,3,500,500,5000,no,target,always,0,,,,,,9,
+3147,Bloody Knight@NPC_PULSESTRIKE,attack,661,3,500,2000,10000,no,self,always,0,,,,,,7,
+3151,Corrupted Soul@NPC_EARTHQUAKE,idle,653,2,10000,5000,5000,yes,self,rudeattacked,,,,,,,7,
+3151,Corrupted Soul@NPC_EVILLAND,idle,670,10,7000,3000,5000,yes,randomtarget,always,0,,,,,,9,
+3151,Corrupted Soul@NPC_HELLJUDGEMENT,idle,662,5,10000,5000,0,yes,self,always,0,,,,,,9,
+3151,Corrupted Soul@NPC_VAMPIRE_GIFT,idle,679,5,2000,5000,5000,yes,self,always,0,,,,,,29,
+3151,Corrupted Soul@NPC_BLOODDRAIN,idle,199,1,2000,0,2000,no,randomtarget,always,0,,,,,,29,
+3151,Corrupted Soul@AM_DEMONSTRATION,idle,229,9,10000,0,2000,no,randomtarget,always,0,,,,,,,
+3151,Corrupted Soul@NPC_HELLJUDGEMENT,idle,662,5,10000,5000,5000,yes,self,myhpltmaxrate,50,,,,,,,
+3151,Corrupted Soul@AL_HEAL,idle,28,11,10000,0,5000,no,self,myhpltmaxrate,50,,,,,,,
+3151,Corrupted Soul@NPC_POWERUP,idle,349,5,10000,1000,5000,yes,self,myhpltmaxrate,50,,,,,,,
+3151,Corrupted Soul@NPC_EARTHQUAKE,idle,653,4,10000,5000,5000,yes,self,myhpltmaxrate,30,,,,,,7,
+3151,Corrupted Soul@NPC_EVILLAND,idle,670,10,10000,1000,5000,yes,randomtarget,myhpltmaxrate,30,,,,,,9,
+3151,Corrupted Soul@NPC_HELLJUDGEMENT,idle,662,10,10000,5000,0,yes,self,rudeattacked,,,,,,,9,
+3151,Corrupted Soul@NPC_HELLJUDGEMENT,idle,662,8,10000,5000,0,yes,self,casttargeted,,,,,,,9,
+3151,Corrupted Soul@NPC_HELLJUDGEMENT,idle,662,6,10000,5000,0,yes,self,longrangeattacked,,,,,,,9,
+3151,Corrupted Soul@NPC_WIDESOULDRAIN,idle,680,5,10000,1000,0,yes,self,skillused,490,,,,,,9,
+3151,Corrupted Soul@NPC_WIDESOULDRAIN,idle,680,5,10000,1000,0,yes,self,skillused,271,,,,,,9,
+3151,Corrupted Soul@NPC_DARKSTRIKE,attack,340,10,5000,1000,5000,yes,target,always,0,,,,,,,
+3151,Corrupted Soul@NPC_BLOODDRAIN,attack,199,1,2000,1000,0,no,target,always,0,,,,,,29,
+3151,Corrupted Soul@NPC_CRITICALWOUND,attack,673,4,500,0,5000,no,target,always,0,,,,,,,
+3151,Corrupted Soul@AS_SONICBLOW,attack,136,10,500,800,5000,yes,target,always,0,,,,,,,
+3151,Corrupted Soul@NPC_WIDECURSE,attack,677,5,10000,1000,5000,yes,self,always,0,,,,,,,
+3151,Corrupted Soul@NPC_WIDESILENCE,attack,663,5,8000,1000,5000,yes,self,always,0,,,,,,,
+3151,Corrupted Soul@NPC_WIDESTONE,attack,666,3,10000,1000,5000,yes,self,always,0,,,,,,,
+3151,Corrupted Soul@NPC_WIDESTUN,attack,678,3,5000,1000,5000,yes,self,always,0,,,,,,,
+3150,Amdarias@NPC_DARKSTRIKE,idle,340,10,10000,0,0,no,target,rudeattacked,,,,,,,,
+3150,Amdarias@NPC_DARKSTRIKE,chase,340,5,5000,0,1000,no,target,always,0,,,,,,,
+3150,Amdarias@NPC_HELLJUDGEMENT,chase,662,5,5000,4000,5000,yes,self,myhpltmaxrate,30,,,,,,7,
+3150,Amdarias@NPC_DRAGONFEAR,chase,659,5,10000,0,0,no,self,always,0,,,,,,,
+3150,Amdarias@NPC_DRAGONFEAR,attack,659,5,2000,1000,20000,yes,self,always,0,,,,,,,
+3150,Amdarias@NPC_HELLJUDGEMENT,attack,662,5,10000,4000,5000,yes,self,myhpltmaxrate,30,,,,,,7,
+3150,Amdarias@NPC_GRANDDARKNESS,attack,339,10,10000,2000,1000,yes,self,myhpltmaxrate,30,,,,,,9,
+3150,Amdarias@NPC_POWERUP,attack,349,5,10000,0,50000,no,self,myhpltmaxrate,30,,,,,,6,
+3150,Amdarias@NPC_VAMPIRE_GIFT,attack,679,5,10000,0,0,no,self,skillused,490,,,,,,42,
+3150,Amdarias@NPC_CRITICALWOUND,attack,673,4,500,500,5000,yes,target,always,0,,,,,,,
+3150,Amdarias@NPC_CHANGEUNDEAD,attack,348,1,500,0,5000,no,target,always,0,,,,,,44,
+3150,Amdarias@NPC_MENTALBREAKER,attack,159,4,500,1500,5000,no,target,always,0,,,,,,42,
+3150,Amdarias@NPC_CRITICALSLASH,attack,170,1,10000,0,5000,no,target,always,0,,,,,,,
+3150,Amdarias@NPC_DARKCROSS,attack,338,10,5000,0,5000,no,target,always,0,,,,,,,
+3150,Amdarias@NPC_UNDEADATTACK,attack,347,10,10000,500,5000,yes,target,always,0,,,,,,,
+3150,Amdarias@NPC_CURSEATTACK,attack,181,5,4000,0,3000,no,target,always,0,,,,,,,
+3150,Amdarias@NPC_STUNATTACK,attack,179,5,2000,0,3000,no,target,always,0,,,,,,,
+3150,Amdarias@SM_MAGNUM,attack,7,25,10000,500,5000,yes,self,always,0,,,,,,,
+
+SQL:
+REPLACE INTO `mob_skill_db2_re` VALUES (3139,'Corrupted Steward@NPC_UNDEADATTACK','chase',347,3,5000,0,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3139,'Corrupted Steward@AL_HEAL','idle',28,1,5000,1000,3000,'no','self','always','0',NULL,NULL,NULL,NULL,NULL,'26',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3139,'Corrupted Steward@NPC_UNDEADATTACK','attack',347,3,5000,500,3000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,'28',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3139,'Corrupted Steward@NPC_BLOODDRAIN','attack',199,1,5000,500,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,'47',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3140,'Corrupted Monk@NPC_CURSEATTACK','chase',181,5,5000,800,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,'9',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3140,'Corrupted Monk@NPC_BLINDATTACK','attack',177,5,5000,0,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3140,'Corrupted Monk@NPC_CURSEATTACK','attack',181,5,5000,800,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,'9',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3140,'Corrupted Monk@NPC_ENERGYDRAIN','attack',200,1,5000,0,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3141,'Grand Chamberlain in pain@NPC_UNDEADATTACK','chase',347,4,5000,0,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3141,'Grand Chamberlain in pain@AL_HEAL','idle',28,1,5000,1000,3000,'no','self','always','0',NULL,NULL,NULL,NULL,NULL,'26',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3141,'Grand Chamberlain in pain@NPC_BLEEDING','attack',660,4,500,900,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,'9',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3141,'Grand Chamberlain in pain@NPC_UNDEADATTACK','attack',347,4,5000,500,3000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,'28',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3141,'Grand Chamberlain in pain@NPC_BLOODDRAIN','attack',199,2,5000,500,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,'47',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3142,'Maggot@NPC_GROUNDATTACK','attack',185,5,2000,0,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3142,'Maggot@NPC_EMOTION','chase',197,1,200,0,5000,'no','self','always','0',19,0x81,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3142,'Maggot@NPC_EMOTION','idle',197,1,2000,0,5000,'no','self','always','0',7,0x3095,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3143,'Corrupted Palace Guard@SM_BASH','chase',5,8,5000,1000,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3143,'Corrupted Palace Guard@BS_MAXIMIZE','chase',114,5,5000,1000,5000,'no','self','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3143,'Corrupted Palace Guard@CR_AUTOGUARD','chase',249,2,2000,0,300000,'no','self','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3143,'Corrupted Palace Guard@SM_MAGNUM','attack',7,9,5000,1000,5000,'no','self','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3143,'Corrupted Palace Guard@NPC_DARKNESSATTACK','attack',190,5,5000,500,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3144,'Wandering Archer@AC_DOUBLE','chase',46,5,5000,1000,1000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3144,'Wandering Archer@AC_CHARGEARROW','attack',148,1,5000,0,50000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3144,'Wandering Archer@NPC_DARKNESSATTACK','attack',190,5,5000,1000,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3144,'Wandering Archer@AC_DOUBLE','attack',46,9,5000,1800,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3145,'Corrupted Knight of Abyss@NPC_DARKSTRIKE','idle',340,3,5000,0,10000,'no','target','rudeattacked',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3145,'Corrupted Knight of Abyss@CR_AUTOGUARD','chase',249,10,2000,0,300000,'no','self','longrangeattacked',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3145,'Corrupted Knight of Abyss@AC_CHARGEARROW','chase',148,1,500,0,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3145,'Corrupted Knight of Abyss@KN_BRANDISHSPEAR','attack',57,10,500,2000,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,'9',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3145,'Corrupted Knight of Abyss@NPC_DARKNESSATTACK','attack',190,9,500,1500,10000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,'7',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3145,'Corrupted Knight of Abyss@NPC_CRITICALSLASH','attack',170,1,500,0,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3147,'Bloody Knight@WZ_METEOR','chase',83,7,2000,0,10000,'no','target','myhpltmaxrate','50',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3147,'Bloody Knight@WZ_METEOR','attack',83,7,2000,0,5000,'no','target','myhpltmaxrate','30',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3147,'Bloody Knight@KN_BRANDISHSPEAR','attack',57,7,500,1000,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,'9',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3147,'Bloody Knight@NPC_DARKNESSATTACK','attack',190,3,500,500,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,'9',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3147,'Bloody Knight@NPC_PULSESTRIKE','attack',661,3,500,2000,10000,'no','self','always','0',NULL,NULL,NULL,NULL,NULL,'7',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_EARTHQUAKE','idle',653,2,10000,5000,5000,'yes','self','rudeattacked',NULL,NULL,NULL,NULL,NULL,NULL,'7',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_EVILLAND','idle',670,10,7000,3000,5000,'yes','randomtarget','always','0',NULL,NULL,NULL,NULL,NULL,'9',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_HELLJUDGEMENT','idle',662,5,10000,5000,0,'yes','self','always','0',NULL,NULL,NULL,NULL,NULL,'9',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_VAMPIRE_GIFT','idle',679,5,2000,5000,5000,'yes','self','always','0',NULL,NULL,NULL,NULL,NULL,'29',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_BLOODDRAIN','idle',199,1,2000,0,2000,'no','randomtarget','always','0',NULL,NULL,NULL,NULL,NULL,'29',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@AM_DEMONSTRATION','idle',229,9,10000,0,2000,'no','randomtarget','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_HELLJUDGEMENT','idle',662,5,10000,5000,5000,'yes','self','myhpltmaxrate','50',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@AL_HEAL','idle',28,11,10000,0,5000,'no','self','myhpltmaxrate','50',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_POWERUP','idle',349,5,10000,1000,5000,'yes','self','myhpltmaxrate','50',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_EARTHQUAKE','idle',653,4,10000,5000,5000,'yes','self','myhpltmaxrate','30',NULL,NULL,NULL,NULL,NULL,'7',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_EVILLAND','idle',670,10,10000,1000,5000,'yes','randomtarget','myhpltmaxrate','30',NULL,NULL,NULL,NULL,NULL,'9',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_HELLJUDGEMENT','idle',662,10,10000,5000,0,'yes','self','rudeattacked',NULL,NULL,NULL,NULL,NULL,NULL,'9',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_HELLJUDGEMENT','idle',662,8,10000,5000,0,'yes','self','casttargeted',NULL,NULL,NULL,NULL,NULL,NULL,'9',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_HELLJUDGEMENT','idle',662,6,10000,5000,0,'yes','self','longrangeattacked',NULL,NULL,NULL,NULL,NULL,NULL,'9',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_WIDESOULDRAIN','idle',680,5,10000,1000,0,'yes','self','skillused','490',NULL,NULL,NULL,NULL,NULL,'9',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_WIDESOULDRAIN','idle',680,5,10000,1000,0,'yes','self','skillused','271',NULL,NULL,NULL,NULL,NULL,'9',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_DARKSTRIKE','attack',340,10,5000,1000,5000,'yes','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_BLOODDRAIN','attack',199,1,2000,1000,0,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,'29',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_CRITICALWOUND','attack',673,4,500,0,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@AS_SONICBLOW','attack',136,10,500,800,5000,'yes','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_WIDECURSE','attack',677,5,10000,1000,5000,'yes','self','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_WIDESILENCE','attack',663,5,8000,1000,5000,'yes','self','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_WIDESTONE','attack',666,3,10000,1000,5000,'yes','self','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3151,'Corrupted Soul@NPC_WIDESTUN','attack',678,3,5000,1000,5000,'yes','self','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3150,'Amdarias@NPC_DARKSTRIKE','idle',340,10,10000,0,0,'no','target','rudeattacked',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3150,'Amdarias@NPC_DARKSTRIKE','chase',340,5,5000,0,1000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3150,'Amdarias@NPC_HELLJUDGEMENT','chase',662,5,5000,4000,5000,'yes','self','myhpltmaxrate','30',NULL,NULL,NULL,NULL,NULL,'7',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3150,'Amdarias@NPC_DRAGONFEAR','chase',659,5,10000,0,0,'no','self','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3150,'Amdarias@NPC_DRAGONFEAR','attack',659,5,2000,1000,20000,'yes','self','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3150,'Amdarias@NPC_HELLJUDGEMENT','attack',662,5,10000,4000,5000,'yes','self','myhpltmaxrate','30',NULL,NULL,NULL,NULL,NULL,'7',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3150,'Amdarias@NPC_GRANDDARKNESS','attack',339,10,10000,2000,1000,'yes','self','myhpltmaxrate','30',NULL,NULL,NULL,NULL,NULL,'9',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3150,'Amdarias@NPC_POWERUP','attack',349,5,10000,0,50000,'no','self','myhpltmaxrate','30',NULL,NULL,NULL,NULL,NULL,'6',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3150,'Amdarias@NPC_VAMPIRE_GIFT','attack',679,5,10000,0,0,'no','self','skillused','490',NULL,NULL,NULL,NULL,NULL,'42',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3150,'Amdarias@NPC_CRITICALWOUND','attack',673,4,500,500,5000,'yes','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3150,'Amdarias@NPC_CHANGEUNDEAD','attack',348,1,500,0,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,'44',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3150,'Amdarias@NPC_MENTALBREAKER','attack',159,4,500,1500,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,'42',NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3150,'Amdarias@NPC_CRITICALSLASH','attack',170,1,10000,0,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3150,'Amdarias@NPC_DARKCROSS','attack',338,10,5000,0,5000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3150,'Amdarias@NPC_UNDEADATTACK','attack',347,10,10000,500,5000,'yes','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3150,'Amdarias@NPC_CURSEATTACK','attack',181,5,4000,0,3000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3150,'Amdarias@NPC_STUNATTACK','attack',179,5,2000,0,3000,'no','target','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db2_re` VALUES (3150,'Amdarias@SM_MAGNUM','attack',7,25,10000,500,5000,'yes','self','always','0',NULL,NULL,NULL,NULL,NULL,NULL,NULL);

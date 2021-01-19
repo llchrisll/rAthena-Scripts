@@ -89,9 +89,9 @@ glast_01,204,273,5	script	Hugin	4_M_SAGE_C,{
 	else if(.@diff == 2)
 		setarray .@quest_id[0],12334,12336;
 	
-	if(getgroupid() && isbegin_quest(.@quest_id[0]) == 1)
-		erasequest .@quest_id[0];
-		
+	if(isbegin_quest(.@quest_id[1]) == 1)
+		erasequest .@quest_id[1];
+	
 	switch( checkquest(.@quest_id[0],PLAYTIME) ) {
 	case -1:
 		.@party_id = getcharid(1);
@@ -209,7 +209,6 @@ glast_01,204,273,5	script	Hugin	4_M_SAGE_C,{
 	.@player_name$ = strcharinfo(0);
 	
 	set 'OGH_Mode,@OGH_Mode;
-	set @OGH_Mode,0;
 	
 	mes "[Varmundt]";
 	mes "Are you the one ^0000ffHerico^000000 sent to help me?";
@@ -487,7 +486,6 @@ OnTimer92000:
 		setarray .@mob_id[0],2470,2471;
 	else if('OGH_Mode == 2) // Hard Mode
 		setarray .@mob_id[0],3145,3146;
-	debugmes "'OGH_Mode = "+'OGH_Mode;
 	monster 'map_name$[0],145,59,"Abysmal Knight",.@mob_id[0],1,.@label$;// MG_KNIGHT_OF_ABYSS
 	monster 'map_name$[0],154,59,"Abysmal Knight",.@mob_id[0],1,.@label$;
 	monster 'map_name$[0],145,69,"Abysmal Knight",.@mob_id[0],1,.@label$;
@@ -1807,6 +1805,7 @@ OnTimer10000:
 	if('OGH_Mode == 1 && !OGH_Norm) // Completing Normal Mode grants access to Hard Mode
 		set OGH_Norm,1; 
 	warp "glast_01",204,270;
+	set @OGH_Mode,0;
 	end;
 }
 

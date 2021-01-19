@@ -24,6 +24,16 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2021/01/19
+<< == |*| Unofficial Old Glast Heim Hard Mode v1.0 [RE] - Modified |*| == >>
+- Added Mob Skills (copied skills from normal mobs)
+- Fixed a typo in OldGlastHeim_merchants.txt
+- Fixed wrong check for cooldown quest (Had the wrong Quest ID selected)
+- Fixed using @reloadscript messing up the instance because of "@OGH_Mode" variable resetting at the beginning
+- Added YAML support for quest_db, instance_db, mob_db and mob_skill_db
+<< == |*| Unofficial Sky Fortress v1.0 [RE] - Modified |*| == >>
+- Added Random Options Item drop support > mob_drop.txt
+------------------------------------------------------------------------------------------------------------------------
 * 2020/11/06
 << == |*| Unofficial Mysterious Combination Book Bundle v1.0 [RE] - Removed |*| == >>
 - Removed because it's an Lapine UI feature

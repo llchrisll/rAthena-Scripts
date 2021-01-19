@@ -1,0 +1,50 @@
+// Monster Drop Database
+// Add drop item to monster
+//
+// Structure:
+// <mobid>,<itemid>,<rate>{,<randopt_groupid>,<flag>}
+//
+// <mobid>  : Monster ID. See db/[pre-]re/mob_db.txt
+// <itemid> : Item ID.
+// <rate>   : 1 = 0.01%
+//            100 = 1%
+//            10000 = 100%
+//            Just like rate in mob_db.txt, adjusted by battle_config.
+//            To remove original drop from monster, use 0 as rate.
+// Optional:
+// <randopt_groupid> : If set, the dropped item will be modified by Random Option Group based on db/[pre-]re/item_randomopt_group.txt
+// <flag>            : 1 - The item is protected from steal.
+//                     2 - As MVP Reward
+
+// Sky Fortress - Vicious Mind Weapons Drops by [llchrisll]
+// Note: All drops are protected from Steal
+
+// Immortal Zombie Assault
+3479,28605,50,AS_WEAPON_4,1 // Vicious Mind Book
+3479,13328,50,AS_WEAPON_5,1 // Vicious Mind Huuma Shuriken
+3479,1800,50,AS_WEAPON_5,1 // Vicious Mind Knuckle
+3479,1450,50,AS_WEAPON_5,1 // Vicious Mind Lance
+3479,16041,50,AS_WEAPON_3,1 // Vicious Mind Mace
+
+// Immortal Cursed Zombie
+3480,18121,100,AS_WEAPON_2,1 // Vicious Mind Bow
+3480,13128,50,AS_WEAPON_2,1 // Vicious Mind Revolver
+3480,1600,50,AS_WEAPON_1,1 // Vicious Mind Rod
+3480,2026,50,AS_WEAPON_1,1 // Vicious Mind Two-Handed Staff
+3480,28107,50,AS_WEAPON_3,1 // Vicious Mind Two-Handed Axe
+
+// Immortal Fortress Legion
+3477,28706,50,AS_WEAPON_4,1 // Vicious Mind Dagger
+3477,28706,50,AS_WEAPON_1,1 // Vicious Mind Dagger
+3477,28008,50,AS_WEAPON_5,1 // Vicious Mind Katar
+3477,13455,50,AS_WEAPON_3,1 // Vicious Mind Saber
+3477,1400,50,AS_WEAPON_5,1 // Vicious Mind Spear
+3477,21016,50,AS_WEAPON_4,1 // Vicious Mind Two-Handed Sword
+
+// Immortal Angry Shadow
+3482,1900,50,AS_WEAPON_2,1 // Vicious Mind Violin
+3482,1900,50,AS_WEAPON_2,1 // Vicious Mind Violin
+
+// Immortal Nightmare Shadow
+3481,1996,50,AS_WEAPON_2,1 // Vicious Mind Wire
+3481,1996,50,AS_WEAPON_2,1 // Vicious Mind Wire

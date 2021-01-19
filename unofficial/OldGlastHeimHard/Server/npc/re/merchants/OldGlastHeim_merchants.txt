@@ -623,7 +623,7 @@ switch(select("Ask about pricing:Purchase White Knight Card:Purchase Khalitzburg
 	}
 	break;
 	
-	case 3:
+	case 4:
 	mes .n$;
 	mes "Come back if you decide you do want to purchase one.";
 	break;
