@@ -24,6 +24,10 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2021/03/13
+<< == |*| Unofficial Sky Fortress Instance v1.0 [RE] - Removed |*| == >>
+- Removed duo official implementation in rAthena
+------------------------------------------------------------------------------------------------------------------------
 * 2021/01/19
 << == |*| Unofficial Old Glast Heim Hard Mode v1.0 [RE] - Modified |*| == >>
 - Added Mob Skills (copied skills from normal mobs)

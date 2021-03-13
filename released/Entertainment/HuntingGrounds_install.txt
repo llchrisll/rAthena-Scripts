@@ -9,7 +9,7 @@ db/import/instance.db:
 
 for YAML:
 db/import/instance_db.yml
-# Hunting Grounds [llchris]
+# Hunting Grounds [llchrisll]
  - Id: 100
    Name: Hunting Ground 99
    TimeLimit: 3600
@@ -991,7 +991,7 @@ Hunting Ground 175 Cooldown#
 
 2018-06-20 Clients - Lua Files:
 Add in "System/OngoingQuestInfoList.lub" or "System/OngoingQuestInfoList_Sakray.lub" the following at the end:
-Note: _Sakray worked for me, not sure why the normal didn't tho.
+Note: Depends on the client version, Ragexe or RagexeRE.
 
 	[160000] = {
 		Title = "Hunting Grounds 99",
