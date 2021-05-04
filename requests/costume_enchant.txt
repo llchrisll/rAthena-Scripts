@@ -9,9 +9,14 @@
 //= 1.2 - Added support to use an price to enchant
 //      - Removed the unecessary variable for Reset Enchantment
 //      - Modified the menu creation
+//= 1.3 - Added requested features by Meneso on Discord:
+//        Enchantment Chance
+//        Selectable or Random Enchantment
+//      - Added Cost Multiplier for higher Enchantment Levels
+//      - Revamped Enchantment Config for better overview
 //===== Tested With ==========================================
-//= rAthena 03/26/2018 Revision
-//= GIT Hash: 333f0dddc8353663eacba0423751988c9bc38e34
+//= rAthena 03/29/2021 Revision
+//= GIT Hash: 47c471e3d0e7997ae605ebf45760349f3b25d365
 //===== Description ==========================================
 //= This NPC allows players to enchant Costumes.
 //= Selectable Enchants and reseting the Enchantments.
@@ -25,7 +30,7 @@ disable_items;
 mes .n$;
 mes "Hello, "+strcharinfo(0)+"!";
 mes "If you like I can enchant your costume equipment with any enchantment I have in store";
-mes ( (.exchange_cost[0] > 0)?"in exchange for "+.enchant_cost[1]+"x "+getitemname(.enchant_cost[0]):"for free")+".";
+mes ( (.enchant_cost[0] > 0)?"in exchange for "+.enchant_cost[1]+"x "+getitemname(.enchant_cost[0])+ ( (.enchant_cost_m == 1)?", but the higher the enchantment level, the more it costs.":""):"for free")+".";
 mes "I can also reset an Enchantment "+ ((.enchant_reset[0] > 0)?", but I require "+.enchant_reset[1]+"x "+getitemname(.enchant_reset[0]):"for free")+".";
 next;
 switch(select("- Enchant Costumes:- Reset Enchantment:- Nevermind")) {
@@ -33,8 +38,8 @@ switch(select("- Enchant Costumes:- Reset Enchantment:- Nevermind")) {
 	case 1:
 	mes .n$;
 	mes "Please select the Costume you want me to enchant:";
-	for ( set .@s,0; .@s < getarraysize(.enchant_slot); set .@s,.@s + 1) {
-		switch(.enchant_slot[.@s]) {
+	for ( set .@s,0; .@s < getarraysize(.equip_slot); set .@s,.@s + 1) {
+		switch(.equip_slot[.@s]) {
 			case EQI_COSTUME_HEAD_TOP: set .@c_slot$,"Top Headgear"; break;
 			case EQI_COSTUME_HEAD_MID: set .@c_slot$,"Mid Headgear"; break;
 			case EQI_COSTUME_HEAD_LOW: set .@c_slot$,"Low Headgear"; break;
@@ -46,12 +51,12 @@ switch(select("- Enchant Costumes:- Reset Enchantment:- Nevermind")) {
 			case EQI_SHADOW_ACC_R: set .@c_slot$,"Accessory Right"; break;
 			case EQI_SHADOW_ACC_L: set .@c_slot$,"Accessory Left"; break;
 		}
-		set .@c_m$,.@c_m$ + ((getequipid(.enchant_slot[.@s]) != -1)?.@c_slot$ + " - "+getitemname(getequipid(.enchant_slot[.@s])):"") + ( (.enchant_slot[.@s+1] != 0)?":":"");
+		set .@c_m$,.@c_m$ + ((getequipid(.equip_slot[.@s]) != -1)?.@c_slot$ + " - "+getitemname(getequipid(.equip_slot[.@s])):"") + ( (.equip_slot[.@s+1] != 0)?":":"");
 	}
 	set .@c_m$,.@c_m$ + ":- Cancel";
 	set .@c,select(.@c_m$);
-	if(.@c >= getarraysize(.enchant_slot)) close;
-	set .@part,.enchant_slot[.@c-1];
+	if(.@c > getarraysize(.equip_slot)) close;
+	set .@part,.equip_slot[.@c-1];
 	next;
 	mes .n$;
 	if(getequipid(.@part) == -1) {
@@ -66,36 +71,68 @@ switch(select("- Enchant Costumes:- Reset Enchantment:- Nevermind")) {
 		mes "But it looks like you already have an enchantment in this costume.";
 		close;
 	}
-	mes "Now please select the Enchantment:";
+	if(.enchant_type == 1) { // Selectable Enchantment
+		mes "Now please select the Enchantment:";
+		next;
+		for ( set .@e,0; .@e < getarraysize(.enchant_id); set .@e,.@e + 3)
+			set .@e_m$,.@e_m$ + "> "+getitemname(.enchant_id[.@e])+ ( (.enchant_id[.@e+3] != 0)?":":"");
+		set .@rune,select(.@e_m$)*3-3;
+		mes .n$;
+		mes "Selected Enchantment: "+getitemname(.enchant_id[.@rune]);
+		mes "Proceed?";
+		if(select("- Yes:- No") - 1) close;
+		
+	} else // Random Enchantment
+		set .@rune,rand(getarraysize(.enchant_id)/3)*3-3;
+		
 	next;
-	for ( set .@e,0; .@e < getarraysize(.enchant_id); set .@e,.@e + 1)
-		set .@e_m$,.@e_m$ + "> "+getitemname(.enchant_id[.@e])+ ( (.enchant_id[.@e+1] != 0)?":":"");
-	set .@rune,select(.@e_m$) - 1;
 	mes .n$;
 	mes "Selected Enchantment: "+getitemname(.enchant_id[.@rune]);
-	if(.enchant_cost[0] > 0 && countitem(.enchant_cost[0]) < .enchant_cost[1]) {
-		mes "But it looks like you don't have enough "+getitemname(.enchant_cost[0])+"!";
-		close;
+	if(.enchant_cost[0] > 0) {
+		mes "Price for Enchanting:";
+		if(.enchant_cost_m == 1)
+			mes (.enchant_cost[1]*.enchant_id[.@rune+2])+"x "+getitemname(.enchant_cost[0]);
+		else
+			mes .enchant_cost[1]+"x "+getitemname(.enchant_cost[0]);
 	}
+	if(.enchant_ch == 1)
+		mes "Enchantment Chance: "+.enchant_id[.@rune+1];
 	mes "Proceed?";
 	if(select("- Yes:- No") - 1) close;
 	next;
-	if(.enchant_cost[0] > 0)
-		delitem .enchant_cost[0],.enchant_cost[1];
-	delequip .@part;
-	getitem2 .@hg,1,1,.@ref,0,.@card1,0,0,.enchant_id[.@rune];
-	equip .@hg;
 	mes .n$;
+	if(.enchant_cost[0] > 0)
+		if( (.enchant_cost_m == 1 && countitem(.enchant_cost[0]) < (.enchant_cost[1]*.enchant_id[.@rune+2]) ) || (.enchant_cost_m == 0 && countitem(.enchant_cost[0]) < .enchant_cost[1]) ) {
+			mes "It looks like you don't have enough "+getitemname(.enchant_cost[0])+"!";
+			mes "You need at least "+( (.enchant_cost_m == 1)?(.enchant_cost[1]*.enchant_id[.@rune+2]):.enchant_cost[1]);
+			close;
+		}
+	if(.enchant_cost[0] > 0) {
+		if(.enchant_cost_m == 1) 
+			delitem .enchant_cost[0],(.enchant_cost[1]*.enchant_id[.@rune+2]);
+		else if(.enchant_cost_m == 0)
+			delitem .enchant_cost[0],.enchant_cost[1];
+	}
+	delequip .@part;
+	if(.enchant_ch == 1) { // Enabled Enchantment Chance
+		set .@r,100-.enchant_id[.@rune+1];
+		if(rand(100) < .@r) {
+			getitem2 .@hg,1,1,.@ref,0,.@card1,0,0,0;
+			mes "I'm sorry, the enchantment failed.";
+			close;
+		}
+	}
+	getitem2 .@hg,1,1,.@ref,0,.@card1,0,0,.enchant_id[.@rune];
 	mes "The enchantment was a success.";
 	mes "See ya next time.";
 	enable_items;
 	break;
-		
+
 	case 2:
 	mes .n$;
 	mes "Please select the Costume you want me to reset the enchantment!";
-	for ( set .@s,0; .@s < getarraysize(.enchant_slot); set .@s,.@s + 1) {
-		switch(.enchant_slot[.@s]) {
+	for ( set .@s,0; .@s < getarraysize(.equip_slot); set .@s,.@s + 1) {
+		switch(.equip_slot[.@s]) {
 			case EQI_COSTUME_HEAD_TOP: set .@c_slot$,"Top Headgear"; break;
 			case EQI_COSTUME_HEAD_MID: set .@c_slot$,"Mid Headgear"; break;
 			case EQI_COSTUME_HEAD_LOW: set .@c_slot$,"Low Headgear"; break;
@@ -107,12 +144,12 @@ switch(select("- Enchant Costumes:- Reset Enchantment:- Nevermind")) {
 			case EQI_SHADOW_ACC_R: set .@c_slot$,"Accessory Right"; break;
 			case EQI_SHADOW_ACC_L: set .@c_slot$,"Accessory Left"; break;
 		}
-		set .@c_m$,.@c_m$ + ((getequipid(.enchant_slot[.@s]) != -1)?.@c_slot$ + " - "+getitemname(getequipid(.enchant_slot[.@s])):"") + ( (.enchant_slot[.@s+1] != 0)?":":"");
+		set .@c_m$,.@c_m$ + ((getequipid(.equip_slot[.@s]) != -1)?.@c_slot$ + " - "+getitemname(getequipid(.equip_slot[.@s])):"") + ( (.equip_slot[.@s+1] != 0)?":":"");
 	}
 	set .@c_m$,.@c_m$ + ":- Cancel";
 	set .@c,select(.@c_m$);
-	if(.@c >= getarraysize(.enchant_slot)) close;
-	set .@part,.enchant_slot[.@c-1];
+	if(.@c > getarraysize(.equip_slot)) close;
+	set .@part,.equip_slot[.@c-1];
 	next;
 	mes .n$;
 	if(getequipcardid(.@part,3) == 0) {
@@ -158,12 +195,34 @@ set .n$,"[Costume Enchanter]";
 // - EQI_SHADOW_SHOES
 // - EQI_SHADOW_ACC_R
 // - EQI_SHADOW_ACC_L
-setarray .enchant_slot[0],EQI_COSTUME_HEAD_TOP,EQI_COSTUME_HEAD_MID,EQI_COSTUME_HEAD_LOW;
-// Enchantment ID's
-setarray .enchant_id[0],4709,4719,4729,4739,4749,4759;
+setarray .equip_slot[0],EQI_COSTUME_HEAD_TOP,EQI_COSTUME_HEAD_MID,EQI_COSTUME_HEAD_LOW;
+// Enchantment Type
+// 0 = Random
+// 1 = Selectable
+set .enchant_type,0;
+// Enchantment Chance
+// 1 = Enable
+// 0 = Disable
+set .enchant_ch,1;
 // Price for enchanting:
 // To disable the price, put 0 as values
 setarray .enchant_cost[0],501,10; // Item ID,Amount
+// Price Multiplier depending on Enchantment Level
+// 1 = Enable
+// 0 = Disable
+set .enchant_cost_m,1;
+// Enchantment Database:
+// [0] = Item ID of Enchantment
+// [1] = Enchantment Chance (if enabled)
+// [2] = Price Multiplier (if enabled)
+setarray .enchant_id[0],
+// Array Index:			0	1	2
+						4709,100,1,
+						4719,90,2,
+						4729,80,3,
+						4739,70,4,
+						4749,60,5,
+						4759,50,6;
 // Price for reseting:
 // To disable the price, put 0 as values
 setarray .enchant_reset[0],501,10; // Item ID,Amount

@@ -4,11 +4,13 @@
 //= llchrisll
 //===== Version ==============================================
 //= 1.0 - Initial Release
-//  1.1 - Added custom Commands for GM's to start/end the invasion manually.
+//= 1.1 - Added custom Commands for GM's to start/end the invasion manually.
 //      - Exchanged the Custom Variable Settings for the Reward NPC with
 //        the forgotten Cash Points reward (ups..)
 //      - Removed the idea about using an Invasion Shop
 //      - Fixed reward announcer to display correct lines
+//= 1.2 - Adjusted announce messages
+//      - Fixed Force End not working
 //===== Tested With ==========================================
 //= rAthena 04/26/2019 Revision
 //= GIT Hash: 67e1583f9fec7ac95a954634f6b7600ebe428df0
@@ -37,7 +39,7 @@ if(.debug)
 	if(.s%60 == 0) debugmes .n$+": Delay Timer: "+.s+" seconds (Minutes: "+(.s/60)+"), Delay Function returns: "+DELAY(.delay_type,.delay_pos,1)+", Invasion Re-/Starts: "+.time[.delay_pos]+" (in seconds), Force End: "+.inva_fend+" (in seconds)";
 if(.delay == 1 && .s == DELAY(.delay_type,.delay_pos,1) ) 
 	donpcevent strnpcinfo(0)+"::OnInvaInit";
-else if( .s == .inva_fend && .inva_status) 
+if(.inva_status && .s == .inva_fend) 
 	donpcevent strnpcinfo(0)+"::OnInvaForceEnd";
 initnpctimer;
 end;
@@ -263,8 +265,7 @@ if(!.inva_status) end; // Shouldn't be possible
 if(getvariableofnpc(.rew_type,"Invasion Rewarder") > 0) 
 	set InvaKill,InvaKill + 1; // Kill Counter for Reward
 set .MobSKilled,.MobSKilled - 1;
-switch(.MobSKilled) {
-	case 0:
+if(.MobSKilled == 0) {
 	announce .n$+": Congratulation to ["+strcharinfo(0)+"] who delivered the final blow!!! Nicely Done!!!",0;
 	if(.inva_final) {
 		announce .n$+": You also get an \"Final Kill Reward\", just take a look in the Chat Box. See ya next time *g*",bc_self;
@@ -282,24 +283,15 @@ switch(.MobSKilled) {
 	}
 	sleep 10000;
 	donpcevent strnpcinfo(0)+"::OnInvaEnd";
-	break;
 	
-	case 1:
-	mapannounce strcharinfo(3),.n$+": JUST "+.MobSKilled+" MONSTER is left!!!! FINAL BLOW, GO GO!!!",bc_yellow;
-	break;
+} else if(.MobSKilled == 1) 
+	mapannounce strcharinfo(3),.n$+": JUST 1 MONSTER is left!!!! FINAL BLOW, GO GO!!!",bc_yellow;
 	
-	case 2:
-	case 3:
-	case 4:
-	mapannounce strcharinfo(3),.n$+": Only "+.MobSKilled+" monsters are left!!!! We can do it!!!",bc_yellow;
-	break;
-
-	case 5:
-	mapannounce strcharinfo(3),.n$+": LAST "+.MobSKilled+"!!!! We can do it!!!",bc_yellow;
-	break;
+else if(.MobSKilled == 5) 
+	mapannounce strcharinfo(3),.n$+": LAST ["+.MobSKilled+"] Monsters!!!! We can do it!!!",bc_yellow;
 	
-	default: break;
-}
+else
+	mapannounce strcharinfo(3),.n$+": "+.MobSKilled+" Monsters are left!",bc_yellow;
 end;
 
 OnMobMultiKilled:
@@ -373,15 +365,9 @@ donpcevent strnpcinfo(0)+"::OnInvaRestart";
 end;
 
 OnInvaForceEnd:
+if(.delay == 1) set .s,0; // Reseting Delay Counter
 announce .n$+": NOOOOO!!! The monsters successfully invaded the towns, RETREAT GUARDS!!!",0;
-sleep 10000;
-announce .n$+": Brave Fighters, I thank you for your support, but we failed!!",0;
-sleep 10000;
-announce .n$+": Let's regroup and let's try again, I will inform you when we are ready!!",0;
-
-OnInvaRestart:
-DELAY(.delay_type,.delay_pos,2);
-// Removing Mobs which kinda survived
+// Removing Mobs
 if(.inva_type == 1) // Single Town
 	if(.map_use == 1) killmonster .map_b$[.t],strnpcinfo(0)+"::OnMobSingleKilled";
 	else killmonster .map_s$[.t],strnpcinfo(0)+"::OnMobSingleKilled";
@@ -394,7 +380,13 @@ else if(.inva_type == 2) { // Multi Town
 		killmonster .map_s$[.@t],strnpcinfo(0)+"::OnMobMultiKilled";
 	}
 set .inva_status,0;
-if(.delay == 1) set .s,0; // Reseting Delay Counter
+sleep 10000;
+announce .n$+": Brave Fighters, I thank you for your support, but we failed!!",0;
+sleep 10000;
+announce .n$+": Let's regroup and let's try again, I will inform you when we are ready!!",0;
+
+OnInvaRestart:
+DELAY(.delay_type,.delay_pos,2);
 if(getvariableofnpc(.rew_type,"Invasion Rewarder") > 0) {
 	enablenpc "Invasion Rewarder";
 	announce .n$+": Visit the \"Invasion Rewarder\" to recieve rewards for your kills. But hurry, he will disappear in "+getvariableofnpc(.rew_dis,"Invasion Rewarder")+" minutes.",0;
@@ -453,7 +445,7 @@ if(.inva_type == 1) {
 	// - 0 = Random
 	// - 1 = Big Maps
 	// - 2 = Small Maps
-	set .s_inva_spec,1;
+	set .s_inva_spec,0;
 
 	if(.s_inva_spec > 0) {
 		// * Map Index
@@ -494,10 +486,11 @@ if(.inva_type == 1) {
 // - 1: Yes
 set .inva_statusinit,1;
 // * Invasion Force End
+// - Default: 3600 seconds // 1 Hour
 // - 0: Not used
 // - 1+: ...
 // Note: The Event will automatically end after this value has passed (in seconds)
-set .inva_fend,3600; // 1 Hour
+set .inva_fend,3600;
 // =======*======= DELAY SETTINGS =======*=======
 // * Delay Usage
 // - 0: Off - OnClockXXXX will be used

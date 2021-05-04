@@ -56,11 +56,16 @@
 //      - Fixed typo at PvP Deathmatch warp "$dmpvp$" > "$@dmpvp$"
 //		- Added some lines for the dynamic Map setting
 //		- Fixed a typo in mapannounce (Thanks to Questune09 for the bug report)
+//= 1.8 - Moved the writeStats use on killing to when the player dies or logs out (lessens SQL usage)
+//      - Added OnPCLogoutEvent seperately
+//      - Removed some left over messages I missed to delete with last update
+//      - Removed MvP Ranker
+//      - Fixed an issue the Shop, which made it possible buy items without cost
 //===== Tested With ==========================================
-//= rAthena 06/29/2019 Revision
-//= GIT Hash: c1975d7ea3729c1f5deec2e0dcf04841c4b96969
+//= rAthena 03/29/2021 Revision
+//= GIT Hash: 47c471e3d0e7997ae605ebf45760349f3b25d365
 //===== Description ==========================================
-//= PvP / GvG Arenas with ranking ladder & MvP Ranker.
+//= PvP / GvG Arenas with ranking ladder
 //= PvP Types:
 //  - Normal
 //  - Dispell: You'll be dispelled on Room entry.
@@ -90,13 +95,10 @@ CREATE TABLE `arena_master` (
   `wicked` smallint(5) unsigned DEFAULT '0', 
   `monster` smallint(5) unsigned DEFAULT '0', 
   `godlike` smallint(5) unsigned DEFAULT '0', 
-  `holys` smallint(5) unsigned DEFAULT '0', 
-  `mvp` smallint(5) unsigned DEFAULT '0',
+  `holys` smallint(5) unsigned DEFAULT '0',
 PRIMARY KEY (`char_id`)
 ) ENGINE=MyISAM;
 */
-//=============== ToDo List ==========================
-//= Maybe adding a even more detailed class limitation, but just maybe
 //============================================================
 // ================= Arena Master ================== //
 prontera,164,163,5	script	Arena Master	808,{
@@ -286,14 +288,12 @@ switch(select("- Arenas:- Rankings:- Arena Shop:- Information:- Nevermind")) {
 		close2;
 		warp $@gvgr$[.@rchoi],0,0;
 		end;
-		break;
 		
 	// Nevermind
-		case 3:
-		goto R_Bye;
-		break;
+		case 3: break;
 	}
-
+	close;
+	
 // Ranking
 	case 2:
 	mes .n$;
@@ -304,11 +304,9 @@ switch(select("- Arenas:- Rankings:- Arena Shop:- Information:- Nevermind")) {
 	mes "Which ranking do you wanna see?";
 	next;
 	
-	set .@rank,select("- Kills:- Deaths:- Highest Streak:- Killing Sphree:- Dominating:- Mega Kill:- Unstoppable:- Wicked Sick:- Monster Kill:- GodLike:- Holy Sh1t:- MvP");
-	if(.@rank > 3 && .@rank < 12) // PvP Sphree Rankers
+	set .@rank,select("- Kills:- Deaths:- Highest Streak:- Killing Sphree:- Dominating:- Mega Kill:- Unstoppable:- Wicked Sick:- Monster Kill:- GodLike:- Holy Sh1t");
+	if(.@rank > 3 && .@rank < 12) // PvP Sphree Ranker
 		set .@listr$,$@sphree_rank$[.@rank-4];
-	else if(.@rank == 12) // MvP Hunters
-		set .@listr$,"mvp";
 	else { // PvP General K/D/Highest Streak Rankers
 		setarray .@db_rank$[0],"kills","death","hstreak";
 		set .@listr$,.@db_rank$[.@rank-1];
@@ -319,7 +317,7 @@ switch(select("- Arenas:- Rankings:- Arena Shop:- Information:- Nevermind")) {
 	set .@limit,select("- Top 5:- Top 10:- Top 15:- Top 20:- Top 25:- Top 30:- Nevermind") * 5;
 	if(.@limit == 35) 
 		goto R_Bye;
-		
+
 	mes .n$;
 	mes "Ranking:";
 	switch(.@rank) {
@@ -327,7 +325,6 @@ switch(select("- Arenas:- Rankings:- Arena Shop:- Information:- Nevermind")) {
 		case 1:	mes set(.@rankn$,"Top "+.@limit+" Killers");	set .@rankt$,"Kills";	break;
 		case 2:	mes set(.@rankn$,"Top "+.@limit+" Victims");	set .@rankt$,"Deaths";	break;
 		case 3:	mes set(.@rankn$,"Top "+.@limit+" Highest Streak");	set .@rankt$,"Highest Streak";	break;
-		case 12: mes set(.@rankn$,"Top "+.@limit+" MvP Hunters");	set .@rankt$,"MvP Kills";	break;
 		default:	mes set(.@rankn$,"Top "+.@limit+" "+$@sphree_names$[@rank-4]+" Rankers");	set .@rankt$,$@sphree_names$[.@rank-4]+"s";	break;
 	}
 	mes "Correct?";
@@ -383,42 +380,49 @@ switch(select("- Arenas:- Rankings:- Arena Shop:- Information:- Nevermind")) {
 	end;
 
 	OnBuyItem:
-	for( set @s,0; @s < getarraysize(@bought_nameid); set @s,@s + 1) {
-		for( set @i,0; @i < getarraysize(.arena_sh); set @i,@i + 1) {
-			if(@bought_nameid[@s] == .arena_sh[@i]) {
-				if(checkweight(@bought_nameid[@s],@bought_quantity[@s]) == 1) {
-					set @c_item,(@bought_quantity[@s]*.arena_ar[@i]);
-					set @total,(@total + @c_item);
+	for( set .@s,0; .@s < getarraysize(@bought_nameid); set .@s,.@s + 1) 
+		for( set .@i,0; .@i < getarraysize(.arena_sh); set .@i,.@i + 1) 
+			if(@bought_nameid[.@s] == .arena_sh[.@i]) 
+				if(checkweight(@bought_nameid[.@s],@bought_quantity[.@s]) == 1) {
+					set .@c_item,(@bought_quantity[.@s]*.arena_ar[.@i]);
+					set .@total,(.@total + .@c_item);
 					break;
+					
 				} else {
 					dispbottom "[Arena Shop]: You have reached your weight limit, lose some weight and come back please.";
 					end;
 				}
-			}
-		}
-	}
+
 	switch($@bty_type) {
 
 		case 1:
-		if(Zeny >= @total) set Zeny,Zeny - @total;
-		else dispbottom "[Arena Shop]:You don't have enough Zeny.";
+		if(Zeny >= .@total) set Zeny,Zeny - .@total;
+		else {
+			dispbottom "[Arena Shop]: You don't have enough Zeny.";
+			end;
+		}
 		break;
 		
 		case 2: 
-		if(getd(""+$@bty_cvarn$) >= @total) setd(""+$@bty_cvarn$),getd(""+$@bty_cvarn$) - @total;
-		else dispbottom "[Arena Shop]:You don't have enough "+$@bty_cvard$+", currently "+getd(""+$@bty_cvarn$)+".";
+		if(getd(""+$@bty_cvarn$) >= .@total) setd(""+$@bty_cvarn$),getd(""+$@bty_cvarn$) - .@total;
+		else {
+			dispbottom "[Arena Shop]: You don't have enough "+$@bty_cvard$+", currently "+getd(""+$@bty_cvarn$)+".";
+			end;
+		}
 		break;
 		
 		case 3:
-		if(@pts >= @total) query_sql "UPDATE `arena_master` SET `bounty_pts` = `bounty_pts` - "+@total+" WHERE `char_id` = '"+getcharid(0)+"'";
-		else dispbottom "[Arena Shop]:You don't have enough Bounty Points, currently "+@pts;
+		if(@pts >= .@total) query_sql "UPDATE `arena_master` SET `bounty_pts` = `bounty_pts` - "+.@total+" WHERE `char_id` = '"+getcharid(0)+"'";
+		else {
+			dispbottom "[Arena Shop]: You don't have enough Bounty Points, currently "+@pts;
+			end;
+		}
 		break;
 	}
 	
-	for ( set @b,0; @b < getarraysize(@bought_nameid); set @b,@b + 1) 
-		getitem @bought_nameid[@b],@bought_quantity[@b];
+	for ( set .@b,0; .@b < getarraysize(@bought_nameid); set .@b,.@b + 1) 
+		getitem @bought_nameid[.@b],@bought_quantity[.@b];
 
-	set @total,0;
 	deletearray @bought_nameid[0],getarraysize(@bought_nameid);
 	deletearray @bought_quantity[0],getarraysize(@bought_quantity);
 	end;
@@ -458,7 +462,6 @@ switch(select("- Arenas:- Rankings:- Arena Shop:- Information:- Nevermind")) {
 		case 3:
 		mes "[=== Sphree ===]";
 		mes "Sphree - Required Kills.";
-		mes "First Blood - 1";
 		for ( set .@s,0; .@s < getarraysize($@sphree_names$); set .@s,.@s + 1) 
 			mes $@sphree_names$[.@s] +" - "+$@sphree_kills[.@s];
 		
@@ -565,7 +568,7 @@ switch(select("- Table Settings:- Debug State:- Nevermind")) {
 		next;
 		mes .n$;
 		mes "Here we go!";
-		query_sql "CREATE TABLE `arena_master` ( `char_id` int(10) unsigned NOT NULL, `kills` smallint(5) unsigned DEFAULT '0', `death` smallint(5) unsigned DEFAULT '0', `hstreak` smallint(5) unsigned DEFAULT '0', `bounty` smallint(5) unsigned DEFAULT '0', `bounty_pts` smallint(5) unsigned DEFAULT '0', `killer` smallint(5) unsigned DEFAULT '0', `domi` smallint(5) unsigned DEFAULT '0', `mega` smallint(5) unsigned DEFAULT '0', `unstopp` smallint(5) unsigned DEFAULT '0', `wicked` smallint(5) unsigned DEFAULT '0', `monster` smallint(5) unsigned DEFAULT '0', `godlike` smallint(5) unsigned DEFAULT '0', `holys` smallint(5) unsigned DEFAULT '0', `mvp` smallint(5) unsigned DEFAULT '0' )";
+		query_sql "CREATE TABLE `arena_master` ( `char_id` int(10) unsigned NOT NULL, `kills` smallint(5) unsigned DEFAULT '0', `death` smallint(5) unsigned DEFAULT '0', `hstreak` smallint(5) unsigned DEFAULT '0', `bounty` smallint(5) unsigned DEFAULT '0', `bounty_pts` smallint(5) unsigned DEFAULT '0', `killer` smallint(5) unsigned DEFAULT '0', `domi` smallint(5) unsigned DEFAULT '0', `mega` smallint(5) unsigned DEFAULT '0', `unstopp` smallint(5) unsigned DEFAULT '0', `wicked` smallint(5) unsigned DEFAULT '0', `monster` smallint(5) unsigned DEFAULT '0', `godlike` smallint(5) unsigned DEFAULT '0', `holys` smallint(5) unsigned DEFAULT '0')";
 		set $@pvp_table,1;
 		break;
 	}
@@ -1161,6 +1164,13 @@ if($arena_debug) debugmes "Party 5v5 PvP Mapflags loaded.";
 if($arena_debug) debugmes "PvP Mapflags loaded.";
 end;
 
+OnPCLogoutEvent:
+if($@pvptable) {
+	if(@killct) writeStats(@killct,1);
+	if($@bty_type) writeBounty(@sphr,getcharid(0));
+}
+end;
+
 OnPCKillEvent:
 if(PVP_BTY_CMAP() == 0) end;
 set .@v,killedrid;
@@ -1215,7 +1225,7 @@ if(@mkillct == 2) {
 	mapannounce strcharinfo(3),strcharinfo(0) + " has made an Ultra Kill!!!!",0;
 	soundeffectall "ultrakill.wav",0,strcharinfo(3);
 }
-if($@bty_type && $@pvptable) {
+if($@pvptable && $@bty_type) {
 	if(@killct >= $@bty_bon_start) {
 		if(!@hunt) {
 			announce "Bounty Hunter: Oh My God!!! Someone stop "+strcharinfo(0)+" please!!! I'll give you a bonus of "+($@bty_bonus*$@bty_bonus_m)+" " + ( ($@bty_type == 1)?"Zeny": ( ($@bty_type == 2)?$@bty_cvard$:"Bounty Points") ) + " on "+ ( (Sex)?"his":"her") +" head!!",0;
@@ -1225,19 +1235,19 @@ if($@bty_type && $@pvptable) {
 			for ( set .@l,0; .@l < getarraysize(.@pvp_pre$); set .@l,.@l + 1)
 				for ( set .@m,1; .@m < getarraysize(getd("$@"+.@pvp_pre$[.@l]+"pvp$")); set .@m,.@m + 1)
 					if(strcharinfo(3) == getd("$@"+.@pvp_pre$[.@l]+"pvp$["+.@m+"]")) {
-						announce "Bounty Hunter: "+( (Sex)?"He":"She")+" is in the \""+$@room$[.@m]+" "+.@pvp_n$[.@l]+" Arena\"!!!",0;
+						announce "Bounty Hunter: "+( (Sex)?"He":"She")+" is in the ["+.@pvp_n$[.@l]+" Arena]!!!",0;
 						break;
 					}
 			for ( set .@m,0; .@m < getarraysize($@gvgr$); set .@m,.@m + 1)
 				if(strcharinfo(3) == $@gvgr$[.@m]) {
-					announce "Bounty Hunter: "+( (Sex)?"He":"She")+" is in the Guild Room "+(.@m+1)+"!!!",0;
+					announce "Bounty Hunter: "+( (Sex)?"He":"She")+" is in the [Guild Room "+(.@m+1)+"]!!!",0;
 					break;
 				}
 				
 			if($@bty_cmap) 
 				for ( set .@m,0; .@m < getarraysize($@bty_cmaps$); set .@m,.@m + 1)
 					if(compare(strcharinfo(3),$@bty_cmaps$[.@m]) == 1) {
-						announce "Bounty Hunter: "+( (Sex)?"He":"She")+" is on the map '"+$@bty_cmaps$[.@m]+"'!!!",0;
+						announce "Bounty Hunter: "+( (Sex)?"He":"She")+" is on the map ["+$@bty_cmaps$[.@m]+"]!!!",0;
 						break;
 					}
 
@@ -1245,10 +1255,9 @@ if($@bty_type && $@pvptable) {
 		}
 		set @sphr,@killct + $@bty_bonus;
 	}
-	query_sql("SELECT `bounty` FROM `arena_master` WHERE `char_id` = '"+getcharid(0,rid2name(.@v))+"'",@bty);
-	getBounty(@bty,.@v);
+	if(query_sql("SELECT `bounty` FROM `arena_master` WHERE `char_id` = '"+getcharid(0,rid2name(.@v))+"'",.@bty) != 0)
+		getBounty(.@bty,.@v);
 	writeBounty(@sphr,getcharid(0));
-	writeStats(@killct,0);
 }
 if(@killct%5==0) message strcharinfo(0),"Defeated Players: "+@killct;
 end;
@@ -1262,7 +1271,7 @@ if(!@dm)
 		set @dm,1;
 
 if($@pvptable) {
-	writeStats(0,1);
+	writeStats(@killct,1);
 	if($@bty_type) writeBounty(@sphr,getcharid(0));
 }
 set @sphr,0;
@@ -1284,30 +1293,20 @@ OnMultiSpan:
 set @mkillct,0;
 end;
 
-OnNPCKillEvent:
-if(!$@pvptable) end;
-if(getmonsterinfo(killedrid,MOB_MVPEXP) > 0) { // Update to rAthena: getmonsterinfo supports now an check for MVP Exp
-	if(query_sql("SELECT `char_id` FROM `arena_master` WHERE `char_id` = '"+getcharid(0)+"'",@charid) != 0)
-		query_sql "UPDATE `arena_master` SET `mvp` = `mvp` + 1  WHERE `char_id` = '"+getcharid(0)+"'";
-	else query_sql "INSERT INTO `arena_master` ( `char_id` , `mvp`) VALUES ( '"+getcharid(0)+"' , '1' )";
-}
-end;
-
 	function	writeStats	{
 	if(!$@pvptable) return; // To be save :O
-	set @k,getarg(0); // Kills
-	set @d,getarg(1); // Deaths
-	if(query_sql("SELECT `kills` FROM `arena_master` WHERE `char_id` = '"+getcharid(0)+"'",@kills) != 0) {
-		if(@k > query_sql("SELECT `hstreak` FROM `arena_master` WHERE `char_id` = '"+getcharid(0)+"'",@hstreak)) set @hstreak,@k;
+	set .@k,getarg(0); // Kills
+	set .@d,getarg(1); // Deaths
+	if(query_sql("SELECT `char_id` FROM `arena_master` WHERE `char_id` = '"+getcharid(0)+"'",.@c_id) != 0) {
+		if(.@k > query_sql("SELECT `hstreak` FROM `arena_master` WHERE `char_id` = '"+getcharid(0)+"'",.@hstreak)) set .@hstreak,.@k;
 		// Adding General Kill/Death/Highstreak Values
-		query_sql "UPDATE `arena_master` SET `kills` = `kills` + "+@k+", `death` = `death` + "+@d+" , `hstreak` = '"+@hstreak+"' WHERE `char_id` = '"+getcharid(0)+"'";
-		// Adding Sphree Ranking Values
-		query_sql "UPDATE `arena_master` SET `killer` = `killer` + "+@killer+" , `domi` = `domi` + "+@domi+" , `mega` = `mega` + "+@mega+" , `unstopp` = `unstopp` + "+@unstopp+" , `wicked` = `wicked` + "+@wicked+" , `monster` = `monster` + "+@monster+" , `godlike` = `godlike` + "+@godlike+" , `holys` = `holys` + "+@holys+" WHERE `char_id` = '"+getcharid(0)+"'";
+		query_sql "UPDATE `arena_master` SET `kills` = `kills` + "+.@k+" , `death` = `death` + "+.@d+" , `hstreak` = '"+.@hstreak+"' , `killer` = `killer` + "+@killer+" , `domi` = `domi` + "+@domi+" , `mega` = `mega` + "+@mega+" , `unstopp` = `unstopp` + "+@unstopp+" , `wicked` = `wicked` + "+@wicked+" , `monster` = `monster` + "+@monster+" , `godlike` = `godlike` + "+@godlike+" , `holys` = `holys` + "+@holys+" WHERE `char_id` = '"+getcharid(0)+"'";
 		// Reseting Ranking Variables
 		for ( set .@l,0; .@l < getarraysize($@sphree_rank$); set .@l,.@l + 1)
 			setd("@"+$@sphree_rank$[.@l]),0;
 		
-	} else query_sql "INSERT INTO `arena_master` ( `char_id` , `kills` , `death` , `hstreak` , `killer` , `domi` , `mega` , `unstopp` , `wicked` , `monster` , `godlike` , `holys` ) VALUES ( '"+getcharid(0)+"' , '"+@k+"' , '"+@d+"' , '"+@k+"' , '"+@killer+"' , '"+@domi+"' , '"+@mega+"' , '"+@unstopp+"' , '"+@wicked+"' , '"+@monster+"' , '"+@godlike+"' , '"+@holys+"' )";
+	} else 
+		query_sql "INSERT INTO `arena_master` ( `char_id` , `kills` , `death` , `hstreak` , `killer` , `domi` , `mega` , `unstopp` , `wicked` , `monster` , `godlike` , `holys` ) VALUES ( '"+getcharid(0)+"' , '"+@k+"' , '"+@d+"' , '"+@k+"' , '"+@killer+"' , '"+@domi+"' , '"+@mega+"' , '"+@unstopp+"' , '"+@wicked+"' , '"+@monster+"' , '"+@godlike+"' , '"+@holys+"' )";
 	return; 
 	}
 	

@@ -7,9 +7,10 @@
 //= 1.1 - Added the feature to ignore items which aren't worth anything
 //      - Moved the sell part a bit below
 //      - Fixed an missing right curly in "Sell Items" case
+//= 1.2 - Added sleep2 to prevent infinite loop
 //===== Tested With ==========================================
-//= rAthena 10/10/2018 Revision
-//= GIT Hash: 55acdb9863382d8935d9df25e1462d5d1ebd7d54
+//= rAthena 03/29/2021 Revision
+//= GIT Hash: 47c471e3d0e7997ae605ebf45760349f3b25d365
 //===== Description ==========================================
 //= This NPC can sell every item in your inventory at once.
 //  But you can use an exception list to let it ignore certain items
@@ -32,7 +33,6 @@ switch(select("- Sell Items:- Personal Config:- Leave")) {
 	if(!getarraysize(MS_Types)) {
 		mes "If this is your first time using my service, I would recommend you setup your personal config before proceeding.";
 		mes "Otherwise I will sell every Item in your Inventory, except Refined Equipment and Equipment with Cards and Items which are not anything of worth.";
-		mes " ";
 	} else {
 		mes "Here is the current list of your ignored items:";
 			for ( set .@p,0; .@p < getarraysize(MS_Types); set .@p,.@p + 1)
@@ -82,6 +82,7 @@ switch(select("- Sell Items:- Personal Config:- Leave")) {
 			}
 		if(.@e) continue;
 		setarray .@sellid[getarraysize(.@sellid)],@inventorylist_id[.@i];
+		sleep2 100;
 	}
 	mes .n$;
 	if(getarraysize(.@sellid) > 0) {

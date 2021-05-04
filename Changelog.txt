@@ -24,6 +24,52 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2021/05/05
+<< == |*| Battle Royale Arenas v1.0 [RE] - Update to v1.1 |*| == >>
+- Revamped the Win code to actually support duo and squad and 
+  added a custom event of OnPCDieEvent for all arenas
+- Revamped Loot Boxes to have more loot and give equipment based on class
+- Added Starter Armor config
+- Changed Reward item to Gold Coin (7720)
+- Added Taekwon Classes and Summoner to the job list
+- Added Star Emperor/Soul Reaper and Summoner Skills to Restricted Skills
+- Fixed a bug related to the Arena Mode (Solo, Duo and Squad)
+- Added allowed skills for Soul Emperor/Soul Reaper/Rebellion/Kagerou&Oboro and Summoner
+  as well as changed some restricted skill of other classes
+- Added the "Downed" feature, which allows party members to revive other members
+- Added a way to use global configs instead of the same values for each area
+- Added a config to make it to a Event, GM controlled
+- Changed Arena Menu to be able to join only an active Battle Royale and for GM controlled Arenas
+- Removed Restricted Gear stuff
+- Changed Main NPC Sprite
+- Added @brstart command for GM's, usable when '.Arena_Event' is active
+- Modified the BR Arena Shop to use .br_shop array as item list
+<< == |*| Arena Master v1.7 [RE] - Update to v1.8 |*| == >>
+- Moved the writeStats use on killing to when the player dies or logs out (lessens SQL usage)
+- Added OnPCLogoutEvent seperately
+- Removed some left over messages I missed to delete with last update
+- Removed MvP Ranker
+- Fixed an issue the Shop, which made it possible buy items without cost
+<< == |*| Mass Seller v1.1 [RE] - Update to v1.2 |*| == >>
+- Added sleep2 to prevent infinite loop
+<< == |*| Monster Invasion v1.1 [RE] - Update to v1.2 |*| == >>
+- Adjusted announce messages
+- Fixed Force End not working
+<< == |*| Costume Enchanter v1.2 [REQ] - Update to v1.3 |*| == >>
+- Added requested features by Meneso on Discord:
+  > Enchantment Chance
+  > Selectable or Random Enchantment
+- Added Cost Multiplier for higher Enchantment Levels
+- Revamped Enchantment Config for better overview
+<< == |*| Unofficial Old Glastheim Hard Mode v1.0 [RE] - Modified |*| == >>
+- Removed entries for OngoingQuestInfoList.lub files
+<< == |*| Unofficial Magma Dungeon F3 v1.0 [RE] - Modified |*| == >>
+- Removed entries for itemInfo.lua
+<< == |*| Unofficial Abyss Glast Heim v1.0 [RE] - Modified |*| == >>
+- Removed entries for itemInfo.lua
+<< == |*| Dynamic Battleground Arena v1.0 [RE] - Removed |*| == >>
+- Removed the script temporar or forever, not sure yet.
+------------------------------------------------------------------------------------------------------------------------
 * 2021/03/13
 << == |*| Unofficial Sky Fortress Instance v1.0 [RE] - Removed |*| == >>
 - Removed duo official implementation in rAthena
