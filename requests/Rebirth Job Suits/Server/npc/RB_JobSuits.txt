@@ -1,0 +1,102 @@
+//===== rAthena Script =======================================
+//= Rebirth Job Suits
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Initial Version
+//===== Tested With ==========================================
+//= rAthena 05/12/2021 Revision
+//= GIT Hash: c44fdaf76e3c6acbb1b7048e17e0d5757799cbf4
+//===== Description ==========================================
+//= Changes the appearances of 2nd Rebirth classes,
+//  Ninja, Gunslinger, Star Gladiator and Soul Linker.
+//===== Comments =============================================
+//= Made for Pre-Renewal Servers in mind.
+//= Requires: rb_jobsuit.grf or the data folder of it
+//============================================================
+prontera,160,173,4	script	Job Suit Service	100,{
+
+mes .n$;
+if(Class < 4008 && Class > 4022 && Class != 24 && Class != 25 && Class != 4046 && Class != 4047 && Class != 4049) {
+	mes "I'm sorry, but my service is not available for your job.";
+	close;
+}
+mes "Welcome, "+strcharinfo(0)+"!";
+mes "I can grant you the possibility to change your appearance to your 3rd Job or 4th Job counterpart.";
+mes "Of course, I also can revert it back.";
+mes "^FF0000Note:^000000 Star Gladiator, Soul Linker, Ninja and Gunslinger don't have any 4th Classes yet!";
+next;
+mes .n$;
+mes "Please choose which appearance you want:";
+next;
+set .@s,select("- Original:- 3rd Job:- 4th Job") - 1;
+mes .n$;
+if(.@s) { // Skip fee for Original appearance
+	if(.js_price) {
+		mes "But you'll need to pay a fee for it:";
+		if(.js_price == 1) mes F_InsertComma(.js_zeny)+" Zeny";
+		else if(.js_price == 2) mes .js_iam+"x "+getitemname(.js_iid);
+		else if(.js_price == 3) {
+			mes F_InsertComma(.js_zeny)+" Zeny";
+			mes .js_iam+"x "+getitemname(.js_iid);
+		}
+		mes " ";
+		mes "Reverting is Free.";
+		next;
+		mes .n$;
+		mes "Do you still want to continue?";
+		if(select("- Yes:- No") - 1) close;
+		next;
+		mes .n$;
+		mes "Good choice, now let's see if you can pay the fee first!";
+		next;
+		switch(.js_price) {
+			case 1: if(Zeny < .js_zeny) set .@f,1; break;
+			case 2: if(countitem(.js_iid) < .js_iam) set .@f,1; break;
+			case 3: if(Zeny < .js_zeny || countitem(.js_iid) < .js_iam) set .@f,1; break;
+		}
+		mes .n$;
+		if(.@f) {
+			mes "It looks you don't have the fee, please come back if you do.";
+			close;
+		}
+	}
+	mes "Looks like you're good to go.";
+	mes .n$;
+		switch(.js_price) {
+			case 0: break;
+			case 1: if(Zeny < .js_zeny) set .@f,1; else set Zeny, Zeny - .js_zeny; break;
+			case 2: if(countitem(.js_iid) < .js_iam) set .@f,1; else delitem .js_iid,.js_iam; break;
+			case 3: 
+			if(Zeny < .js_zeny || countitem(.js_iid) < .js_iam) 
+				set .@f,1;
+			else {
+				set Zeny, Zeny - .js_zeny;
+				delitem .js_iid,.js_iam;
+			}
+			break;
+		}
+		if(.@f) {
+			mes "Huh?! What happened to the fee you had before? Come back if you have it!";
+			close;
+		}
+}
+mes "Here you go, until next time!";
+setlook LOOK_BODY2,.@s;
+end;
+
+OnInit:
+set .n$,"["+strnpcinfo(0)+"]";
+// Price Type
+// 0 = Disabled
+// 1 = Zeny
+// 2 = Item
+// 3 = Zeny + Items
+set .js_price,3;
+
+// Price Settings
+set .js_zeny,100000; // 100k Zeny
+set .js_iid,512; // Item ID
+set .js_iam,100; // Item Amount
+end;
+}

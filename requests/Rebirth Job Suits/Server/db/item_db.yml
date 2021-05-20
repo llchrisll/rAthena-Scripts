@@ -1,0 +1,57 @@
+  - Id: 35100
+    AegisName: 3rd_Job_Suit
+    Name: 3rd Job Suit
+    Type: ShadowGear
+    Buy: 20
+    Jobs:
+      Alchemist: true
+      Assassin: true
+      BardDancer: true
+      Blacksmith: true
+      Crusader: true
+      Gunslinger: true
+      Hunter: true
+      Knight: true
+      Monk: true
+      Ninja: true
+      Priest: true
+      Rogue: true
+      Sage: true
+      SoulLinker: true
+      StarGladiator: true
+      Wizard: true
+    Classes:
+      Normal: true
+      Upper: true
+    Locations:
+      Costume_Garment: true
+    EquipScript: |
+      setlook LOOK_BODY2,1;
+    UnEquipScript: |
+      setlook LOOK_BODY2,0;
+  - Id: 35101
+    AegisName: 4th_Job_Suit
+    Name: 4th Job Suit
+    Type: ShadowGear
+    Buy: 20
+    Jobs:
+      Alchemist: true
+      Assassin: true
+      BardDancer: true
+      Blacksmith: true
+      Crusader: true
+      Hunter: true
+      Knight: true
+      Monk: true
+      Priest: true
+      Rogue: true
+      Sage: true
+      Wizard: true
+    Classes:
+      Upper: true
+    Locations:
+      Costume_Garment: true
+    EquipScript: |
+      setlook LOOK_BODY2,2;
+    UnEquipScript: |
+      setlook LOOK_BODY2,0;

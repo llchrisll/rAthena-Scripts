@@ -24,6 +24,14 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2021/05/20
+<< == |*| Rebirth Job Suits v1.0 [RE] - Added |*| == >>
+- Designed for Pre-Renewal Servers
+- Adds the possiblity for Rebirth Classes and Expanded Classes (except Super Novice)
+  to look like their 3rd/4th job counterpart.
+- Either via Item or NPC integration
+- Pre-packed GRF included or use the data folder
+------------------------------------------------------------------------------------------------------------------------
 * 2021/05/05
 << == |*| Battle Royale Arenas v1.0 [RE] - Update to v1.1 |*| == >>
 - Revamped the Win code to actually support duo and squad and 
