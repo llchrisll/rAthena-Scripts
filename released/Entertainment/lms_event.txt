@@ -7,9 +7,11 @@
 //      - Fixed an fatal error after someone wins the match
 //      - Added Queue Usage
 //      - Some minor adjustments
+//= 1.1 - Added a check to prevent joining while in party
+//      - Fixed the join announce
 //===== Tested With ==========================================
-//= rAthena 10/10/2018 Revision
-//= GIT Hash: 55acdb9863382d8935d9df25e1462d5d1ebd7d54
+//= rAthena 06/20/2021 Revision
+//= GIT Hash: 145c229a23b0b0177e503d9fc79dac7525196689
 //===== Description ==========================================
 //= Last Man Standing is an PvP Event, where the last one to
 //	survive wins.
@@ -57,6 +59,10 @@ switch(select("- Join LMS:- Information:- Recieve Reward:- "+ ( (.rew_type == 2)
 	mes .n$;
 	if(!.LMS_Reg) {
 		mes "I'm sorry, but the registration is not opened yet.";
+		close;
+	}
+	if(getcharid(1) != 0) {
+		mes "I'm sorry, but you can't join while you are in a party.";
 		close;
 	}
 	if(getarraysize(.LMS_Queue) >= .limit) {
@@ -112,7 +118,7 @@ switch(select("- Join LMS:- Information:- Recieve Reward:- "+ ( (.rew_type == 2)
 	close2;
 	set @lms,1;
 	setarray .LMS_Queue[getarraysize(.LMS_Queue)],getcharid(0);
-	announce .n$+": ["+strcharinfo(0)+"] registered "+ (!Sex)?"her":"him" +"self for the Event!",bc_all;
+	announce .n$+": ["+strcharinfo(0)+"] registered "+ ( (!Sex)?"her":"him" )+"self for the Event!",bc_all;
 	end;
 
 	case 2:

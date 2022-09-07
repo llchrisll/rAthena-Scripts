@@ -22,51 +22,6 @@ quest_db:
 8547,0,20379,10,20380,10,0,0,"A Mirror"
 8548,86400,0,0,0,0,0,0,"A Mirror - Wait"
 */
-/*
-OngoingQuestInfoList_Sakray.lub or OngoingQuestInfoList (Main Server):
-	[8541] = {
-		Title = "Nothing to See",
-		IconName = "ico_dq.bmp",
-		Description = {
-			"<NAVI>[Mage Nillem]<INFO>glast_01,190,273,0,101,0</INFO></NAVI> asked you to hunt 20 Hunt Contaminated Raydrics and 20 Contaminated Raydric Archers to gather more information."
-		},
-		Summary = "Hunt 20 Contaminated Raydrics and 20 Contaminated Raydric Archers."
-	},
-	[8542] = {
-		Title = "Nothing to See - Wait",
-		IconName = "ico_dq.bmp",
-		Description = { "This is a daily quest, you can take it again tomorrow when the timer expires. Speak with <NAVI>[Mage Nillem]<INFO>glast_01,190,273,0,101,0</INFO></NAVI>." },
-		Summary = "Reset at 00:00."
-	},
-	[8544] = {
-		Title = "High Freezing Point",
-		IconName = "ico_dq.bmp",
-		Description = {
-			"<NAVI>[Mage Nillem]<INFO>glast_01,190,273,0,101,0</INFO></NAVI> asked you to hunt 5 Frozen Gargoyles and 5 Prison Breakers to gather more information."
-		},
-		Summary = "Hunt 5 Frozen Gargoyles and 5 Prison Breakers."
-	},
-	[8545] = {
-		Title = "High Freezing Point - Wait",
-		IconName = "ico_dq.bmp",
-		Description = { "This is a daily quest, you can take it again tomorrow when the timer expires. Speak with <NAVI>[Mage Nillem]<INFO>glast_01,190,273,0,101,0</INFO></NAVI>." },
-		Summary = "Reset at 00:00."
-	},
-	[8547] = {
-		Title = "A Mirror",
-		IconName = "ico_dq.bmp",
-		Description = {
-			"<NAVI>[Mage Nillem]<INFO>glast_01,190,273,0,101,0</INFO></NAVI> asked you to hunt 10 Ice Ghosts and 10 Flame Ghosts to gather more information."
-		},
-		Summary = "Hunt 10 Ice Ghosts and 10 Flame Ghosts."
-	},
-	[8548] = {
-		Title = "A Mirror - Wait",
-		IconName = "ico_dq.bmp",
-		Description = { "This is a daily quest, you can take it again tomorrow when the timer expires. Speak with <NAVI>[Mage Nillem]<INFO>glast_01,190,273,0,101,0</INFO></NAVI>." },
-		Summary = "Reset at 00:00."
-	},
-*/
 //============================================================
 glast_01,189,272,4	script	Mage Nillem#glast	4_M_JOB_WIZARD,{
 

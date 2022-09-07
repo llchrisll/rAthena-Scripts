@@ -24,6 +24,35 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2022/09/07
+<< == |*| Unofficial Magma Dungeon F3 [RE] - Modified |*| == >>
+- Removed item_db.txt file
+<< == |*| Unofficial Abyss Glastheim [RE] - Modified |*| == >>
+- Removed item_db.txt file
+- Removed OngoingQuestInfoList entries
+<< == |*| Last Mand Standing v1.0 [RE] - Update to v1.1 |*| == >>
+- Added a check to prevent joining while in party
+- Fixed the join announce
+<< == |*| Mystic Enchanter v1.1 [RE] - Update to v1.2 |*| == >>
+- Fixed an menu bug when using selectable Random Options (Thanks to space cat)
+- Fixed an format typo in Random Options Database:
+  "Damage Reduction from Medium Targets" > "Reduction from Medium Targets"
+<< == |*| Advanced Dummy v1.0 [REQ] - Added |*| == >>
+- Spawn your own Dummy with adjusted (optional) attributes and DPS Counter
+- Supports Mob ID input
+- Dummy Spots adjustable and expandable
+- Spawned Dummies can be edited afterwards
+<< == |*| Reborn System v1.0 [REQ] - Added |*| == >>
+- Handles a system, which allows players to be reborn:
+- Reverts the player back to Base Level 1, while keeping Job Level and Class.
+- Grants item bonuses on certain Reborns.
+- Easy Configurable with many different settings:
+> Class Restriction
+> Doram Restriction
+> Level Settings for both restrictions above
+> Item Requirements
+> Item Rewards per reborn
+------------------------------------------------------------------------------------------------------------------------
 * 2021/05/20
 << == |*| Rebirth Job Suits v1.0 [RE] - Added |*| == >>
 - Designed for Pre-Renewal Servers

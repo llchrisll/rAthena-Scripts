@@ -12,9 +12,12 @@
 //      - Changed the Price Code into a function
 //      - Fixed a bug regarding Special Random Options
 //      - Added a limitation for Special Random Options
+//= 1.2 - Fixed an menu bug when using selectable Random Options (Thanks to space cat)
+//      - Fixed an format typo in Random Options Database:
+//        "Damage Reduction from Medium Targets" > "Reduction from Medium Targets"
 //===== Tested With ==========================================
-//= rAthena 05/13/2020 Revision
-//= GIT Hash: 5154e078999ea8b0ae8680126933fe11a2506dd9
+//= rAthena 09/16/2021 Revision
+//= GIT Hash: a725844553efb8e036f66d03347a000411a23f11
 //===== Description ==========================================
 //= All-in-one Enchanter
 //= Price for Enchanting and Resetting seperatly configurable
@@ -462,6 +465,7 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 					set .@ropt,.@ropt + 1;
 					continue;
 				}
+				set .@ropt_m$,""; // Clearing the menu before generating a new one
 				next;
 				switch(select( ( (.@ropt_weap && !.@ropt_wele)?"Weapon Element":"")+":"+ ( (.@ropt_arm && !.@ropt_aele)?"Armor Element":"")+":Attribute:"+( (.@ropt_weap)?"Increase Damage":"")+":"+( (.@ropt_arm)?"Defensive":"")+":Special")) {
 					
@@ -1355,7 +1359,7 @@ setarray .RandOpt_RES_ETC[0],
 		RDMOPT_DAMAGE_SIZE_LARGE_USER,1,20,				// Damage Reduction from Large Targets
 		RDMOPT_RANGE_ATTACK_DAMAGE_USER,1,20,			// Damage Reduction from Ranged Attacks
 		RDMOPT_DAMAGE_CRI_USER,1,20;					// Damage Reduction from Critical Attacks
-setarray .RandOpt_RES_ETC_M$[0],"Reduction from Formless Race","Reduction from Undead Race","Reduction from Animal Race","Reduction from Plant Race","Reduction from Insect Race","Reduction from Fish Race","Reduction from Demon Race","Reduction from Human Race","Reduction from Angel Race","Reduction from Dragon Race","Reduction from Normal Targets","Reduction from Boss Targets","Reduction from Small Targets","Damage Reduction from Medium Targets","Reduction from Large Targets","Reduction from Ranged Attacks","Reduction from Critical Attacks";
+setarray .RandOpt_RES_ETC_M$[0],"Reduction from Formless Race","Reduction from Undead Race","Reduction from Animal Race","Reduction from Plant Race","Reduction from Insect Race","Reduction from Fish Race","Reduction from Demon Race","Reduction from Human Race","Reduction from Angel Race","Reduction from Dragon Race","Reduction from Normal Targets","Reduction from Boss Targets","Reduction from Small Targets","Reduction from Medium Targets","Reduction from Large Targets","Reduction from Ranged Attacks","Reduction from Critical Attacks";
 
 // - Weapon Elements
 setarray .RandOpt_WEle[0],

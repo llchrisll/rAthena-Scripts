@@ -1,0 +1,710 @@
+//===== rAthena Script =======================================
+//= Advanced Dummy with DPS Counter
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Initial Version
+//===== Tested With ==========================================
+//= rAthena 01/23/2021 Revision
+//= GIT Hash: 27f78b1a7249321afe56b2e727b85b78f80ed16f
+//===== Description ==========================================
+//= Spawn your own Dummy with adjusted (optional) attributes
+//  and DPS Counter
+//= Supports Mob ID input
+//= Dummy Spots adjustable and expandable
+//= Spawned Dummies can be edited afterwards
+//===== Credits ==============================================
+//= Secretdataz for his "Punching Bag" script, which I took as example.
+//============================================================
+quiz_00,64,24,4	script	Dummy Settings	4_M_JOB_KNIGHT1,{
+mes .n$;
+mes "Before I can help you, please input the Dummy Spot first:";
+mes "^FF0000Note: There are total of 4 spots.";
+if(input(.@spot,1,.SpotCount) != 0) {
+	mes " ";
+	mes "[^FF0000Error^000000]";
+	mes "Invalid Spot, 1-"+.SpotCount+" are valid.";
+	close;
+}
+next;
+switch(select("- Spawn/Kill Dummy:- Dummy Attributes:- Nevermind")) {
+	case 1:
+	if(mobcount(strnpcinfo(4),"#DS"+.@spot+"::OnDummyDead")) {
+		mes .n$;
+		mes "Do you want to kill the current dummy?";
+		if(select("- Yes:- No") - 1) close;
+		next;
+		mes .n$;
+		mes "Done";
+		killmonster strnpcinfo(4),"#DS"+.@spot+"::OnDummyDead";
+		donpcevent "#DS"+.@spot+"::OnDummyDead";
+		close;
+	}
+	while(1) {
+		mes .n$;
+		mes "Please type the ID of the Mob which you wanna use as Dummy.";
+		mes "^FF0000Note: Dummy has 2411, using a non-existing Mob ID, will bring you back there,";
+		mes "\"0\" is used as \"Cancel\".^000000";
+		next;
+		input .@mob_id;
+		if(.@mob_id && getmonsterinfo(.@mob_id,MOB_NAME) == "null") {
+			mes .n$;
+			mes "This Mob doesn't exist,try again.";
+			continue;
+			next;
+		
+		} else if(!.@mob_id)
+			close;
+			
+		break;
+	}
+	mes .n$;
+	mes "The \""+strmobinfo(1,.@mob_id)+"\" has the current attributes:";
+	for ( set .@i,0; .@i < getarraysize(.MobInfo); set .@i,.@i + 1) {
+			switch(.MobInfo[.@i]) {
+				case MOB_SIZE:
+				switch(getmonsterinfo(.@mob_id,.MobInfo[.@i])) {
+					case 0: set .@type$,"Small"; break;
+					case 1: set .@type$,"Medium"; break;
+					case 2: set .@type$,"Large"; break;
+				}
+				break;
+				
+				case MOB_RACE:
+				switch(getmonsterinfo(.@mob_id,.MobInfo[.@i])) {
+					case 0:	set .@type$,"Formless"; break;
+					case 1:	set .@type$,"Undead"; break;
+					case 2:	set .@type$,"Brute"; break;
+					case 3:	set .@type$,"Plant"; break;
+					case 4:	set .@type$,"Insect"; break;
+					case 5:	set .@type$,"Fish"; break;
+					case 6:	set .@type$,"Demon"; break;
+					case 7:	set .@type$,"Demi-Human"; break;
+					case 8:	set .@type$,"Angel"; break;
+					case 9: set .@type$,"Dragon"; break;
+					case 10:	set .@type$,"Player"; break;
+				}
+				break;
+		
+				case MOB_ELEMENT:
+				switch(getmonsterinfo(.@mob_id,.MobInfo[.@i])) {
+					case 0:	set .@type$,"Neutral"; break;
+					case 1:	set .@type$,"Water"; break;
+					case 2:	set .@type$,"Earth"; break;
+					case 3: set .@type$,"Fire"; break;
+					case 4:	set .@type$,"Wind"; break;
+					case 5:	set .@type$,"Poison"; break;
+					case 6:	set .@type$,"Holy"; break;
+					case 7:	set .@type$,"Shadow"; break;
+					case 8:	set .@type$,"Ghost"; break;
+					case 9:	set .@type$,"Undead"; break;
+				}
+				break;
+			}
+			mes .MobInfo_T$[.@i]+": "+ ( (.@type$ != "")?.@type$:getmonsterinfo(.@mob_id,.MobInfo[.@i]));
+			set .@type$,"";
+		}
+	mes " ";
+	mes "Please select the attributes the \""+strmobinfo(1,.@mob_id)+"\" Dummy should have:";
+	mes "^FF0000Note: The \"Cancel\" button will abort this process, please use the option \"Done\" to spawn your Dummy.^000000";
+	while(1) {
+		next;
+		set .@menu$,"";
+		for ( set .@m,0; .@m < getarraysize(.MobData_T$); set .@m,.@m + 1)
+			set .@menu$,.@menu$ + ( (.@Data[.@m] < 1)?"- " + .MobData_T$[.@m]:"") + ( (.MobData_T$[.@m+1] == "")?":- Done":":"); // Add available attributes to the menu variable
+
+		set .@s,select(.@menu$) - 1;
+		
+		switch(.@s) {
+			
+			case 0: // Size
+			set .@val,select("- Small:- Medium:- Large") - 1; break;
+			
+			case 1: // Level
+			mes .n$;
+			mes "Minimum Level: 1";
+			mes "Maximum Level: "+.d_stats[1];
+			if(input(.@val,1,.d_stats[1]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Level, 1-"+.d_stats[1]+" is allowed";
+				continue;
+			}
+			break;
+			
+			// ----------- Stats -----------
+			case 2: // STR
+			mes .n$;
+			mes "Minimum STR: 1";
+			mes "Maximum STR: "+.d_stats[2];
+			if(input(.@val,1,.d_stats[2]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 1-"+.d_stats[2]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 3: // AGI
+			mes .n$;
+			mes "Minimum AGI: 1";
+			mes "Maximum AGI: "+.d_stats[2];
+			if(input(.@val,1,.d_stats[2]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 1-"+.d_stats[2]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 4: // VIT
+			mes .n$;
+			mes "Minimum VIT: 1";
+			mes "Maximum VIT: "+.d_stats[2];
+			if(input(.@val,1,.d_stats[2]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 1-"+.d_stats[2]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 5: // INT
+			mes .n$;
+			mes "Minimum INT: 1";
+			mes "Maximum INT: "+.d_stats[2];
+			if(input(.@val,1,.d_stats[2]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 1-"+.d_stats[2]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 6: // DEX
+			mes .n$;
+			mes "Minimum DEX: 1";
+			mes "Maximum DEX: "+.d_stats[2];
+			if(input(.@val,1,.d_stats[2]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 1-"+.d_stats[2]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 7: // LUK
+			mes .n$;
+			mes "Minimum LUK: 1";
+			mes "Maximum LUK: "+.d_stats[2];
+			if(input(.@val,1,.d_stats[2]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 1-"+.d_stats[2]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 8: // DEF
+			mes .n$;
+			mes "Minimum DEF: 0";
+			mes "Maximum DEF: "+.d_stats[4];
+			if(input(.@val,0,.d_stats[4]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 0-"+.d_stats[4]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 9: // MDEF
+			mes .n$;
+			mes "Minimum MDEF: 0";
+			mes "Maximum MDEF: "+.d_stats[4];
+			if(input(.@val,0,.d_stats[4]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 0-"+.d_stats[4]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 10: // HIT
+			mes .n$;
+			mes "Minimum HIT: 0";
+			mes "Maximum HIT: "+.d_stats[3];
+			if(input(.@val,0,.d_stats[3]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 0-"+.d_stats[3]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 11: // FLEE
+			mes .n$;
+			mes "Minimum FLEE: 0";
+			mes "Maximum FLEE: "+.d_stats[3];
+			if(input(.@val,0,.d_stats[3]) != 0) {
+				mes "Invalid Value, 0-"+.d_stats[3]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 12: // PDodge
+			mes .n$;
+			mes "Minimum Perfect Dodge: 0";
+			mes "Maximum Perfect Dodge: 100";
+			if(input(.@val,0,100) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 0-100 is allowed";
+				continue;
+			}
+			break;
+			
+			// -------- Element/Race --------
+			case 13: // Race
+			set .@val,select("- Formless:- Undead:- Brute:- Plant:- Insect:- Fish:- Demon:- Demi-Human:- Angel:- Dragon:- Player") - 1; break;
+			
+			case 14: // Element Type
+			set .@val,select("- Neutral:- Water:- Earth:- Fire:- Wind:- Poison:- Holy:- Shadow:- Ghost:- Undead") - 1; break;
+			
+			case 15: // Element Level
+			set .@val,select("- Level 1:- Level 2:- Level 3:- Level 4"); break;
+			
+			default: // Done
+			break;
+		}
+		if(.@s >= 16) break;
+		setarray .@Mob_Data[.@s],.@val;
+		setarray .@Data[.@s],1;
+	}
+	mes .n$;
+	mes "I will now spawn your \""+strmobinfo(1,.@mob_id)+"\" Dummy with the changed attributes:";
+	for ( set .@i,0; .@i < getarraysize(.@Mob_Data); set .@i,.@i + 1)
+		if(.@Data[.@i] > 0) {
+			switch(.MobData[.@i]) {
+				case UMOB_SIZE:
+				switch(.@Mob_Data[.@i]) {
+					case 0: set .@type$,"Small"; break;
+					case 1: set .@type$,"Medium"; break;
+					case 2: set .@type$,"Large"; break;
+				}
+				break;
+				
+				case UMOB_RACE:
+				switch(.@Mob_Data[.@i]) {
+					case 0:	set .@type$,"Formless"; break;
+					case 1:	set .@type$,"Undead"; break;
+					case 2:	set .@type$,"Brute"; break;
+					case 3:	set .@type$,"Plant"; break;
+					case 4:	set .@type$,"Insect"; break;
+					case 5:	set .@type$,"Fish"; break;
+					case 6:	set .@type$,"Demon"; break;
+					case 7:	set .@type$,"Demi-Human"; break;
+					case 8:	set .@type$,"Angel"; break;
+					case 9: set .@type$,"Dragon"; break;
+					case 10:	set .@type$,"Player"; break;
+				}
+				break;
+		
+				case UMOB_ELETYPE:
+				switch(.@Mob_Data[.@i]) {
+					case 0:	set .@type$,"Neutral"; break;
+					case 1:	set .@type$,"Water"; break;
+					case 2:	set .@type$,"Earth"; break;
+					case 3: set .@type$,"Fire"; break;
+					case 4:	set .@type$,"Wind"; break;
+					case 5:	set .@type$,"Poison"; break;
+					case 6:	set .@type$,"Holy"; break;
+					case 7:	set .@type$,"Shadow"; break;
+					case 8:	set .@type$,"Ghost"; break;
+					case 9:	set .@type$,"Undead"; break;
+				}
+				break;
+			}
+			mes .MobData_T$[.@i]+": "+ ( (.@type$ != "")?.@type$:.@Mob_Data[.@i]);
+			set .@type$,"";
+		}
+	if(getarraysize(.@Mob_Data) < 1)
+		mes "Nothing was adjusted.";
+	mes " ";
+	mes "Is that correct?";
+	if(select("- Yes:- No") - 1) close;
+	next;
+	mes .n$;
+	mes "I will now spawn your \""+strmobinfo(1,.@mob_id)+"\" Dummy!";
+	mes " ";
+	mes "^FF0000WARNING: I'm unable to prevent certain mobs to spawn their slaves the first time, but they are unable to summon them once they are dead.^000000";
+	close2;
+	getunitdata(getnpcid(0,"#DS"+.@spot),.@n); // Retrieve NPC ID and data like coordinates
+	monster strnpcinfo(4),.@n[UNPC_X],.@n[UNPC_Y],strmobinfo(1,.@mob_id)+" Dummy",.@mob_id,1,"#DS"+.@spot+"::OnDummyDead";
+	setarray .gid[.@spot],$@mobid[0]; // Save ID of Dummy
+	// Apply changed attributes, if there are
+	setarray .mid[.@spot],.@mob_id; // Save actual Mob ID for later use
+	for ( set .@m,0; .@m < getarraysize(.MobData); set .@m,.@m + 1)
+		if(.@Data[.@m] > 0)
+			setunitdata .gid[.@spot],.MobData[.@m],.@Mob_Data[.@m];
+			
+	// Mob Mode Overrides:
+	// > MD_STATUSIMMUNE (0x4000000) = Because EDP/burn/%MHP based status can skew the DPS counter so much.
+	// > MD_KNOCKBACKIMMUNE (0x0200000)
+	// > MD_NOCASTSKILL (0x0000040) = Prevent the mob of using skills
+	setunitdata .gid[.@spot],UMOB_MODE,MD_STATUSIMMUNE|MD_KNOCKBACKIMMUNE|MD_NOCAST;
+	setunitdata .gid[.@spot],UMOB_MAXHP,.d_stats[0]; // Set Max HP of Dummy
+	// Set Looking Direction to South
+	// 0 = North, 1 = South West, 2 = West,...
+	setunitdata .gid[.@spot],UMOB_LOOKDIR,4;
+	donpcevent "#DS"+.@spot+"::OnDummySpawn";
+	end;
+	
+	case 2:
+	mes .n$;
+	if(mobcount(strnpcinfo(4),"#DS"+.@spot+"::OnDummyDead") < 1) {
+		mes "You didn't spawn an Dummy yet.";
+		close;
+	}
+	mes "The \""+strmobinfo(1,.mid[.@spot])+"\" Dummy has currently the following attributes:";
+	getunitdata(.gid[.@spot],.@d);
+	for ( set .@i,0; .@i < getarraysize(.MobData); set .@i,.@i + 1) {
+		switch(.MobData[.@i]) {
+			case UMOB_SIZE:
+			switch(.@d[.MobData[.@i]]) {
+				case 0: set .@type$,"Small"; break;
+				case 1: set .@type$,"Medium"; break;
+				case 2: set .@type$,"Large"; break;
+			}
+			break;
+				
+			case UMOB_RACE:
+			switch(.@d[.MobData[.@i]]) {
+				case 0:	set .@type$,"Formless"; break;
+				case 1:	set .@type$,"Undead"; break;
+				case 2:	set .@type$,"Brute"; break;
+				case 3:	set .@type$,"Plant"; break;
+				case 4:	set .@type$,"Insect"; break;
+				case 5:	set .@type$,"Fish"; break;
+				case 6:	set .@type$,"Demon"; break;
+				case 7:	set .@type$,"Demi-Human"; break;
+				case 8:	set .@type$,"Angel"; break;
+				case 9: set .@type$,"Dragon"; break;
+				case 10:	set .@type$,"Player"; break;
+			}
+			break;
+			
+			case UMOB_ELETYPE:
+			switch(.@d[.MobData[.@i]]) {
+				case 0:	set .@type$,"Neutral"; break;
+				case 1:	set .@type$,"Water"; break;
+				case 2:	set .@type$,"Earth"; break;
+				case 3: set .@type$,"Fire"; break;
+				case 4:	set .@type$,"Wind"; break;
+				case 5:	set .@type$,"Poison"; break;
+				case 6:	set .@type$,"Holy"; break;
+				case 7:	set .@type$,"Shadow"; break;
+				case 8:	set .@type$,"Ghost"; break;
+				case 9:	set .@type$,"Undead"; break;
+			}
+			break;
+		}
+		mes .MobData_T$[.@i]+": "+ ( (.@type$ != "")?.@type$:.@d[.MobData[.@i]]);
+		set .@type$,"";
+	}
+	mes " ";
+	mes "Do you want to change it's attributes?";
+	if(select("- Yes:- No") - 1) close;
+	next;
+	mes .n$;
+	mes "Please select the attributes you want to change for the \""+strmobinfo(1,.mid[.@spot])+"\" Dummy:";
+	mes "^FF0000Note: The \"Cancel\" button will abort this process, please use the option \"Done\" to respawn your Dummy.^000000";
+	while(1) {
+		next;
+		set .@menu$,"";
+		for ( set .@m,0; .@m < getarraysize(.MobData_T$); set .@m,.@m + 1)
+			set .@menu$,.@menu$ + ( (.@Data[.@m] < 1)?"- " + .MobData_T$[.@m]:"") + ( (.MobData_T$[.@m+1] == "")?":- Done":":"); // Add available attributes to the menu variable
+
+		set .@s,select(.@menu$) - 1;
+		
+		switch(.@s) {
+			
+			case 0: // Size
+			set .@val,select("- Small:- Medium:- Large") - 1; break;
+			
+			case 1: // Level
+			mes .n$;
+			mes "Minimum Level: 1";
+			mes "Maximum Level: "+.d_stats[1];
+			if(input(.@val,1,.d_stats[1]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Level, 1-"+.d_stats[1]+" is allowed";
+				continue;
+			}
+			break;
+			
+			// ----------- Stats -----------
+			case 2: // STR
+			mes .n$;
+			mes "Minimum STR: 1";
+			mes "Maximum STR: "+.d_stats[2];
+			if(input(.@val,1,.d_stats[2]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 1-"+.d_stats[2]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 3: // AGI
+			mes .n$;
+			mes "Minimum AGI: 1";
+			mes "Maximum AGI: "+.d_stats[2];
+			if(input(.@val,1,.d_stats[2]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 1-"+.d_stats[2]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 4: // VIT
+			mes .n$;
+			mes "Minimum VIT: 1";
+			mes "Maximum VIT: "+.d_stats[2];
+			if(input(.@val,1,.d_stats[2]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 1-"+.d_stats[2]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 5: // INT
+			mes .n$;
+			mes "Minimum INT: 1";
+			mes "Maximum INT: "+.d_stats[2];
+			if(input(.@val,1,.d_stats[2]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 1-"+.d_stats[2]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 6: // DEX
+			mes .n$;
+			mes "Minimum DEX: 1";
+			mes "Maximum DEX: "+.d_stats[2];
+			if(input(.@val,1,.d_stats[2]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 1-"+.d_stats[2]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 7: // LUK
+			mes .n$;
+			mes "Minimum LUK: 1";
+			mes "Maximum LUK: "+.d_stats[2];
+			if(input(.@val,1,.d_stats[2]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 1-"+.d_stats[2]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 8: // DEF
+			mes .n$;
+			mes "Minimum DEF: 0";
+			mes "Maximum DEF: "+.d_stats[4];
+			if(input(.@val,0,.d_stats[4]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 0-"+.d_stats[4]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 9: // MDEF
+			mes .n$;
+			mes "Minimum MDEF: 0";
+			mes "Maximum MDEF: "+.d_stats[4];
+			if(input(.@val,0,.d_stats[4]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 0-"+.d_stats[4]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 10: // HIT
+			mes .n$;
+			mes "Minimum HIT: 0";
+			mes "Maximum HIT: "+.d_stats[3];
+			if(input(.@val,0,.d_stats[3]) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 0-"+.d_stats[3]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 11: // FLEE
+			mes .n$;
+			mes "Minimum FLEE: 0";
+			mes "Maximum FLEE: "+.d_stats[3];
+			if(input(.@val,0,.d_stats[3]) != 0) {
+				mes "Invalid Value, 0-"+.d_stats[3]+" is allowed";
+				continue;
+			}
+			break;
+			
+			case 12: // PDodge
+			mes .n$;
+			mes "Minimum Perfect Dodge: 0";
+			mes "Maximum Perfect Dodge: 100";
+			if(input(.@val,0,100) != 0) {
+				mes " ";
+				mes "[^FF0000Error^000000]";
+				mes "Invalid Value, 0-100 is allowed";
+				continue;
+			}
+			break;
+			
+			// -------- Element/Race --------
+			case 13: // Race
+			set .@val,select("- Formless:- Undead:- Brute:- Plant:- Insect:- Fish:- Demon:- Demi-Human:- Angel:- Dragon:- Player") - 1; break;
+			
+			case 14: // Element Type
+			set .@val,select("- Neutral:- Water:- Earth:- Fire:- Wind:- Poison:- Holy:- Shadow:- Ghost:- Undead") - 1; break;
+			
+			case 15: // Element Level
+			set .@val,select("- Level 1:- Level 2:- Level 3:- Level 4"); break;
+			
+			default: // Done
+			break;
+		}
+		if(.@s >= 16) break;
+		setarray .@Mob_Data[.@s],.@val;
+		setarray .@Data[.@s],1;
+	}
+	killmonster strnpcinfo(4),"#DS"+.@spot+"::OnDummyDead"; // Kill the current Dummy
+	getunitdata(getnpcid(0,"#DS"+.@spot),.@n); // Retrieve NPC ID and data like coordinates
+	monster strnpcinfo(4),.@n[UNPC_X],.@n[UNPC_Y],strmobinfo(1,.mid[.@spot])+" Dummy",.mid[.@spot],1,"#DS"+.@spot+"::OnDummyDead";
+	setarray .gid[.@spot],$@mobid[0]; // Refresh the ID of Dummy and reapply previous values
+	for ( set .@m,0; .@m < getarraysize(.MobData); set .@m,.@m + 1)
+		if(.@Data[.@m] > 0)
+			setunitdata .gid[.@spot],.MobData[.@m],.@Mob_Data[.@m];
+		else
+			setunitdata .gid[.@spot],.MobData[.@m],.@d[.MobData[.@m]];
+			
+	setunitdata .gid[.@spot],UMOB_MAXHP,.d_stats[0]; // Set Max HP of Dummy
+	// Mob Mode Overrides:
+	// > MD_STATUSIMMUNE (0x4000000) = Because EDP/burn/%MHP based status can skew the DPS counter so much.
+	// > MD_KNOCKBACKIMMUNE (0x0200000)
+	// > MD_NOCAST (0x0000040) = Prevent the mob of using skills
+	setunitdata .gid[.@spot],UMOB_MODE,MD_STATUSIMMUNE|MD_KNOCKBACKIMMUNE|MD_NOCAST;
+	// Set Looking Direction to South
+	// 0 = North, 1 = South West, 2 = West,...
+	setunitdata .gid[.@spot],UMOB_LOOKDIR,4;
+	donpcevent "#DS"+.@spot+"::OnDummySpawn";
+	break;
+	
+	case 3:
+	break;
+}
+end;
+
+OnInit:
+set .n$,"["+strnpcinfo(0)+"]";
+// Enables/disables various Mapflags for quiz_00
+setmapflag strnpcinfo(4),mf_nowarpto;
+setmapflag strnpcinfo(4),mf_noloot;
+setmapflag strnpcinfo(4),mf_noexp;
+if(getmapflag(strnpcinfo(4),mf_pvp))
+	removemapflag strnpcinfo(4),mf_pvp;
+removemapflag strnpcinfo(4),mf_noskill;
+// Dummy Changeable Stats
+setarray .d_stats[0],99999999, // Max HP
+					1000, // Max Level
+					500, // Max Stats (STR,....)
+					1000, // Max Hit/Flee
+					500; // Max DEF/MDEF
+// Parameters for getmonsterinfo
+setarray .MobInfo[0],MOB_LV,MOB_DEF,MOB_MDEF,MOB_STR,MOB_AGI,MOB_VIT,MOB_INT,MOB_DEX,MOB_LUK,MOB_SIZE,MOB_RACE,MOB_ELEMENT;
+setarray .MobInfo_T$[0],"Level","DEF","MDEF","STR","AGI","VIT","INT","DEX","LUK","Size","Race","Element";
+// Parameters for setunitdata - Changes need to be done on both arrays!
+setarray .MobData[0],UMOB_SIZE,UMOB_LEVEL,UMOB_STR,UMOB_AGI,UMOB_VIT,UMOB_INT,UMOB_DEX,UMOB_LUK,UMOB_DEF,UMOB_MDEF,UMOB_HIT,UMOB_FLEE,UMOB_PDODGE,UMOB_RACE,UMOB_ELETYPE,UMOB_ELELEVEL;
+setarray .MobData_T$[0],"Size","Level","STR","AGI","VIT","INT","DEX","LUK","DEF","MDEF","HIT","FLEE","Perfect Dodge","Race","Element Type","Element Level";
+end;
+}
+
+// Dummy Template
+-	script	DummyTemp	HIDDEN_NPC,{
+end;
+
+OnDummySpawn:
+setarray .gid[atoi(charat(strnpcinfo(2),2))],getvariableofnpc(.gid[atoi(charat(strnpcinfo(2),2))],"Dummy Settings");
+initnpctimer;
+delwaitingroom;
+end;
+
+OnDummyDead:
+stopnpctimer;
+waitingroom "Dummy Spot "+charat(strnpcinfo(2),2),0;
+end;
+
+OnTimer5000:
+if(unitexists(.gid[atoi(charat(strnpcinfo(2),2))])) {
+	getunitdata(.gid[atoi(charat(strnpcinfo(2),2))],.@d);
+	.@diff = (.@d[UMOB_MAXHP] - .@d[UMOB_HP]);
+	if(.@diff > 0){
+		unittalk .gid[atoi(charat(strnpcinfo(2),2))],getunitname(.gid[atoi(charat(strnpcinfo(2),2))])+" - DPS: "+F_InsertComma(.@diff/5);
+		setunitdata .gid[atoi(charat(strnpcinfo(2),2))],UMOB_HP,.@d[UMOB_MAXHP];
+	}
+initnpctimer;
+}
+end;
+
+OnInit:
+if(strnpcinfo(2) == "") end;
+set getvariableofnpc(.SpotCount,"Dummy Settings"),getvariableofnpc(.SpotCount,"Dummy Settings") + 1;
+waitingroom "Dummy Spot "+charat(strnpcinfo(2),2),0;
+end;
+}
+// Dummy Spots
+quiz_00,57,28,0	duplicate(DummyTemp)	#DS1	HIDDEN_NPC
+quiz_00,57,16,0	duplicate(DummyTemp)	#DS2	HIDDEN_NPC
+quiz_00,75,28,0	duplicate(DummyTemp)	#DS3	HIDDEN_NPC
+quiz_00,75,16,0	duplicate(DummyTemp)	#DS4	HIDDEN_NPC
+
+prontera,163,173,4	script	Dummy Guard#entry	4_M_JOB_KNIGHT2,{
+
+mes "[Dummy Guard]";
+mes "Do you want to be warped to the \"Dummy Room\"?";
+if(select("- Yes:- No") - 1)close;
+next;
+mes "[Dummy Room]";
+mes "See you there!";
+warp "quiz_00",65,22;
+end;
+
+OnInit:
+waitingroom "Dummy Room",0;
+end;
+}
+
+quiz_00,67,24,4	script	Dummy Guard#exit	4_M_JOB_KNIGHT2,{
+
+mes "[Dummy Guard]";
+mes "Do you want to be warped back to your Prontera?";
+if(select("- Yes:- No") - 1)close;
+next;
+mes "[Dummy Guard]";
+mes "See you again!";
+warp "prontera",156,182;
+end;
+}

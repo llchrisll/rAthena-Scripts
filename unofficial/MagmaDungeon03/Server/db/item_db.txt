@@ -1,2 +1,0 @@
-25728,Shadowdecon_Ore,Shadowdecon Ore,3,20,10,10,,,,,0xFFFFFFFF,63,2,,,,,,{},{},{}
-25729,Shadowdecon,Shadowdecon,3,20,10,20,,,,,0xFFFFFFFF,63,2,,,,,,{},{},{}

@@ -1,2 +1,0 @@
-25730,Zelunium_Ore,Zelunium Ore,3,20,10,10,,,,,0xFFFFFFFF,63,2,,,,,,{},{},{}
-25731,Zelunium,Zelunium,3,20,10,20,,,,,0xFFFFFFFF,63,2,,,,,,{},{},{}

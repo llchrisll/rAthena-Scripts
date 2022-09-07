@@ -1,0 +1,728 @@
+//===== rAthena Script =======================================
+//= Reborn System
+//===== By ===================================================
+//= llchrisll
+//===== Version ==============================================
+//= 1.0 - Initial Version
+//===== Tested With ==========================================
+//= rAthena 09/16/2021 Revision
+//= GIT Hash: a725844553efb8e036f66d03347a000411a23f11
+//===== Description ==========================================
+//= Handles a system, which allows players to be reborn:
+//- Reverts the player back to Base Level 1, while keeping
+//  Job Level and Class.
+//- Grants item bonuses on certain Reborns.
+//= Easy Configurable with many different settings:
+//- Class Restriction
+//- Doram Restriction
+//- Level Settings for both restrictions above
+//- Item Requirements
+//- Item Rewards per reborn
+//===== Installation =============================================
+//= Add/replace the following on your item:
+//  Note: This makes it only removeable by GM command!
+/*
+    Flags:
+      BindOnEquip: true
+    Trade:
+      NoDrop: true
+      NoTrade: true
+      TradePartner: true
+      NoSell: true
+      NoCart: true
+      NoStorage: true
+      NoGuildStorage: true
+      NoMail: true
+      NoAuction: true
+    Script: |
+      if(RebornCT) bonus_script "{ "+callfunc("Reborn_Item",RebornCT)+" }",-1,512;
+*/
+//===== Comments =============================================
+//= Original idea by space cat via Discord PM.
+//============================================================
+prontera,156,180,4	script	Reborn Assistent	100,{
+
+mes .n$;
+// Enable Admin's to input the Reborn Count to test it, if '.debug' is on
+if(.debug && getgroupid() == 99) {
+	mes "Input your desired amount of Reborns:";
+	input(RebornCT);
+	next;
+	mes .n$;
+}
+mes "Welcome to the Reborn System!";
+mes "You have been reborned "+RebornCT+" times.";
+mes "How can I help you?";
+next;
+switch(select("- Reborn:- Information:- Nevermid")) {
+	
+	case 1:
+	mes .n$;
+	if(.max_reb && RebornCT >= .max_reb) {
+		mes "I'm sorry, but you can't rebirth any further.";
+		close;
+	}
+	// Check if player is Summoner but can't be reborn
+	if(!.doram && eaclass()&EAJ_SUMMONER) {
+		mes "I'm sorry, but Summoners (Doram) can't be reborn.";
+		close;
+	
+	// Check if player is normal classes
+	} else if(!(eaclass()&EAJ_SUMMONER)) {
+		
+		if(BaseLevel < .lvl[.class]) {
+			mes "I'm sorry, but you didn't reach max level of yet.";
+			close;
+		}
+		switch(.class) {
+			default: break; // Every Class
+			case 1:
+			if(!(eaclass()&EAJL_THIRD)) {
+				mes "Only 3rd Classes can be reborn.";
+				close;
+			}
+			break;
+			
+			case 2:
+			if(Class < JOB_LORD_KNIGHT || Class > JOB_PALADIN2) {
+				mes "Only 2nd Rebirth Classes can be reborn.";
+				close;
+			}
+			break;
+			
+			case 3:
+			if(Class < JOB_KNIGHT || Class > JOB_CRUSADER2) {
+				mes "Only 2nd Classes can be reborn.";
+				close;
+			}
+			break;
+			
+			case 4:
+			if(Class < JOB_BABY_RUNE_KNIGHT || Class > JOB_BABY_MECHANIC2) {
+				mes "Only 3rd Baby Classes can be reborn.";
+				close;
+			}
+			break;
+			
+			case 5:
+			if(Class < JOB_BABY_KNIGHT || Class > JOB_BABY_CRUSADER2) {
+				mes "Only 2nd Baby Classes can be reborn.";
+				close;
+			}
+			break;
+			
+			case 6:
+			if( (Class < JOB_STAR_GLADIATOR || Class > JOB_SOUL_LINKER) && Class != JOB_NINJA && Class != JOB_GUNSLINGER) {
+				mes "Only 2nd Taekwon Classes, Ninjas and Gunslingers can be reborn.";
+				close;
+			}
+			break;
+			
+			case 7:
+			if(Class != JOB_BABY_STAR_GLADIATOR && Class != JOB_BABY_SOUL_LINKER && Class != JOB_BABY_STAR_GLADIATOR2 && Class != JOB_BABY_NINJA && Class != JOB_BABY_GUNSLINGER) {
+				mes "Only 2nd Baby Taekwon Classes, Ninjas and Gunslingers can be reborn.";
+				close;
+			}
+			break;
+			
+			case 8:
+			if(Class != JOB_STAR_EMPEROR && Class != JOB_SOUL_REAPER && Class != JOB_STAR_EMPEROR2 && Class != JOB_KAGEROU && Class != JOB_OBORO && Class != JOB_REBELLION) {
+				mes "Only 3rd Taekwon Classes, Oborou/Kagerou and Rebellion can be reborn.";
+				close;
+			}
+			break;
+			
+			case 9:
+			if(Class != JOB_BABY_STAR_EMPEROR && Class != JOB_BABY_SOUL_REAPER && Class != JOB_BABY_STAR_EMPEROR2 && Class != JOB_BABY_KAGEROU && Class != JOB_BABY_OBORO && Class != JOB_BABY_REBELLION) {
+				mes "Only 3rd Baby Taekwon Classes, Oborou/Kagerou and Rebellion can be reborn.";
+				close;
+			}
+			break;
+		}
+	}
+	if(eaclass()&EAJ_SUMMONER && BaseLevel < .doram_lvl) {
+		mes "I'm sorry, but you didn't reach max level of yet.";
+		close;
+	}
+	if(getarraysize(.items) > 0) {
+		mes "I require the following items, before you can be reborn:";
+		mes "Additionally I will check if you meet the required amount already.";
+		for ( set .@i,0; .@i < getarraysize(.items); set .@i,.@i + 2) {
+			mes "> "+getitemname(.items[.@i])+" - "+( (countitem(.items[.@i]) >= .items[.@i+1])?"^088A08":"^FF0000") + countitem(.items[.@i])+"^000000/"+.items[.@i+1];
+			if(countitem(.items[.@i]) < .items[.@i+1]) 
+				set .@f,.@f + 1;
+		}
+		next;
+		mes .n$;
+	}
+	if(.@f) {
+		mes "Hmm, it looks you are missing the required for "+.@f+" items.";
+		mes "Come back once you have them.";
+		close;
+	}
+	mes "So are you ready to be reborn?";
+	if(select("- Yes, let's go!:- No, I'll come back.") - 1) close;
+	next;
+	if(getarraysize(.items) > 0)
+		for ( set .@i,0; .@i < getarraysize(.items); set .@i,.@i + 2)
+			if(countitem(.items[.@i]) >= .items[.@i+1]) // Just to be sure
+				delitem .items[.@i],.items[.@i+1];
+	
+	if(!RebornCT) // Give Reborn Item on first Reborn
+		getitem .equip,1;
+
+	set RebornCT,RebornCT + 1;
+	resetlvl(3); // This alone would not reset the distributed status points!
+	resetstatus;
+	for ( set .@r,0; .@r < getarraysize(.reb_reward); set .@r,.@r + 3)
+		if(RebornCT == .reb_reward[.@r])
+			getitem .reb_reward[.@r+1],.reb_reward[.@r+2];
+	mes .n$;
+	mes "You have been successfully reborn "+RebornCT+" times!";
+	mes "Now go out there and get strong again to regain your past power!";
+	break;
+	
+	case 2:
+	mes .n$;
+	mes "The Reborn System is very simply explained.";
+	mes "Once you have reached the maximum level, you have the possiblity to be reborn.";
+	mes "You will be reset to Base Level 1, while keeping your Class and Skills.";
+	mes "But everytime you reborn, you'll recieve additional bonuses if you wear the "+getitemname(.equip)+", you'll recieve on your first reborn.";
+	next;
+	mes .n$;
+	if(.max_reb) 
+		mes "You can be reborn a maximum of "+.max_reb+" times.";
+	else
+		mes "There is no limit to how often you can be reborn.";
+	mes " ";
+	mes "=== Class Restriction ===";
+	switch(.class) {
+		case 0: mes "Every Class can be reborn, even Novice!"; break;
+		case 1: mes "Every 3rd Class and 3rd Expanded Classes (Kagerou/Oborou, Rebellion, Star Emperor and Soul Reaper) can be reborn."; break;
+		case 2: mes "Only 2nd Rebirth Classes can be reborn."; break;
+		case 3: mes "Only 2nd Classes (Knight, etc.) can be reborn."; break;
+		case 4: mes "Only 3rd Baby Classes can be reborn."; break;
+		case 5: mes "Only 2nd Baby Classes can be reborn."; break;
+		case 6: mes "Only 2nd Taekwon Classes, Ninjas and Gunslingers can be reborn."; break;
+		case 7: mes "Only 2nd Baby Taekwon Classes, Ninjas and Gunslingers can be reborn."; break;
+		case 8: mes "Only 3rd Expanded Classes can be reborn."; break;
+		case 9: mes "Only 3rd Baby Taekwon Classes, Oborou/Kagerou and Rebellion can be reborn."; break;
+	}
+	mes "Required Level: "+.lvl[.class];
+	mes " ";
+	mes "=== Doram Restriction ===";
+	if(.doram) {
+		mes "Summoners (Doram) can be reborn.";
+		mes "Required Level: "+.doram_lvl;
+	} else
+		mes "Summoners can't be reborn.";
+	if(.bonus_info) {
+		next;
+		mes .n$;
+		mes "Reborn Count - Bonus";
+		mes " ";
+		mes "> 1 - MaxHP +10%";
+		mes "> 3 - MaxHP +20%";
+		mes "> 5 - MaxSP +10%";
+		mes "> 7 - MaxSP +20%";
+		mes "> 10 - STR +3";
+		mes "> 13 - STR +2";
+		mes "> 15 - Increases Damage against monsters of Medium size by 5%.";
+		mes "> 18 - Increases Damage against monsters of Medium size by 10%.";
+		mes "> 20 - Monsters of every class drops an Apple with 5% chance.";
+		mes "> 22 - Monsters of every class drops an Apple with 5% chance.";
+		mes "> 25 - When recieving damage, autocasts Level 4 Kyrie Eleison with 5% chance.";
+		mes "> 27 - When recieving damage, autocasts Level 2 Kyrie Eleison with 5% chance.";
+		mes "> 30 - Physical and Magical Attacks have 5% chance to autocast Level 1 Earthquake.";
+		mes "> 33 - Physical and Magical Attacks have 5% chance to autocast Level 3 Earthquake.";
+		mes "> 100 - Enables the use of Level 1 Enchant Deadly Poison.";
+		mes "> 150 - Enables the use of Level 2 Enchant Deadly Poison.";
+		mes " ";
+		mes "Depending on the power I was given, some effects will either stack or replace the previous effect.";
+	}
+	break;
+
+	case 3:
+	break;
+}
+close;
+
+OnInit:
+set .n$,"["+strnpcinfo(1)+"]";
+// ================= Debug =================
+// Enables to use test checks for 99 GM's
+// 1 = Enable/0 = Disable
+set .debug,0;
+// ================= Settings =================
+// * Reborn Item (Item which contains the Item Script mentioned in the Header)
+set .equip,35006;
+// * Required Level
+// Setting based on '.class' order
+setarray .lvl[0], 
+				MAX_LEVEL, // Every Class and Doram
+				MAX_LEVEL, // 3rd Classes and 3rd Expanded Classes
+				99, // 2nd Rebirth Classes
+				99, // 2nd Classes
+				MAX_LEVEL, // 3rd Baby Classes
+				99, // 2nd Baby Classes
+				99, // 2nd Taekwon Classes, Ninjas and Gunslingers
+				99, // 2nd Baby Taekwon Classes, Ninjas and Gunslingers
+				MAX_LEVEL, // 3rd Taekwon Classes, Oborou/Kagerou and Rebellion
+				MAX_LEVEL; // 3rd Baby Taekwon Classes, Oborou/Kagerou and Rebellion
+// * Required Items
+// Put '0' values to disable it.
+setarray .items[0],0,0;
+// * Maximum amount of Reborn per Character
+// 0 = Unlimited
+set .max_reb,0;
+// Restricted to certain Classes
+// Note - 3rd Expanded Classes: Oborou, Kagerou, Rebellion, Star Emperor and Soul Reaper
+// > I don't intend to add Super Novices seperatly
+// 0 = Every Class (literally, even Novice!)
+// 1 = 3rd Classes (Every 3rd Class and 3rd Expanded Classes)
+// 2 = 2nd Rebirth Classes only
+// 3 = 2nd Classes only (Knight,...)
+// 4 = 3rd Baby Classes only
+// 5 = 2nd Baby Classes only
+// 6 = 2nd Taekwon Classes, Ninjas and Gunslingers only
+// 7 = 2nd Baby Taekwon Classes, Ninjas and Gunslingers only
+// 8 = 3rd Taekwon Classes, Oborou/Kagerou and Rebellion only
+// 9 = 3rd Baby Taekwon Classes, Oborou/Kagerou and Rebellion only
+set .class,1;
+// * Doram Restriction
+// Are Doram's allowed to reborn as well?
+// 1 = Yes/0 = No
+set .doram,1;
+// Doram Required Level
+set .doram_lvl,MAX_LEVEL;
+// * Reborn Reward Settings
+// Rewards the players for each reborn
+// - Format: Reborn Count, Item ID, Item Amount
+// This supports also multiple rewards for one reborn
+setarray .reb_reward[0],
+						1,12215,3, // 1: 3x Level 10 Blessing Scroll
+						1,12216,3, // 1: 3x Level 10 Increase Agility Scroll
+						3,12208,5, // 3: 5x Battle Manual
+						5,12210,5; // 5: 5x Bubble Gum
+// * Reborn Bonus Information:
+// Enable/Disable the handwritten information about the bonuses for each reborn above
+set .bonus_info,0;
+end;
+}
+// callfunc "Reborn_Item",RebornCT;
+function	script	Reborn_Item	{
+// =======================================
+// * Debug Setting (1 = Enable/0 = Disable)
+set .@debug,0;
+// -------------------------------
+// * Bonus Handling
+// 0 = Bonus Value depends on last value it was given based on the last Reborn
+// 1 = Addition for the same bonuses
+// Note: There are 'restrictions' for 'bonus3', 'bonus4' and 'bonus5' bonuses
+// -------------------------------
+// Example:
+// Reborn #1: Grants MaxHP +10%
+// Reborn #3: Grants MaxHP +20%
+// -------------------------------
+// - Bonus Handling = 0 > 20%
+// -------------------------------
+// - Bonus Handling = 1 > 30%
+// =======================================
+// * Reborn Bonus Database
+// One Array per Reborn
+// Notes:
+// > Val<X>, depends on used bonus, like 'bonus2' requires 2 values
+// > See 'doc/item_bonus.txt' for all item bonuses
+// > You can also use the 'skill' script command to add skills, but you need to use the Skill ID!
+// -------------------------------
+// Layout: Bonus Type, Item Bonus, Val1, Val2, Val3, Val4, Val5, Bonus Handling (= see above)
+// =======================================
+setarray .@reb_1$[0],"bonus","bMaxHPrate","10","0","0","0","0","0";
+setarray .@reb_3$[0],"bonus","bMaxHPrate","20","0","0","0","0","0";
+setarray .@reb_5$[0],"bonus","bMaxSPrate","10","0","0","0","0","0";
+setarray .@reb_7$[0],"bonus","bMaxSPrate","20","0","0","0","0","0";
+setarray .@reb_10$[0],"bonus","bStr","3","0","0","0","0","0";
+setarray .@reb_13$[0],"bonus","bStr","2","0","0","0","0","1";
+setarray .@reb_15$[0],"bonus2","bAddSize","Size_Medium","5","0","0","0","0";
+setarray .@reb_18$[0],"bonus2","bAddSize","Size_Medium","10","0","0","0","1";
+setarray .@reb_20$[0],"bonus3","bAddClassDropItem","512","Class_All","500","0","0","0";
+setarray .@reb_22$[0],"bonus3","bAddClassDropItem","512","Class_All","500","0","0","1";
+setarray .@reb_25$[0],"bonus4","bAutoSpellWhenHit","73","4","50","0","0","0";
+setarray .@reb_27$[0],"bonus4","bAutoSpellWhenHit","73","2","50","0","0","1";
+setarray .@reb_30$[0],"bonus5","bAutoSpell","653","1","50","BF_WEAPON|BF_MAGIC","0","0";
+setarray .@reb_33$[0],"bonus5","bAutoSpell","653","3","50","BF_WEAPON|BF_MAGIC","0","0";
+setarray .@reb_100$[0],"skill","378","1","0","0","0","0","0";
+setarray .@reb_150$[0],"skill","378","2","0","0","0","0","0";
+// =======================================
+// getarg(0) == Reborn Amount
+if(!getarg(0)) return;
+for ( set .@r,1; .@r <= getarg(0); set .@r,.@r + 1) {
+	
+	// Skip empty arrays
+	if(getarraysize(getd(".@reb_"+.@r+"$")) < 1) continue; 
+	
+	// Check for duplicate bonuses and depending on '.@bonus_type' make the addition or value update
+	for ( set .@b,0; .@b < getarraysize(getd(".@reb_"+.@r+"$")); set .@b,.@b + 8) {
+
+		// Skip to next bonus, if it's the first bonus
+		if(getarraysize(.@bonus_data$) < 1) break; 
+		
+		for ( set .@c,0; .@c < getarraysize(.@bonus_data$); set .@c,.@c + 7) {
+			
+			// Find existing bonuses, if not continue with next
+			if(.@bonus_data$[.@c] != getd(".@reb_"+.@r+"$["+.@b+"]")) continue;
+			if(.@bonus_data$[.@c+1] != getd(".@reb_"+.@r+"$["+(.@b+1)+"]")) continue;
+			
+			if(.@debug)
+				debugmes "Bonus Found: "+.@bonus_data$[.@c]+", "+.@bonus_data$[.@c+1]+", "+.@bonus_data$[.@c+2]+", "+.@bonus_data$[.@c+3]+", "+.@bonus_data$[.@c+4]+", "+.@bonus_data$[.@c+5]+", "+.@bonus_data$[.@c+6];
+			
+			// ======= Bonus Handling - Restrictions: =======
+			// These won't change, but need to be the same for a replace/addition to happen:
+			// - Status effect (eff)
+			// - Element (e)
+			// - Race (r)
+			// - Monster Race (mr)
+			// - Class (c)
+			// - Size (s)
+			// - Trigger Critera (bf/atf)
+			// - other values: Skill (sk), Monster id (mid), Item id (iid), Item group (ig), Weapon type (w)
+			// --------------------------------------------------
+			// Example - bonus3 bSubEle,e,x,bf;
+			// e (element) an bf(trigger criteria) need to be the same so the replace/addition of the x (value) can happen
+			// ================================
+			// * Replace the previous value with the new one
+			if(atoi(getd(".@reb_"+.@r+"$["+(.@b+7)+"]")) == 0) {
+				if(.@bonus_data$[.@c] == "bonus" || .@bonus_data$[.@c] == "skill")
+			
+					// Check if the 'restrictions' are the same
+					if(.@bonus_data$[.@c+1] == getd(".@reb_"+.@r+"$["+(.@b+1)+"]"))
+					
+						// Check if the 'value' is not the same and replace it
+						if(getd(".@reb_"+.@r+"$["+(.@b+2)+"]") != .@bonus_data$[.@c+2])
+							setarray .@bonus_data$[.@c+2],getd(".@reb_"+.@r+"$["+(.@b+2)+"]");
+
+				if(.@bonus_data$[.@c] == "bonus2")
+					
+					// Check if the 'restrictions' are the same
+					if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]"))
+						
+						// Check if the 'value' is not the same and replace it
+						if(getd(".@reb_"+.@r+"$["+(.@b+3)+"]") != .@bonus_data$[.@c+3])
+							setarray .@bonus_data$[.@c+3],getd(".@reb_"+.@r+"$["+(.@b+3)+"]");
+
+				// Check for each different 'bonus3' seperatly, categorized by values to change
+				if(.@bonus_data$[.@c] == "bonus3") {
+
+					// Last Value = Index 4
+					if(.@bonus_data$[.@c+1] == "bAddMonsterIdDropItem" || .@bonus_data$[.@c+1] == "bAddMonsterDropItem" || .@bonus_data$[.@c+1] == "bAddClassDropItem" || .@bonus_data$[.@c+1] == "bAddMonsterDropItemGroup" || .@bonus_data$[.@c+1] == "bAddClassDropItemGroup" || .@bonus_data$[.@c+1] == "bAddEffOnSkill")
+						
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]") && .@bonus_data$[.@c+3] == getd(".@reb_"+.@r+"$["+(.@b+3)+"]"))
+							
+							// Check if the 'value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+4)+"]") != .@bonus_data$[.@c+4])
+								setarray .@bonus_data$[.@c+4],getd(".@reb_"+.@r+"$["+(.@b+4)+"]");
+						
+					// 2nd Value = Index 3
+					else if(.@bonus_data$[.@c+1] == "bAddEle" || .@bonus_data$[.@c+1] == "bSubEle" || .@bonus_data$[.@c+1] == "bSubRace" || .@bonus_data$[.@c+1] == "bAddEff" || .@bonus_data$[.@c+1] == "bAddEffWhenHit")
+						
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]") && .@bonus_data$[.@c+4] == getd(".@reb_"+.@r+"$["+(.@b+4)+"]"))
+								
+							// Check if the 'value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+3)+"]") != .@bonus_data$[.@c+3])
+								setarray .@bonus_data$[.@c+3],getd(".@reb_"+.@r+"$["+(.@b+3)+"]");
+
+					// Last two values = Index 3+4
+					else if(.@bonus_data$[.@c+1] == "bAutoSpell" || .@bonus_data$[.@c+1] == "bAutoSpellWhenHit" || .@bonus_data$[.@c+1] == "bHPVanishRaceRate" || .@bonus_data$[.@c+1] == "bSPVanishRaceRate" || .@bonus_data$[.@c+1] == "bStateNoRecoverRace")
+						
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]")) {
+							
+							// Check if the 'first value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+3)+"]") != .@bonus_data$[.@c+3]) 
+								setarray .@bonus_data$[.@c+3],getd(".@reb_"+.@r+"$["+(.@b+3)+"]");
+								
+							// Check if the 'second value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+4)+"]") != .@bonus_data$[.@c+4])
+								setarray .@bonus_data$[.@c+4],getd(".@reb_"+.@r+"$["+(.@b+4)+"]");
+						}
+					// First two values = Index 2+3
+					else if(.@bonus_data$[.@c+1] == "bHPVanishRate" || .@bonus_data$[.@c+1] == "bSPVanishRate")
+						
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+4] == getd(".@reb_"+.@r+"$["+(.@b+4)+"]")) {
+
+							// Check if the 'first value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+2)+"]") != .@bonus_data$[.@c+2])
+								setarray .@bonus_data$[.@c+2],getd(".@reb_"+.@r+"$["+(.@b+2)+"]");
+	
+							// Check if the 'second value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+3)+"]") != .@bonus_data$[.@c+3])
+								setarray .@bonus_data$[.@c+3],getd(".@reb_"+.@r+"$["+(.@b+3)+"]");
+						}
+				}
+				// Check for each different 'bonus4' seperatly, categorized by values to change
+				if(.@bonus_data$[.@c] == "bonus4") {
+					
+					// Last 3 values = Index 3+4+5
+					if(.@bonus_data$[.@c+1] == "bSetDefRace" || .@bonus_data$[.@c+1] == "bSetMDefRace")
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]")) {
+							
+							// Check if the 'first value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+3)+"]") != .@bonus_data$[.@c+3])
+								setarray .@bonus_data$[.@c+3],getd(".@reb_"+.@r+"$["+(.@b+3)+"]");
+	
+							// Check if the 'second value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+4)+"]") != .@bonus_data$[.@c+4])
+								setarray .@bonus_data$[.@c+4],getd(".@reb_"+.@r+"$["+(.@b+4)+"]");
+									
+							// Check if the 'third value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+5)+"]") != .@bonus_data$[.@c+5])
+								setarray .@bonus_data$[.@c+5],getd(".@reb_"+.@r+"$["+(.@b+5)+"]");
+						}
+
+					// 2nd and 3rd Value = Index 3+4
+					if(.@bonus_data$[.@c+1] == "bAutoSpell" || .@bonus_data$[.@c+1] == "bAutoSpellWhenHit")
+						
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]") && .@bonus_data$[.@c+5] == getd(".@reb_"+.@r+"$["+(.@b+5)+"]")) {
+							
+							// Check if the 'first value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+3)+"]") != .@bonus_data$[.@c+3]) 
+								setarray .@bonus_data$[.@c+3],getd(".@reb_"+.@r+"$["+(.@b+3)+"]");
+	
+							// Check if the 'second value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+4)+"]") != .@bonus_data$[.@c+4])
+								setarray .@bonus_data$[.@c+4],getd(".@reb_"+.@r+"$["+(.@b+4)+"]");
+						}
+					
+					// 2nd Value = Index 3
+					if(.@bonus_data$[.@c+1] == "bAddEff" || .@bonus_data$[.@c+1] == "bAddEffWhenHit")
+						
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]") && .@bonus_data$[.@c+4] == getd(".@reb_"+.@r+"$["+(.@b+4)+"]") && .@bonus_data$[.@c+5] == getd(".@reb_"+.@r+"$["+(.@b+5)+"]"))
+							
+							// Check if the 'value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+3)+"]") != .@bonus_data$[.@c+3])
+								setarray .@bonus_data$[.@c+3],getd(".@reb_"+.@r+"$["+(.@b+3)+"]");
+						
+					// 3rd Value = Index 4
+					if(.@bonus_data$[.@c+1] == "bAddEffOnSkill")
+						
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]") && .@bonus_data$[.@c+3] == getd(".@reb_"+.@r+"$["+(.@b+3)+"]") && .@bonus_data$[.@c+5] == getd(".@reb_"+.@r+"$["+(.@b+5)+"]"))
+							
+							// Check if the 'value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+4)+"]") != .@bonus_data$[.@c+4])
+								setarray .@bonus_data$[.@c+4],getd(".@reb_"+.@r+"$["+(.@b+4)+"]");
+						
+					// Last two values = Index 4+5
+					if(.@bonus_data$[.@c+1] == "bAutoSpellOnSkill")
+
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]") && .@bonus_data$[.@c+3] == getd(".@reb_"+.@r+"$["+(.@b+3)+"]")) {
+
+							// Check if the 'first value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+4)+"]") != .@bonus_data$[.@c+4])
+								setarray .@bonus_data$[.@c+4],getd(".@reb_"+.@r+"$["+(.@b+4)+"]");
+							
+							// Check if the 'second value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+5)+"]") != .@bonus_data$[.@c+5])
+								setarray .@bonus_data$[.@c+5],getd(".@reb_"+.@r+"$["+(.@b+5)+"]");
+						}
+				}
+				// Check for each different 'bonus5' seperatly, categorized by values to change
+				if(.@bonus_data$[.@c] == "bonus5") {
+					
+					// 3rd Value = Index 4
+					if(.@bonus_data$[.@c+1] == "bAddEffOnSkill")
+						
+						// Check if the 'restrictions' is the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]") && .@bonus_data$[.@c+3] == getd(".@reb_"+.@r+"$["+(.@b+3)+"]") && .@bonus_data$[.@c+5] == getd(".@reb_"+.@r+"$["+(.@b+5)+"]") && .@bonus_data$[.@c+6] == getd(".@reb_"+.@r+"$["+(.@b+6)+"]"))
+
+							// Check if the 'value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+4)+"]") != .@bonus_data$[.@c+4])
+								setarray .@bonus_data$[.@c+4],getd(".@reb_"+.@r+"$["+(.@b+4)+"]");
+									
+					// 2nd and 3rd Value = Index 3+4
+					if(.@bonus_data$[.@c+1] == "bAutoSpell" || .@bonus_data$[.@c+1] == "bAutoSpellWhenHit")
+
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]") && .@bonus_data$[.@c+5] == getd(".@reb_"+.@r+"$["+(.@b+5)+"]") && .@bonus_data$[.@c+6] == getd(".@reb_"+.@r+"$["+(.@b+6)+"]")) {
+
+							// Check if the 'first value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+3)+"]") != .@bonus_data$[.@c+3])
+								setarray .@bonus_data$[.@c+3],getd(".@reb_"+.@r+"$["+(.@b+3)+"]");
+							
+							// Check if the 'second value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+4)+"]") != .@bonus_data$[.@c+4])
+								setarray .@bonus_data$[.@c+4],getd(".@reb_"+.@r+"$["+(.@b+4)+"]");
+						}
+					
+					// 3rd and 4th Value = Index 4+5
+					if(.@bonus_data$[.@c+1] == "bAutoSpellOnSkill")
+
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]") && .@bonus_data$[.@c+3] == getd(".@reb_"+.@r+"$["+(.@b+3)+"]") && .@bonus_data$[.@c+6] == getd(".@reb_"+.@r+"$["+(.@b+6)+"]")) {
+							
+							// Check if the 'first value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+4)+"]") != .@bonus_data$[.@c+4])
+								setarray .@bonus_data$[.@c+4],getd(".@reb_"+.@r+"$["+(.@b+4)+"]");
+									
+							// Check if the 'second value' is not the same and replace it
+							if(getd(".@reb_"+.@r+"$["+(.@b+5)+"]") != .@bonus_data$[.@c+5])
+								setarray .@bonus_data$[.@c+5],getd(".@reb_"+.@r+"$["+(.@b+5)+"]");
+						}
+				}
+			// * Add the new value to the previous value
+			} else if(atoi(getd(".@reb_"+.@r+"$["+(.@b+7)+"]")) == 1) {
+
+				if(.@bonus_data$[.@c] == "bonus" || .@bonus_data$[.@c] == "skill")
+
+					// Check if the 'restrictions' are the same
+					if(.@bonus_data$[.@c+1] == getd(".@reb_"+.@r+"$["+(.@b+1)+"]"))
+						setarray .@bonus_data$[.@c+2],""+(atoi(.@bonus_data$[.@c+2])+atoi(getd(".@reb_"+.@r+"$["+(.@b+2)+"]")));
+				
+				if(.@bonus_data$[.@c] == "bonus2")
+					
+					// Check if the 'restrictions' are the same
+					if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]"))
+						setarray .@bonus_data$[.@c+3],""+(atoi(.@bonus_data$[.@c+3])+atoi(getd(".@reb_"+.@r+"$["+(.@b+3)+"]")));
+					
+				// Check for each different 'bonus3' seperatly, categorized by values to change
+				if(.@bonus_data$[.@c] == "bonus3") {
+
+					// Last Value = Index 4
+					if(.@bonus_data$[.@c+1] == "bAddMonsterIdDropItem" || .@bonus_data$[.@c+1] == "bAddMonsterDropItem" || .@bonus_data$[.@c+1] == "bAddClassDropItem" || .@bonus_data$[.@c+1] == "bAddMonsterDropItemGroup" || .@bonus_data$[.@c+1] == "bAddClassDropItemGroup" || .@bonus_data$[.@c+1] == "bAddEffOnSkill")
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]") && .@bonus_data$[.@c+3] == getd(".@reb_"+.@r+"$["+(.@b+3)+"]"))
+							setarray .@bonus_data$[.@c+4],""+(atoi(.@bonus_data$[.@c+4])+atoi(getd(".@reb_"+.@r+"$["+(.@b+4)+"]")));
+					
+					// 2nd Value = Index 3
+					else if(.@bonus_data$[.@c+1] == "bAddEle" || .@bonus_data$[.@c+1] == "bSubEle" || .@bonus_data$[.@c+1] == "bSubRace" || .@bonus_data$[.@c+1] == "bAddEff" || .@bonus_data$[.@c+1] == "bAddEffWhenHit")
+						
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]") && .@bonus_data$[.@c+4] == getd(".@reb_"+.@r+"$["+(.@b+4)+"]"))
+							setarray .@bonus_data$[.@c+3],""+(atoi(.@bonus_data$[.@c+3])+atoi(getd(".@reb_"+.@r+"$["+(.@b+3)+"]")));
+						
+					// Last two values = Index 3+4
+					else if(.@bonus_data$[.@c+1] == "bAutoSpell" || .@bonus_data$[.@c+1] == "bAutoSpellWhenHit" || .@bonus_data$[.@c+1] == "bHPVanishRaceRate" || .@bonus_data$[.@c+1] == "bSPVanishRaceRate" || .@bonus_data$[.@c+1] == "bStateNoRecoverRace")
+						
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]")) {
+							setarray .@bonus_data$[.@c+3],""+(atoi(.@bonus_data$[.@c+3])+atoi(getd(".@reb_"+.@r+"$["+(.@b+3)+"]")));
+							setarray .@bonus_data$[.@c+4],""+(atoi(.@bonus_data$[.@c+4])+atoi(getd(".@reb_"+.@r+"$["+(.@b+4)+"]")));
+						}
+					// First two values = Index 2+3
+					else if(.@bonus_data$[.@c+1] == "bHPVanishRate" || .@bonus_data$[.@c+1] == "bSPVanishRate")
+						
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+4] == getd(".@reb_"+.@r+"$["+(.@b+4)+"]")) {
+							setarray .@bonus_data$[.@c+2],""+(atoi(.@bonus_data$[.@c+2])+atoi(getd(".@reb_"+.@r+"$["+(.@b+2)+"]")));
+							setarray .@bonus_data$[.@c+3],""+(atoi(.@bonus_data$[.@c+3])+atoi(getd(".@reb_"+.@r+"$["+(.@b+3)+"]")));
+						}
+				}
+				// Check for each different 'bonus4' seperatly, categorized by values to change
+				if(.@bonus_data$[.@c] == "bonus4") {
+					
+					// Last 3 values = Index 3+4+5
+					if(.@bonus_data$[.@c+1] == "bSetDefRace" || .@bonus_data$[.@c+1] == "bSetMDefRace")
+						
+						// Check if the 'restrictions' are the same
+						if(getd(".@reb_"+.@r+"$["+(.@b+2)+"]") == .@bonus_data$[.@c+2]) {
+							setarray .@bonus_data$[.@c+3],""+(atoi(.@bonus_data$[.@c+3])+atoi(getd(".@reb_"+.@r+"$["+(.@b+3)+"]")));
+							setarray .@bonus_data$[.@c+4],""+(atoi(.@bonus_data$[.@c+4])+atoi(getd(".@reb_"+.@r+"$["+(.@b+4)+"]")));
+							setarray .@bonus_data$[.@c+5],""+(atoi(.@bonus_data$[.@c+4])+atoi(getd(".@reb_"+.@r+"$["+(.@b+5)+"]")));
+						}
+						
+					// 2nd and 3rd Value = Index 3+4
+					if(.@bonus_data$[.@c+1] == "bAutoSpell" || .@bonus_data$[.@c+1] == "bAutoSpellWhenHit")
+						
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]") && .@bonus_data$[.@c+5] == getd(".@reb_"+.@r+"$["+(.@b+5)+"]")) {
+							setarray .@bonus_data$[.@c+3],""+(atoi(.@bonus_data$[.@c+3])+atoi(getd(".@reb_"+.@r+"$["+(.@b+3)+"]")));
+							setarray .@bonus_data$[.@c+4],""+(atoi(.@bonus_data$[.@c+4])+atoi(getd(".@reb_"+.@r+"$["+(.@b+4)+"]")));
+						}
+					
+					// 2nd Value = Index 3
+					if(.@bonus_data$[.@c+1] == "bAddEff" || .@bonus_data$[.@c+1] == "bAddEffWhenHit")
+						
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]") && .@bonus_data$[.@c+4] == getd(".@reb_"+.@r+"$["+(.@b+4)+"]") && .@bonus_data$[.@c+5] == getd(".@reb_"+.@r+"$["+(.@b+5)+"]"))
+							setarray .@bonus_data$[.@c+3],""+(atoi(.@bonus_data$[.@c+3])+atoi(getd(".@reb_"+.@r+"$["+(.@b+3)+"]")));
+
+					// 3rd Value = Index 4
+					if(.@bonus_data$[.@c+1] == "bAddEffOnSkill")
+						
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]") && .@bonus_data$[.@c+3] == getd(".@reb_"+.@r+"$["+(.@b+3)+"]") && .@bonus_data$[.@c+5] == getd(".@reb_"+.@r+"$["+(.@b+5)+"]"))
+							setarray .@bonus_data$[.@c+4],""+(atoi(.@bonus_data$[.@c+4])+atoi(getd(".@reb_"+.@r+"$["+(.@b+4)+"]")));
+				
+					// Last two values = Index 4+5
+					if(.@bonus_data$[.@c+1] == "bAutoSpellOnSkill")
+						
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]") && .@bonus_data$[.@c+3] == getd(".@reb_"+.@r+"$["+(.@b+3)+"]")) {
+							setarray .@bonus_data$[.@c+4],""+(atoi(.@bonus_data$[.@c+4])+atoi(getd(".@reb_"+.@r+"$["+(.@b+4)+"]")));
+							setarray .@bonus_data$[.@c+5],""+(atoi(.@bonus_data$[.@c+5])+atoi(getd(".@reb_"+.@r+"$["+(.@b+5)+"]")));
+						}
+				}
+				// Check for each different 'bonus5' seperatly, categorized by values to change
+				if(.@bonus_data$[.@c] == "bonus5") {
+					
+					// 3rd Value = Index 4
+					if(.@bonus_data$[.@c+1] == "bAddEffOnSkill")
+						
+						// Check if the 'restrictions' is the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]") && .@bonus_data$[.@c+3] == getd(".@reb_"+.@r+"$["+(.@b+3)+"]") && .@bonus_data$[.@c+5] == getd(".@reb_"+.@r+"$["+(.@b+5)+"]") && .@bonus_data$[.@c+6] == getd(".@reb_"+.@r+"$["+(.@b+6)+"]"))
+							setarray .@bonus_data$[.@c+4],""+(atoi(.@bonus_data$[.@c+4])+atoi(getd(".@reb_"+.@r+"$["+(.@b+4)+"]")));
+	
+					// 2nd and 3rd Value = Index 3+4
+					if(.@bonus_data$[.@c+1] == "bAutoSpell" || .@bonus_data$[.@c+1] == "bAutoSpellWhenHit")
+						
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]") && .@bonus_data$[.@c+5] == getd(".@reb_"+.@r+"$["+(.@b+5)+"]") && .@bonus_data$[.@c+6] == getd(".@reb_"+.@r+"$["+(.@b+6)+"]")) {
+							setarray .@bonus_data$[.@c+3],""+(atoi(.@bonus_data$[.@c+3])+atoi(getd(".@reb_"+.@r+"$["+(.@b+3)+"]")));
+							setarray .@bonus_data$[.@c+4],""+(atoi(.@bonus_data$[.@c+4])+atoi(getd(".@reb_"+.@r+"$["+(.@b+4)+"]")));
+						}
+					
+					// 3rd and 4th Value = Index 4+5
+					if(.@bonus_data$[.@c+1] == "bAutoSpellOnSkill")
+						
+						// Check if the 'restrictions' are the same
+						if(.@bonus_data$[.@c+2] == getd(".@reb_"+.@r+"$["+(.@b+2)+"]") && .@bonus_data$[.@c+3] == getd(".@reb_"+.@r+"$["+(.@b+3)+"]") && .@bonus_data$[.@c+6] == getd(".@reb_"+.@r+"$["+(.@b+6)+"]")) {
+							setarray .@bonus_data$[.@c+4],""+(atoi(.@bonus_data$[.@c+4])+atoi(getd(".@reb_"+.@r+"$["+(.@b+4)+"]")));
+							setarray .@bonus_data$[.@c+5],""+(atoi(.@bonus_data$[.@c+5])+atoi(getd(".@reb_"+.@r+"$["+(.@b+5)+"]")));
+						}
+				}
+			}
+			set .@e,1; // Variable to prevent duplicate bonus
+			if(.@debug)
+				debugmes "Bonus Data After: "+.@bonus_data$[.@c]+", "+.@bonus_data$[.@c+1]+", "+.@bonus_data$[.@c+2]+", "+.@bonus_data$[.@c+3]+", "+.@bonus_data$[.@c+4]+", "+.@bonus_data$[.@c+5]+", "+.@bonus_data$[.@c+6];
+		}
+	}
+	if(!.@e)
+		setarray .@bonus_data$[getarraysize(.@bonus_data$)],getd(".@reb_"+.@r+"$[0]"),getd(".@reb_"+.@r+"$[1]"),getd(".@reb_"+.@r+"$[2]"),getd(".@reb_"+.@r+"$[3]"),getd(".@reb_"+.@r+"$[4]"),getd(".@reb_"+.@r+"$[5]"),getd(".@reb_"+.@r+"$[6]");
+	set .@e,0; // Reset variable
+}
+for ( set .@m,0; .@m < getarraysize(.@bonus_data$); set .@m,.@m + 7) {
+	// Define the 2 base values
+	set .@script$,.@script$ + .@bonus_data$[.@m]+" "+.@bonus_data$[.@m+1]+","+.@bonus_data$[.@m+2];
+	// and then depending on the used bonus, add additional ',' before applying the values
+	// (I know this could have been made with one line, but for the overview I found it better this way)
+	if(.@bonus_data$[.@m] == "bonus2")
+		set .@script$,.@script$ + ","+.@bonus_data$[.@m+3];
+	else if(.@bonus_data$[.@m] == "bonus3")
+		set .@script$,.@script$ + ","+.@bonus_data$[.@m+3]+","+.@bonus_data$[.@m+4];
+	else if(.@bonus_data$[.@m] == "bonus4")
+		set .@script$,.@script$ + ","+.@bonus_data$[.@m+3]+","+.@bonus_data$[.@m+4]+","+.@bonus_data$[.@m+5];
+	else if(.@bonus_data$[.@m] == "bonus5")
+		set .@script$,.@script$ + ","+.@bonus_data$[.@m+3]+","+.@bonus_data$[.@m+4]+","+.@bonus_data$[.@m+5]+","+.@bonus_data$[.@m+6];
+	// Ofc, you need a ';' after it
+	set .@script$,.@script$ + "; ";
+}
+if(.@debug) debugmes "Script Variable: "+.@script$;
+return .@script$;
+}
