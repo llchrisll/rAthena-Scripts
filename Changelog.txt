@@ -24,6 +24,16 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2023/06/23
+<< == |*| Unofficial Old Glast Heim Hard [RE] - Updated v1.8 |*| == >>
+- Removed OldGlastHeim_merchants.txt
+- Updated Instance Script to reflect last rAthena changes
+- Updated db files
+<< == |*| Unofficial Magma Dungeon F3 [RE] - Removed |*| == >>
+<< == |*| Unofficial Abyss Glast Heim [RE] - Removed |*| == >>
+<< == |*| Unofficial Infinite Space [RE] - Removed |*| == >>
+<< == |*| Unofficial Temple of Demon God [RE] - Removed |*| == >>
+------------------------------------------------------------------------------------------------------------------------
 * 2022/09/07
 << == |*| Unofficial Magma Dungeon F3 [RE] - Modified |*| == >>
 - Removed item_db.txt file

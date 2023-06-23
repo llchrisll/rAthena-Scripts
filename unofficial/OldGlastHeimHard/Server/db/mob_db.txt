@@ -12,6 +12,577 @@
 3150,MG_AMDARAIS_H,Amdarias,Amdarias,180,42900000,1,2291320,2416730,3,10580,4231,30,40,255,39,90,169,166,20,10,12,2,1,89,0x6283695,120,312,1200,432,0,0,0,0,0,0,0,616,5000,617,10000,6607,5000,607,10000,1186,1000,1004,10000,0,0,0,0,0,0,4602,1
 3151,MG_CORRUPTION_ROOT_H,Corruption Root,Corruption Root,180,18200000,1,2199906,2008478,3,8133,8133,333,333,201,20,90,201,201,20,10,12,2,6,62,0x6280084,2000,576,672,480,0,0,0,0,0,0,0,616,5000,617,10000,6607,5000,607,10000,2854,1000,7566,10000,0,0,0,0,0,0,4604,1
 
+YML:
+  - Id: 3139
+    AegisName: MG_ZOMBIE_H
+    Name: Corrupted Steward
+    Level: 160
+    Hp: 271200
+    BaseExp: 13332
+    JobExp: 17596
+    Attack: 4728
+    Attack2: 1840
+    Defense: 15
+    MagicDefense: 15
+    Str: 44
+    Agi: 22
+    Vit: 77
+    Int: 25
+    Dex: 88
+    Luk: 22
+    AttackRange: 1
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Medium
+    Race: Undead
+    Element: Undead
+    ElementLevel: 1
+    WalkSpeed: 400
+    AttackDelay: 2612
+    AttackMotion: 912
+    DamageMotion: 288
+    Ai: 04
+    Drops:
+      - Item: Glast_Decayed_Nail
+        Rate: 200
+      - Item: Glast_Horrendous_Mouth
+        Rate: 200
+      - Item: Coagulated_Spell
+        Rate: 20
+      - Item: Sticky_Mucus
+        Rate: 2000
+      - Item: White_Jewel
+        Rate: 1000
+  - Id: 3140
+    AegisName: MG_WRAITH_H
+    Name: Corrupted Monk
+    Level: 163
+    Hp: 200336
+    BaseExp: 13998
+    JobExp: 18474
+    Attack: 1998
+    Attack2: 799
+    Defense: 80
+    MagicDefense: 200
+    Str: 16
+    Agi: 26
+    Vit: 30
+    Int: 115
+    Dex: 79
+    Luk: 5
+    AttackRange: 1
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Large
+    Race: Undead
+    Element: Undead
+    ElementLevel: 4
+    WalkSpeed: 350
+    AttackDelay: 1816
+    AttackMotion: 576
+    DamageMotion: 240
+    Ai: 21
+    Drops:
+      - Item: Glast_Decayed_Nail
+        Rate: 200
+      - Item: Glast_Horrendous_Mouth
+        Rate: 200
+      - Item: Coagulated_Spell
+        Rate: 20
+      - Item: Wedding_Veil
+        Rate: 200
+      - Item: Crystal_Jewel_
+        Rate: 200
+      - Item: Crystal_Mirror
+        Rate: 1000
+  - Id: 3141
+    AegisName: MG_GHOUL_H
+    Name: Grand Chamberlain in pain
+    Level: 162
+    Hp: 416200
+    BaseExp: 14222
+    JobExp: 18772
+    Attack: 5930
+    Attack2: 2371
+    Defense: 30
+    MagicDefense: 30
+    Str: 88
+    Agi: 44
+    Vit: 88
+    Int: 21
+    Dex: 95
+    Luk: 44
+    AttackRange: 1
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Medium
+    Race: Undead
+    Element: Undead
+    ElementLevel: 2
+    WalkSpeed: 300
+    AttackDelay: 2456
+    AttackMotion: 912
+    DamageMotion: 504
+    Ai: 04
+    Drops:
+      - Item: Glast_Decayed_Nail
+        Rate: 200
+      - Item: Glast_Horrendous_Mouth
+        Rate: 200
+      - Item: Coagulated_Spell
+        Rate: 20
+      - Item: Oridecon_Stone
+        Rate: 200
+      - Item: Skul_Ring
+        Rate: 200
+      - Item: Old_White_Cloth
+        Rate: 2000
+  - Id: 3142
+    AegisName: MG_ARCLOUSE_H
+    Name: Maggot
+    Level: 163
+    Hp: 161622
+    BaseExp: 22
+    JobExp: 28
+    Attack: 2491
+    Attack2: 996
+    Defense: 121
+    MagicDefense: 36
+    Str: 60
+    Agi: 103
+    Vit: 45
+    Int: 35
+    Dex: 172
+    Luk: 15
+    AttackRange: 1
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Small
+    Race: Insect
+    Element: Earth
+    ElementLevel: 2
+    WalkSpeed: 100
+    AttackDelay: 960
+    AttackMotion: 500
+    DamageMotion: 480
+    Ai: 09
+    Modes:
+      Detector: true
+    Drops:
+      - Item: Glast_Decayed_Nail
+        Rate: 200
+      - Item: Coagulated_Spell
+        Rate: 20
+      - Item: Glast_Horrendous_Mouth
+        Rate: 200
+      - Item: Round_Shell
+        Rate: 5000
+      - Item: Great_Nature
+        Rate: 200
+      - Item: Polluted_Spell
+        Rate: 500
+  - Id: 3143
+    AegisName: MG_RAYDRIC_H
+    Name: Corrupted Palace Guard
+    Level: 165
+    Hp: 368160
+    BaseExp: 16306
+    JobExp: 7638
+    Attack: 6333
+    Attack2: 2533
+    Defense: 89
+    MagicDefense: 15
+    Str: 159
+    Agi: 87
+    Vit: 66
+    Int: 33
+    Dex: 106
+    Luk: 27
+    AttackRange: 2
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Medium
+    Race: Undead
+    Element: Dark
+    ElementLevel: 2
+    WalkSpeed: 150
+    AttackDelay: 824
+    AttackMotion: 780
+    DamageMotion: 420
+    Ai: 09
+    Drops:
+      - Item: Glast_Decayed_Nail
+        Rate: 200
+      - Item: Glast_Horrendous_Mouth
+        Rate: 200
+      - Item: Coagulated_Spell
+        Rate: 20
+      - Item: Brigan
+        Rate: 5000
+      - Item: Elunium
+        Rate: 100
+      - Item: Plate_Armor
+        Rate: 5
+  - Id: 3144
+    AegisName: MG_RAYDRIC_ARCHER_H
+    Name: Wandering Archer
+    Level: 166
+    Hp: 288740
+    BaseExp: 14248
+    JobExp: 10314
+    Attack: 7781
+    Attack2: 3113
+    Defense: 63
+    MagicDefense: 40
+    Str: 53
+    Agi: 24
+    Vit: 40
+    Int: 15
+    Dex: 156
+    Luk: 30
+    AttackRange: 14
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Medium
+    Race: Undead
+    Element: Dark
+    ElementLevel: 2
+    WalkSpeed: 200
+    AttackDelay: 1152
+    AttackMotion: 1152
+    DamageMotion: 480
+    Ai: 05
+    Modes:
+      Detector: true
+    Drops:
+      - Item: Glast_Decayed_Nail
+        Rate: 200
+      - Item: Glast_Horrendous_Mouth
+        Rate: 200
+      - Item: Coagulated_Spell
+        Rate: 20
+      - Item: Brigan
+        Rate: 5000
+      - Item: Elunium
+        Rate: 100
+      - Item: Tights
+        Rate: 5
+  - Id: 3145
+    AegisName: MG_KNIGHT_OF_ABYSS_H
+    Name: Corrupted Abysmal Knight
+    JapaneseName: Corrupted Knight of Abyss
+    Level: 172
+    Hp: 451578
+    BaseExp: 18584
+    JobExp: 18232
+    Attack: 6400
+    Attack2: 2560
+    Defense: 102
+    MagicDefense: 50
+    Str: 121
+    Agi: 55
+    Vit: 99
+    Int: 70
+    Dex: 126
+    Luk: 37
+    AttackRange: 2
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Large
+    Race: Undead
+    Element: Dark
+    ElementLevel: 4
+    WalkSpeed: 300
+    AttackDelay: 1000
+    AttackMotion: 500
+    DamageMotion: 1000
+    Ai: 21
+    Class: Boss
+    Drops:
+      - Item: Glast_Decayed_Nail
+        Rate: 500
+      - Item: Glast_Horrendous_Mouth
+        Rate: 400
+      - Item: Coagulated_Spell
+        Rate: 100
+      - Item: Reins
+        Rate: 5000
+      - Item: Patriotism_Marks
+        Rate: 20
+      - Item: Full_Plate_Armor
+        Rate: 5
+  - Id: 3146
+    AegisName: MG_KHALITZBURG_H
+    Name: Suffering Khalitzburg
+    Level: 173
+    Hp: 473702
+    BaseExp: 17542
+    JobExp: 16128
+    Attack: 5600
+    Attack2: 2240
+    Defense: 125
+    MagicDefense: 10
+    Str: 121
+    Agi: 142
+    Vit: 55
+    Int: 81
+    Dex: 105
+    Luk: 32
+    AttackRange: 2
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Large
+    Race: Undead
+    Element: Undead
+    ElementLevel: 1
+    WalkSpeed: 350
+    AttackMotion: 1000
+    DamageMotion: 396
+    Ai: 21
+    Class: Boss
+    Drops:
+      - Item: Glast_Decayed_Nail
+        Rate: 500
+      - Item: Glast_Horrendous_Mouth
+        Rate: 400
+      - Item: Coagulated_Spell
+        Rate: 100
+      - Item: Elunium
+        Rate: 100
+      - Item: Patriotism_Marks
+        Rate: 20
+      - Item: Lapier
+        Rate: 600
+  - Id: 3147
+    AegisName: MG_BLOODY_KNIGHT_H
+    Name: Bloody Knight
+    Level: 173
+    Hp: 493502
+    BaseExp: 20448
+    JobExp: 24070
+    Attack: 3761
+    Attack2: 1504
+    Defense: 122
+    MagicDefense: 300
+    Str: 132
+    Agi: 55
+    Vit: 89
+    Int: 151
+    Dex: 137
+    Luk: 45
+    AttackRange: 2
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Large
+    Race: Undead
+    Element: Dark
+    ElementLevel: 4
+    WalkSpeed: 250
+    AttackDelay: 828
+    AttackMotion: 528
+    DamageMotion: 192
+    Ai: 21
+    Class: Boss
+    Drops:
+      - Item: Glast_Decayed_Nail
+        Rate: 500
+      - Item: Glast_Horrendous_Mouth
+        Rate: 400
+      - Item: Coagulated_Spell
+        Rate: 100
+      - Item: Brigan
+        Rate: 5000
+      - Item: Broad_Sword
+        Rate: 200
+      - Item: Two_Hand_Sword
+        Rate: 200
+  - Id: 3148
+    AegisName: MG_M_UNDEAD_KNIGHT_H
+    Name: Agony of Royal Knight
+    Level: 175
+    Hp: 1900070
+    BaseExp: 160018
+    JobExp: 148702
+    Attack: 6641
+    Attack2: 2656
+    Defense: 80
+    MagicDefense: 150
+    Str: 165
+    Agi: 82
+    Vit: 110
+    Int: 122
+    Dex: 154
+    Luk: 52
+    AttackRange: 2
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Medium
+    Race: Undead
+    Element: Undead
+    ElementLevel: 2
+    WalkSpeed: 130
+    AttackDelay: 350
+    AttackMotion: 864
+    DamageMotion: 480
+    Ai: 21
+    Class: Boss
+    Drops:
+      - Item: Glast_Decayed_Nail
+        Rate: 500
+      - Item: Glast_Horrendous_Mouth
+        Rate: 500
+      - Item: Coagulated_Spell
+        Rate: 100
+      - Item: Alca_Bringer
+        Rate: 20
+      - Item: Claymore
+        Rate: 200
+      - Item: Halberd
+        Rate: 400
+      - Item: UndeadKnightM_Card
+        Rate: 1
+        StealProtected: true
+  - Id: 3149
+    AegisName: MG_F_UNDEAD_KNIGHT_H
+    Name: Grudge of Royal Knight
+    Level: 175
+    Hp: 1696020
+    BaseExp: 159672
+    JobExp: 132436
+    Attack: 6180
+    Attack2: 2471
+    Defense: 80
+    MagicDefense: 180
+    Str: 155
+    Agi: 88
+    Vit: 110
+    Int: 135
+    Dex: 154
+    Luk: 59
+    AttackRange: 2
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Medium
+    Race: Undead
+    Element: Undead
+    ElementLevel: 2
+    WalkSpeed: 120
+    AttackDelay: 350
+    AttackMotion: 768
+    DamageMotion: 480
+    Ai: 21
+    Class: Boss
+    Drops:
+      - Item: Glast_Decayed_Nail
+        Rate: 500
+      - Item: Glast_Horrendous_Mouth
+        Rate: 500
+      - Item: Coagulated_Spell
+        Rate: 100
+      - Item: Claymore
+        Rate: 200
+      - Item: Holy_Avenger
+        Rate: 100
+      - Item: UndeadKnightF_Card
+        Rate: 1
+        StealProtected: true
+  - Id: 3150
+    AegisName: MG_AMDARAIS_H
+    Name: Amdarias
+    Level: 180
+    Hp: 42900000
+    BaseExp: 2291320
+    JobExp: 2416730
+    Attack: 10580
+    Attack2: 4231
+    Defense: 30
+    MagicDefense: 40
+    Str: 255
+    Agi: 39
+    Vit: 90
+    Int: 169
+    Dex: 166
+    Luk: 20
+    AttackRange: 3
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Large
+    Race: Undead
+    Element: Undead
+    ElementLevel: 4
+    WalkSpeed: 120
+    AttackDelay: 312
+    AttackMotion: 1200
+    DamageMotion: 432
+    Ai: 21
+    Class: Boss
+    Modes:
+      Mvp: true
+    Drops:
+      - Item: Old_Card_Album
+        Rate: 5000
+      - Item: Old_Violet_Box
+        Rate: 10000
+      - Item: Temporal_Crystal
+        Rate: 5000
+      - Item: Yggdrasilberry
+        Rate: 10000
+      - Item: Death_Guidance
+        Rate: 1000
+      - Item: Patriotism_Marks
+        Rate: 10000
+      - Item: AmdaraisH_Card
+        Rate: 1
+        StealProtected: true
+  - Id: 3151
+    AegisName: MG_CORRUPTION_ROOT_H
+    Name: Corruption Root
+    Level: 180
+    Hp: 18200000
+    BaseExp: 2199906
+    JobExp: 2008478
+    Attack: 8133
+    Attack2: 8133
+    Defense: 333
+    MagicDefense: 333
+    Str: 201
+    Agi: 20
+    Vit: 90
+    Int: 201
+    Dex: 201
+    Luk: 20
+    AttackRange: 3
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Large
+    Race: Demon
+    Element: Earth
+    ElementLevel: 3
+    WalkSpeed: 1000
+    AttackDelay: 576
+    AttackMotion: 672
+    DamageMotion: 480
+    Ai: 10
+    Class: Boss
+    Modes:
+      Mvp: true
+    Drops:
+      - Item: Old_Card_Album
+        Rate: 5000
+      - Item: Old_Violet_Box
+        Rate: 10000
+      - Item: Temporal_Crystal
+        Rate: 5000
+      - Item: Yggdrasilberry
+        Rate: 10000
+      - Item: Alchemy_Glove
+        Rate: 1000
+      - Item: Will_Of_Darkness_
+        Rate: 10000
+      - Item: CorruptionRootH_Card
+        Rate: 1
+        StealProtected: true
+
 SQL:
 REPLACE INTO `mob_db2_re` VALUES (3139,'MG_ZOMBIE_H','Corrupted Steward','Corrupted Steward',160,271200,1,13332,17596,1,4728,1840,15,15,44,22,77,25,88,22,10,12,1,1,29,0x3885,400,2612,912,288,0,0,0,0,0,0,0,6609,200,6610,200,6608,20,938,2000,727,1000,0,0,0,0,0,0,0,0,0,0);
 REPLACE INTO `mob_db2_re` VALUES (3140,'MG_WRAITH_H','Corrupted Monk','Corrupted Monk',163,200336,1,13998,18474,1,1998,799,80,200,16,26,30,115,79,5,10,12,2,1,89,0x3695,350,1816,576,240,0,0,0,0,0,0,0,6609,200,6610,200,6608,20,2206,200,731,200,747,1000,0,0,0,0,0,0,0,0);

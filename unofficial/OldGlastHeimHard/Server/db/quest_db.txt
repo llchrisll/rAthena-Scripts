@@ -2,14 +2,14 @@
 12336,0,3151,1,0,0,0,0,0,0,0,0,0,0,0,0,0,"Corrupted Soul Hunt"
 12337,0,3150,1,0,0,0,0,0,0,0,0,0,0,0,0,0,"Amdarais Soul Hunt"
 
-quest_db.yml: (12334 is already in the database)
- - Id: 12336
-   Title: Corrupted Soul Hunt
-   Targets:
-     - Mob: MG_CORRUPTION_ROOT_H
-       Count: 1
- - Id: 12337
-   Title: Amdarais Hunt
-   Targets:
-     - Mob: MG_AMDARAIS_H
-       Count: 1
+quest_db.yml: (12334 is already in the db)
+  - Id: 12336
+    Title: Corrupted Soul Hunt
+    Targets:
+      - Mob: MG_CORRUPTION_ROOT_H
+        Count: 1
+  - Id: 12337
+    Title: Amdarais Hunt
+    Targets:
+      - Mob: MG_AMDARAIS_H
+        Count: 1

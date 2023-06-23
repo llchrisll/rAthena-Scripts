@@ -18,6 +18,7 @@
 //=     TODO: Confirm Hugin NPC's code flow.
 //= 1.6 Cleaned up the dialogue. [Aleos]
 //= 1.7 Unofficial Old Glastheim Hard Mode [llchrisll]
+//= 1.8 Updated Script to reflect recent changes from rAthena [llchrisll]
 //============================================================
 
 glast_01,204,273,5	script	Hugin	4_M_SAGE_C,{
@@ -340,7 +341,7 @@ glast_01,204,273,5	script	Hugin	4_M_SAGE_C,{
 1@gl_k,154,54,3	duplicate(Khalitzburg Knightage#21)	Khalitzburg Knightage#22	4_F_KHALITZBURG
 
 1@gl_k,149,100,6	script	Heinrich#1	4_M_HEINRICH,{
-	if (getcharid(0) != getpartyleader(getcharid(1),2)) {
+	if (is_party_leader() == false) {
 		mes "[Heinrich]";
 		mes "Where is your leader? I must talk to him.";
 		cutin "gl_heinrich2",2;
@@ -681,7 +682,7 @@ OnMyMobDead:
 }
 
 1@gl_k,17,51,3	script	Altar boy Domun#1	4_M_KID1,{
-	if (getcharid(0) != getpartyleader(getcharid(1),2)) {
+	if (is_party_leader() == false) {
 		mes "[Altar boy Domun]";
 		mes "Save me, save me, please...";
 		close;
@@ -765,7 +766,7 @@ OnMyMobDead:
 }
 
 1@gl_k,291,145,3	script	Holgren the Destroyer#1	4_F_JOB_BLACKSMITH,{
-	if (getcharid(0) != getpartyleader(getcharid(1),2)) {
+	if (is_party_leader() == false) {
 		mes "[Holgren the Destroyer]";
 		mes "You human?";
 		close;
@@ -825,7 +826,7 @@ OnTouch_:
 		monster .@map$,.@x,.@y,"Maggot",2467,.@mobs;
 	else if('OGH_Mode == 2) // Hard Mode
 		monster .@map$,.@x,.@y,"Maggot",3142,.@mobs;
-	disablenpc instance_npcname( strnpcinfo(0) );
+	disablenpc();
 	end;
 }
 1@gl_k,233,123,4	duplicate(A dead man#1)	A dead man#2	4_M_DIEMAN,5,5
@@ -1029,8 +1030,6 @@ OnMyMobDead:
 
 		enablenpc instance_npcname("#2F Entrance");
 		enablenpc instance_npcname("#1 Control");
-		enablenpc instance_npcname("#22 Control");
-		enablenpc instance_npcname("#22 Control2");
 		enablenpc instance_npcname("#Servanton");
 		enablenpc instance_npcname("Heinrich#21");
 		enablenpc instance_npcname("Varmundt#21");
@@ -1145,6 +1144,8 @@ OnTimer69000:
 	disablenpc 'npc_heinrich$;
 	stopnpctimer;
 	'npc_varmundt$ = 'npc_heinrich$ = "";
+	enablenpc instance_npcname("#22 Control");
+	enablenpc instance_npcname("#22 Control2");
 	end;
 }
 
@@ -1153,7 +1154,7 @@ OnTimer69000:
 2@gl_k,118,141,0	script	#ogh_2-1	HIDDEN_WARP_NPC,20,20,{
 	end;
 OnTouch_:
-	disablenpc instance_npcname( strnpcinfo(0) );
+	disablenpc();
 	.@hidden_name$ = strnpcinfo(2);
 	.@event_type = atoi( charat(.@hidden_name$,4) );
 	if (.@event_type == 2)
@@ -1174,11 +1175,11 @@ OnTouch_:
 	initnpctimer;
 	end;
 OnTimer30000:
-	enablenpc instance_npcname( strnpcinfo(0) );
+	enablenpc();
 	stopnpctimer;
 	end;
 OnStop:
-	disablenpc instance_npcname( strnpcinfo(0) );
+	disablenpc();
 	stopnpctimer;
 	end;
 }
@@ -1346,7 +1347,7 @@ OnTouch_:
 2@gl_k,143,260,4	script	Decomposed body#1	4_M_DIEMAN,5,5,{
 	end;
 OnTouch_:
-	disablenpc instance_npcname( strnpcinfo(0) );
+	disablenpc();
 	.@i = rand(1,10);
 	if (.@i == 1) .@mobs = 3;
 	else if (.@i == 2) .@mobs = 4;
@@ -1362,7 +1363,7 @@ OnTouch_:
 	initnpctimer;
 	end;
 OnTimer45000:
-	enablenpc instance_npcname( strnpcinfo(0) );
+	enablenpc();
 	stopnpctimer;
 	end;
 }
@@ -1690,7 +1691,7 @@ OnTouch:
 	end;
 OnEvent:
 	initnpctimer;
-	enablenpc instance_npcname( strnpcinfo(0) );
+	enablenpc();
 	.@num = atoi( replacestr(strnpcinfo(2), "Buff", "") );
 	if (.@num == 1)
 		npctalk "Varmundt's Ghost: Amdarais may use a strong magic shield! Stay close to me and I'll protect you!";
@@ -1703,7 +1704,7 @@ OnEvent:
 	end;
 OnTimer10000:
 	stopnpctimer;
-	disablenpc instance_npcname( strnpcinfo(0) );
+	disablenpc();
 	end;
 }
 2@gl_k,165,247,3	duplicate(Varmundt's Ghost#Buff1)	Varmundt's Ghost#Buff2	4_M_BARMUND,2,2
@@ -1714,42 +1715,28 @@ OnTimer10000:
 2@gl_k,158,241,1	script	Hugin#21	4_M_SAGE_C,{
 	
 	if('OGH_Mode == 1) { // Normal Mode
-		if (checkquest(12319,HUNTING) == 2) {// note: complete hunting 'Corrupted Soul Hunt' prerequis
+		setarray .@quest_id[0],12319,12322,12321;
+		setarray .@reward[0],6607,5,6608,5,350000,350000;
+	} else if('OGH_Mode == 2) { // Hard Mode
+		setarray .@quest_id[0],12337,12335,12339;
+		setarray .@reward[0],6607,5,6755,5,350000,350000;
+	}
+		if (checkquest(.@quest_id[0],HUNTING) == 2) {// note: complete hunting 'Corrupted Soul Hunt' prerequis
 			mes "[Hugin]";
 			mes "Hm, you are very well. First of all, let me give you some loot from Amdarais.";
-			erasequest 12319;
-			setquest 12322;// Space Distortion
-			if (isbegin_quest(12321) == 0) {
-				setquest 12321;// Time Conqueror
-				completequest 12321;
-				getitem 6607,5;// Temporal_Crystal
-				getitem 6608,5;// Coagulated_Spell
-				getexp 350000,350000;
+			erasequest .@quest_id[0];
+			setquest .@quest_id[1];// Space Distortion
+			if (isbegin_quest(.@quest_id[3]) == 0) {
+				setquest .@quest_id[3];// Time Conqueror
+				completequest .@quest_id[3];
+				getitem .@reward[0],.@reward[1];// Temporal_Crystal
+				getitem .@reward[2],.@reward[3];// Coagulated_Spell/Contaminated_Magic
+				getexp .@reward[4],.@reward[5];
 			}
 			else {
-				getitem 6607,1;// Temporal_Crystal
-				getitem 6608,1;// Coagulated_Spell
+				getitem .@reward[0],1;// Temporal_Crystal
+				getitem .@reward[2],1;// Coagulated_Spell/Contaminated_Magic
 			}
-			next;
-			mes "[Hugin]";
-			mes "Varmundt's time is stopped by me.";
-			mes "And your time will be distorted soon.";
-			specialeffect2 EF_BLIND;
-			soundeffect "_blind.wav",0;
-			next;
-			mes "[Hugin]";
-			mes "Maybe this poor time traveler will try to stop Glast Heim's tragedy from happening.";
-			next;
-			mes "[Hugin]";
-			mes "However, we will never overlook his behavior now and forever...";
-			next;
-			mes "[Hugin]";
-			mes "Now let me remove your memory. If you see me again it will be someone new.";
-			specialeffect2 EF_FREEZE;
-			close2;
-			warp 'map_name$[1],158,244;
-			end;
-		}
 	} else if('OGH_Mode == 2) { // Hard Mode
 		if (checkquest(12337,HUNTING) == 2) {// note: complete hunting 'Corrupted Soul Hunt' prerequis
 			mes "[Hugin]";
@@ -1788,6 +1775,7 @@ OnTimer10000:
 			end;
 		}
 	}
+	}
 	mes "[Hugin]";
 	mes "Oops. I almost distorted the time gap. Come over here. We need to go out!";
 	next;
@@ -1819,24 +1807,24 @@ OnTimer10000:
 	specialeffect EF_SPELLBREAKER;
 
 	.@random = rand(1,4);
+
+	if('OGH_Mode == 1) // Normal Mode
+		set .@drop_id,6608; //Coagulated_Spell
+	else if('OGH_Mode == 2) // Hard Mode
+		set .@drop_id,6755; / /Contaminated_Magic
+
 	switch( atoi(strnpcinfo(2)) ) {
 	case 2:
 		for ( .@i = 1; .@i <= .@random; ++.@i )
 			makeitem 719,1,"this",165,138;
-		if('OGH_Mode == 1) // Normal Mode: Coagulated_Spell
-			makeitem 6608,1,"this",165,138;
-		else if('OGH_Mode == 2) // Hard Mode: Contaminated_Magic
-			makeitem 6755,1,"this",165,138;
+			makeitem .@drop_id,1,"this",165,138;
 		break;
 	case 3:
 		for ( .@i = 1; .@i <= .@random; ++.@i )
 			makeitem 720,1,"this",159,138;
 		if (rand(1,4) == 4)
 			makeitem2 15066,1,"this",159,138,0,0,0,0,0,0,0;
-		if('OGH_Mode == 1) // Normal Mode: Coagulated_Spell
-			makeitem 6608,1,"this",159,138;
-		else if('OGH_Mode == 2) // Hard Mode: Contaminated_Magic
-			makeitem 6755,1,"this",159,138;
+		makeitem .@drop_id,1,"this",159,138;
 		makeitem 7229,1,"this",159,138;
 		break;
 	case 4:
@@ -1844,10 +1832,7 @@ OnTimer10000:
 			makeitem 721,1,"this",153,138;
 		if (rand(1,4) == 4)
 			makeitem2 13086,1,"this",153,138,0,0,0,0,0,0,0;
-		if('OGH_Mode == 1) // Normal Mode: Coagulated_Spell
-			makeitem 6608,1,"this",153,138;
-		else if('OGH_Mode == 2) // Hard Mode: Contaminated_Magic
-			makeitem 6755,1,"this",153,138;
+		makeitem .@drop_id,1,"this",153,138;
 		makeitem 7230,1,"this",153,138;
 		break;
 	case 5:
@@ -1857,10 +1842,7 @@ OnTimer10000:
 			makeitem2 2949,1,"this",147,138,0,0,0,0,0,0,0;
 		makeitem 6612,1,"this",147,138;
 		makeitem 6613,1,"this",147,138;
-		if('OGH_Mode == 1) // Normal Mode: Coagulated_Spell
-			makeitem 6608,1,"this",147,138;
-		else if('OGH_Mode == 2) // Hard Mode: Contaminated_Magic
-			makeitem 6755,1,"this",147,138;
+		makeitem .@drop_id,1,"this",147,138;
 		break;
 	case 6:
 		for ( .@i = 1; .@i <= .@random; ++.@i )
@@ -1868,33 +1850,24 @@ OnTimer10000:
 		makeitem 7228,1,"this",141,138;
 		if (rand(1,4) == 4)
 			makeitem2 13440,1,"this",141,138,0,0,0,0,0,0,0;
-		if('OGH_Mode == 1) // Normal Mode: Coagulated_Spell
-			makeitem 6608,1,"this",141,138;
-		else if('OGH_Mode == 2) // Hard Mode: Contaminated_Magic
-			makeitem 6755,1,"this",141,138;
+		makeitem .@drop_id,1,"this",141,138;
 		break;
 	case 7:
 		for ( .@i = 1; .@i <= .@random; ++.@i )
 			makeitem 726,1,"this",135,138;
 		if (rand(1,4) == 4)
 			makeitem2 2022,1,"this",135,138,0,0,0,0,0,0,0;
-		if('OGH_Mode == 1) // Normal Mode: Coagulated_Spell
-			makeitem 6608,1,"this",135,138;
-		else if('OGH_Mode == 2) // Hard Mode: Contaminated_Magic
-			makeitem 6755,1,"this",135,138;
+		makeitem .@drop_id,1,"this",135,138;
 		break;
 	case 8:
 		for ( .@i = 1; .@i <= .@random; ++.@i )
 			makeitem 727,1,"this",129,138;
 		if (rand(1,4) == 4)
 			makeitem2 21007,1,"this",129,138,0,0,0,0,0,0,0;
-		if('OGH_Mode == 1) // Normal Mode: Coagulated_Spell
-			makeitem 6608,1,"this",129,138;
-		else if('OGH_Mode == 2) // Hard Mode: Contaminated_Magic
-			makeitem 6755,1,"this",129,138;
+		makeitem .@drop_id,1,"this",129,138;
 		break;
 	}
-	disablenpc instance_npcname( strnpcinfo(0) );
+	disablenpc();
 	end;
 }
 1@gl_k,159,136,3	duplicate(Strange crack#2)	Strange crack#3	CLEAR_NPC

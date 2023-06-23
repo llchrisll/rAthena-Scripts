@@ -1,13 +1,11 @@
-35,Old Glast Heim Hard,3600,300,1@gl_k,150,20,2@gl_k
+79,Old Glast Heim Hard,3600,300,1@gl_k,150,20,2@gl_k
 
 instance_db.yml
-  - Id: 35
+  - Id: 79
     Name: Old Glast Heim Hard
-    TimeLimit: 3600
-    IdleItmeOut: 300
     Enter:
       Map: 1@gl_k
-	  X: 150
-	  Y: 20
-	AdditionalMaps:
-	  2@gl_k: true
+      X: 150
+      Y: 20
+    AdditionalMaps:
+      2@gl_k: true
