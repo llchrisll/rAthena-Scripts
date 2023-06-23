@@ -1717,6 +1717,7 @@ OnTimer10000:
 	if('OGH_Mode == 1) { // Normal Mode
 		setarray .@quest_id[0],12319,12322,12321;
 		setarray .@reward[0],6607,5,6608,5,350000,350000;
+	
 	} else if('OGH_Mode == 2) { // Hard Mode
 		setarray .@quest_id[0],12337,12335,12339;
 		setarray .@reward[0],6607,5,6755,5,350000,350000;
@@ -1775,7 +1776,6 @@ OnTimer10000:
 			end;
 		}
 	}
-	}
 	mes "[Hugin]";
 	mes "Oops. I almost distorted the time gap. Come over here. We need to go out!";
 	next;
@@ -1809,15 +1809,15 @@ OnTimer10000:
 	.@random = rand(1,4);
 
 	if('OGH_Mode == 1) // Normal Mode
-		set .@drop_id,6608; //Coagulated_Spell
+		set .@drop_id,6608; // Coagulated_Spell
 	else if('OGH_Mode == 2) // Hard Mode
-		set .@drop_id,6755; / /Contaminated_Magic
+		set .@drop_id,6755; // Contaminated_Magic
 
 	switch( atoi(strnpcinfo(2)) ) {
 	case 2:
 		for ( .@i = 1; .@i <= .@random; ++.@i )
 			makeitem 719,1,"this",165,138;
-			makeitem .@drop_id,1,"this",165,138;
+		makeitem .@drop_id,1,"this",165,138;
 		break;
 	case 3:
 		for ( .@i = 1; .@i <= .@random; ++.@i )
