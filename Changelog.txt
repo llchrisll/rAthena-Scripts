@@ -24,6 +24,10 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2024/08/14
+<< == |*| Unofficial Old Glast Heim Hard [RE] - Updated v1.8 |*| == >>
+- Fixed an array typo and added base level check for hard mode > 160
+------------------------------------------------------------------------------------------------------------------------
 * 2023/06/23
 << == |*| Unofficial Old Glast Heim Hard [RE] - Updated v1.8 |*| == >>
 - Removed OldGlastHeim_merchants.txt

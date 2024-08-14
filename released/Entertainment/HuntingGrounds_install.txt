@@ -10,54 +10,54 @@ db/import/instance.db:
 for YAML:
 db/import/instance_db.yml
 # Hunting Grounds [llchrisll]
- - Id: 100
-   Name: Hunting Ground 99
-   TimeLimit: 3600
-   IdleTimeOut: 300
-   Enter:
-     Map: gef_fild14
-     X: 365
-     Y: 220
- - Id: 101
-   Name: Hunting Ground 115
-   TimeLimit: 3600
-   IdleTimeOut: 300
-   Enter:
-     Map: gef_fild14
-     X: 365
-     Y: 220
- - Id: 102
-   Name: Hunting Ground 130
-   TimeLimit: 3600
-   IdleTimeOut: 300
-   Enter:
-     Map: gef_fild14
-     X: 365
-     Y: 220
- - Id: 103
-   Name: Hunting Ground 45
-   TimeLimit: 3600
-   IdleTimeOut: 300
-   Enter:
-     Map: gef_fild14
-     X: 365
-     Y: 220
- - Id: 104
-   Name: Hunting Ground 160
-   TimeLimit: 7200
-   IdleTimeOut: 300
-   Enter:
-     Map: gef_fild14
-     X: 365
-     Y: 220
- - Id: 105
-   Name: Hunting Ground 175
-   TimeLimit: 10800
-   IdleTimeOut: 300
-   Enter:
-     Map: gef_fild14
-     X: 365
-     Y: 220
+  - Id: 100  
+    Name: Hunting Ground 99
+    TimeLimit: 3600
+    IdleTimeOut: 300
+    Enter:
+      Map: gef_fild14
+      X: 365
+      Y: 220
+  - Id: 101  
+    Name: Hunting Ground 115
+    TimeLimit: 3600
+    IdleTimeOut: 300
+    Enter:
+      Map: gef_fild14
+      X: 365
+      Y: 220
+  - Id: 102  
+    Name: Hunting Ground 130
+    TimeLimit: 3600
+    IdleTimeOut: 300
+    Enter:
+      Map: gef_fild14
+      X: 365
+      Y: 220
+  - Id: 103  
+    Name: Hunting Ground 45
+    TimeLimit: 3600
+    IdleTimeOut: 300
+    Enter:
+      Map: gef_fild14
+      X: 365
+      Y: 220
+  - Id: 104  
+    Name: Hunting Ground 160
+    TimeLimit: 7200
+    IdleTimeOut: 300
+    Enter:
+      Map: gef_fild14
+      X: 365
+      Y: 220
+  - Id: 105  
+    Name: Hunting Ground 175
+    TimeLimit: 10800
+    IdleTimeOut: 300
+    Enter:
+      Map: gef_fild14
+      X: 365
+      Y: 220
 
 db/import/quest_db.txt:
 // Hunting Grounds [llchrisll]
@@ -1502,40 +1502,46 @@ Note: Depends on the client version, Ragexe or RagexeRE.
 		Description = {
 			"Re-entering the Hunting Grounds for level 99 - 114 is currently not possible. Please wait until the cooldown has passed."
 		},
-		Summary = "Hunting Ground 99 Cooldown"
+		Summary = "Hunting Ground 99 Cooldown",
+		CoolTimeQuest = 1
 	},
 	[160201] = {
 		Title = "Master Hunter 115",
 		Description = {
 			"Re-entering the Hunting Grounds for level 115 - 129 is currently not possible. Please wait until the cooldown has passed."
 		},
-		Summary = "Hunting Ground 115 Cooldown"
+		Summary = "Hunting Ground 115 Cooldown",
+		CoolTimeQuest = 1
 	},
 	[160202] = {
 		Title = "Master Hunter 130",
 		Description = {
 			"Re-entering the Hunting Grounds for level 130 - 144 is currently not possible. Please wait until the cooldown has passed."
 		},
-		Summary = "Hunting Ground 130 Cooldown"
+		Summary = "Hunting Ground 130 Cooldown",
+		CoolTimeQuest = 1
 	},
 	[160203] = {
 		Title = "Master Hunter 145",	
 		Description = {
 			"Re-entering the Hunting Grounds for level 145 - 159 is currently not possible. Please wait until the cooldown has passed."
 		},
-		Summary = "Hunting Ground 145 Cooldown"
+		Summary = "Hunting Ground 145 Cooldown",
+		CoolTimeQuest = 1
 	},
 	[160204] = {
 		Title = "Master Hunter 160",
 		Description = {
 			"Re-entering the Hunting Grounds for level 160 - 174 is currently not possible. Please wait until the cooldown has passed."
 		},
-		Summary = "Hunting Ground 160 Cooldown"
+		Summary = "Hunting Ground 160 Cooldown",
+		CoolTimeQuest = 1
 	},
 	[160205] = {
 		Title = "Master Hunter 175",
 		Description = {
 			"Re-entering the Hunting Grounds for level 175 is currently not possible. Please wait until the cooldown has passed."
 		},
-		Summary = "Hunting Ground 175 Cooldown"
+		Summary = "Hunting Ground 175 Cooldown",
+		CoolTimeQuest = 1
 	},

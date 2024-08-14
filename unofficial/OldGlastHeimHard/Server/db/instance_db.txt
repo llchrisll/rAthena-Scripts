@@ -1,8 +1,8 @@
-79,Old Glast Heim Hard,3600,300,1@gl_k,150,20,2@gl_k
+79,Old Glast Heim Advanced,3600,300,1@gl_k,150,20,2@gl_k
 
 instance_db.yml
   - Id: 79
-    Name: Old Glast Heim Hard
+    Name: Old Glast Heim Advanced
     Enter:
       Map: 1@gl_k
       X: 150

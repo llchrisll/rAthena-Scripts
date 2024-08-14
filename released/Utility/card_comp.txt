@@ -7,202 +7,326 @@
 //= 1.1 - Script Optimization
 //      - Added config for custom Variable, see .requ_vard$ and .requ_varn$
 //      - Fixed an bug duo missing variable change from Script Optimization
+//= 1.2 - Added Random Option and Grade support
+//      - Added a new config for slots usage, see .co_slots
+//      - Added new menu option to uncompound cards
+//      - Changed selecting equipment from inventory to equipped
+//      - Added a check preventing an empty card list
 //===== Tested With =========================================
-//= rAthena SQL 07/16-2017 Revision
+//= rAthena 20240615 Revision
+//= GIT Hash: 84cdc9cae022353b9cdf67678957f0335321c615
 //===== Description ==========================================
-//= This script allows you to insert any card you in your inventory
-//  in any equip you have in exchange for an high fee.
+//= This script allows you to insert any card you have in your inventory
+//  in any equip or remove all cards you have in exchange for an high fee.
 //===== Comments =============================================
 //= None yet... 
 //===========================================================
-prontera,147,167,0	script	Card Compounder	100,{
+prontera,147,167,4	script	Card Compounder	100,{
 
-// GM Settings & Testing Help
+// GM Testing
 if(getgmlevel() > 0) {
-	if(.requ[0] == 1) {
-		mes "Zeny:";
-		input .@zeny,.requ[1],1000000; // 1m Zeny
-		if(.@zeny == 0) set @zeny,.requ[1];
-		set .Zeny,@zeny*4;
-	} else if(.requ[0] == 2) {
-		mes "Cash Points:";
-		input .@cash,.requ[1],10000; // 10k Cash Points
-		if(.@cash == 0) set .@cash,.requ[1];
-		set #CASHPOINTS,.@cash*4;
-	} else if(.requ[0] == 3) {
-		mes ""+.requ_vard$;
-		input @custom,.requ[1],2000;
-		if(.@custom == 0) set .@custom,.requ[1];
-		setd(""+.requ_varn$),.@custom*4;
-	} else if(.requ[0] > 500) {
-		mes getitemname(.requ[0])+":";
-		input .@item,.requ[1],10000;
-		if(.@item == 0) set .@item,.requ[1];
-		getitem .requ[0],.@item*4;
-	}
-	next;
-	mes "Balances:";
+	mes "Balance:";
 	mes "Zeny: "+ Zeny;
 	mes "Cash Points: "+#CASHPOINTS;
 	mes .requ_vard$+": "+getd(""+.requ_varn$);
-	set @debug,1;	
+	mes " ";
+	if(.requ[0] == 1) {
+		mes "Get Zeny:";
+		if(input(.@zeny,.requ[1],1000000) != -1) // 1m Zeny
+			set Zeny,Zeny + .@zeny;
+	
+	} else if(.requ[0] == 2) {
+		mes "Get Cash Points:";
+		if(input(.@cash,.requ[1],10000) != -1) // 10k Cash Points
+			set #CASHPOINTS,#CASHPOINTS + .@cash;
+	
+	} else if(.requ[0] == 3) {
+		mes "Get "+.requ_vard$;
+		if(input(.@custom,.requ[1],2000) != -1)
+			setd(""+.requ_varn$),getd(""+.requ_varn$) + .@custom;
+	
+	} else if(.requ[0] > 500) {
+		mes "Get "+getitemname(.requ[0])+":";
+		if(input(.@item,.requ[1],10000) != -1)
+			getitem .requ[0],.@item;
+	}
+	next;
+	mes "New Balance:";
+	mes "Zeny: "+ Zeny;
+	mes "Cash Points: "+#CASHPOINTS;
+	mes .requ_vard$+": "+getd(""+.requ_varn$);
 	next;
 }
 
 mes .n$;
 mes "Hello, how can I help you?";
 next;
-switch(select("- Compound Cards:- Information:- Nothing")) {
+switch(select("- Un/Compound Cards:- Information:- Nothing")) {
 
 	case 1:
+	disable_items;
 	mes .n$;
-	mes "Please choose the item you want to compound cards on from your inventory:";
+	mes "Please choose the item you want to un/compound cards:";
 	next;
-	getinventorylist;
-	set .@e,0; // Reset Array Position
-	for ( set .@i,0; .@i < @inventorylist_count; set .@i,.@i + 1) { // Looping through the Items
-		// Available Equipment
-		if( (getiteminfo(@inventorylist_id[.@i],2) == 4 || getiteminfo(@inventorylist_id[.@i],2) == 5) && getitemslots(@inventorylist_id[.@i]) > 0 && @inventorylist_identify[.@i] == 1 && @inventorylist_equip[.@i] == 0) {
-			// Item ID
-			setarray .@eq_list[.@e],@inventorylist_id[.@i];
-			if(@debug) dispbottom "Equip Name: "+getitemname(@inventorylist_id[.@i])+" ["+@inventorylist_id[.@i]+"]";
-			// Does the items have an refine?
-			setarray .@eq_ref[.@e],@inventorylist_refine[.@i];
-			// Does the items already have cards compounded?
-			setarray .@eq_c1[.@e],@inventorylist_card1[.@i];
-			if(@debug) dispbottom "Card 1: "+ getitemname(@inventorylist_card1[.@i])+" ["+@inventorylist_card1[.@i]+"]";
-			setarray .@eq_c2[.@e],@inventorylist_card2[.@i];
-			if(@debug) dispbottom "Card 2: "+ getitemname(@inventorylist_card2[.@i])+" ["+@inventorylist_card2[.@i]+"]";
-			setarray .@eq_c3[.@e],@inventorylist_card3[.@i];
-			if(@debug) dispbottom "Card 3: "+ getitemname(@inventorylist_card3[.@i])+" ["+@inventorylist_card3[.@i]+"]";
-			setarray .@eq_c4[.@e],@inventorylist_card4[.@i];
-			if(@debug) dispbottom "Card 4: "+ getitemname(@inventorylist_card4[.@i])+" ["+@inventorylist_card4[.@i]+"]";
-			if(@debug) dispbottom "------------------------------------------------------";
-			if(@debug) dispbottom "Array Sizes: Card 1: "+getarraysize(.@eq_c1)+" - Card 2: "+getarraysize(.@eq_c2)+" - Card 3: "+getarraysize(.@eq_c3)+" - Card 4: "+getarraysize(.@eq_c4);
-			if(@debug) dispbottom "=============================================";
-			if(@debug) dispbottom " ";
-			// Menu Creation
-			set .@it_m$,.@it_m$ + "- (+"+@inventorylist_refine[.@i]+") " + getitemname(@inventorylist_id[.@i])+" ["+getitemslots(@inventorylist_id[.@i])+"]" + ( (@inventorylist_id[@i+1])?":":"");
-			
-			// New Array Position:
-			// getarraysize would be bugged if an entry would be 0
-			// since it won't be counted as a valid value
-			set .@e,.@e + 1; 
-		}
-		// Available Cards
-		if(getiteminfo(@inventorylist_id[.@i],2) == 6) {
-			setarray .@ca_list[getarraysize(.@ca_list)],@inventorylist_id[.@i];
-			setarray .@ca_am[getarraysize(.@ca_am)],@inventorylist_amount[.@i];
-		}
-	}
-	// Menu Selection
-	set .@id,select(.@it_m$) - 1;
+	for ( set .@l,0; .@l < getarraysize(.slot); set .@l,.@l + 1)
+		set .@i_menu$,.@i_menu$ + ( (getequipid(.slot[.@l]) != -1)?"["+getequipname(.slot[.@l])+"]":"") + ((.slot[.@l+1] != 0)?":":"");
+	set .@e,select(.@i_menu$) - 1;
 	
-	set .@max_c,getitemslots(.@eq_list[.@id]);
-	if(getd(".@eq_c"+.@max_c+"["+.@id+"]") > 0) {
-		mes .n$;
-		mes "Each slot is in usage already, please uncompound the current cards and try again.";
-		close;
+	set .@part,.slot[.@e];
+	set .@id,getequipid(.@part);
+	set .@ref,getequiprefinerycnt(.@part);
+	set .@c_slot,getitemslots(.@id);
+	set .@c1,getequipcardid(.@part,0);
+	set .@c2,getequipcardid(.@part,1);
+	set .@c3,getequipcardid(.@part,2);
+	set .@c4,getequipcardid(.@part,3);
+	set .@grade,getenchantgrade(.@part);
+	// Saving Random Options
+	if(getequiprandomoption(.@part,0,ROA_ID) != 0) {
+		setarray .@OptID[0],getequiprandomoption(.@part,0,ROA_ID),getequiprandomoption(.@part,1,ROA_ID),getequiprandomoption(.@part,2,ROA_ID),getequiprandomoption(.@part,3,ROA_ID),getequiprandomoption(.@part,4,ROA_ID);
+		setarray .@OptVal[0],getequiprandomoption(.@part,0,ROA_VALUE),getequiprandomoption(.@part,1,ROA_VALUE),getequiprandomoption(.@part,2,ROA_VALUE),getequiprandomoption(.@part,3,ROA_VALUE),getequiprandomoption(.@part,4,ROA_VALUE);
+		setarray .@OptParam[0],getequiprandomoption(.@part,0,ROA_PARAM),getequiprandomoption(.@part,1,ROA_PARAM),getequiprandomoption(.@part,2,ROA_PARAM),getequiprandomoption(.@part,3,ROA_PARAM),getequiprandomoption(.@part,4,ROA_PARAM);
 	}
-	set .@cards,0;
-	
-	set .@slots,.@max_c;
-	set .@c,1;
-	while(.@c <= .@max_c) {
-		if(getd(".@eq_c"+.@c+"["+.@id+"]") == 0) {
-			set .@ca_m$,"";
-			for ( set .@l,0; .@l < getarraysize(.@ca_list); set .@l,.@l + 1) 
-				set .@ca_m$,.@ca_m$ + "- "+getitemname(.@ca_list[.@l]) + " ("+.@ca_am[.@l]+")" + ( (.@ca_list[.@l+1])?":":"");
-			mes .n$;
-			mes "Slots left: "+.@slots;
-			next;
-			if(prompt(.@ca_m$) != 255) {
-				setd(".@card"+.@c),.@ca_list[@menu-1];
-				if(.@ca_am[@menu-1] == 1) {
-					deletearray .@ca_list[@menu-1],1;
-					deletearray .@ca_am[@menu-1],1;
-				} else setarray .@ca_am[@menu-1],.@ca_am[@menu-1] - 1;
-				
-			} else setd(".@card"+.@c),0;
-			if(getd(".@card"+.@c) != 0) set .@cards,.@cards + 1;
+	if(.debug) {
+		dispbottom "Item Details:";
+		dispbottom "---------------------";
+		dispbottom "+"+.@ref+" "+getitemname(.@id)+"["+.@c_slot+"]";
+		for ( set .@a,1; .@a <= 4; set .@a,.@a + 1)
+			if(getd(".@c"+.@a))
+				dispbottom "Card "+.@a+": "+ getitemname(getd(".@c"+.@a))+" ["+getd(".@c"+.@a)+"]"; 
+		dispbottom "Grade: "+.@grade;
+		if(getarraysize(.@OptID)) {
+			dispbottom "Random Options:";
+			for ( set .@a,0; .@a < getarraysize(.@OptID); set .@a,.@a + 1)
+				dispbottom "Slot "+(.@a+1)+": ID - "+.@OptID[.@a]+"; Val - "+.@OptVal[.@a]+"; Param - "+.@OptParam[.@a];
 		}
-		set .@slots,.@slots - 1;
-	set .@c,.@c + 1;
 	}
-
-	mes .n$;
-	mes "You will recieve the following Item:";
-	mes "Name: 1x +"+.@eq_ref[.@id]+" "+ getitemname(.@eq_list[.@id]) + " with these cards:";
-	if(!.@cards) { // No new Cards inserted!
-		mes " ";
-		mes "Error: No Cards inserted."; 
-		close;
-	}
-	if(.@card1) mes "Card 1: "+ getitemname(.@card1)+" ["+.@card1+"]"; 
-	if(.@card2) mes "Card 2: "+ getitemname(.@card2)+" ["+.@card2+"]";
-	if(.@card3) mes "Card 3: "+ getitemname(.@card3)+" ["+.@card3+"]";
-	if(.@card4) mes "Card 4: "+ getitemname(.@card4)+" ["+.@card4+"]";
-	if(.requ[0] > 0) {
-		set .@cost,.requ[1]*.@cards;
-		mes " ";
-		mes "Therefore I require";
-		mes .@cost + ( (.requ[0] > 500)?"x ":" ") + ( (.requ[0] == 1)?"Zeny":( (.requ[0] == 2)?"Cash Points":( (.requ[0] > 3)?getitemname(.requ[0]):"Custom Points")));
-		mes "Proceed?";
-		if(select("- Yes:- No") - 1) close;
 		
-		if(.requ[0] == 1 && Zeny < .@cost ) {
-			mes "I'm sorry, but you don't have the required Zeny for inserting "+.@cards+" Cards.";
-			mes "You'll need "+.@cost+" Zeny.";
-			close;
-		} else if(.requ[0] == 2 && #CASHPOINTS < .@cost) {
-			mes "I'm sorry, but you don't have the required Cash Points for inserting "+.@cards+" Cards.";
-			mes "You'll need "+.@cost+" Cash Points.";
-			close;
-		} else if(.requ[0] == 3 && getd(""+.requ_varn$) < .@cost) {
-			mes "I'm sorry, but you don't have the required "+.requ_vard$+" for inserting "+.@cards+" Cards.";
-			mes "You'll need "+.@cost+" "+.requ_vard$+".";
-			close;
-		} else if(.requ[0] > 500 && countitem(.requ[0]) < .@cost) {
-			mes "I'm sorry, but you don't have the required "+getitemname(.requ[0])+" for inserting "+.@cards+" Cards.";
-			mes "You'll need "+.@cost+" "+getitemname(.requ[0])+".";
+	next;
+	mes .n$;
+	mes "What do you want to do now?";
+	next;
+	switch(select("- Compound:- Uncompound:- Nevermind")) {
+		case 1:
+		getinventorylist;
+		// Looping through
+		for ( set .@i,0; .@i < @inventorylist_count; set .@i,.@i + 1)
+			// available Cards
+			if(getiteminfo(@inventorylist_id[.@i],2) == 6) {
+				setarray .@ca_list[getarraysize(.@ca_list)],@inventorylist_id[.@i];
+				setarray .@ca_am[getarraysize(.@ca_am)],@inventorylist_amount[.@i];
+			}
+		if(getarraysize(.@ca_list) < 1) {
+			mes .n$;
+			mes "It looks you don't have any cards in your inventory.";
+			mes "Please come back once you have some.";
 			close;
 		}
+		if(!.co_slots)
+			set .@max_c,getitemslots(.@id);
+		else
+			set .@max_c,.co_slots;
+			
+		set .@slots,.@max_c;
+		set .@c,1;
+		
+		for ( set .@a,1; .@a <= .@max_c; set .@a,.@a + 1)
+			if(getd(".@c"+.@a))
+				set .@slot_use,.@slot_use + 1;
+				
+		if(.@slot_use == .@max_c) {
+			mes .n$;
+			mes "Each slot is in usage already, please uncompound the current cards and try again.";
+			close;
+		}
+		while(.@c <= .@max_c) {
+			if(getd(".@c"+.@c) == 0) {
+				set .@ca_m$,"";
+				for ( set .@l,0; .@l < getarraysize(.@ca_list); set .@l,.@l + 1) 
+					set .@ca_m$,.@ca_m$ + "- "+getitemname(.@ca_list[.@l]) + " ("+.@ca_am[.@l]+")" + ( (.@ca_list[.@l+1])?":":"");
+				set .@ca_m$,.@ca_m$ + ":- Empty";
+				mes .n$;
+				mes "Slots left: "+.@slots;
+				next;
+				if(select(.@ca_m$) <= getarraysize(.@ca_list)) {
+					setd(".@card"+.@c),.@ca_list[@menu-1];
+					if(.@ca_am[@menu-1] == 1) {
+						deletearray .@ca_list[@menu-1],1;
+						deletearray .@ca_am[@menu-1],1;
+					} else setarray .@ca_am[@menu-1],.@ca_am[@menu-1] - 1;
+					
+				} else 
+					setd(".@card"+.@c),0;
+				
+				if(getd(".@card"+.@c) != 0) 
+					set .@cards,.@cards + 1;
+			}
+			set .@slots,.@slots - 1;
+			set .@c,.@c + 1;
+		}
+		mes .n$;
+		mes "You will recieve the following Item:";
+		mes "Name: 1x +"+.@ref+" "+ getitemname(.@id) + " with these cards:";
+		if(!.@cards) { // No new Cards inserted!
+			mes " ";
+			mes "Error: No Cards inserted."; 
+			close;
+		}
+		for ( set .@a,1; .@a <= 4; set .@a,.@a + 1)
+			if(getd(".@c"+.@a))
+				mes "Card "+.@a+": "+ getitemname(getd(".@c"+.@a))+" ["+getd(".@c"+.@a)+"]"; 
+		
+		if(.requ[0] > 0) {
+			set .@cost,.requ[1]*.@cards;
+			next;
+			mes .n$;
+			mes "Therefore I require";
+			mes .@cost + ( (.requ[0] > 500)?"x ":" ") + ( (.requ[0] == 1)?"Zeny":( (.requ[0] == 2)?"Cash Points":( (.requ[0] > 3)?getitemname(.requ[0]):"Custom Points")));
+			mes "Proceed?";
+			if(select("- Yes:- No") - 1) close;
+			if(.requ[0] == 1 && Zeny < .@cost ) {
+				mes "I'm sorry, but you don't have the required Zeny for inserting "+.@cards+" Cards.";
+				mes "You'll need "+.@cost+" Zeny.";
+				close;
+			} else if(.requ[0] == 2 && #CASHPOINTS < .@cost) {
+				mes "I'm sorry, but you don't have the required Cash Points for inserting "+.@cards+" Cards.";
+				mes "You'll need "+.@cost+" Cash Points.";
+				close;
+			} else if(.requ[0] == 3 && getd(""+.requ_varn$) < .@cost) {
+				mes "I'm sorry, but you don't have the required "+.requ_vard$+" for inserting "+.@cards+" Cards.";
+				mes "You'll need "+.@cost+" "+.requ_vard$+".";
+				close;
+			} else if(.requ[0] > 500)
+				if(countitem(.requ[0]) < .@cost) {
+					mes "I'm sorry, but you don't have the required "+getitemname(.requ[0])+" for inserting "+.@cards+" Cards.";
+					mes "You'll need "+.@cost+" "+getitemname(.requ[0])+".";
+					close;
+				}
+		}
+		// If there are cards inserted already, re-add them also else they will be deleted
+		// and only the new card will be added.
+		for ( set .@a,1; .@a <= 4; set .@a,.@a + 1)
+			if(!getd(".@card"+.@a) && getd(".@c"+.@a)) setd(".@card"+.@a),getd(".@c"+.@a);
+		
+		delequip .@part;
+		getitem4 .@id,1,1,.@ref,0,.@card1,.@card2,.@card3,.@card4,.@grade,.@OptID,.@OptVal,.@OptParam;
+		
+		for ( set .@c,1; .@c <= .@max_c; set .@c,.@c+1) 
+			if(getd(".@card"+.@c)) delitem getd(".@card"+.@c),1;
+
+		if(.requ[0] == 1) set Zeny,Zeny - .@cost;
+		else if(.requ[0] == 2) set #CASHPOINTS,#CASHPOINTS - .@cost;
+		else if(.requ[0] == 3) setd(""+.requ_varn$),getd(""+.requ_varn$) - .@cost;
+		else if(.requ[0] > 500) delitem .requ[0],.requ[1];
+		break;
+		
+		case 2:
+		mes .n$;
+		set .@c,1;
+		while(.@c <= 4) {
+			if(getd(".@c"+.@c) && compare(getitemname(getd(".@c"+.@c)),"Card") != 1)
+				setd(".@card"+.@c),getd(".@c"+.@c);
+			else {
+				set .@cards,.@cards + 1;
+				setd(".@card"+.@c),0;
+			}
+			set .@c,.@c + 1;
+		}
+		if(!.@cards) { // No Cards inserted!
+			mes "Error: No Cards inserted."; 
+			close;
+		}
+		mes "I see you have "+.@cards+" cards inserted.";
+		if(.requ_unc[0] > 0) {
+			set .@cost,.requ_unc[1]*.@cards;
+			mes " ";
+			mes "Therefore I require";
+			mes .@cost + ( (.requ_unc[0] > 500)?"x ":" ") + ( (.requ_unc[0] == 1)?"Zeny":( (.requ_unc[0] == 2)?"Cash Points":( (.requ_unc[0] > 3)?getitemname(.requ_unc[0]):"Custom Points")));
+			mes "Proceed?";
+			if(select("- Yes:- No") - 1) close;
+			if(.requ_unc[0] == 1 && Zeny < .@cost ) {
+				mes "I'm sorry, but you don't have the required Zeny for removing "+.@cards+" Cards.";
+				mes "You'll need "+.@cost+" Zeny.";
+				close;
+			} else if(.requ_unc[0] == 2 && #CASHPOINTS < .@cost) {
+				mes "I'm sorry, but you don't have the required Cash Points for removing "+.@cards+" Cards.";
+				mes "You'll need "+.@cost+" Cash Points.";
+				close;
+			} else if(.requ_unc[0] == 3 && getd(""+.requ_varn$) < .@cost) {
+				mes "I'm sorry, but you don't have the required "+.requ_vard$+" for removing "+.@cards+" Cards.";
+				mes "You'll need "+.@cost+" "+.requ_vard$+".";
+				close;
+			} else if(.requ_unc[0] > 500)
+				if(countitem(.requ_unc[0]) < .@cost) {
+					mes "I'm sorry, but you don't have the required "+getitemname(.requ_unc[0])+" for removing "+.@cards+" Cards.";
+					mes "You'll need "+.@cost+" "+getitemname(.requ_unc[0])+".";
+					close;
+				}
+		}
+		delequip .@part;
+		getitem4 .@id,1,1,.@ref,0,.@card1,.@card2,.@card3,.@card4,.@grade,.@OptID,.@OptVal,.@OptParam;
+		
+		for ( set .@c,1; .@c <= 4; set .@c,.@c+1)
+			if(getd(".@c"+.@c) && compare(getitemname(getd(".@c"+.@c)),"Card") == 1)
+				getitem getd(".@c"+.@c),1;
+				
+		if(.requ_unc[0] == 1) set Zeny,Zeny - .@cost;
+		else if(.requ_unc[0] == 2) set #CASHPOINTS,#CASHPOINTS - .@cost;
+		else if(.requ_unc[0] == 3) setd(""+.requ_varn$),getd(""+.requ_varn$) - .@cost;
+		else if(.requ_unc[0] > 500) delitem .requ_unc[0],.requ_unc[1];
+		break;
+		
+		case 3: break;
 	}
-	// If there are cards inserted already, 
-	// re-add them also else they will be deleted
-	// and only the new card will be added.
-	if(!.@card1 && .@eq_c1[.@id]) set .@card1,.@eq_c1[.@id];
-	if(!.@card2 && .@eq_c2[.@id]) set .@card2,.@eq_c2[.@id];
-	if(!.@card3 && .@eq_c3[.@id]) set .@card3,.@eq_c3[.@id];
-	if(!.@card4 && .@eq_c4[.@id]) set .@card4,.@eq_c4[.@id];
+	break;
 	
- 	delitem2 .@eq_list[.@id],1,1,.@eq_ref[.@id],0,.@eq_c1[.@id],.@eq_c2[.@id],.@eq_c3[.@id],.@eq_c4[.@id];
-	getitem2 .@eq_list[.@id],1,1,.@eq_ref[.@id],0,.@card1,.@card2,.@card3,.@card4;
-	for ( set .@c,1; .@c <= .@max_c; set .@c,.@c+1) 
-		if(getd(".@card"+.@c)) delitem getd(".@card"+.@c),1;
-
-	if(.requ[0] == 1) set Zeny,Zeny - .@cost;
-	else if(.requ[0] == 2) set #CASHPOINTS,#CASHPOINTS - .@cost;
-	else if(.requ[0] == 3) setd(""+.requ_varn$),getd(""+.requ_varn$) - .@cost;
-	else if(.requ[0] > 500) delitem .requ[0],.requ[1];
-	close;
-
 	case 2:
 	mes .n$;
-	mes "I am able to insert cards in any equipment you want.";
+	mes "I am able to compound cards in any equipment you want, as well as uncompound them.";
 	if(.requ[0] == 0) close;
 	mes "The only thing I require is";
 	mes .requ[1] + ( (.requ[0] > 500)?"x ":" ") + ( (.requ[0] == 1)?"Zeny":( (.requ[0] == 2)?"Cash Points":( (.requ[0] > 3)?getitemname(.requ[0]):.requ_vard$)));
-	mes "for each card you inserted.";
-	close;
+	mes "for each card compounded.";
+	break;
 	
-	case 3:
-	close;
+	case 3: break;
 }
+end;
 
 OnInit:
 set .n$,"["+strnpcinfo(1)+"]";
-// ======== Requirement Settings: ============
+// Debug Mode
+set .debug,0;
+// ======== Slots: ============
+// = Define how many slots are available
+// - 0 = Equipment based slots
+// - 1+ = x slots
+set .co_slots,4;
+// ======== Equipment: ============
+// Define which equipment can be compounded
+// If you want to enable more, please make sure you take note of the ';'
+setarray .slot[0],
+				EQI_HEAD_TOP,
+				EQI_HEAD_MID,
+				EQI_HEAD_LOW,
+				EQI_ARMOR,
+				EQI_HAND_R,
+				EQI_HAND_L,
+				EQI_GARMENT,
+				EQI_SHOES,
+				EQI_ACC_R,
+				EQI_ACC_L;
+//EQI_COSTUME_HEAD_TOP,
+//EQI_COSTUME_HEAD_MID,
+//EQI_COSTUME_HEAD_LOW,
+//EQI_COSTUME_GARMENT,
+//EQI_SHADOW_ARMOR,
+//EQI_SHADOW_WEAPON,
+//EQI_SHADOW_SHIELD,
+//EQI_SHADOW_SHOES,
+//EQI_SHADOW_ACC_R,
+//EQI_SHADOW_ACC_L;
+// ======== Requirement: ============
 // = Format:
 // - .requ[0],<ID>,<Amount>;
 // = ID:
@@ -211,8 +335,18 @@ set .n$,"["+strnpcinfo(1)+"]";
 // - 2 = #CASHPOINTS
 // - 3 = Custom Variable, see below
 // - 501 and higher means Item ID
-// Amount should be obvious :D.
 setarray .requ[0],2,100; // Default: 2,100 = 100x Cash Points
+// ======== Uncompound Requirement: ============
+// = Format:
+// - .requ[0],<ID>,<Amount>;
+// = ID:
+// - 0 = Nothing/Disabled
+// - 1 = Zeny
+// - 2 = #CASHPOINTS
+// - 3 = Custom Variable, see below
+// - 501 and higher means Item ID
+setarray .requ_unc[0],1,100000; // Default: 1,100000 = 100 000x Zeny
+
 // Custom Points:
 set .requ_vard$,"Custom Points"; // Display Name
 set .requ_varn$,"custom_points"; // Variable Name

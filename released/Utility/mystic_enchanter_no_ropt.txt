@@ -1,5 +1,5 @@
 //===== rAthena Script =======================================
-//= Mystic Enchanter - No Random Options
+//= Mystic Enchanter - No Random Options/Grade
 //===== By ===================================================
 //= llchrisll
 //===== Version ==============================================
@@ -9,9 +9,10 @@
 //      - Changed the Slot selection to be fixed slot
 //= 1.1 - Added support to reset selected enchantments as well
 //      - Changed the Price Code into a function
+//= 1.2 - Added a check enchant slots being used by cards
 //===== Tested With ==========================================
-//= rAthena 04/29/2020 Revision
-//= GIT Hash: 4829f3775d5371e65d6648cf05b6f0c2810bb664
+//= rAthena 20240615 Revision
+//= GIT Hash: 84cdc9cae022353b9cdf67678957f0335321c615
 //===== Description ==========================================
 //= All-in-one Enchanter
 //= Price for Enchanting and Resetting seperatly configurable
@@ -22,7 +23,7 @@
 //===== Comments =============================================
 //= This is merge of my Costume and Armor Enchanter with additonal features.
 //= The idea about the shop display is inspired by sader's enchanter.
-//= There is also a version with Random Options Support available > mystic_enchanter.txt
+//= There is also a version with Random Options/Grade Support available > mystic_enchanter.txt
 //============================================================
 prontera,147,174,4	script	Mystic Enchanter	4_M_MOCASS1,{
 function ME_Price;
@@ -91,9 +92,15 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 	set .@c4,getequipcardid(.@part,3);
 	
 	// Count how many slots are used by enchants
-	if(.@c2 && compare(getitemname(.@c2),"Card") != 1) set .@e_cnt,.@e_cnt + 1;
-	if(.@c3 && compare(getitemname(.@c3),"Card") != 1) set .@e_cnt,.@e_cnt + 1;
-	if(.@c4 && compare(getitemname(.@c4),"Card") != 1) set .@e_cnt,.@e_cnt + 1;
+	if(.@c2)
+		if(compare(getitemname(.@c2),"Card") != 1) set .@e_cnt,.@e_cnt + 1;
+		else set .@c_cnt,.@c_cnt + 1;
+	if(.@c3)
+		if(compare(getitemname(.@c3),"Card") != 1) set .@e_cnt,.@e_cnt + 1;
+		else set .@c_cnt,.@c_cnt + 1;
+	if(.@c4)
+		if(compare(getitemname(.@c4),"Card") != 1) set .@e_cnt,.@e_cnt + 1;
+		else set .@c_cnt,.@c_cnt + 1;
 		
 	mes .n$;
 	mes "Please select what you want to do now:";
@@ -130,9 +137,9 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 		if(.slot[.@e+5]) set .@enc_max,.@enc_max + 1;
 		if(.slot[.@e+8]) set .@enc_max,.@enc_max + 1;
 		
-		if(.@e_cnt >= .@e_max || .@e_cnt >= .@enc_max) {
+		if(.@e_cnt >= .@e_max || .@e_cnt >= .@enc_max || .@c_cnt >= .@e_max) {
 			mes .n$;
-			mes "I'm sorry, but this item has already reached the maximum amount of enchants.";
+			mes "I'm sorry, but this item has no slots left to enchant.";
 			close;
 		}
 
