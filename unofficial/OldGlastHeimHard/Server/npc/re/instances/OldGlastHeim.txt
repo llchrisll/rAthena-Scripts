@@ -108,7 +108,7 @@ glast_01,204,273,5	script	Hugin	4_M_SAGE_C,{
 		if(.@diff == 1)
 			.@md_name$ = "Old Glast Heim";
 		else if(.@diff == 2)
-			.@md_name$ = "Old Glast Heim Hard";
+			.@md_name$ = "Old Glast Heim Advanced";
 				
 		if (!instance_check_party(.@party_id)) {
 			mes "[Hugin]";
