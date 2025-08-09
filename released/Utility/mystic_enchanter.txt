@@ -20,16 +20,24 @@
 //= 1.4 - Added grade support and rewrote the code about Random Options
 //      - Fixed an issue with rand for Special Enchants
 //      - Added a check enchant slots being used by cards
+//= 1.5 - Revamped Enchantment Database
+//      - Added ME_AdvRand function for Advanced Randomizer
+//      - Added a new config for the Advanced Randomizer, `.enchant_inc`
+//      - Removed the array for disabling enchantments, now you need to comment them out.
+//      - Added code to check if equip uses multiple slots (Two-Handed Weapons/Headgears (Top/Mid/Lower, etc))
+//      - Added a check to prevent using 4th class attributes (POW, etc) for classes which don't have them
+//      - Added the possiblity to view every enchant, also new function ME_ItemLink for it
+//      - Modified the upgrade chance mathematic (made it harder)
+//      - Improved the way to look up existing enchantments for upgrade process
 //===== Tested With ==========================================
-//= rAthena 20240615 Revision
-//= GIT Hash: 84cdc9cae022353b9cdf67678957f0335321c615
+//= rAthena 20250730 Revision
+//= GIT Hash: cf6b9bd2ea6618d729049f275b178497698c28fd
 //===== Description ==========================================
 //= All-in-one Enchanter
 //= Price for Enchanting and Resetting seperatly configurable
 //= Every Equipment Slot has it's own settings
 //= Restricted Equipment = Define which Items are enchantable
-//= Equipment Limitations = Limited Slots Limit per Item configurable
-//= Enchantments can be individual enabled or disabled
+//= Equipment Limitations = Slots Limit per Item configurable
 //===== Comments =============================================
 //= This is merge of my Costume and Armor Enchanter with additonal features.
 //= The idea about the shop display is inspired by sader's enchanter.
@@ -37,6 +45,8 @@
 //============================================================
 prontera,144,167,4	script	Mystic Enchanter	4_M_MOCASS1,{
 function ME_Price;
+function ME_AdvRand;
+function ME_ItemLink;
 
 disable_items;
 mes .n$;
@@ -55,8 +65,22 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 	mes "Please select the equipment you want to enchant/upgrade the enchantments or reset the enchantments:";
 	mes "^FF0000Note: If you can't see an equipment, you can't either enchant it or you don't have anything equipped on it.^000000";
 	next;
-	for ( set .@l,0; .@l < getarraysize(.slot); set .@l,.@l + 24)
-		set .@i_menu$,.@i_menu$ + ( (.slot[.@l+1] == 1 && getequipid(.slot[.@l]) != -1)?"["+getequipname(.slot[.@l])+"]":"") + (( (.@l+24) < (20*24) )?":":"");
+	for ( set .@l,0; .@l < getarraysize(.slot); set .@l,.@l + 24) {
+		.@m = 0;
+		.@id = getequipid(.slot[.@l]);
+		if(.@id != -1) {
+			// Check equip if it's using multiple slots!
+			.@loc = getiteminfo(.@id,ITEMINFO_LOCATIONS);
+			switch(.slot[.@l]) {
+				case EQI_HAND_L: if(getiteminfo(.@id,ITEMINFO_TYPE) == IT_WEAPON) .@m = 1; break;
+				case EQI_HEAD_MID: if(.@loc&EQP_HEAD_TOP) .@m = 1; break;
+				case EQI_HEAD_LOW: if(.@loc&EQP_HEAD_TOP || .@loc&EQP_HEAD_MID) .@m = 1; break;
+				case EQI_COSTUME_HEAD_MID: if(.@loc&EQP_COSTUME_HEAD_TOP) .@m = 1; break;
+				case EQI_COSTUME_HEAD_LOW: if(.@loc&EQP_COSTUME_HEAD_TOP || .@loc&EQP_COSTUME_HEAD_MID) .@m = 1; break;
+			}
+		}
+		set .@i_menu$,.@i_menu$ + ( (.slot[.@l+1] == 1 && .@id != -1 && !.@m)?"["+replacestr(getequipname(.slot[.@l]),":","")+"]":"") + (( (.@l+24) < (20*24) )?":":"");
+	}
 	set .@e,select(.@i_menu$)*24-24;
 	
 	if(.enchant_restrict) {
@@ -169,104 +193,95 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 			if(.slot[.@e+8]) set .@e_c3,1;
 		}
 		mes .n$;
+		
 		// Attribute Enchants:
 		if(.@e_c1 && !.@c4) {
 			if(.slot[.@e+3] == 0) { // Random Attribute Enchantment
 				
-				if(!.enchant_rand) // Simple Randomizer
-					set .@a,rand(getarraysize(.attr_v$)); 
+				// Attribute Enchants contain 4th class attributes,
+				// so prevent them from being applied for classes, which don't have any use for them.
+				if(eaclass()&EAJL_FOURTH) 
+					.@ct = .attr_ct;
+				else
+					.@ct = 6;
 				
-				else { // Advanced Randomizer
-					set .@enc_c,rand(850); // Total of 6 Attributes
-					if(.@enc_c < 100) set .@a,1;
-					else if(.@enc_c < 250) set .@a,2;
-					else if(.@enc_c < 400) set .@a,3;
-					else if(.@enc_c < 550) set .@a,4;
-					else if(.@enc_c < 700) set .@a,5;
-					else if(.@enc_c < 850) set .@a,6;
-				}
+				if(!.enchant_rand) // Simple Randomizer
+					set .@a,rand(1,.@ct);
+			
+				else // Advanced Randomizer
+					.@a = ME_AdvRand(.@ct);
 
 			} else if(.slot[.@e+3] == 1) {
 				mes "Please select which Attribute Enchantment you want:";
-				set .@a,select(.attr_m$) - 1;
+				set .@a,select(.attr_m$);
 				next;
 				mes .n$;
 			}
+			.@a = (.@a*2-2)+1;
+			explode(.@attr_ids$,.attr$[.@a],":");
+			
 			if(.slot[.@e+4] == 0) // Attribute Enchant Upgrade: Disabled = Random selected Level
-				set .@r,rand(getarraysize(getd("."+.attr_v$[.@a])));
-
-			set .@e_id4,getd("."+.attr_v$[.@a]+"["+.@r+"]"); // Saving Enchant ID for the actual process
-			set .@e_c1,0;
+				if(getarraysize(.@attr_ids$) > 1)
+					set .@r,rand(getarraysize(.@attr_ids$));
+			
+			set .@e_id4,atoi(.@attr_ids$[.@r]); // Saving Enchant ID for the actual process
+			.@r = 0;
 		}
+		
 		// Status Enchants:
 		if(.@e_c2 && !.@c3) {
 			if(.slot[.@e+6] == 0) { // Random Status Enchantment
 				
 				if(!.enchant_rand) // Simple Randomizer
-					set .@a,rand(getarraysize(.stats_v$));
+					set .@a,rand(1,.stats_ct);
 				
-				else { // Advanced Randomizer 
-					set .@enc_c,rand(1600); // Total of 11 Status
-					if(.@enc_c < 100) set .@a,0;
-					else if(.@enc_c < 250) set .@a,1;
-					else if(.@enc_c < 400) set .@a,2;
-					else if(.@enc_c < 550) set .@a,3;
-					else if(.@enc_c < 700) set .@a,4;
-					else if(.@enc_c < 850) set .@a,5;
-					else if(.@enc_c < 1000) set .@a,6;
-					else if(.@enc_c < 1150) set .@a,7;
-					else if(.@enc_c < 1300) set .@a,8;
-					else if(.@enc_c < 1450) set .@a,9;
-					else if(.@enc_c < 1600) set .@a,10;
-				}
+				else // Advanced Randomizer
+					.@a = ME_AdvRand(.stats_ct);
 
 			} else if(.slot[.@e+6] == 1) {
 				mes "Please select which Status Enchantment you want:";
-				set .@a,select(.stats_m$) - 1;
+				set .@a,select(.stats_m$);
 				next;
 				mes .n$;
 			}
+			
+			.@a = (.@a*2-2)+1;
+			explode(.@stats_ids$,.stats$[.@a],":");
+			
 			if(.slot[.@e+7] == 0) // Status Enchant Upgrade: Disabled = Random selected Level
-				set .@r,rand(getarraysize(getd("."+.stats_v$[.@a])));
-		
-			set .@e_id3,getd("."+.stats_v$[.@a]+"["+.@r+"]"); // Saving Enchant ID for the actual process
-			set .@e_c2,0;
+				if(getarraysize(.@stats_ids$) > 1)
+					set .@r,rand(getarraysize(.@stats_ids$));
+			
+			set .@e_id3,atoi(.@stats_ids$[.@r]); // Saving Enchant ID for the actual process
+			.@r = 0;
 		}
-		
+
 		// Special Enchants:
 		if(.@e_c3  && !.@c2) {
 			if(.slot[.@e+9] == 0) { // Random Special Enchantment
-				if(!.enchant_rand) // Simple Randomizer
-					set .@a,rand(getarraysize(.special_v$));
 				
-				else { // Advanced Randomizer
-					set .@enc_c,rand(2400); // Total of 14 Special Enchants
-					if(.@enc_c < 100) set .@a,0;
-					else if(.@enc_c < 250) set .@a,1;
-					else if(.@enc_c < 400) set .@a,2;
-					else if(.@enc_c < 550) set .@a,3;
-					else if(.@enc_c < 700) set .@a,4;
-					else if(.@enc_c < 850) set .@a,5;
-					else if(.@enc_c < 1000) set .@a,6;
-					else if(.@enc_c < 1150) set .@a,7;
-					else if(.@enc_c < 1300) set .@a,8;
-					else if(.@enc_c < 1450) set .@a,9;
-					else if(.@enc_c < 1600) set .@a,10;
-					else if(.@enc_c < 1750) set .@a,11;
-					else if(.@enc_c < 1900) set .@a,12;
-					else if(.@enc_c < 2050) set .@a,13;
-				}
+				if(!.enchant_rand) // Simple Randomizer
+					set .@a,rand(1,.spec_ct);
+				
+				else // Advanced Randomizer
+					.@a = ME_AdvRand(.spec_ct);
+				
 			} else if(.slot[.@e+9] == 1) {
 				mes "Please select which Special Enchantment you want:";
-				set .@a,select(.special_m$) - 1;
+				set .@a,select(.special_m$);
 				next;
 				mes .n$;
 			}
+			
+			.@a = (.@a*2-2)+1;
+			explode(.@spec_ids$,.spec$[.@a],":");
+			
 			// Randomized Special Enchant Level
-			set .@r,rand(getarraysize(getd("."+.special_v$[.@a])));
-
-			set .@e_id2,getd("."+.special_v$[.@a]+"["+.@r+"]"); // Saving Enchant ID for the actual process
-			set .@e_c3,0;
+			if(getarraysize(.@spec_ids$) > 1)
+				set .@r,rand(getarraysize(.@spec_ids$));
+			
+			set .@e_id2,atoi(.@spec_ids$[.@r]); // Saving Enchant ID for the actual process
+			.@r = 0;
 		}
 		// Saving Random Options
 		if(getequiprandomoption(.@part,0,ROA_ID) != 0) {
@@ -309,30 +324,38 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 		mes "^FF0000Note: STR,... are Attribute, ATK,... are Status and anything else is Special.^000000";
 		next;
 		switch(select( ((.slot[.@e+4])?"- Attribute":"")+":"+ ((.slot[.@e+7])?"- Status":""))) {
-			case 1: set .@type$,"attr"; set .@t,select(.attr_m$) - 1; break;
-			case 2: set .@type$,"stats"; set .@t,select(.stats_m$) - 1; break;
+			case 1: set .@type$,"attr"; break;
+			case 2: set .@type$,"stats"; break;
 		}
 		mes .n$;
-		for ( set .@r,0; .@r < getarraysize(getd("."+getd("."+.@type$+"_v$["+.@t+"]"))); set .@r,.@r + 1)
-			if(getd("."+getd("."+.@type$+"_v$["+.@t+"]")+"["+.@r+"]") == getd(".@c"+.@s))
-				if(getd("."+getd("."+.@type$+"_v$["+.@t+"]")+"["+(.@r+1)+"]") != 0) { // Check if there is upgrade available
-					set .@u_go,1;
+		// Lookup the Item ID in the respective enchant array
+		.@e_id = getd(".@c"+.@s);
+		
+		for ( .@i = 1; .@i <= getd("."+.@type$+"_ct"); .@i++ ) {
+			deletearray .@e_ids$[0],getarraysize(.@e_ids$);
+			explode(.@e_ids$,getd("."+.@type$+"$["+(.@i*2-1)+"]"),":");
+			
+			if( (.@r = inarray(.@e_ids$,""+.@e_id)) != -1)
+				if(atoi(.@e_ids$[.@r+1]) != 0) { // Check if there is upgrade available
+					.@upg_id = atoi(.@e_ids$[.@r+1]);
 					break;
-					
-				} else if(getd("."+getd("."+.@type$+"_v$["+.@t+"]")+"["+(.@r+1)+"]") == 0) { // No upgrade available anymore
-					set .@u_fail,1;
+			
+				} else if(atoi(.@e_ids$[.@r+1]) == 0) { // No upgrade available anymore
+					.@u_fail = 1;
 					break;
 				}
-
-		if(.@u_go) {
+		}
+		if(.@upg_id) {
 			if( (.@type$ == "attr" && .slot[.@e+4] == 2) || (.@type$ == "stats" && .slot[.@e+7] == 2))
 				if(.@ref < (.@r+1)) {
 					mes "To upgrade your enchantment further you need to increase the refine on your equipment as well.";
 					close;
 				}
-			set .@upg_c,rand(1,100);
-			if(.@upg_c <= getd("."+.@type$+"_p["+(.@r+1)+"]")) {
-				set .@upg_id,getd("."+getd("."+.@type$+"_v$["+.@t+"]")+"["+(.@r+1)+"]");
+			.@upg_c = rand(1,100);
+			.@req_c = getd("."+.@type$+"_p["+(.@r+1)+"]");
+			//debugmes ".@upg_c = "+.@upg_c+", chance: "+.@req_c;
+
+			if(.@upg_c >= .@req_c) {
 				// Saving Random Options
 				if(getequiprandomoption(.@part,0,ROA_ID) != 0) {
 					setarray .@OptID[0],getequiprandomoption(.@part,0,ROA_ID),getequiprandomoption(.@part,1,ROA_ID),getequiprandomoption(.@part,2,ROA_ID),getequiprandomoption(.@part,3,ROA_ID),getequiprandomoption(.@part,4,ROA_ID);
@@ -354,7 +377,7 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 		} else if(.@u_fail) 
 			mes "I'm sorry, but there is no upgrade available anymore for this Enchantment.";
 
-		else if(!.@u_go)
+		else if(!.@upg_id)
 			mes "I'm sorry, but I can't find your Enchantment in my list or it's an Special Enchantment which I can't upgrade.";
 		break;
 		
@@ -768,19 +791,33 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 		mes .n$;
 		mes "Each Enchantment type has their own chances of success for Upgrade and Random Enchantment.";
 		mes " ";
+		mes "Do you also want to see the description of each enchant?";
+		next;
+		.@d = select("- No:- Yes") - 1;
 		mes "[Enchantment List]";
 		mes " > Attribute Enchants:";
-		for ( set .@l,0; .@l < getarraysize(.attr_n$); set .@l,.@l + 1)
-			if(.attr_e[.@l]) mes " - "+.attr_n$[.@l];
-		mes " ";
+		for ( set .@l,0; .@l < getarraysize(.attr$); set .@l,.@l + 2) {
+			mes " - "+.attr$[.@l];
+			if(.@d) 
+				mes ME_ItemLink(.attr$[.@l+1]);
+		}
+		next;
+		mes "[Enchantment List]";
 		mes " > Status Enchants:";
-		for ( set .@l,0; .@l < getarraysize(.stats_n$); set .@l,.@l + 1)
-			if(.stats_e[.@l]) mes " - "+.stats_n$[.@l];
-		mes " ";
+		for ( set .@l,0; .@l < getarraysize(.stats$); set .@l,.@l + 2) {
+			mes " - "+.stats$[.@l];
+			if(.@d) 
+				mes ME_ItemLink(.stats$[.@l+1]);
+		}
+		next;
+		mes "[Enchantment List]";
 		mes " > Special Enchants:";
 		mes "^FF0000Note: Can't be Upgraded!^000000";
-		for ( set .@l,0; .@l < getarraysize(.special_n$); set .@l,.@l + 1)
-			if(.special_e[.@l]) mes " - "+.special_n$[.@l];
+		for ( set .@l,0; .@l < getarraysize(.spec$); set .@l,.@l + 2) {
+			mes " - "+.spec$[.@l];
+			if(.@d) 
+				mes ME_ItemLink(.spec$[.@l+1]);
+		}
 		break;
 		
 		// Random Options List
@@ -863,43 +900,80 @@ switch(select("- Select Equipment:- Information:"+ ( (.enchant_restrict)?"- Rest
 end;
 
 	function	ME_Price	{
-	// getarg(0) > Identifier
-	// getarg(1) > Amount
-	// getarg(2) > 1 = Check, 2 = Pay
-	if(getarg(2) == 1) {
-		switch(getarg(0)) {
-			case 0: break;
-			case 1:
-			if(Zeny < getarg(1)) {
-				mes "You don't have enough Zeny for the Random Option Enchantment! You need "+getarg(1)+" Zeny.";
-				close;
-			}
-			break;
+	// getarg(0): Identifier
+	// getarg(1): Amount
+	// getarg(2): 1 = Check, 2 = Pay
+		if(getarg(2) == 1) {
+			switch(getarg(0)) {
+				case 0: break;
+				case 1:
+				if(Zeny < getarg(1)) {
+					mes "You don't have enough Zeny for the Random Option Enchantment! You need "+getarg(1)+" Zeny.";
+					close;
+				}
+				break;
 
-			case 2:
-			if(#CASHPOINTS < getarg(1)) {
-				mes "You don't have enough Cash Points for the Random Option Enchantment! You need "+getarg(1)+" Cash Points.";
-				close;
-			}
-			break;
+				case 2:
+				if(#CASHPOINTS < getarg(1)) {
+					mes "You don't have enough Cash Points for the Random Option Enchantment! You need "+getarg(1)+" Cash Points.";
+					close;
+				}
+				break;
 
-			default:
-			if(countitem(getarg(0)) < getarg(1)) {
-				mes "You don't have enough "+getitemname(getarg(0))+" for the Random Option Enchantment! You need "+getarg(1)+" "+getitemname(getarg(0))+".";
-				close;
+				default:
+				if(countitem(getarg(0)) < getarg(1)) {
+					mes "You don't have enough "+getitemname(getarg(0))+" for the Random Option Enchantment! You need "+getarg(1)+" "+getitemname(getarg(0))+".";
+					close;
+				}
+				break;
 			}
-			break;
+			
+		} else if(getarg(2) == 2) {
+			switch(getarg(0)) {
+				case 0: break;
+				case 1: set Zeny,Zeny - getarg(1); break;
+				case 2: set #CASHPOINTS,#CASHPOINTS - getarg(1); break;
+				default: delitem getarg(0),getarg(1); break;
+			}
 		}
-		
-	} else if(getarg(2) == 2) {
-		switch(getarg(0)) {
-			case 0: break;
-			case 1: set Zeny,Zeny - getarg(1); break;
-			case 2: set #CASHPOINTS,#CASHPOINTS - getarg(1); break;
-			default: delitem getarg(0),getarg(1); break;
-		}
-	}
 	return;
+	}
+	
+	function	ME_AdvRand	{
+		// getarg(0) == Total Amount of Enchants
+		.@debug = 0; // Disable/Enable debug messages
+		if(.@debug) debugmes "getarg(0): "+getarg(0)+", .enchant_inc: "+.enchant_inc;
+
+		// Calculate a max number based on the increment and amount of total enchants available,
+		// then pick a random number of it
+		if(.@debug) debugmes "rand("+.enchant_inc*getarg(0)+")";
+		.@enc_c = rand(.enchant_inc*getarg(0));
+		if(.@debug) debugmes ".@enc_c: "+.@enc_c;
+		
+		.@c = .@a = 1;
+		while ( .@c <= getarg(0)) {
+			if ( .@enc_c < (.enchant_inc*.@c))
+				.@a++;
+			.@c++;
+		}
+		if(.@debug) debugmes "return "+.@a;
+		return .@a;
+	}
+	
+	function	ME_ItemLink	{
+	//getarg(0) = String of Item IDs
+		explode(.@e_ids$,getarg(0),":");
+		.@list$ = "";
+		for ( .@i = 0; .@i < getarraysize(.@e_ids$); .@i++) {
+			.@id = atoi(.@e_ids$[.@i]);
+			if(getitemname(.@id) == "" || getitemname(.@id) == "null")
+				.@list$ += "<ITEM>Item ID: "+.@id+"<INFO>"+.@id+"</INFO></ITEM>";
+			else
+				.@list$ += "<ITEM>"+getitemname(.@id)+"<INFO>"+.@id+"</INFO></ITEM>";
+			
+			if(.@e_ids$[.@i+1] != "") .@list$ += " / ";
+		}
+		return .@list$;
 	}
 
 OnInit:
@@ -936,7 +1010,7 @@ setarray .slot[0],
 	EQI_HEAD_MID,			1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	1,	1,	10000,	1,	50000, // Middle Headgear
 	EQI_HEAD_LOW,			1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	1,	1,	10000,	1,	50000, // Lower Headgear
 	EQI_ARMOR,				1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	1,	1,	10000,	1,	50000, // Armor
-	EQI_HAND_R,				1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0,	1,	1,	0,	1,	1,	1,	10000,	1,	50000, // Weapon
+	EQI_HAND_R,				1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	1,	1,	10000,	1,	50000, // Weapon
 	EQI_HAND_L,				1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	1,	1,	10000,	1,	50000, // Shield
 	EQI_GARMENT,			1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	1,	1,	10000,	1,	50000, // Garment
 	EQI_SHOES,				1,	1,0,2,	1,0,2,	1,0,	1,	50000,	1,	0,	0,	0,	1,	0,	1,	1,	1,	10000,	1,	50000, // Shoes
@@ -961,9 +1035,9 @@ for ( set .@e,0; .@e < getarraysize(.slot); set .@e,.@e + 24)
 // * Defines how the Enchantments will be randomized
 // 0 = Simple Randomizer = "set .@a,rand();"
 // 1 = Advanced Randomizer = "set .@enc_c,rand(<Value>); > if(.@enc_c < <Value>)"
-// Note: For the Advanced Randomizer you can change the values as you like to increase the difficulty.
-// Just head up to the respective Enchantment.
-set .enchant_rand,0;
+set .enchant_rand,1;
+// Define the increments for Advanced Randomizer, the higher the more difficult it becomes.
+set .enchant_inc,150;
 // ==== Equipment Restriction ====
 // * Define here the Item ID's which can be enchanted
 // 0 = You can enchant anything you want
@@ -1082,9 +1156,7 @@ setarray .shadow_shield_enc[0],0,0;
 setarray .costume_garment_enc[0],0,0;
 setarray .shadow_shoes_enc[0],0,0;
 setarray .shadow_acc_enc[0],0,0;
-
-// ===== Enchantment Data =====
-// Attribute enchants
+	
 // * Attribute Enchants (STR/AGI/VIT/INT/DEX/LUK - 1~10)
 // > STR: 4700,4701,4702,4703,4704,4705,4706,4707,4708,4709
 // > AGI: 4730,4731,4732,4733,4734,4735,4736,4737,4738,4739
@@ -1098,20 +1170,27 @@ setarray .shadow_acc_enc[0],0,0;
 // > SPL+3
 // > CON+3
 // > CRT+3
-setarray .attr1[0],4700,4701,4702,4703,4704,4705,4706,4707,4708,4709;
-setarray .attr2[0],4730,4731,4732,4733,4734,4735,4736,4737,4738,4739;
-setarray .attr3[0],4740,4741,4742,4743,4744,4745,4746,4747,4748,4749;
-setarray .attr4[0],4710,4711,4712,4713,4714,4715,4716,4717,4718,4719;
-setarray .attr5[0],4720,4721,4722,4723,4724,4725,4726,4727,4728,4729;
-setarray .attr6[0],4750,4751,4752,4753,4754,4755,4756,4757,4758,4759;
-setarray .attr7[0],312189;
-setarray .attr8[0],312190;
-setarray .attr9[0],312191;
-setarray .attr10[0],312192;
-setarray .attr11[0],312193;
-setarray .attr12[0],312194;
-// Chances in % (No double entries!) - affects Upgrade only:
-setarray .attr_p[0],100,90,80,70,65,50,35,25,10,5; 
+
+setarray .attr$[0],
+// * 2 index per entry
+// Format: "Attribute Name","<ID #1>:<ID #2>,..."
+// Note: POW~CRT is not available for non-4th class jobs
+		"STR",	"4700:4701:4702:4703:4704:4705:4706:4707:4708:4709",
+		"AGI",	"4730:4731:4732:4733:4734:4735:4736:4737:4738:4739",
+		"VIT",	"4740:4741:4742:4743:4744:4745:4746:4747:4748:4749",
+		"INT",	"4710:4711:4712:4713:4714:4715:4716:4717:4718:4719",
+		"DEX",	"4720:4721:4722:4723:4724:4725:4726:4727:4728:4729",
+		"LUK",	"4750:4751:4752:4753:4754:4755:4756:4757:4758:4759",
+		"POW",	"312189",
+		"STA",	"312190",
+		"WIS",	"312191",
+		"SPL",	"312192",
+		"CON",	"312193",
+		"CRT",	"312194";
+
+// Upgrade Fail Chances in %
+setarray .attr_p[0],0,1,5,10,20,25,30,35,40,50,75;
+
 // * Status Enchants - ATK/MATK/FLEE/CRIT/DEF/MDEF/HP/SP/ASPD
 // > ATK: 4882,4766,4767,4894,4895,4904,4905
 // > MATK: 4883,4896,4897,4898,4899,4906,4907,4760,4761,4806
@@ -1130,25 +1209,37 @@ setarray .attr_p[0],100,90,80,70,65,50,35,25,10,5;
 // > Darklord Essence Vitality: 4917,4918,4919
 // > Darklord Essence Concentration: 4920,4921,4922
 // > Darklord Essence Luck: 4923,4924,4925
-setarray .stats_atk[0],4882,4766,4767,4894,4895,4904,4905;
-setarray .stats_matk[0],4883,4896,4897,4898,4899,4906,4907,4760,4761,4806;
-setarray .stats_flee[0],4859,4860,4762,4763,4942,4943,4944;
-setarray .stats_crit[0],4926,4939,4940,4941,4764,4765;
-setarray .stats_def[0],4791,4792,4793,4794,4893,4902,4903;
-setarray .stats_mdef[0],4890,4786,4891,4787,4892,4788,4789,4790;
-setarray .stats_hp[0],4927,4795,4796,4797,4798,4799,4861,4862,4867,4868,4900;
-setarray .stats_sp[0],4870,4800,4871,4801,4802,4929;
-setarray .stats_aspd[0],4807,4842;
-setarray .stats_reg[0],4930,4931,4932;
-setarray .stats_spc[0],4945,4946,4947;
-setarray .stats_dlf[0],4908,4909,4910;
-setarray .stats_dli[0],4911,4912,4913;
-setarray .stats_dls[0],4914,4915,4916;
-setarray .stats_dlv[0],4917,4918,4919;
-setarray .stats_dlc[0],4920,4921,4922;
-setarray .stats_dll[0],4923,4924,4925;
-// Chances in % (No double entries!) - affects Upgrade only:
-setarray .stats_p[0],100,90,80,70,60,55,45,35,30,10,5; 
+// > Neev Strength: 4994,4995,4996
+// > Neev Agility: 4997,4998,4999
+// > Neev Intellect: 29000,29001,29002
+
+setarray .stats$[0],
+// * 2 index per entry
+// Format: "Status Name","<ID #1>:<ID #2>,..."
+		"ATK",			"4882:4766:4767:4894:4895:4904:4905",
+		"MATK",			"4883:4896:4897:4898:4899:4906:4907:4760:4761:4806",
+		"FLEE",			"4859:4860:4762:4763:4942:4943:4944",
+		"CRIT",			"4926:4939:4940:4941:4764:4765",
+		"DEF",			"4791:4792:4793:4794:4893:4902:4903",
+		"MDEF",			"4890:4786:4891:4787:4892:4788:4789:4790",
+		"HP",			"4927:4795:4796:4797:4798:4799:4861:4862:4867:4868:4900",
+		"SP",			"4870:4800:4871:4801:4802:4929",
+		"ASPD",			"4807:4842",
+		"Regeneration",			"4930:4931:4932",
+		"SP Consume",			"4945:4946:4947",
+		"Darklord Essence Force",			"4908:4909:4910",
+		"Darklord Essence Intelligence",	"4911:4912:4913",
+		"Darklord Essence Speed",			"4914:4915:4916",
+		"Darklord Essence Vitality",		"4917:4918:4919",
+		"Darklord Essence Concentration",	"4920:4921:4922",
+		"Darklord Essence Luck",			"4923:4924:4925",
+		"Neev Strength",		"4994:4995:4996",
+		"Neev Agility",			"4997:4998:4999",
+		"Neev Intellect",		"29000:29001:29002";
+
+// Upgrade Fail Chances in %
+setarray .stats_p[0],0,1,5,10,20,25,30,35,40,50,75;
+
 // * Special Enchants
 // > Heal Amount: 4850,4851,4852
 // > Fighting Spirit: 4811,4810,4809,4808,4820,4821,4822,4823,4824,4825
@@ -1165,24 +1256,57 @@ setarray .stats_p[0],100,90,80,70,60,55,45,35,30,10,5;
 // > Highness Heal, Coluceo Heal, Archbishop, Bear's Power, Runaway Magic, Speed of Light, Muscle Fool, Hawkeye, Lucky Day
 // > 4803,4804,4805,4875,4876,4877,4878,4879,4880
 // > ATK Size: 4938,4937,4936
-setarray .spec_heal[0],4850,4851,4852;
-setarray .spec_spirit[0],4811,4810,4809,4808,4820,4821,4822,4823,4824,4825;
-setarray .spec_spell[0],4815,4814,4813,4812,4826,4827,4828,4829,4830,4831;
-setarray .spec_sharp[0],4818,4817,4816,4843,4844;
-setarray .spec_expert[0],4832,4833,4834,4835,4836,4837,4838,4839,4840,4841;
-setarray .spec_resist[0],4933,4934,4935,4848;
-setarray .spec_cran[0],4849;
-setarray .spec_spec[0],4853,4854,4855,4856,4857,4858;
-setarray .spec_fatal[0],4863,4864,4865,4866;
-setarray .spec_atkd[0],4869,4872,4873,4881;
-setarray .spec_skilld[0],4948,4949,4950;
-setarray .spec_conju[0],4885,4886,4887,4888,4889;
-setarray .spec_glasth[0],4803,4804,4805,4875,4876,4877,4878,4879,4880;
-setarray .spec_atksize[0],4938,4937,4936;
+// > Drops(Darkness/Fire/Water/Earth/Holy/Recovery): 4951,4952,4953,4954,4955,4956
+// > Famitsu's Power: 4957
+// > Zodiac (Gemini/Sagittarius/Aquarius/Aries/Cancer/Taurus/Capricorn/Pisces/Scorpio/Leo/Virgo/Libra):
+//   4958,4959,4960,4961,4962,4963,4964,4965,4966,4967,4968,4969
+// > Property Reactors (Fire/Water/Earth/Wind): 4970,4971,4972, 4973
+// > Resistance Reactors (Fire/Water/Earth/Wind): 4974,4975,4976, 4977
+// > Recovery Reactors (101/102/201/202): 4978,4979,4980,4981
+// > Supplement Reactors (INT/DEF/PD/Attack/Magic/HP/SP/Frozen/ASPD): 4983,4984,4985,4986,4987,4988,4989,4990,4991
+// > HP/SP Drain: 4992,4993
+// > Nihitsu: 27397
+// > Perfect Dodge +25: 27398
+// > Divine Offering: 27399
+// > Range Resistance +5%: 27400
+// > Absorb Spirits: 27401
+// > Latent Release (Summoner/Star Empire/Soul Reaper/Kagerou/Oboro/Rebellion): 27402,27403,27404,27405,27406,27407
+// > Power of (Shango/Ochosi/Iansa/Oshun): 27413,27414,27415,27416
 
+setarray .spec$[0],
+// * 2 index per entry
+// Format: "Special Name","<ID #1>:<ID #2>:..."
+		"Heal Amount",			"4850:4851:4852",
+		"Fighting Spirit",		"4811:4810:4809:4808:4820:4821:4822:4823:4824:4825",
+		"Spell",				"4815:4814:4813:4812:4826:4827:4828:4829:4830:4831",
+		"Sharp",				"4818:4817:4816:4843:4844",
+		"Expert Archer",		"4832:4833:4834:4835:4836:4837:4838:4839:4840:4841",
+		"Neutral Resistance",	"4933:4934:4935:4848",
+		"Cranial",				"4849",
+		"Special <STAT>",		"4853:4854:4855:4856:4857:4858",
+		"Fatal",				"4863:4864:4865:4866",
+		"Attack Delay",			"4869:4872:4873:4881",
+		"After Skill Delay",	"4948:4949:4950",
+		"Conjure",				"4885:4886:4887:4888:4889",
+		"Glastheim Enchants",	"4803:4804:4805:4875:4876:4877:4878:4879:4880",
+		"ATK Size",				"4938:4937:4936",
+		"Drops",				"4951:4952:4953:4954:4955:4956",
+		"Famitsu's Power",		"4957",
+		"Zodiac",				"4958:4959:4960:4961:4962:4963:4964:4965:4966:4967:4968:4969",
+		"Propery Reactors",		"4970:4971:4972:4973",
+		"Resistance Reactors",	"4974:4975:4976:4977",
+		"Recovery Reactors",  	"4978:4979:4980:4981",
+		"Supplement Reactors",	"4983:4984:4985:4986:4987:4988:4989:4990:4991",
+		"HP/SP Drain",			"4992:4993",
+		"Nihitsu",				"27397",
+		"Perfect Dodge +25",	"27398",
+		"Divine Offering",		"27399",
+		"Range Resistance",		"27400",
+		"Absorb Spirits",		"27401",
+		"Latent Release",		"27402:27403:27404:27405:27406:27407",
+		"Power of",				"27413:27414:27415:27416";
+	
 // =========  These are for the dynamic flow and config ===============
-// Note: If you want to add/remove your enchants, change the _n$ and _v$ entries respectively
-// Note2: You can enable/disable Enchantments in the _e arrays respectively!
 // * === Equipment === *
 setarray .EQ_Name$[0],"Top Headgear","Middle Headgear","Lower Headgear","Armor","Weapon","Shield","Garment","Shoes","Acc L.","Acc R.","Costume Top","Costume Middle","Costume Lower","Costume Garment","Shadow Armor","Shadow Weapon","Shadow Shield","Shadow Shoes","Shadow Acc L.","Shadow Acc R.";
 setarray .restrict_v$[0],"headgear_rct","headgear_rct","headgear_rct","armor_rct","weapon_rct","shield_rct","garment_rct","shoes_rct","acc_rct","acc_rct","costume_headgear_rct","costume_headgear_rct","costume_headgear_rct","costume_garment_rct","shadow_armor_rct","shadow_weapon_rct","shadow_shield_rct","shadow_shoes_rct","shadow_acc_rct","shadow_acc_rct";
@@ -1190,24 +1314,6 @@ setarray .limit_v$[0],"headgear_enc","headgear_enc","headgear_enc","armor_enc","
 // * === Shop === *
 setarray .shop_name$[0],"EShop_Headgear","EShop_Armor","EShop_Weapon","EShop_Shield","EShop_Garment","EShop_Shoes","EShop_Acc","EShop_Costume_Headgear","EShop_Costume_Garment","EShop_Shadow_Armor","EShop_Shadow_Weapon","EShop_Shadow_Shield","EShop_Shadow_Shoes","EShop_Shadow_Acc";
 setarray .shop_t$[0],"Headgear","Armor","Weapon","Shield","Garment","Shoes","Accessory","Costume Headgear","Costume Garment","Shadow Armor","Shadow Weapon","Shadow Shield","Shadow Shoes","Shadow Accessory";
-
-// * === Attribute Enchants === *
-setarray .attr_n$[0],"STR","AGI","VIT","INT","DEX","LUK","POW","STA","WIS","SPL","CON","CRT";
-setarray .attr_v$[0],"attr1","attr2","attr3","attr4","attr5","attr6","attr7","attr8","attr9","attr10","attr11","attr12";
-// Enable(1) or Disable(0) Enchantments
-setarray .attr_e[0],1,1,1,1,1,1,1,1,1,1,1,1;
-
-// * === Status Enchants === *
-setarray .stats_n$[0],"ATK","MATK","FLEE","CRIT","DEF","MDEF","HP","SP","ASPD","Regeneration","SP Consume","Darklord Essence Force","Darklord Essence Intelligence","Darklord Essence Speed","Darklord Essence Vitality","Darklord Essence Concentration","Darklord Essence Luck";
-setarray .stats_v$[0],"stats_atk","stats_matk","stats_flee","stats_crit","stats_def","stats_mdef","stats_hp","stats_sp","stats_aspd","stats_reg","stats_spc","stats_dlf","stats_dli","stats_dls","stats_dlv","stats_dlc","stats_dll";
-// Enable(1) or Disable(0) Enchantments
-setarray .stats_e[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
-
-// * === Special Enchants === *
-setarray .special_n$[0],"Heal Amount","Fighting Spirit","Spell","Sharp","Expert Archer","Neutral Resistance","Cranial","Special <STAT>","Fatal","Attack Delay","After Skill Delay","Conjure","Glastheim Enchants","ATK Size";
-setarray .special_v$[0],"spec_heal","spec_spirit","spec_spell","spec_sharp","spec_expert","spec_resist","spec_cran","spec_spec","spec_fatal","spec_atkd","spec_skilld","spec_conju","spec_glasth","spec_atksize";
-// Enable(1) or Disable(0) Enchantments
-setarray .special_e[0],1,1,1,1,1,1,1,1,1,1,1,1,1,1;
 
 // * === Menu Creation === *
 // - Equipment Menu
@@ -1219,16 +1325,20 @@ for ( set .@a,0; .@a < getarraysize(.shop_t$); set .@a,.@a + 1)
 	set .shop_m$,.shop_m$ + "- "+.shop_t$[.@a] + ( (.shop_t$[.@a+1] != "")?":":"");
 	
 // - Attribute Enchants
-for ( set .@a,0; .@a < getarraysize(.attr_n$); set .@a,.@a + 1) 
-	set .attr_m$,.attr_m$ + ( (.attr_e[.@a] == 1)?"- "+.attr_n$[.@a]:"") + ( (.attr_n$[.@a+1] != "")?":":"");
-
+for ( .@a = 0; .@a < getarraysize(.attr$); .@a+=2 ) {
+	set .attr_m$,.attr_m$ + .attr$[.@a] + ( (.attr$[.@a+2]!= "")?":":"");
+	.attr_ct++; // Simple Counter
+}
 // - Status Enchants
-for ( set .@a,0; .@a < getarraysize(.stats_n$); set .@a,.@a + 1) 
-	set .stats_m$,.stats_m$ + ( (.stats_e[.@a] == 1)?"- "+.stats_n$[.@a]:"") + ( (.stats_n$[.@a+1] != "")?":":"");
-
+for ( .@a = 0; .@a < getarraysize(.stats$); .@a+=2 ) {
+	set .stats_m$,.stats_m$ + .stats$[.@a] + ( (.stats$[.@a+2]!= "")?":":"");
+	.stats_ct++; // Simple Counter
+}	
 // - Special Enchants
-for ( set .@a,0; .@a < getarraysize(.special_n$); set .@a,.@a + 1) 
-	set .special_m$,.special_m$ + ( (.special_e[.@a] == 1)?"- "+.special_n$[.@a]:"") + ( (.special_n$[.@a+1] != "")?":":"");
+for ( .@a = 0; .@a < getarraysize(.spec$); .@a+=2 ) {
+	set .special_m$,.special_m$ + .spec$[.@a] + ( (.spec$[.@a+2]!= "")?":":"");
+	.spec_ct++; // Simple Counter
+}
 
 // ========= Random Option Database =========
 // Format: RandomOption_ID,MinValue,MaxValue,

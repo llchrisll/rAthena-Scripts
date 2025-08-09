@@ -24,6 +24,32 @@
 // ====================================================================
 // ========= The latest updates will always be on top!!! ==============
 // ====================================================================
+* 2025/08/09
+<< == |*| Mystic Enchanter v1.4 and Mystic Enchanter without Random Options v1.2 [RE] - Update to v1.5 and v1.3 |*| == >>
+- Revamped Enchantment Database
+- Added ME_AdvRand function for Advanced Randomizer
+- Added a new config for the Advanced Randomizer, `.enchant_inc`
+- Removed the array for disabling enchantments, now you need to comment them out.
+- Added code to check if equip uses multiple slots (Two-Handed Weapons/Headgears (Top/Mid/Lower, etc))
+- Added a check to prevent using 4th class attributes (POW, etc) for classes which don't have them
+- Added the possiblity to view every enchant, also new function ME_ItemLink for it
+- Modified the upgrade chance mathematic (made it harder)
+- Improved the way to look up existing enchantments for upgrade process
+------------------------------------------------------------------------------------------------------------------------
+* 2025/02/09
+<< == |*| MvP Ranker v1.2 [REQ] - Updated to v1.3 |*| == >>
+- Updated the sql code to work with latest rAthena SQL DB
+- Changed the field structure for 'mvp_card' to varchar(50)
+- Reversed the order of the goal behaviour (count upwards instead of downwards)
+- Added automatic detection and insertion of MVPs via SQL (mode_mvp field) and their Cards
+  Note: This is NOT optimized to prevent any duplicates, Event MvP's and similar from being added
+- Instead of pre-defined MVP's, it's now an list to ignore MVP (.ignore_mvp)
+- Added an .global_goal variable and an specific goal per MVP (.mvp_goal)
+- Added a variable to define the cost in the shop (.mvp_card_price) and
+  changed the calculation to muliply instead of divide by goal points
+- Added a setting to define the MVPPOINTS gained per MvP (.mvp_pts_gain)
+- Added a .debug setting and messages (this will clutter your map server console!)
+------------------------------------------------------------------------------------------------------------------------
 * 2024/08/14
 << == |*| Unofficial Old Glast Heim Hard [RE] - Updated v1.8 |*| == >>
 - Fixed an array typo and added base level check for hard mode > 160
